@@ -34,7 +34,7 @@ const items = [
   },
   {
     title: "Upload Excel",
-    url: "#",
+    url: "/dashboard/excel",
     icon: Inbox,
   },
 ];
