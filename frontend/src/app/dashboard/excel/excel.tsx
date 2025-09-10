@@ -18,6 +18,8 @@ import {
 import { useState } from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
+import Image from "next/image";
 
 export default function Excel() {
   const [files, setFile] = useState<File[] | undefined>();
@@ -28,6 +30,16 @@ export default function Excel() {
     console.log(files[0]);
     setFile(files);
   };
+
+  const upload = async () => {
+    if (onUpload) return; // Kalau lagi proses upload
+    setOpenModal(false);
+    setOnUpload(true);
+    setInterval(() => {
+      setOnUpload(false);
+    }, 3000);
+  };
+
   return (
     <div className="flex flex-col gap-4">
       <h1 className="scroll-m-20 text-center text-4xl font-extrabold tracking-tight text-balance">
@@ -72,20 +84,63 @@ export default function Excel() {
             </DialogDescription>
           </DialogHeader>
           {/* Rules */}
-          <div className="flex items-center gap-2">
-            <div className="grid flex-1 gap-2">
-              Lorem ipsum dolor sit amet consectetur adipisicing elit. Sit, qui!
-              Neque deleniti voluptates culpa exercitationem quis voluptas nobis
-              eum libero dolorem similique in optio corporis, consequatur
-              voluptatem, magni officiis? Aspernatur!
+          <div className="flex items-center gap-2 mt-2">
+            <div className="grid flex-1 gap-6">
+              {/* Table */}
+              <div className="grid gap-2">
+                <h2 className="font-medium">1. Urutan Header dari Excel</h2>
+                <div className="flex items-center space-x-4 text-sm overflow-auto">
+                  <div>No.</div>
+                  <Separator orientation="vertical" />
+                  <div>Vessel Name</div>
+                  <Separator orientation="vertical" />
+                  <div>Nama</div>
+                  <Separator orientation="vertical" />
+                  <div>Jabatan</div>
+                  <Separator orientation="vertical" />
+                  <div>Kondite Review</div>
+                  <Separator orientation="vertical" />
+                  <div>KPI Vessel</div>
+                  <Separator orientation="vertical" />
+                  <div>Performance Score</div>
+                  <Separator orientation="vertical" />
+                  <div>Value Assessment</div>
+                  <Separator orientation="vertical" />
+                  <div>Assessment Center</div>
+                  <Separator orientation="vertical" />
+                  <div>Potential Score</div>
+                  <Separator orientation="vertical" />
+                  <div>HAV Quadran</div>
+                  <Separator orientation="vertical" />
+                  <div>HAV Mapping</div>
+                  <Separator orientation="vertical" />
+                  <div>Competency Gap Analysis</div>
+                  <Separator orientation="vertical" />
+                  <div>Talent Classified</div>
+                  <Separator orientation="vertical" />
+                  <div>IDP Program</div>
+                </div>
+              </div>
+
+              {/* Nama Sheet */}
+              <div className="grid gap-2">
+                <h2 className="font-medium">2. Nama Sheet Excel</h2>
+                <Image
+                  src="/images/sheet.png"
+                  alt="Sheet Name"
+                  width={240}
+                  height={240}
+                />
+                <p className="leading-7 [&:not(:first-child)]:mt-6">
+                  <span className="font-medium">Sheet1</span> Merupakan nama
+                  sheet dari file Excel yang diupload. Pastikan nama sheetnya
+                  sesuai yaitu <span className="font-medium">Sheet1</span>
+                </p>
+              </div>
             </div>
           </div>
           <DialogFooter className="sm:justify-start">
-            <Button
-              type="button"
-              className="w-full"
-              onClick={() => setOpenModal(false)}
-            >
+            <Button type="button" className="w-full" onClick={upload}>
               Upload
             </Button>
           </DialogFooter>
