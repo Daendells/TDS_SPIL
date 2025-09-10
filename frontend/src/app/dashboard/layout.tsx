@@ -23,7 +23,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="my-3 mx-4 w-screen mt-7">
+      <main className="my-3 mx-4 w-screen mt-10">
         <div className="flex h-5 items-center space-x-3 text-sm mb-4">
           <SidebarTrigger />
           <Separator orientation="vertical" />

@@ -24,10 +24,11 @@ import Image from "next/image";
 export default function Excel() {
   const [files, setFile] = useState<File[] | undefined>();
   const [openModal, setOpenModal] = useState<boolean>(false);
-  const [onUpload, setOnUpload] = useState<boolean>(false);
+  const [onUpload, setOnUpload] = useState<boolean>(true);
 
   const handleDrop = (files: File[]) => {
     console.log(files[0]);
+    setOnUpload(false);
     setFile(files);
   };
 
@@ -140,7 +141,12 @@ export default function Excel() {
             </div>
           </div>
           <DialogFooter className="sm:justify-start">
-            <Button type="button" className="w-full" onClick={upload}>
+            <Button
+              type="button"
+              className="w-full"
+              onClick={upload}
+              disabled={onUpload}
+            >
               Upload
             </Button>
           </DialogFooter>
