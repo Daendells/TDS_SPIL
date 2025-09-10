@@ -166,7 +166,6 @@ export default function Dashboard() {
               <TableHead>Vessel Name</TableHead>
               <TableHead>Nama</TableHead>
               <TableHead>Jabatan</TableHead>
-              <TableHead>IDP Program</TableHead>
               <TableHead>Kondite Review</TableHead>
               <TableHead>KPI Vessel</TableHead>
               <TableHead>Performance Score</TableHead>
@@ -177,6 +176,7 @@ export default function Dashboard() {
               <TableHead>HAV Maping</TableHead>
               <TableHead>Competency Gap Analysis</TableHead>
               <TableHead>Talent Classified</TableHead>
+              <TableHead>IDP Program</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
