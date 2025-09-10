@@ -18,13 +18,67 @@ import {
   PaginationPrevious,
 } from "@/components/ui/pagination";
 
-import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+
+import {
+  CheckIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  ChevronsUpDownIcon,
+} from "lucide-react";
 import CardCompetence from "@/components/card-competence";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+interface IData {
+  id: number;
+  vesselName: string;
+  nama: string;
+  jabatan: string;
+  konditeReview: number;
+  kpiVessel: number;
+  performaceScore: number;
+  valueAssessment: number;
+  assessmentCenter: number;
+  havQuadran: string;
+  havMapping: string;
+  competencyGapAnalysis: string;
+  idpProgram: string;
+}
+
+interface IPaginationData<T> {
+  data: T[];
+  firstId: number;
+  lastId: number;
+  pageSize: number;
+  hasMore: boolean;
+  firstPage: boolean;
+}
+
+const pageSizes = [10, 20, 50, 100];
 
 export default function Dashboard() {
   const [onCallApi, setOnCallApi] = useState(false);
+  const [mdp, setMdp] = useState(10);
+  const [fdp, setFdp] = useState(10);
+  const [sdp, setSdp] = useState(10);
+
+  // PageSize
+  const [pageSize, setPageSize] = useState(10);
+  const [open, setOpen] = useState(false);
 
   const callApi = async () => {
     setOnCallApi(true);
@@ -40,24 +94,68 @@ export default function Dashboard() {
         {/* MDP */}
         <CardCompetence
           title="MDP"
-          count={10}
+          count={mdp}
           onClick={callApi}
           disabled={onCallApi}
         />
         {/* FDP */}
         <CardCompetence
           title="FDP"
-          count={10}
+          count={fdp}
           onClick={() => console.log("TEST")}
           disabled={onCallApi}
         />
         {/* SDP */}
         <CardCompetence
           title="SDP"
-          count={10}
+          count={sdp}
           onClick={() => console.log("TEST")}
           disabled={onCallApi}
         />
+      </div>
+
+      {/* Page Size */}
+      <div className="mb-2">
+        <Popover open={open} onOpenChange={setOpen}>
+          <PopoverTrigger asChild>
+            <Button
+              variant="outline"
+              role="combobox"
+              aria-expanded={open}
+              className="w-[6.25rem] justify-between"
+            >
+              {pageSize}
+              <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
+            </Button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[6.25rem] p-0">
+            <Command>
+              <CommandList>
+                <CommandGroup>
+                  {pageSizes.map((size) => (
+                    <CommandItem
+                      key={size}
+                      value={size.toString()}
+                      onSelect={(currentValue) => {
+                        setPageSize(parseInt(currentValue));
+                        setOpen(false);
+                      }}
+                    >
+                      <CheckIcon
+                        className={cn(
+                          "mr-2 h-4 w-4",
+                          pageSize === size ? "opacity-100" : "opacity-0"
+                        )}
+                      />
+                      {size}
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
+        <span className="ml-2">Pages</span>
       </div>
 
       {/* TABLE */}
