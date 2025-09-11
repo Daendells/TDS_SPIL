@@ -1,6 +1,10 @@
 package config
 
 import (
+	"backend/internal/controllers"
+	"backend/internal/repositories"
+	"backend/internal/services"
+
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
@@ -18,10 +22,18 @@ type BootstrapConfig struct {
 
 func Bootstrap(config *BootstrapConfig) {
 	// Setup Repositories
+	reportRepository := repositories.NewReportRepository(config.Log)
 
 	// Setup Service
+	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository)
 
 	// Setup Controller
+	reportController := controllers.NewReportController(reportService, config.Log)
 
-	// Setup Route and Middleware
+	// Setup Routes and Middlewares
+	report := config.App.Group("reports")
+	{
+		report.POST("/upload", reportController.CreateAll)
+		report.GET("/test", reportController.TestPanic)
+	}
 }

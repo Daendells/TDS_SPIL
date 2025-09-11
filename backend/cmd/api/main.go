@@ -10,7 +10,7 @@ func main() {
 	viperConfig := config.NewViper()
 	log := config.NewLogger(viperConfig)
 	validate := config.NewValidator()
-	app := config.NewGin(viperConfig)
+	app := config.NewGin(viperConfig, log)
 	db := config.NewDatabase(viperConfig, log)
 
 	// Bootstrap all configs
@@ -25,7 +25,7 @@ func main() {
 	// Get the Web Port
 	webPort := viperConfig.GetInt("WEB_PORT")
 
-	err := app.Run(":", strconv.Itoa(webPort))
+	err := app.Run(":" + strconv.Itoa(webPort))
 	if err != nil {
 		log.Fatal("Something went wrong")
 	}
