@@ -13,6 +13,8 @@ import (
 
 	"backend/internal/config"
 
+	"github.com/stretchr/testify/assert"
+
 	"github.com/gin-gonic/gin"
 	"github.com/spf13/viper"
 )
@@ -84,4 +86,6 @@ func TestExcel(t *testing.T) {
 	responseBody, _ := io.ReadAll(response.Body)
 
 	fmt.Println(string(responseBody))
+	result := string(responseBody)
+	assert.Equal(t, "{\"code\":201,\"status\":\"Created\",\"data\":\"Reports Created Successfully\"}", result)
 }

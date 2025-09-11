@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"backend/internal/helpers"
 	"backend/internal/models/domain"
@@ -91,9 +92,11 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		havMapping := helpers.SanitizeCell(helpers.GetCell(row, 11))
 		competencyGapAnalysis := helpers.SanitizeCell(helpers.GetCell(row, 12))
 		talentClassified := helpers.SanitizeCell(helpers.GetCell(row, 13))
-		
+
 		// Mapping the IDP Program
-		idpProgram := helpers.SanitizeCell(helpers.GetCell(row, 14))
+		idp := strings.ToUpper(jabatan)
+		service.Log.Info(idp)
+		idpProgram := helpers.MapIDPProgram(idp)
 
 		reports = append(reports, domain.Report{
 			VesselName:            vesselName,
