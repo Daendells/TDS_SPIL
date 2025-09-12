@@ -21,3 +21,7 @@ func NewReportRepository(log *logrus.Logger) *ReportRepository {
 func (r *ReportRepository) CreateAll(db *gorm.DB, reports *[]domain.Report) error {
 	return db.Create(reports).Error
 }
+
+func (r *ReportRepository) SelectAll(db *gorm.DB) error {
+	return nil
+}

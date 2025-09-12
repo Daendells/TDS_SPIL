@@ -33,6 +33,7 @@ func Bootstrap(config *BootstrapConfig) {
 	// Setup Routes and Middlewares
 	report := config.App.Group("reports")
 	{
+		report.GET("/", reportController.FindAll)
 		report.POST("/upload", reportController.CreateAll)
 		report.GET("/test", reportController.TestPanic)
 	}
