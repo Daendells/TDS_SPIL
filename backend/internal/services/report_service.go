@@ -48,13 +48,39 @@ func (service *ReportService) FindAll(ctx context.Context, request *web.Dashboar
 
 	// TODO: Init response
 	hasMore := false
-	isFirstPage := request.AnchorID == 0
+	isFirstPage := false
 
-	// Check Page, apakah masih ada page selanjutnya / sebelumnya
-	//! Test Next
-	if len(reports) > request.PageSize {
-		hasMore = true
-		reports = reports[:request.PageSize]
+	// //! If for prev, we need to reverse the reports
+	// if request.Page == "prev" {
+	// 	helpers.Reverse(&reports)
+	// 	if len(reports) > request.PageSize {
+	// 		hasMore = true
+	// 		isFirstPage = true
+	// 		reports = reports[:request.PageSize]
+	// 	}
+	// } else {
+	// 	// Check Page, apakah masih ada page selanjutnya / sebelumnya
+	// 	if len(reports) > request.PageSize {
+	// 		hasMore = true
+	// 		reports = reports[:request.PageSize]
+	// 	}
+	// }
+	if request.Page == "prev" {
+		// Untuk prev, hasil query DESC lalu dibalik biar tetap ASC
+		helpers.Reverse(&reports)
+		if len(reports) > request.PageSize {
+			isFirstPage = false // Kalau ada lebih, pasti bukan first page
+		} else {
+			isFirstPage = true
+		}
+		hasMore = true // Karena page sekarang akan jadi page selanjutnya, jadi pasti TRUE
+	} else {
+		//! Next
+		if len(reports) > request.PageSize {
+			hasMore = true
+			reports = reports[:request.PageSize]
+		}
+		isFirstPage = false // Karena page sekarang pasti jadi page sebelumya, jadi pasti FALSE
 	}
 
 	firstId := reports[0].ID

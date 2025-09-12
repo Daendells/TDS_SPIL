@@ -28,16 +28,32 @@ func (r *ReportRepository) SelectAll(db *gorm.DB, filter *web.DashboardRequest, 
 }
 
 func (r *ReportRepository) SelectWithFilter(db *gorm.DB, filter *web.DashboardRequest, reports *[]domain.Report) error {
-	//! Query Next
-	query := `
-		SELECT *
-		FROM
-			reports
-		WHERE id > ?
-		ORDER BY
-			id ASC
-		LIMIT ?
-	`
+	var query string
+	// var anchorId int
+
+	if filter.Page == "next" {
+		//! Query Next
+		query = `
+			SELECT *
+			FROM
+				reports
+			WHERE id > ?
+			ORDER BY
+				id ASC
+			LIMIT ?
+		`
+	} else {
+		//! Query Prev
+		query = `
+			SELECT *
+			FROM
+				reports
+			WHERE id < ?
+			ORDER BY
+				id DESC
+			LIMIT ?
+		`
+	}
 
 	if err := db.Raw(query, filter.AnchorID, filter.PageSize+1).Scan(reports).Error; err != nil {
 		return err

@@ -15,6 +15,13 @@ func SliceContains[T comparable](slice []T, val T) bool {
 	return false
 }
 
+func Reverse[T any](s *[]T) {
+	arr := *s
+	for i, j := 0, len(arr)-1; i < j; i, j = i+1, j-1 {
+		arr[i], arr[j] = arr[j], arr[i]
+	}
+}
+
 func GetFieldTagName(obj interface{}, fieldName string) string {
 	t := reflect.TypeOf(obj)
 	if t.Kind() == reflect.Ptr {
