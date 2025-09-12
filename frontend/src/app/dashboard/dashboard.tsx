@@ -61,8 +61,8 @@ interface IData {
 
 interface IPaginationData<T> {
   data: T[];
-  firstId: number;
-  lastId: number;
+  firstId: number | null;
+  lastId: number | null;
   pageSize: number;
   hasMore: boolean;
   firstPage: boolean;
