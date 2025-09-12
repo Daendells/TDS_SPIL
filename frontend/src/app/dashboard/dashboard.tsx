@@ -50,7 +50,7 @@ interface IData {
   jabatan: string;
   konditeReview: number;
   kpiVessel: number;
-  performaceScore: number;
+  performanceScore: number;
   valueAssessment: number;
   assessmentCenter: number;
   havQuadran: string;
@@ -71,10 +71,11 @@ interface IPaginationData<T> {
 const pageSizes = [10, 20, 50, 100];
 
 export default function Dashboard() {
-  const [onCallApi, setOnCallApi] = useState(false);
-  const [mdp, setMdp] = useState(10);
-  const [fdp, setFdp] = useState(10);
-  const [sdp, setSdp] = useState(10);
+  const [onCallApi, setOnCallApi] = useState<boolean>(false);
+  const [filter, setFilter] = useState<string>("");
+  const [mdp, setMdp] = useState<number>(10);
+  const [fdp, setFdp] = useState<number>(10);
+  const [sdp, setSdp] = useState<number>(10);
 
   // PageSize
   const [pageSize, setPageSize] = useState(10);
@@ -91,18 +92,18 @@ export default function Dashboard() {
     <>
       {/* GRID */}
       <div className="grid grid-cols-3 gap-x-4 my-6 mb-8">
-        {/* MDP */}
-        <CardCompetence
-          title="MDP"
-          count={mdp}
-          onClick={callApi}
-          disabled={onCallApi}
-        />
         {/* FDP */}
         <CardCompetence
           title="FDP"
           count={fdp}
           onClick={() => console.log("TEST")}
+          disabled={onCallApi}
+        />
+        {/* MDP */}
+        <CardCompetence
+          title="MDP"
+          count={mdp}
+          onClick={callApi}
           disabled={onCallApi}
         />
         {/* SDP */}

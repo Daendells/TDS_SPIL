@@ -33,12 +33,40 @@ export default function Excel() {
   };
 
   const upload = async () => {
-    if (onUpload) return; // Kalau lagi proses upload
+    if (onUpload || !files?.length) return; // Kalau lagi proses upload
     setOpenModal(false);
     setOnUpload(true);
-    setInterval(() => {
+
+    try {
+      const formData = new FormData();
+      formData.append("file", files[0]); // only upload first file
+
+      // TODO: Call API
+      const res = await fetch("http://localhost:8080/reports/upload", {
+        method: "POST",
+        body: formData,
+      });
+
+      // TODO: If there is an error, just throw
+      if (!res.ok) {
+        throw new Error("Upload failed");
+      }
+
+      const data = await res.json();
+
+      // TODO: Remove the data from Dropzone
+      setFile(undefined);
+
+      toast.success("File uploaded successfully!");
+      console.log("Upload response:", data);
+    } catch (err) {
+      //! If Error, just toast it
+      toast.error((err as Error).message);
+      console.error(err);
+    } finally {
+      // Enable the button
       setOnUpload(false);
-    }, 3000);
+    }
   };
 
   return (
