@@ -39,7 +39,7 @@ func (service *ReportService) FindAll(ctx context.Context, request *web.Dashboar
 	tx := service.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
-	var reports []web.Report
+	var reports []domain.Report
 
 	err := service.ReportRepository.SelectWithFilter(tx, request, &reports)
 	if err != nil {
@@ -49,7 +49,7 @@ func (service *ReportService) FindAll(ctx context.Context, request *web.Dashboar
 	return &web.SuccessResponse{
 		Status: "Ok",
 		Code:   http.StatusOK,
-		Data: map[string][]web.Report{
+		Data: map[string][]domain.Report{
 			"reports": reports,
 		},
 	}, nil

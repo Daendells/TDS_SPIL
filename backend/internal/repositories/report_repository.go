@@ -23,11 +23,11 @@ func (r *ReportRepository) CreateAll(db *gorm.DB, reports *[]domain.Report) erro
 	return db.Create(reports).Error
 }
 
-func (r *ReportRepository) SelectAll(db *gorm.DB, filter *web.DashboardRequest, reports *[]web.Report) error {
+func (r *ReportRepository) SelectAll(db *gorm.DB, filter *web.DashboardRequest, reports *[]domain.Report) error {
 	return nil
 }
 
-func (r *ReportRepository) SelectWithFilter(db *gorm.DB, filter *web.DashboardRequest, reports *[]web.Report) error {
+func (r *ReportRepository) SelectWithFilter(db *gorm.DB, filter *web.DashboardRequest, reports *[]domain.Report) error {
 	query := `
 		SELECT *
 		FROM
