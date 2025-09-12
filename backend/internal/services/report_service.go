@@ -34,6 +34,27 @@ func NewReportService(db *gorm.DB, log *logrus.Logger, validate *validator.Valid
 	}
 }
 
+func (service *ReportService) FindAll(ctx context.Context, request *web.DashboardRequest) (*web.SuccessResponse, error) {
+	// TODO: Create Transaction
+	tx := service.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	var reports []web.Report
+
+	err := service.ReportRepository.SelectWithFilter(tx, request, &reports)
+	if err != nil {
+		return nil, err
+	}
+
+	return &web.SuccessResponse{
+		Status: "Ok",
+		Code:   http.StatusOK,
+		Data: map[string][]web.Report{
+			"reports": reports,
+		},
+	}, nil
+}
+
 func (service *ReportService) CreateAll(ctx context.Context, request *web.ReportRequest) (*web.SuccessResponse, error) {
 	// TODO: Create Transaction
 	tx := service.DB.WithContext(ctx).Begin()

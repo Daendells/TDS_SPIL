@@ -25,24 +25,10 @@ func NewReportController(service *services.ReportService, log *logrus.Logger) *R
 }
 
 func (controller *ReportController) CreateAll(ctx *gin.Context) {
-	// var request web.ReportRequest
-
-	// // Binding
-	// if err := ctx.ShouldBind(&request); err != nil {
-	// 	panic(err)
-	// }
-
 	fileHeader, err := ctx.FormFile("file")
 	if err != nil {
 		panic(err)
 	}
-
-	// file, err := fileHeader.Open()
-	// if err != nil {
-	// 	panic(err)
-	// }
-
-	// defer file.Close()
 
 	// TODO: Make request
 	reportRequest := &web.ReportRequest{
@@ -111,12 +97,16 @@ func (controller *ReportController) FindAll(ctx *gin.Context) {
 	}
 
 	// Success
-	ctx.JSON(http.StatusOK, web.SuccessResponse{
-		Code:   http.StatusOK,
-		Status: "Ok",
-		Data:   "OK",
-	})
-	return
+	response, err := controller.Service.FindAll(ctx, &request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+	ctx.JSON(response.Code, response)
 }
 
 func (controlelr *ReportController) TestPanic(ctx *gin.Context) {
