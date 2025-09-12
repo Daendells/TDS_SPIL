@@ -41,9 +41,25 @@ func (service *ReportService) FindAll(ctx context.Context, request *web.Dashboar
 
 	var reports []domain.Report
 
-	err := service.ReportRepository.SelectWithFilter(tx, request, &reports)
+	err := service.ReportRepository.SelectAll(tx, request, &reports)
 	if err != nil {
 		return nil, err
+	}
+
+	// TODO: If empty, return empty array and set first_id and last_id equal to null
+	if len(reports) == 0 {
+		return &web.SuccessResponse{
+			Status: "Ok",
+			Code:   http.StatusOK,
+			Data: map[string]interface{}{
+				"reports":    []domain.Report{},
+				"first_id":   nil,
+				"last_id":    nil,
+				"page_size":  request.PageSize,
+				"has_more":   false,
+				"first_page": true,
+			},
+		}, nil
 	}
 
 	// TODO: Init response
@@ -51,28 +67,16 @@ func (service *ReportService) FindAll(ctx context.Context, request *web.Dashboar
 	isFirstPage := false
 
 	// //! If for prev, we need to reverse the reports
-	// if request.Page == "prev" {
-	// 	helpers.Reverse(&reports)
-	// 	if len(reports) > request.PageSize {
-	// 		hasMore = true
-	// 		isFirstPage = true
-	// 		reports = reports[:request.PageSize]
-	// 	}
-	// } else {
-	// 	// Check Page, apakah masih ada page selanjutnya / sebelumnya
-	// 	if len(reports) > request.PageSize {
-	// 		hasMore = true
-	// 		reports = reports[:request.PageSize]
-	// 	}
-	// }
 	if request.Page == "prev" {
-		// Untuk prev, hasil query DESC lalu dibalik biar tetap ASC
-		helpers.Reverse(&reports)
 		if len(reports) > request.PageSize {
 			isFirstPage = false // Kalau ada lebih, pasti bukan first page
+			reports = reports[:request.PageSize]
 		} else {
 			isFirstPage = true
 		}
+
+		// Untuk prev, hasil query DESC lalu dibalik biar tetap ASC
+		helpers.Reverse(&reports)
 		hasMore = true // Karena page sekarang akan jadi page selanjutnya, jadi pasti TRUE
 	} else {
 		//! Next
@@ -80,7 +84,12 @@ func (service *ReportService) FindAll(ctx context.Context, request *web.Dashboar
 			hasMore = true
 			reports = reports[:request.PageSize]
 		}
-		isFirstPage = false // Karena page sekarang pasti jadi page sebelumya, jadi pasti FALSE
+
+		if request.AnchorID == 0 {
+			isFirstPage = true // 0 digunakan untuk menampilkan page pertama
+		} else {
+			isFirstPage = false // Karena page sekarang pasti jadi page sebelumya, jadi pasti FALSE
+		}
 	}
 
 	firstId := reports[0].ID
