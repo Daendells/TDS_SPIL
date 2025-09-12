@@ -46,11 +46,30 @@ func (service *ReportService) FindAll(ctx context.Context, request *web.Dashboar
 		return nil, err
 	}
 
+	// TODO: Init response
+	hasMore := false
+	isFirstPage := request.AnchorID == 0
+
+	// Check Page, apakah masih ada page selanjutnya / sebelumnya
+	//! Test Next
+	if len(reports) > request.PageSize {
+		hasMore = true
+		reports = reports[:request.PageSize]
+	}
+
+	firstId := reports[0].ID
+	lastId := reports[len(reports)-1].ID
+
 	return &web.SuccessResponse{
 		Status: "Ok",
 		Code:   http.StatusOK,
-		Data: map[string][]domain.Report{
-			"reports": reports,
+		Data: map[string]interface{}{
+			"reports":    reports,
+			"first_id":   firstId,
+			"last_id":    lastId,
+			"page_size":  request.PageSize,
+			"has_more":   hasMore,
+			"first_page": isFirstPage,
 		},
 	}, nil
 }
