@@ -40,17 +40,21 @@ import {
 } from "lucide-react";
 import CardCompetence from "@/components/card-competence";
 
-import { IPaginationData, IReport } from "@/types/global-types";
+import {
+  FilterType,
+  IPaginationData,
+  IPaginationRequest,
+  IReport,
+} from "@/types/global-types";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn, parsePaginationData, parseReports } from "@/lib/utils";
 
-const pageSizes = [10, 20, 50, 100];
+const PAGE_SIZES = [10, 20, 50, 100];
 
 export default function Dashboard() {
   const [onCallApi, setOnCallApi] = useState<boolean>(false);
-  const [filter, setFilter] = useState<string>("");
-  const firstRender = useRef(true);
+  const [filter, setFilter] = useState<FilterType>("");
 
   const [mdp, setMdp] = useState<number>(10);
   const [fdp, setFdp] = useState<number>(10);
@@ -64,24 +68,34 @@ export default function Dashboard() {
   const [pageSize, setPageSize] = useState(10);
   const [open, setOpen] = useState(false);
 
+  // Pagination Mechanism
+  const prevValues = useRef<{ filter: string; pageSize: number }>({
+    filter,
+    pageSize,
+  });
+  const [paginationRequest, setPaginationRequest] =
+    useState<IPaginationRequest>({
+      anchorId: 0,
+      page: "next",
+      pageSize: pageSize,
+      filter: filter,
+    });
+
   // TODO: Fetch data with Filter
   useEffect(() => {
-    if (firstRender.current) {
-      firstRender.current = false;
-      return; // Skip first render
-    }
-    console.log("USE EFFECT CALL", filter);
     const fetchData = async () => {
       setOnCallApi(true); // Disable filter buttons
 
       const params = new URLSearchParams({
-        anchor_id: "0",
-        page: "next",
-        page_size: pageSize.toString(),
-        filter: filter,
+        anchor_id: paginationRequest.anchorId.toString(),
+        page: paginationRequest.page,
+        page_size: paginationRequest.pageSize.toString(),
       });
 
-      console.log(params.toString());
+      // If there is a filter
+      if (paginationRequest.filter) {
+        params.set("filter", paginationRequest.filter);
+      }
 
       try {
         const response = await fetch(
@@ -96,14 +110,13 @@ export default function Dashboard() {
         );
       } catch (err) {
         console.log(err);
-        console.log("SDASDSAD ");
       } finally {
         setOnCallApi(false);
       }
     };
 
     fetchData();
-  }, [filter]);
+  }, [paginationRequest]);
 
   return (
     <>
@@ -113,21 +126,27 @@ export default function Dashboard() {
         <CardCompetence
           title="FDP"
           count={fdp}
-          onClick={() => setFilter("FDP")}
+          onClick={() =>
+            setPaginationRequest({ ...paginationRequest, filter: "FDP" })
+          }
           disabled={onCallApi}
         />
         {/* MDP */}
         <CardCompetence
           title="MDP"
           count={mdp}
-          onClick={() => setFilter("MDP")}
+          onClick={() =>
+            setPaginationRequest({ ...paginationRequest, filter: "MDP" })
+          }
           disabled={onCallApi}
         />
         {/* SDP */}
         <CardCompetence
           title="SDP"
           count={sdp}
-          onClick={() => setFilter("SDP")}
+          onClick={() =>
+            setPaginationRequest({ ...paginationRequest, filter: "SDP" })
+          }
           disabled={onCallApi}
         />
       </div>
@@ -150,12 +169,16 @@ export default function Dashboard() {
             <Command>
               <CommandList>
                 <CommandGroup>
-                  {pageSizes.map((size) => (
+                  {PAGE_SIZES.map((size) => (
                     <CommandItem
                       key={size}
                       value={size.toString()}
                       onSelect={(currentValue) => {
                         setPageSize(parseInt(currentValue));
+                        setPaginationRequest({
+                          ...paginationRequest,
+                          pageSize: parseInt(currentValue),
+                        });
                         setOpen(false);
                       }}
                     >
