@@ -45,6 +45,7 @@ import {
   IPaginationData,
   IPaginationRequest,
   IReport,
+  PageType,
 } from "@/types/global-types";
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -69,10 +70,6 @@ export default function Dashboard() {
   const [open, setOpen] = useState(false);
 
   // Pagination Mechanism
-  const prevValues = useRef<{ filter: string; pageSize: number }>({
-    filter,
-    pageSize,
-  });
   const [paginationRequest, setPaginationRequest] =
     useState<IPaginationRequest>({
       anchorId: 0,
@@ -87,7 +84,7 @@ export default function Dashboard() {
       setOnCallApi(true); // Disable filter buttons
 
       const params = new URLSearchParams({
-        anchor_id: paginationRequest.anchorId.toString(),
+        anchor_id: paginationRequest.anchorId!.toString(),
         page: paginationRequest.page,
         page_size: paginationRequest.pageSize.toString(),
       });
@@ -117,6 +114,17 @@ export default function Dashboard() {
 
     fetchData();
   }, [paginationRequest]);
+
+  const navigatePage = (page: PageType) => {
+    if (!paginationData) return;
+
+    setPaginationRequest({
+      ...paginationRequest,
+      page: page,
+      anchorId:
+        page == "next" ? paginationData?.lastId : paginationData?.firstId,
+    });
+  };
 
   return (
     <>
@@ -178,6 +186,9 @@ export default function Dashboard() {
                         setPaginationRequest({
                           ...paginationRequest,
                           pageSize: parseInt(currentValue),
+                          // Reset the pagination
+                          anchorId: 0,
+                          page: "next",
                         });
                         setOpen(false);
                       }}
@@ -276,13 +287,21 @@ export default function Dashboard() {
       <Pagination className="mt-6">
         <PaginationContent className="flex justify-between w-full">
           <PaginationItem>
-            <Button className="cursor-pointer transition duration-300 active:scale-95 disabled:cursor-not-allowed">
+            <Button
+              className="cursor-pointer transition duration-300 active:scale-95 disabled:cursor-not-allowed"
+              disabled={paginationData?.firstPage}
+              onClick={() => navigatePage("prev")}
+            >
               <ChevronLeftIcon />
               Previous
             </Button>
           </PaginationItem>
           <PaginationItem>
-            <Button className="cursor-pointer transition duration-300 active:scale-95 disabled:cursor-not-allowed">
+            <Button
+              className="cursor-pointer transition duration-300 active:scale-95 disabled:cursor-not-allowed"
+              disabled={!paginationData?.hasMore}
+              onClick={() => navigatePage("next")}
+            >
               Next
               <ChevronRightIcon />
             </Button>

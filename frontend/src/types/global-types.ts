@@ -29,7 +29,7 @@ export interface IPaginationData<T> {
 }
 
 export interface IPaginationRequest {
-  anchorId: number;
+  anchorId: number | null;
   page: PageType;
   pageSize: number;
   filter: FilterType;
