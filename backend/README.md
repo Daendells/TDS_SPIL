@@ -28,7 +28,7 @@
     "code": 200,
     "status": "Ok",
     "data": {
-        "reports": [
+        "results": [
             {
                 "id": 1,
                 "vessel_name": "test",

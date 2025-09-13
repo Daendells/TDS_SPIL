@@ -99,7 +99,7 @@ func (service *ReportService) FindAll(ctx context.Context, request *web.Dashboar
 		Status: "Ok",
 		Code:   http.StatusOK,
 		Data: map[string]interface{}{
-			"reports":    reports,
+			"results":    reports,
 			"first_id":   firstId,
 			"last_id":    lastId,
 			"page_size":  request.PageSize,

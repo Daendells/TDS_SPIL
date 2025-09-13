@@ -20,9 +20,9 @@ func NewGin(config *viper.Viper, log *logrus.Logger) *gin.Engine {
 	app := gin.Default()
 	// CORS config
 	app.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"}, // your Next.js app
+		AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000"}, // your Next.js app
 		AllowMethods:     []string{"POST", "GET", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
+		AllowHeaders:     []string{"*"},
 		ExposeHeaders:    []string{"Content-Length"},
 		AllowCredentials: true,
 		MaxAge:           12 * time.Hour,

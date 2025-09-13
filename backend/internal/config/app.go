@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+
 	"backend/internal/controllers"
 	"backend/internal/repositories"
 	"backend/internal/services"
@@ -33,8 +35,9 @@ func Bootstrap(config *BootstrapConfig) {
 	// Setup Routes and Middlewares
 	report := config.App.Group("reports")
 	{
-		report.GET("/", reportController.FindAll)
+		report.GET("", reportController.FindAll)
 		report.POST("/upload", reportController.CreateAll)
 		report.GET("/test", reportController.TestPanic)
 	}
+	fmt.Println(report)
 }
