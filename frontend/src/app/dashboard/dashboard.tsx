@@ -39,54 +39,71 @@ import {
   ChevronsUpDownIcon,
 } from "lucide-react";
 import CardCompetence from "@/components/card-competence";
-import { useState } from "react";
+
+import { IPaginationData, IReport } from "@/types/global-types";
+import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
-
-interface IData {
-  id: number;
-  vesselName: string;
-  nama: string;
-  jabatan: string;
-  konditeReview: number;
-  kpiVessel: number;
-  performanceScore: number;
-  valueAssessment: number;
-  assessmentCenter: number;
-  havQuadran: string;
-  havMapping: string;
-  competencyGapAnalysis: string;
-  idpProgram: string;
-}
-
-interface IPaginationData<T> {
-  data: T[];
-  firstId: number | null;
-  lastId: number | null;
-  pageSize: number;
-  hasMore: boolean;
-  firstPage: boolean;
-}
+import { cn, parsePaginationData, parseReports } from "@/lib/utils";
 
 const pageSizes = [10, 20, 50, 100];
 
 export default function Dashboard() {
   const [onCallApi, setOnCallApi] = useState<boolean>(false);
   const [filter, setFilter] = useState<string>("");
+  const firstRender = useRef(true);
+
   const [mdp, setMdp] = useState<number>(10);
   const [fdp, setFdp] = useState<number>(10);
   const [sdp, setSdp] = useState<number>(10);
+
+  // Pagination Data
+  const [paginationData, setPaginationData] =
+    useState<IPaginationData<IReport> | null>(null);
 
   // PageSize
   const [pageSize, setPageSize] = useState(10);
   const [open, setOpen] = useState(false);
 
-  const callApi = async () => {
-    setOnCallApi(true);
-    setInterval(() => {
-      setOnCallApi(false);
-    }, 2000);
-  };
+  // TODO: Fetch data with Filter
+  useEffect(() => {
+    if (firstRender.current) {
+      firstRender.current = false;
+      return; // Skip first render
+    }
+    console.log("USE EFFECT CALL", filter);
+    const fetchData = async () => {
+      setOnCallApi(true); // Disable filter buttons
+
+      const params = new URLSearchParams({
+        anchor_id: "0",
+        page: "next",
+        page_size: pageSize.toString(),
+        filter: filter,
+      });
+
+      console.log(params.toString());
+
+      try {
+        const response = await fetch(
+          `http://localhost:8080/reports?${params.toString()}`
+        );
+
+        let data = await response.json();
+
+        // TODO: Parse the response into PaginationData with type of IReport
+        setPaginationData(
+          parsePaginationData<IReport>(data.data, parseReports)
+        );
+      } catch (err) {
+        console.log(err);
+        console.log("SDASDSAD ");
+      } finally {
+        setOnCallApi(false);
+      }
+    };
+
+    fetchData();
+  }, [filter]);
 
   return (
     <>
@@ -96,21 +113,21 @@ export default function Dashboard() {
         <CardCompetence
           title="FDP"
           count={fdp}
-          onClick={() => console.log("TEST")}
+          onClick={() => setFilter("FDP")}
           disabled={onCallApi}
         />
         {/* MDP */}
         <CardCompetence
           title="MDP"
           count={mdp}
-          onClick={callApi}
+          onClick={() => setFilter("MDP")}
           disabled={onCallApi}
         />
         {/* SDP */}
         <CardCompetence
           title="SDP"
           count={sdp}
-          onClick={() => console.log("TEST")}
+          onClick={() => setFilter("SDP")}
           disabled={onCallApi}
         />
       </div>
@@ -164,29 +181,70 @@ export default function Dashboard() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Vessel Name</TableHead>
-              <TableHead>Nama</TableHead>
-              <TableHead>Jabatan</TableHead>
-              <TableHead>Kondite Review</TableHead>
-              <TableHead>KPI Vessel</TableHead>
-              <TableHead>Performance Score</TableHead>
-              <TableHead>Value Assessment</TableHead>
-              <TableHead>Assessment Center</TableHead>
-              <TableHead>Potential Score</TableHead>
-              <TableHead>HAV Quadran</TableHead>
-              <TableHead>HAV Maping</TableHead>
-              <TableHead>Competency Gap Analysis</TableHead>
-              <TableHead>Talent Classified</TableHead>
-              <TableHead>IDP Program</TableHead>
+              <TableHead className="text-center">Vessel Name</TableHead>
+              <TableHead className="text-center">Nama</TableHead>
+              <TableHead className="text-center">Jabatan</TableHead>
+              <TableHead className="text-center">Kondite Review</TableHead>
+              <TableHead className="text-center">KPI Vessel</TableHead>
+              <TableHead className="text-center">Performance Score</TableHead>
+              <TableHead className="text-center">Value Assessment</TableHead>
+              <TableHead className="text-center">Assessment Center</TableHead>
+              <TableHead className="text-center">Potential Score</TableHead>
+              <TableHead className="text-center">HAV Quadran</TableHead>
+              <TableHead className="text-center">HAV Maping</TableHead>
+              <TableHead className="text-center">
+                Competency Gap Analysis
+              </TableHead>
+              <TableHead className="text-center">Talent Classified</TableHead>
+              <TableHead className="text-center">IDP Program</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {/* <TableRow>
-            <TableCell className="font-medium">INV001</TableCell>
-            <TableCell>Paid</TableCell>
-            <TableCell>Credit Card</TableCell>
-            <TableCell className="text-right">$250.00</TableCell>
-          </TableRow> */}
+            {paginationData?.data && paginationData.data.length > 0 ? (
+              paginationData.data.map((report) => (
+                <TableRow key={report.id}>
+                  <TableCell className="text-center font-bold">
+                    {report.vesselName}
+                  </TableCell>
+                  <TableCell>{report.nama}</TableCell>
+                  <TableCell>{report.jabatan}</TableCell>
+                  <TableCell className="text-center">
+                    {report.konditeReview}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {report.kpiVessel}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {report.performanceScore}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {report.valueAssessment}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {report.assessmentCenter}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {report.potentialScore}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {report.havQuadran}
+                  </TableCell>
+                  <TableCell>{report.havMapping}</TableCell>
+                  <TableCell>{report.competencyGapAnalysis}</TableCell>
+                  <TableCell>{report.talentClassified}</TableCell>
+                  <TableCell>{report.idpProgram}</TableCell>
+                </TableRow>
+              ))
+            ) : (
+              <TableRow>
+                <TableCell
+                  colSpan={14}
+                  className="text-center font-bold text-gray-400"
+                >
+                  No Data
+                </TableCell>
+              </TableRow>
+            )}
           </TableBody>
         </Table>
       </div>
