@@ -17,7 +17,7 @@
 - `anchor_id` digunakan untuk pagination, kalau `next` jadi > `anchor_id`, sebaliknya juga.
 - `page` digunakan sebagai pagination direction.
 - `page_size` digunakan untuk jumlah data yang ingin ditampilkan.
-- `filter`: untuk filter, kalau tanpa tinggal kirim string kosong.
+- `filter`: untuk filter, kalau tidak pake filter, tidak perlu dikirim
 
 > Untuk page awal, kirim `anchor_id`-nya `0` dan `filter`-nya `""`.
 
@@ -53,5 +53,33 @@
   "code": 400,
   "status": "Bad Request",
   "error": "sdasdsd"
+}
+```
+
+---
+
+## GET /reports/count-by-idp
+
+### Response Success
+
+```json
+{
+  "code": 200,
+  "status": "Ok",
+  "data": {
+    "FDP": 100,
+    "MDP": 200,
+    "SDP": 300
+  }
+}
+```
+
+### Response Failed
+
+```json
+{
+  "code": 500,
+  "status": "Internal Server Error",
+  "error": "Something went wrong..."
 }
 ```
