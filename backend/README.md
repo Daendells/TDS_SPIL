@@ -58,7 +58,7 @@
 
 ---
 
-## GET /reports/count-by-idp
+## GET /reports/idp-count
 
 ### Response Success
 
@@ -67,9 +67,9 @@
   "code": 200,
   "status": "Ok",
   "data": {
-    "FDP": 100,
-    "MDP": 200,
-    "SDP": 300
+    "fdp": 100,
+    "mdp": 200,
+    "sdp": 300
   }
 }
 ```

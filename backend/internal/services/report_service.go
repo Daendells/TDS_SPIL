@@ -213,3 +213,28 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		Data:   "Reports Created Successfully",
 	}, nil
 }
+
+func (service *ReportService) IDPCount(ctx context.Context) (*web.SuccessResponse, error) {
+	// TODO: Create Transaction
+	tx := service.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	// TODO: Get IDP Count
+	var data web.IDPCountData
+	err := service.ReportRepository.IDPCount(tx, &data)
+	if err != nil {
+		return nil, err
+	}
+
+	// TODO: Commit Transaction
+	if err = tx.Commit().Error; err != nil {
+		service.Log.Warnf("Failed commit transaction: %+v", err)
+		return nil, fmt.Errorf("Failed commit transaction: %w", err)
+	}
+
+	return &web.SuccessResponse{
+		Status: "Ok",
+		Code:   http.StatusOK,
+		Data:   data,
+	}, nil
+}

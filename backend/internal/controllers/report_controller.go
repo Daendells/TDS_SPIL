@@ -88,6 +88,20 @@ func (controller *ReportController) FindAll(ctx *gin.Context) {
 	ctx.JSON(response.Code, response)
 }
 
+func (controller *ReportController) IDPCount(ctx *gin.Context) {
+	// TODO: Call Service
+	response, err := controller.Service.IDPCount(ctx)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+	}
+
+	ctx.JSON(response.Code, response)
+}
+
 func (controlelr *ReportController) TestPanic(ctx *gin.Context) {
 	panic("Oopps...")
 }

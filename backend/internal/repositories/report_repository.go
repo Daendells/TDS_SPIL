@@ -66,37 +66,21 @@ func (r *ReportRepository) SelectAll(db *gorm.DB, filter *web.DashboardRequest, 
 		return err
 	}
 
-	// if filter.Page == "next" {
-	// 	//! Query Next
-	// 	query = `
-	// 		SELECT *
-	// 		FROM
-	// 			reports
-	// 		WHERE
-	// 			id > ? AND
-	// 			idp_program = ?
-	// 		ORDER BY
-	// 			id ASC
-	// 		LIMIT ?
-	// 	`
-	// } else {
-	// 	//! Query Prev
-	// 	query = `
-	// 		SELECT *
-	// 		FROM
-	// 			reports
-	// 		WHERE
-	// 			id < ? AND
-	// 			idp_program = ?
-	// 		ORDER BY
-	// 			id DESC
-	// 		LIMIT ?
-	// 	`
-	// }
+	return nil
+}
 
-	// if err := db.Raw(query, filter.AnchorID, filter.Filter, filter.PageSize+1).Scan(reports).Error; err != nil {
-	// 	return err
-	// }
+func (r *ReportRepository) IDPCount(db *gorm.DB, data *web.IDPCountData) error {
+	query := `
+		SELECT 
+			SUM(CASE WHEN idp_program = 'MDP' THEN 1 ELSE 0 END) as mdp,
+			SUM(CASE WHEN idp_program = 'FDP' THEN 1 ELSE 0 END) as fdp,
+			SUM(CASE WHEN idp_program = 'SDP' THEN 1 ELSE 0 END) as sdp
+		FROM reports
+	`
+
+	if err := db.Raw(query).Scan(data).Error; err != nil {
+		return err
+	}
 
 	return nil
 }

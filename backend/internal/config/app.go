@@ -36,6 +36,7 @@ func Bootstrap(config *BootstrapConfig) {
 	report := config.App.Group("reports")
 	{
 		report.GET("", reportController.FindAll)
+		report.GET("/idp-count", reportController.IDPCount)
 		report.POST("/upload", reportController.CreateAll)
 		report.GET("/test", reportController.TestPanic)
 	}
