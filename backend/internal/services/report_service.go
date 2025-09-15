@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"backend/internal/helpers"
+	"backend/internal/models/converter"
 	"backend/internal/models/domain"
 	"backend/internal/models/web"
 	"backend/internal/repositories"
@@ -63,26 +64,27 @@ func (service *ReportService) FindAll(ctx context.Context, request *web.Dashboar
 	}
 
 	// TODO: Init response
+	reportData := converter.ToReportDataList(&reports)
 	hasMore := false
 	isFirstPage := false
 
 	// //! If for prev, we need to reverse the reports
 	if request.Page == "prev" {
-		if len(reports) > request.PageSize {
+		if len(reportData) > request.PageSize {
 			isFirstPage = false // Kalau ada lebih, pasti bukan first page
-			reports = reports[:request.PageSize]
+			reportData = reportData[:request.PageSize]
 		} else {
 			isFirstPage = true
 		}
 
 		// Untuk prev, hasil query DESC lalu dibalik biar tetap ASC
-		helpers.Reverse(&reports)
+		helpers.Reverse(&reportData)
 		hasMore = true // Karena page sekarang akan jadi page selanjutnya, jadi pasti TRUE
 	} else {
 		//! Next
-		if len(reports) > request.PageSize {
+		if len(reportData) > request.PageSize {
 			hasMore = true
-			reports = reports[:request.PageSize]
+			reportData = reportData[:request.PageSize]
 		}
 
 		if request.AnchorID == 0 {
@@ -92,14 +94,14 @@ func (service *ReportService) FindAll(ctx context.Context, request *web.Dashboar
 		}
 	}
 
-	firstId := reports[0].ID
-	lastId := reports[len(reports)-1].ID
+	firstId := reportData[0].ID
+	lastId := reportData[len(reportData)-1].ID
 
 	return &web.SuccessResponse{
 		Status: "Ok",
 		Code:   http.StatusOK,
 		Data: map[string]interface{}{
-			"results":    reports,
+			"results":    reportData,
 			"first_id":   firstId,
 			"last_id":    lastId,
 			"page_size":  request.PageSize,
