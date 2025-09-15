@@ -1,5 +1,45 @@
 # API Contract
 
+## Authentication
+
+### Response Missing Token
+
+```json
+{
+  "code": 401,
+  "status": "Unauthroized",
+  "error": "Missing Token"
+}
+```
+
+- Menandakan tidak ada token yang dikirim melalui HTTP Only Cookie. Maka arahkan ke page Login.
+
+### Response Signature Failed
+
+```json
+{
+  "code": 401,
+  "status": "Unautrhorized",
+  "error": "Signature Failed"
+}
+```
+
+- Menandakan bahwa token yang dikirim tidak valid (bukan berasal dari server). Maka token akan dihapus.
+
+### Response Token Expired
+
+```json
+{
+  "code": 401,
+  "status": "Unauthorized",
+  "error": "Token Expired"
+}
+```
+
+- Menandakan bahwa token sudah expired.
+
+---
+
 ## GET /reports
 
 ### Request

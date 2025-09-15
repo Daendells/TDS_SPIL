@@ -2,6 +2,7 @@ package config
 
 import (
 	"backend/internal/controllers"
+	"backend/internal/middlewares"
 	"backend/internal/repositories"
 	"backend/internal/routers"
 	"backend/internal/services"
@@ -24,15 +25,27 @@ type BootstrapConfig struct {
 func Bootstrap(config *BootstrapConfig) {
 	// Setup Repositories
 	reportRepository := repositories.NewReportRepository(config.Log)
+	userRepository := repositories.NewUserReposiotry(config.Log)
 
-	// Setup Service
+	// Setup Services
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository)
+	userService := services.NewUserService(config.DB, config.Log, config.Validate, config.Config, userRepository)
 
-	// Setup Controller
+	// Setup Controllers
 	reportController := controllers.NewReportController(reportService, config.Log)
+	userController := controllers.NewUserController(userService, config.Log)
 
 	// Setup Routes and Middlewares
-	routers.SetupReportRouter(config.App, config.Config, reportController)
+	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KET"))
+
+	routerConfig := &routers.RouterConfig{
+		App:              config.App,
+		ReportController: reportController,
+		UserController:   userController,
+		AuthMiddleware:   authMiddleware,
+	}
+
+	routerConfig.Setup()
 
 	// fmt.Println(report)
 }

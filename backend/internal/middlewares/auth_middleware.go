@@ -11,7 +11,15 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
-var TOKEN_COOKIE = "Authorization"
+var (
+	TOKEN_COOKIE = "Authorization"
+	TOKEN_KEY    = "TOKEN"
+	USER_KEY     = "USER"
+)
+
+func DeleteToken(ctx *gin.Context) {
+	ctx.SetCookie(TOKEN_COOKIE, "delete", -1, "", "", false, true)
+}
 
 func AuthMiddleware(secret string) gin.HandlerFunc {
 	fmt.Println(secret)
@@ -36,7 +44,8 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
 		//! IF the signature is different
 		if err != nil {
-			fmt.Println(err.Error())
+			//! Delete Token
+			DeleteToken(ctx)
 			ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
 				Code:   http.StatusUnauthorized,
 				Status: "Unauthorized",
@@ -53,7 +62,7 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 			// TODO: Check the expired time
 			if float64(time.Now().Unix()) > claims["expired"].(float64) {
 				//! Delete the Cookie
-				ctx.SetCookie(TOKEN_COOKIE, "delete", -1, "", "", false, true)
+				DeleteToken(ctx)
 				ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
 					Code:   http.StatusUnauthorized,
 					Status: "Unauthorized",
@@ -66,6 +75,11 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 			// TODO: Find the user with Token Sub
 			// var user domain.User
 			fmt.Println(claims)
+
+			// TODO: Set the User
+
+			// TODO: Set the Token (for logout)
+			ctx.Set(TOKEN_KEY, tokenString)
 
 			// Continue
 			ctx.Next()
