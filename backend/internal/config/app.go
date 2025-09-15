@@ -1,10 +1,9 @@
 package config
 
 import (
-	"fmt"
-
 	"backend/internal/controllers"
 	"backend/internal/repositories"
+	"backend/internal/routers"
 	"backend/internal/services"
 
 	"github.com/gin-gonic/gin"
@@ -33,12 +32,7 @@ func Bootstrap(config *BootstrapConfig) {
 	reportController := controllers.NewReportController(reportService, config.Log)
 
 	// Setup Routes and Middlewares
-	report := config.App.Group("reports")
-	{
-		report.GET("", reportController.FindAll)
-		report.GET("/idp-count", reportController.IDPCount)
-		report.POST("/upload", reportController.CreateAll)
-		report.GET("/test", reportController.TestPanic)
-	}
-	fmt.Println(report)
+	routers.SetupReportRouter(config.App, config.Config, reportController)
+
+	// fmt.Println(report)
 }
