@@ -81,3 +81,13 @@ func (c *UserController) Login(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, response)
 }
+
+func (c *UserController) Logout(ctx *gin.Context) {
+	middlewares.DeleteToken(ctx)
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Status: "OK",
+		Code:   http.StatusOK,
+		Data:   "Logged out successfully",
+	})
+}

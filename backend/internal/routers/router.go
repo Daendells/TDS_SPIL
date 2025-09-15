@@ -37,6 +37,12 @@ func (c *RouterConfig) SetupAuthRouter() {
 		report.GET("", c.ReportController.FindAll)
 		report.GET("/idp-count", c.ReportController.IDPCount)
 		report.POST("/upload", c.ReportController.CreateAll)
-		report.GET("/test", c.AuthMiddleware, c.ReportController.TestPanic)
+		report.GET("/test", c.ReportController.TestPanic)
+	}
+
+	// TODO: Setup Auth Routes
+	auth := c.App.Group("auth")
+	{
+		auth.POST("/logout", c.UserController.Logout)
 	}
 }
