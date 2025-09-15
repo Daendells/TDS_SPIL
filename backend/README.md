@@ -40,6 +40,44 @@
 
 ---
 
+## POST /login
+
+### Request
+
+```json
+{
+  "username": "username",
+  "password": "password"
+}
+```
+
+### Response Success
+
+### Response Success
+
+```json
+{
+  "code": 200,
+  "status": "Ok",
+  "data": {
+    "id": 1,
+    "username": "nathan"
+  }
+}
+```
+
+### Respose Failed
+
+```json
+{
+  "code": 400,
+  "status": "Bad Request",
+  "error": "Invalid username or password"
+}
+```
+
+---
+
 ## GET /reports
 
 ### Request

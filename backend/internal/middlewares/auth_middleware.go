@@ -45,7 +45,7 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 		//! IF the signature is different
 		if err != nil {
 			//! Delete Token
-			DeleteToken(ctx)
+			// DeleteToken(ctx)
 			ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
 				Code:   http.StatusUnauthorized,
 				Status: "Unauthorized",

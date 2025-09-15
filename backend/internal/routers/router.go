@@ -14,7 +14,17 @@ type RouterConfig struct {
 }
 
 func (c *RouterConfig) Setup() {
+	c.SetupGuestRouter()
 	c.SetupAuthRouter()
+}
+
+func (c *RouterConfig) SetupGuestRouter() {
+	// TODO: Setup Login
+
+	auth := c.App.Group("auth")
+	{
+		auth.POST("/login", c.UserController.Login)
+	}
 }
 
 func (c *RouterConfig) SetupAuthRouter() {

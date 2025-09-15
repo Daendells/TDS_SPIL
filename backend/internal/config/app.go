@@ -36,7 +36,7 @@ func Bootstrap(config *BootstrapConfig) {
 	userController := controllers.NewUserController(userService, config.Log)
 
 	// Setup Routes and Middlewares
-	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KET"))
+	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KEY"))
 
 	routerConfig := &routers.RouterConfig{
 		App:              config.App,
