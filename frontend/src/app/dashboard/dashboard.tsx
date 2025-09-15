@@ -50,6 +50,8 @@ import {
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn, parsePaginationData, parseReports } from "@/lib/utils";
+import { toast } from "sonner";
+import { SkeletonCard } from "@/components/skeleton-card";
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
@@ -57,9 +59,9 @@ export default function Dashboard() {
   const [onCallApi, setOnCallApi] = useState<boolean>(false);
   const [filter, setFilter] = useState<FilterType>("");
 
-  const [mdp, setMdp] = useState<number>(10);
-  const [fdp, setFdp] = useState<number>(10);
-  const [sdp, setSdp] = useState<number>(10);
+  const [mdp, setMdp] = useState<number | null>(null);
+  const [fdp, setFdp] = useState<number | null>(null);
+  const [sdp, setSdp] = useState<number | null>(null);
 
   // Pagination Data
   const [paginationData, setPaginationData] =
@@ -77,6 +79,31 @@ export default function Dashboard() {
       pageSize: pageSize,
       filter: filter,
     });
+
+  // TODO: Get IDP Count
+  useEffect(() => {
+    const fetchIdp = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:8080/reports/idp-count",
+          {
+            method: "GET",
+          }
+        );
+
+        const { data } = await response.json();
+        setMdp(data.mdp);
+        setFdp(data.fdp);
+        setSdp(data.sdp);
+
+        console.log(data);
+      } catch (err) {
+        toast.error((err as Error).message);
+      }
+    };
+
+    fetchIdp();
+  }, []);
 
   // TODO: Fetch data with Filter
   useEffect(() => {
@@ -107,6 +134,7 @@ export default function Dashboard() {
         );
       } catch (err) {
         console.log(err);
+        toast.error((err as Error).message);
       } finally {
         setOnCallApi(false);
       }
@@ -131,32 +159,44 @@ export default function Dashboard() {
       {/* GRID */}
       <div className="grid grid-cols-3 gap-x-4 my-6 mb-8">
         {/* FDP */}
-        <CardCompetence
-          title="FDP"
-          count={fdp}
-          onClick={() =>
-            setPaginationRequest({ ...paginationRequest, filter: "FDP" })
-          }
-          disabled={onCallApi}
-        />
+        {fdp === null ? (
+          <SkeletonCard />
+        ) : (
+          <CardCompetence
+            title="FDP"
+            count={fdp!}
+            onClick={() =>
+              setPaginationRequest({ ...paginationRequest, filter: "FDP" })
+            }
+            disabled={onCallApi}
+          />
+        )}
         {/* MDP */}
-        <CardCompetence
-          title="MDP"
-          count={mdp}
-          onClick={() =>
-            setPaginationRequest({ ...paginationRequest, filter: "MDP" })
-          }
-          disabled={onCallApi}
-        />
+        {mdp === null ? (
+          <SkeletonCard />
+        ) : (
+          <CardCompetence
+            title="MDP"
+            count={mdp!}
+            onClick={() =>
+              setPaginationRequest({ ...paginationRequest, filter: "MDP" })
+            }
+            disabled={onCallApi}
+          />
+        )}
         {/* SDP */}
-        <CardCompetence
-          title="SDP"
-          count={sdp}
-          onClick={() =>
-            setPaginationRequest({ ...paginationRequest, filter: "SDP" })
-          }
-          disabled={onCallApi}
-        />
+        {fdp === null ? (
+          <SkeletonCard />
+        ) : (
+          <CardCompetence
+            title="SDP"
+            count={sdp!}
+            onClick={() =>
+              setPaginationRequest({ ...paginationRequest, filter: "SDP" })
+            }
+            disabled={onCallApi}
+          />
+        )}
       </div>
 
       {/* Page Size */}
