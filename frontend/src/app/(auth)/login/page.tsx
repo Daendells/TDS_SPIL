@@ -30,6 +30,8 @@ import { useRouter } from "next/navigation";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
+import { useApi } from "@/hooks/use-api";
+import { useAuth } from "@/context/AuthContext";
 const FormSchema = z.object({
   username: z.string().min(1, {
     message: "Username is required",
@@ -42,6 +44,8 @@ const FormSchema = z.object({
 
 export default function Page() {
   const router = useRouter();
+  const api = useApi();
+  const { setUser } = useAuth();
   const [onLogin, setOnLogin] = useState<Boolean>(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -52,10 +56,35 @@ export default function Page() {
     },
   });
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
+  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
+    if (onLogin) return;
+
+    setOnLogin(true);
     //TODO: LOGIN LOGIC GOES HERE (call API)
-    toast.success("Login successful");
-    router.replace("/dashboard");
+    try {
+      const response = await api.post(
+        "/auth/login",
+        {
+          username: data.username,
+          password: data.password,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      const userData = response.data.data;
+      console.log(userData);
+      setUser(userData);
+
+      router.replace("/dashboard");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setOnLogin(false);
+    }
   };
 
   return (
