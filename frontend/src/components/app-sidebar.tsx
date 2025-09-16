@@ -25,6 +25,12 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
+import { Button } from "./ui/button";
+import { useState } from "react";
+import { ca } from "zod/v4/locales";
+import { toast } from "sonner";
+import { useApi } from "@/hooks/use-api";
+import { useRouter } from "next/navigation";
 
 // Menu items.
 const items = [
@@ -42,7 +48,23 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const { user } = useAuth();
+  const router = useRouter();
+  const { user, setUser } = useAuth();
+  const api = useApi();
+
+  const [onLogout, setOnLogout] = useState(false);
+
+  const logout = async () => {
+    try {
+      const response = await api.post("/auth/logout");
+      setUser(null); // Remove from the localstorage
+      router.replace("/login");
+    } catch (err) {
+      toast.error((err as Error).message);
+    } finally {
+      setOnLogout(false);
+    }
+  };
 
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -103,8 +125,16 @@ export function AppSidebar() {
                 side="top"
                 className="w-[--radix-popper-anchor-width]"
               >
-                <DropdownMenuItem>
-                  <span>Sign out</span>
+                <DropdownMenuItem className="p-0">
+                  <Button
+                    className="w-full"
+                    variant="destructive"
+                    disabled={onLogout}
+                    onClick={() => logout()}
+                  >
+                    Sign out
+                  </Button>
+                  {/* <span>Sign out</span> */}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
