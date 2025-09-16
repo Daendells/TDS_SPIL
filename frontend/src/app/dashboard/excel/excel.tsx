@@ -61,7 +61,7 @@ export default function Excel() {
       console.log("Upload response:", data);
     } catch (err) {
       //! If Error, just toast it
-      toast.error((err as Error).message);
+      toast.error((err as any).response?.data.error);
       console.error(err);
     }
   };

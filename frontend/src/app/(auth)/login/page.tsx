@@ -3,7 +3,6 @@
 import { Button } from "@/components/ui/button";
 import {
   Card,
-  CardAction,
   CardContent,
   CardDescription,
   CardFooter,
@@ -13,14 +12,12 @@ import {
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import Link from "next/link";
 import React, { useState } from "react";
@@ -81,7 +78,8 @@ export default function Page() {
 
       router.replace("/dashboard");
     } catch (err) {
-      toast.error((err as Error).message);
+      // toast.error((err as Error).message);
+      toast.error((err as any).response?.data.error);
     } finally {
       setOnLogin(false);
     }

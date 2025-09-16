@@ -103,7 +103,7 @@ export default function Dashboard() {
 
         console.log(data);
       } catch (err) {
-        toast.error((err as Error).message);
+        toast.error((err as any).response?.data.error);
       }
     };
 
