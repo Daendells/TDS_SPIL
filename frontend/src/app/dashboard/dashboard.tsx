@@ -52,12 +52,14 @@ import { Button } from "@/components/ui/button";
 import { cn, parsePaginationData, parseReports } from "@/lib/utils";
 import { toast } from "sonner";
 import { SkeletonCard } from "@/components/skeleton-card";
+import { useApi } from "@/hooks/use-api";
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
 export default function Dashboard() {
   const [onCallApi, setOnCallApi] = useState<boolean>(false);
   const [filter, setFilter] = useState<FilterType>("");
+  const api = useApi();
 
   const [mdp, setMdp] = useState<number | null>(null);
   const [fdp, setFdp] = useState<number | null>(null);
@@ -84,14 +86,17 @@ export default function Dashboard() {
   useEffect(() => {
     const fetchIdp = async () => {
       try {
-        const response = await fetch(
-          "http://localhost:8080/reports/idp-count",
-          {
-            method: "GET",
-          }
-        );
+        // const response = await fetch(
+        //   "http://localhost:8080/reports/idp-count",
+        //   {
+        //     method: "GET",
+        //   }
+        // );
 
-        const { data } = await response.json();
+        const response = await api.get("/reports/idp-count");
+
+        // const { data } = await response.json();
+        const data = response.data.data;
         setMdp(data.mdp);
         setFdp(data.fdp);
         setSdp(data.sdp);
@@ -122,16 +127,17 @@ export default function Dashboard() {
       }
 
       try {
-        const response = await fetch(
-          `http://localhost:8080/reports?${params.toString()}`
-        );
+        // const response = await fetch(
+        //   `http://localhost:8080/reports?${params.toString()}`
+        // );
 
-        let data = await response.json();
+        // let data = await response.json();
+        const response = await api.get(`/reports?${params.toString()}`);
+
+        let data = response.data.data;
 
         // TODO: Parse the response into PaginationData with type of IReport
-        setPaginationData(
-          parsePaginationData<IReport>(data.data, parseReports)
-        );
+        setPaginationData(parsePaginationData<IReport>(data, parseReports));
       } catch (err) {
         console.log(err);
         toast.error((err as Error).message);

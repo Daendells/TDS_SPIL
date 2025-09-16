@@ -24,6 +24,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
+import { useAuth } from "@/context/AuthContext";
 
 // Menu items.
 const items = [
@@ -41,6 +42,7 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
+  const { user } = useAuth();
 
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -93,7 +95,7 @@ export function AppSidebar() {
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton>
-                  <User2 /> Username
+                  <User2 /> {user?.username}
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>

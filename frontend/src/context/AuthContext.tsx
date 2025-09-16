@@ -25,7 +25,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   // TODO: Load from the localStorage on first render
   useEffect(() => {
-    const stored = localStorage.getItem("USERNAME");
+    const stored = localStorage.getItem("USER");
     if (stored) {
       setUser(JSON.parse(stored));
     }
@@ -34,9 +34,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // TODO: Save to localStorage whenever user changes
   useEffect(() => {
     if (user) {
-      localStorage.setItem("USERNAME", JSON.stringify(user));
+      localStorage.setItem("USER", JSON.stringify(user));
     } else {
-      localStorage.removeItem("USERNAME");
+      localStorage.removeItem("USER");
     }
   }, [user]);
 
