@@ -45,7 +45,7 @@ func (c *UserController) Login(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, web.ErrorResponse{
 			Code:   http.StatusNotFound,
 			Status: "Not Found",
-			Error:  err.Error(),
+			Error:  "Username not found",
 		})
 		ctx.Abort()
 		return
