@@ -20,11 +20,14 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
+import { useApi } from "@/hooks/use-api";
 
 export default function Excel() {
   const [files, setFile] = useState<File[] | undefined>();
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [onUpload, setOnUpload] = useState<boolean>(true);
+
+  const api = useApi();
 
   const handleDrop = (files: File[]) => {
     console.log(files[0]);
@@ -42,17 +45,14 @@ export default function Excel() {
       formData.append("file", files[0]); // only upload first file
 
       // TODO: Call API
-      const res = await fetch("http://localhost:8080/reports/upload", {
-        method: "POST",
-        body: formData,
+
+      const res = await api.post(`/reports/upload`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
       });
 
-      // TODO: If there is an error, just throw
-      if (!res.ok) {
-        throw new Error("Upload failed");
-      }
-
-      const data = await res.json();
+      const data = res.data;
 
       // TODO: Remove the data from Dropzone
       setFile(undefined);
@@ -63,9 +63,6 @@ export default function Excel() {
       //! If Error, just toast it
       toast.error((err as Error).message);
       console.error(err);
-    } finally {
-      // Enable the button
-      setOnUpload(false);
     }
   };
 

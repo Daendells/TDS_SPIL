@@ -127,11 +127,6 @@ export default function Dashboard() {
       }
 
       try {
-        // const response = await fetch(
-        //   `http://localhost:8080/reports?${params.toString()}`
-        // );
-
-        // let data = await response.json();
         const response = await api.get(`/reports?${params.toString()}`);
 
         let data = response.data.data;
