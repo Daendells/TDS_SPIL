@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/shadcn-io/dropzone";
 import {
   Dialog,
-  DialogClose,
   DialogContent,
   DialogDescription,
   DialogFooter,

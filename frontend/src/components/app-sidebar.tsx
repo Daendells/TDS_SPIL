@@ -1,6 +1,6 @@
 "use client";
 
-import { LaptopMinimal, ChevronUp, Home, Inbox, User2 } from "lucide-react";
+import { LaptopMinimal, ChevronUp, Inbox, User2 } from "lucide-react";
 
 import {
   Sidebar,
@@ -22,12 +22,10 @@ import {
 } from "./ui/dropdown-menu";
 import Image from "next/image";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "./ui/button";
 import { useState } from "react";
-import { ca } from "zod/v4/locales";
 import { toast } from "sonner";
 import { useApi } from "@/hooks/use-api";
 import { useRouter } from "next/navigation";

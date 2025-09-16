@@ -8,10 +8,8 @@ import {
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
-  BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
 import React from "react";
 import { formatSegmet } from "@/lib/utils";

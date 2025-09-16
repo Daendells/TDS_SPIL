@@ -11,18 +11,12 @@ import {
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
-  PaginationNext,
-  PaginationPrevious,
 } from "@/components/ui/pagination";
 
 import {
   Command,
-  CommandEmpty,
   CommandGroup,
-  CommandInput,
   CommandItem,
   CommandList,
 } from "@/components/ui/command";
@@ -41,13 +35,12 @@ import {
 import CardCompetence from "@/components/card-competence";
 
 import {
-  FilterType,
   IPaginationData,
   IPaginationRequest,
   IReport,
   PageType,
 } from "@/types/global-types";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn, parsePaginationData, parseReports } from "@/lib/utils";
 import { toast } from "sonner";
@@ -58,7 +51,7 @@ const PAGE_SIZES = [10, 20, 50, 100];
 
 export default function Dashboard() {
   const [onCallApi, setOnCallApi] = useState<boolean>(false);
-  const [filter, setFilter] = useState<FilterType>("");
+  // const [filter, setFilter] = useState<FilterType>("");
   const api = useApi();
 
   const [mdp, setMdp] = useState<number | null>(null);
@@ -79,7 +72,7 @@ export default function Dashboard() {
       anchorId: 0,
       page: "next",
       pageSize: pageSize,
-      filter: filter,
+      filter: "",
     });
 
   // TODO: Get IDP Count

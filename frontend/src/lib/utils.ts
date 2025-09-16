@@ -13,6 +13,7 @@ export function formatSegmet(segment: string) {
     .join(" ");
 }
 
+/* eslint-disable @typescript-eslint/no-explicit-any */
 export function parseReports(data: Record<any, any>): IReport[] {
   return data.map((d: any) => ({
     id: d["id"],
