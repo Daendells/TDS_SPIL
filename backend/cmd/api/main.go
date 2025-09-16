@@ -4,6 +4,8 @@ import (
 	"strconv"
 
 	"backend/internal/config"
+
+	"github.com/gin-gonic/gin"
 )
 
 func main() {
@@ -24,6 +26,11 @@ func main() {
 
 	// Get the Web Port
 	webPort := viperConfig.GetInt("WEB_PORT")
+
+	if viperConfig.GetString("ENV") == "production" {
+		log.Info("ON PRODUCTION ENVIRONTMENT")
+		gin.SetMode(gin.ReleaseMode)
+	}
 
 	err := app.Run(":" + strconv.Itoa(webPort))
 	if err != nil {

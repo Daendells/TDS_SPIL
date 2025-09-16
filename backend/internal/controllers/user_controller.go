@@ -77,8 +77,9 @@ func (c *UserController) Login(ctx *gin.Context) {
 
 	// TODO: Create HTTP Only Cookie
 	ctx.SetSameSite(http.SameSiteNoneMode)
-	ctx.SetCookie(middlewares.TOKEN_COOKIE, tokenString, 3600*6, "", "", true, true)
+	ctx.SetCookie(middlewares.TOKEN_COOKIE, tokenString, 3600*6, "/", "", true, true)
 
+	// ctx.Header("Authorization", tokenString)
 	ctx.JSON(http.StatusOK, response)
 }
 
