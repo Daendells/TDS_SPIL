@@ -1,0 +1,37 @@
+version: "3.9"
+
+networks:
+  spil_tds:
+    driver: bridge
+services:
+  tds_frontend:
+    container_name: tds_frontend
+    build:
+      context: .
+      dockerfile: docker/nextjs.dockerfile
+    restart: always
+    # volumes:
+    #   - ./frontend:/app
+    environment:
+      - NODE_ENV=production
+    ports:
+      - "3000:3000" ## Sesuaikan degnan port yang kosong => <port_kosong>:3000
+    networks:
+      - spil_tds
+  tds_backend:
+    container_name: tds_backend
+    build:
+      context: .
+      dockerfile: docker/golang.dockerfile
+    restart: always
+    environment:
+      - GIN_MODE=release
+    networks:
+      - spil_tds
+    ports:
+      - "8080:8080" # Sesuaikan dengan port yg kosong => <port_kosong>:8080
+    volumes:
+      - ./backend:/app
+    deploy:
+      restart_policy:
+        condition: on-failure
