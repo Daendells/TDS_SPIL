@@ -141,7 +141,6 @@ export default function Page() {
               <Button type="submit" className="w-full">
                 Login
               </Button>
-              <Link href="/dashboard">Dashboard</Link>
             </CardFooter>
           </form>
         </Form>
