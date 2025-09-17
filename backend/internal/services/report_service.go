@@ -140,8 +140,9 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 	defer excel.Close()
 
 	// TODO: Get the Sheet and the rows
-	sheetName := excel.GetSheetName(0)
-	rows, err := excel.GetRows(sheetName)
+	// sheetName := excel.GetSheetName(0) // Kalau pakai sheet pertama
+	// rows, err := excel.GetRows(sheetName)
+	rows, err := excel.GetRows("Sheet1")
 	if err != nil {
 		service.Log.Warnf("Cannot get the rows: %+v", err)
 		return nil, fmt.Errorf("Cannot open the rows: %w", err)
