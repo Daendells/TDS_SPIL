@@ -160,7 +160,11 @@ export default function Dashboard() {
             title="FDP"
             count={fdp!}
             onClick={() =>
-              setPaginationRequest({ ...paginationRequest, filter: "FDP" })
+              setPaginationRequest({
+                ...paginationRequest,
+                filter: "FDP",
+                anchorId: 0,
+              })
             }
             disabled={onCallApi}
           />
@@ -173,7 +177,11 @@ export default function Dashboard() {
             title="MDP"
             count={mdp!}
             onClick={() =>
-              setPaginationRequest({ ...paginationRequest, filter: "MDP" })
+              setPaginationRequest({
+                ...paginationRequest,
+                filter: "MDP",
+                anchorId: 0,
+              })
             }
             disabled={onCallApi}
           />
@@ -186,7 +194,11 @@ export default function Dashboard() {
             title="SDP"
             count={sdp!}
             onClick={() =>
-              setPaginationRequest({ ...paginationRequest, filter: "SDP" })
+              setPaginationRequest({
+                ...paginationRequest,
+                filter: "SDP",
+                anchorId: 0,
+              })
             }
             disabled={onCallApi}
           />

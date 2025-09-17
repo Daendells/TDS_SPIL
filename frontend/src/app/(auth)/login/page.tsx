@@ -42,7 +42,7 @@ export default function Page() {
   const router = useRouter();
   const api = useApi();
   const { setUser } = useAuth();
-  const [onLogin, setOnLogin] = useState<Boolean>(false);
+  const [onLogin, setOnLogin] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -76,10 +76,10 @@ export default function Page() {
       setUser(userData);
 
       router.replace("/dashboard");
+      setOnLogin(false);
     } catch (err) {
       // toast.error((err as Error).message);
       toast.error((err as any).response?.data.error);
-    } finally {
       setOnLogin(false);
     }
   };
@@ -137,7 +137,7 @@ export default function Page() {
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-2 mt-4">
-              <Button type="submit" className="w-full">
+              <Button type="submit" className="w-full" disabled={onLogin}>
                 Login
               </Button>
             </CardFooter>
