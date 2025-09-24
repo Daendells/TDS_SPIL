@@ -43,8 +43,6 @@ export default function Excel() {
       const formData = new FormData();
       formData.append("file", files[0]); // only upload first file
 
-      // TODO: Call API
-
       const res = await api.post(`/reports/upload`, formData, {
         headers: {
           "Content-Type": "multipart/form-data",
@@ -53,13 +51,10 @@ export default function Excel() {
 
       const data = res.data;
 
-      // TODO: Remove the data from Dropzone
       setFile(undefined);
-
       toast.success("File uploaded successfully!");
       console.log("Upload response:", data);
     } catch (err) {
-      //! If Error, just toast it
       toast.error((err as any).response?.data.error);
       console.error(err);
     }
@@ -104,10 +99,11 @@ export default function Excel() {
           <DialogHeader>
             <DialogTitle>Are you absolutely sure?</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. Please Make sure your have followed
+              This action cannot be undone. Please make sure you have followed
               the rules below!
             </DialogDescription>
           </DialogHeader>
+
           {/* Rules */}
           <div className="flex items-center gap-2 mt-2">
             <div className="grid flex-1 gap-6">
@@ -119,9 +115,15 @@ export default function Excel() {
                   <Separator orientation="vertical" />
                   <div>Vessel Name</div>
                   <Separator orientation="vertical" />
-                  <div>Nama</div>
+                  <div>Name</div>
                   <Separator orientation="vertical" />
-                  <div>Jabatan</div>
+                  <div>Position</div>
+                  <Separator orientation="vertical" />
+                  <div>Seaman Code</div>
+                  <Separator orientation="vertical" />
+                  <div>Certificate</div>
+                  <Separator orientation="vertical" />
+                  <div>Age</div>
                   <Separator orientation="vertical" />
                   <div>Kondite Review</div>
                   <Separator orientation="vertical" />
@@ -131,19 +133,21 @@ export default function Excel() {
                   <Separator orientation="vertical" />
                   <div>Value Assessment</div>
                   <Separator orientation="vertical" />
-                  <div>Assessment Center</div>
-                  <Separator orientation="vertical" />
-                  <div>Potential Score</div>
-                  <Separator orientation="vertical" />
-                  <div>HAV Quadran</div>
-                  <Separator orientation="vertical" />
-                  <div>HAV Mapping</div>
-                  <Separator orientation="vertical" />
                   <div>Competency Gap Analysis</div>
                   <Separator orientation="vertical" />
-                  <div>Talent Classified</div>
+                  <div>TOTAL GAP</div>
+                  <Separator orientation="vertical" />
+                  <div>Strength Analysis</div>
                   <Separator orientation="vertical" />
                   <div>IDP Program</div>
+                  <Separator orientation="vertical" />
+                  <div>HAV Quadran 2</div>
+                  <Separator orientation="vertical" />
+                  <div>Talent Classified 2</div>
+                  <Separator orientation="vertical" />
+                  <div>Readiness</div>
+                  <Separator orientation="vertical" />
+                  <div>Certificate Eligible</div>
                 </div>
               </div>
 
@@ -157,13 +161,14 @@ export default function Excel() {
                   height={240}
                 />
                 <p className="leading-7 [&:not(:first-child)]:mt-6">
-                  <span className="font-medium">Sheet1</span> Merupakan nama
+                  <span className="font-medium">Sheet1</span> merupakan nama
                   sheet dari file Excel yang diupload. Pastikan nama sheetnya
-                  sesuai yaitu <span className="font-medium">Sheet1</span>
+                  sesuai yaitu <span className="font-medium">Sheet1</span>.
                 </p>
               </div>
             </div>
           </div>
+
           <DialogFooter className="sm:justify-start">
             <Button
               type="button"

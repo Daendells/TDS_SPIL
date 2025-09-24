@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strconv"
 	"strings"
 
 	"backend/internal/helpers"
@@ -157,19 +156,23 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		}
 
 		// TODO: Get All Cells
-		vesselName := helpers.SanitizeCell(helpers.GetCell(row, 1))
+		// vesselName := helpers.SanitizeCell(helpers.GetCell(row, 1))
 		nama := helpers.SanitizeCell(helpers.GetCell(row, 2))
 		jabatan := helpers.SanitizeCell(helpers.GetCell(row, 3))
-		konditeReview, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 4)))
-		kpiVessel, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 5)))
-		performanceScore, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 6)))
-		valueAssessment, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 7)))
-		assessmentCenter, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 8)))
-		potentialScore, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 9)))
-		havQuadran := helpers.SanitizeCell(helpers.GetCell(row, 10))
-		havMapping := helpers.SanitizeCell(helpers.GetCell(row, 11))
-		competencyGapAnalysis := helpers.SanitizeCell(helpers.GetCell(row, 12))
-		talentClassified := helpers.SanitizeCell(helpers.GetCell(row, 13))
+		seamanCode := helpers.SanitizeCell(helpers.GetCell(row, 4))
+		// certificate := helpers.SanitizeCell(helpers.GetCell(row, 5))
+		// age := helpers.SanitizeCell(helpers.GetCell(row, 6))
+		// konditeReview, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 7)))
+		// kpiVessel, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 8)))
+		// performanceScore, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 9)))
+		// valueAssessment, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 10)))
+		// competencyGapAnalysis := helpers.SanitizeCell(helpers.GetCell(row, 11))
+		// totalGap, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 12)))
+		// strength, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 13)))
+		// havQuadran := helpers.SanitizeCell(helpers.GetCell(row, 15))
+		// talentClassified := helpers.SanitizeCell(helpers.GetCell(row, 16))
+		readiness := helpers.SanitizeCell(helpers.GetCell(row, 17))
+		// certificateEligible := helpers.SanitizeCell(helpers.GetCell(row, 18))
 
 		// Mapping the IDP Program
 		idp := strings.ToUpper(jabatan)
@@ -177,20 +180,11 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		idpProgram := helpers.MapIDPProgram(idp)
 
 		reports = append(reports, domain.Report{
-			VesselName:            vesselName,
+			SeamanCode:			   seamanCode,
 			Nama:                  nama,
 			Jabatan:               jabatan,
-			KonditeReview:         konditeReview,
-			KPIVessel:             kpiVessel,
-			PerformanceScore:      performanceScore,
-			ValueAssessment:       valueAssessment,
-			AssessmentCenter:      assessmentCenter,
-			PotentialScore:        potentialScore,
-			HAVQuadran:            havQuadran,
-			HAVMapping:            havMapping,
-			CompetencyGapAnalysis: competencyGapAnalysis,
-			TalentClassified:      talentClassified,
 			IDPProgram:            idpProgram,
+			Readiness :			   readiness,
 		})
 	}
 

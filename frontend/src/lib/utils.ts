@@ -17,20 +17,11 @@ export function formatSegmet(segment: string) {
 export function parseReports(data: Record<any, any>): IReport[] {
   return data.map((d: any) => ({
     id: d["id"],
-    vesselName: d["vessel_name"],
+    seamanCode: d["seaman_code"],
     nama: d["nama"],
     jabatan: d["jabatan"],
-    konditeReview: d["kondite_review"],
-    kpiVessel: d["kpi_vessel"],
-    performanceScore: d["performance_score"],
-    valueAssessment: d["value_assessment"],
-    assessmentCenter: d["assessment_center"],
-    potentialScore: d["potential_score"],
-    havQuadran: d["hav_quadran"],
-    havMapping: d["hav_mapping"],
-    competencyGapAnalysis: d["competency_gap_analysis"],
-    talentClassified: d["talent_classified"],
     idpProgram: d["idp_program"],
+    readiness: d["readiness"]
   }));
 }
 

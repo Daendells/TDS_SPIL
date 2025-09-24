@@ -3,20 +3,11 @@ export type FilterType = "" | "MDP" | "FDP" | "SDP";
 
 export interface IReport {
   id: number;
-  vesselName: string;
+  seamanCode: string;
   nama: string;
   jabatan: string;
-  konditeReview: number;
-  kpiVessel: number;
-  performanceScore: number;
-  valueAssessment: number;
-  assessmentCenter: number;
-  potentialScore: number;
-  havQuadran: string;
-  havMapping: string;
-  competencyGapAnalysis: string;
-  talentClassified: string;
   idpProgram: string;
+  readiness:  string;
 }
 
 export interface IPaginationData<T> {

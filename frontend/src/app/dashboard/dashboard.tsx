@@ -261,22 +261,11 @@ export default function Dashboard() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-center">Vessel Name</TableHead>
-              <TableHead className="text-center">Nama</TableHead>
-              <TableHead className="text-center">Jabatan</TableHead>
-              <TableHead className="text-center">Kondite Review</TableHead>
-              <TableHead className="text-center">KPI Vessel</TableHead>
-              <TableHead className="text-center">Performance Score</TableHead>
-              <TableHead className="text-center">Value Assessment</TableHead>
-              <TableHead className="text-center">Assessment Center</TableHead>
-              <TableHead className="text-center">Potential Score</TableHead>
-              <TableHead className="text-center">HAV Quadran</TableHead>
-              <TableHead className="text-center">HAV Maping</TableHead>
-              <TableHead className="text-center">
-                Competency Gap Analysis
-              </TableHead>
-              <TableHead className="text-center">Talent Classified</TableHead>
-              <TableHead className="text-center">IDP Program</TableHead>
+              <TableHead className="text-center">Seaman Code</TableHead>
+              <TableHead className="text-center">Nama Talent</TableHead>
+              <TableHead className="text-center">Rank</TableHead>
+              <TableHead className="text-center">Program</TableHead>
+              <TableHead className="text-center">Talent Readiness</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -284,35 +273,12 @@ export default function Dashboard() {
               paginationData.data.map((report) => (
                 <TableRow key={report.id}>
                   <TableCell className="text-center font-bold">
-                    {report.vesselName}
+                    {report.seamanCode}
                   </TableCell>
                   <TableCell>{report.nama}</TableCell>
                   <TableCell>{report.jabatan}</TableCell>
-                  <TableCell className="text-center">
-                    {report.konditeReview}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {report.kpiVessel}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {report.performanceScore}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {report.valueAssessment}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {report.assessmentCenter}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {report.potentialScore}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {report.havQuadran}
-                  </TableCell>
-                  <TableCell>{report.havMapping}</TableCell>
-                  <TableCell>{report.competencyGapAnalysis}</TableCell>
-                  <TableCell>{report.talentClassified}</TableCell>
                   <TableCell>{report.idpProgram}</TableCell>
+                  <TableCell>{report.readiness}</TableCell>
                 </TableRow>
               ))
             ) : (

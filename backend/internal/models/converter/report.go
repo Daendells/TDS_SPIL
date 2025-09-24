@@ -8,20 +8,11 @@ import (
 func ToReportData(data *domain.Report) web.ReportData {
 	return web.ReportData{
 		ID:                    data.ID,
-		VesselName:            data.VesselName,
+		SeamanCode:			   data.SeamanCode,
 		Nama:                  data.Nama,
 		Jabatan:               data.Jabatan,
-		KonditeReview:         data.KonditeReview,
-		KPIVessel:             data.KPIVessel,
-		PerformanceScore:      data.PerformanceScore,
-		ValueAssessment:       data.ValueAssessment,
-		AssessmentCenter:      data.AssessmentCenter,
-		PotentialScore:        data.PotentialScore,
-		HAVQuadran:            data.HAVQuadran,
-		HAVMapping:            data.HAVMapping,
-		CompetencyGapAnalysis: data.CompetencyGapAnalysis,
-		TalentClassified:      data.TalentClassified,
 		IDPProgram:            data.IDPProgram,
+		Readiness:			   data.Readiness,
 	}
 }
 
