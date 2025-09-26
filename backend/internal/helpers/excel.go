@@ -23,11 +23,13 @@ func GetCell(row []string, idx int) string {
 }
 
 func MapIDPProgram(idp string) string {
-	if SliceContains([]string{"MUALIM II", "MASINIS III"}, idp) {
+	if SliceContains([]string{"MUALIM III", "MASINIS IV"}, idp) {
 		return "FDP"
-	} else if SliceContains([]string{"MUALIM I", "MASINIS II"}, idp) {
+	} else if SliceContains([]string{"MUALIM II", "MASINIS III"}, idp) {
 		return "MDP"
-	} else {
+	} else if SliceContains([]string{"MUALIM I", "MASINIS II"}, idp) {
 		return "SDP"
+	} else {
+		return "UNKNOWN"
 	}
 }

@@ -1,5 +1,7 @@
 "use client";
 
+import { useState, useEffect } from "react";
+import ProfilingDialog from "@/components/profiling-dialog";
 import {
   Table,
   TableBody,
@@ -13,7 +15,6 @@ import {
   PaginationContent,
   PaginationItem,
 } from "@/components/ui/pagination";
-
 import {
   Command,
   CommandGroup,
@@ -25,7 +26,6 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover";
-
 import {
   CheckIcon,
   ChevronLeftIcon,
@@ -33,14 +33,12 @@ import {
   ChevronsUpDownIcon,
 } from "lucide-react";
 import CardCompetence from "@/components/card-competence";
-
 import {
   IPaginationData,
   IPaginationRequest,
   IReport,
   PageType,
 } from "@/types/global-types";
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn, parsePaginationData, parseReports } from "@/lib/utils";
 import { toast } from "sonner";
@@ -51,7 +49,6 @@ const PAGE_SIZES = [10, 20, 50, 100];
 
 export default function Dashboard() {
   const [onCallApi, setOnCallApi] = useState<boolean>(false);
-  // const [filter, setFilter] = useState<FilterType>("");
   const api = useApi();
 
   const [mdp, setMdp] = useState<number | null>(null);
@@ -66,6 +63,10 @@ export default function Dashboard() {
   const [pageSize, setPageSize] = useState(10);
   const [open, setOpen] = useState(false);
 
+  // Profiling Dialog
+  const [openProfiling, setOpenProfiling] = useState(false);
+  const [selectedReport, setSelectedReport] = useState<IReport | null>(null);
+
   // Pagination Mechanism
   const [paginationRequest, setPaginationRequest] =
     useState<IPaginationRequest>({
@@ -75,71 +76,52 @@ export default function Dashboard() {
       filter: "",
     });
 
-  // TODO: Get IDP Count
+  // Fetch IDP Count
   useEffect(() => {
     const fetchIdp = async () => {
       try {
-        // const response = await fetch(
-        //   "http://localhost:8080/reports/idp-count",
-        //   {
-        //     method: "GET",
-        //   }
-        // );
-
         const response = await api.get("/reports/idp-count");
-
-        // const { data } = await response.json();
         const data = response.data.data;
         setMdp(data.mdp);
         setFdp(data.fdp);
         setSdp(data.sdp);
-
-        console.log(data);
       } catch (err) {
         toast.error((err as any).response?.data.error);
       }
     };
-
     fetchIdp();
   }, []);
 
-  // TODO: Fetch data with Filter
+  // Fetch reports data
   useEffect(() => {
     const fetchData = async () => {
-      setOnCallApi(true); // Disable filter buttons
-
+      setOnCallApi(true);
       const params = new URLSearchParams({
         anchor_id: paginationRequest.anchorId!.toString(),
         page: paginationRequest.page,
         page_size: paginationRequest.pageSize.toString(),
       });
 
-      // If there is a filter
       if (paginationRequest.filter) {
         params.set("filter", paginationRequest.filter);
       }
 
       try {
         const response = await api.get(`/reports?${params.toString()}`);
-
         let data = response.data.data;
-
-        // TODO: Parse the response into PaginationData with type of IReport
+        console.log(data);
         setPaginationData(parsePaginationData<IReport>(data, parseReports));
       } catch (err) {
-        console.log(err);
         toast.error((err as Error).message);
       } finally {
         setOnCallApi(false);
       }
     };
-
     fetchData();
   }, [paginationRequest]);
 
   const navigatePage = (page: PageType) => {
     if (!paginationData) return;
-
     setPaginationRequest({
       ...paginationRequest,
       page: page,
@@ -148,11 +130,16 @@ export default function Dashboard() {
     });
   };
 
+  const handleRowClick = (report: IReport) => {
+    console.log(report);
+    setSelectedReport(report);
+    setOpenProfiling(true);
+  };
+
   return (
     <>
       {/* GRID */}
       <div className="grid grid-cols-3 gap-x-4 my-6 mb-8">
-        {/* FDP */}
         {fdp === null ? (
           <SkeletonCard />
         ) : (
@@ -169,7 +156,7 @@ export default function Dashboard() {
             disabled={onCallApi}
           />
         )}
-        {/* MDP */}
+
         {mdp === null ? (
           <SkeletonCard />
         ) : (
@@ -186,8 +173,8 @@ export default function Dashboard() {
             disabled={onCallApi}
           />
         )}
-        {/* SDP */}
-        {fdp === null ? (
+
+        {sdp === null ? (
           <SkeletonCard />
         ) : (
           <CardCompetence
@@ -232,7 +219,6 @@ export default function Dashboard() {
                         setPaginationRequest({
                           ...paginationRequest,
                           pageSize: parseInt(currentValue),
-                          // Reset the pagination
                           anchorId: 0,
                           page: "next",
                         });
@@ -271,14 +257,18 @@ export default function Dashboard() {
           <TableBody>
             {paginationData?.data && paginationData.data.length > 0 ? (
               paginationData.data.map((report) => (
-                <TableRow key={report.id}>
+                <TableRow
+                  key={report.id}
+                  className="cursor-pointer hover:bg-gray-100"
+                  onClick={() => handleRowClick(report)}
+                >
                   <TableCell className="text-center font-bold">
                     {report.seamanCode}
                   </TableCell>
-                  <TableCell>{report.nama}</TableCell>
-                  <TableCell>{report.jabatan}</TableCell>
-                  <TableCell>{report.idpProgram}</TableCell>
-                  <TableCell>{report.readiness}</TableCell>
+                  <TableCell className="text-center">{report.nama}</TableCell>
+                  <TableCell className="text-center">{report.jabatan}</TableCell>
+                  <TableCell className="text-center">{report.idpProgram}</TableCell>
+                  <TableCell className="text-center">{report.readiness}</TableCell>
                 </TableRow>
               ))
             ) : (
@@ -320,6 +310,15 @@ export default function Dashboard() {
           </PaginationItem>
         </PaginationContent>
       </Pagination>
+
+      {/* Profiling Modal */}
+      {selectedReport && (
+        <ProfilingDialog
+          open={openProfiling}
+          setOpen={setOpenProfiling}
+          report={selectedReport}
+        />
+      )}
     </>
   );
 }

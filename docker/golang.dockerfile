@@ -4,6 +4,8 @@ WORKDIR /app
 
 COPY backend/go.mod backend/go.sum ./
 
+ENV GOPROXY=https://goproxy.cn,direct
+
 RUN go mod download
 
 COPY backend ./

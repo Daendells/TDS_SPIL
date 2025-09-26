@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"net/http"
-	"strings"
+	"strconv"
 
 	"backend/internal/helpers"
 	"backend/internal/models/converter"
@@ -156,36 +156,58 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		}
 
 		// TODO: Get All Cells
-		// vesselName := helpers.SanitizeCell(helpers.GetCell(row, 1))
+		vesselName := helpers.SanitizeCell(helpers.GetCell(row, 1))
 		nama := helpers.SanitizeCell(helpers.GetCell(row, 2))
 		jabatan := helpers.SanitizeCell(helpers.GetCell(row, 3))
 		seamanCode := helpers.SanitizeCell(helpers.GetCell(row, 4))
-		// certificate := helpers.SanitizeCell(helpers.GetCell(row, 5))
-		// age := helpers.SanitizeCell(helpers.GetCell(row, 6))
-		// konditeReview, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 7)))
-		// kpiVessel, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 8)))
-		// performanceScore, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 9)))
-		// valueAssessment, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 10)))
-		// competencyGapAnalysis := helpers.SanitizeCell(helpers.GetCell(row, 11))
-		// totalGap, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 12)))
-		// strength, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 13)))
-		// havQuadran := helpers.SanitizeCell(helpers.GetCell(row, 15))
-		// talentClassified := helpers.SanitizeCell(helpers.GetCell(row, 16))
-		readiness := helpers.SanitizeCell(helpers.GetCell(row, 17))
-		// certificateEligible := helpers.SanitizeCell(helpers.GetCell(row, 18))
+		certificate := helpers.SanitizeCell(helpers.GetCell(row, 5))
+		age := helpers.SanitizeCell(helpers.GetCell(row, 6))
+		konditeReview, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 7)))
+		kpiVessel, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 8)))
+		performanceScore, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 9)))
+		valueAssessment, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 10)))
+		assessmentCenter, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 11)))
+		potentialScore, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 12)))
+		havQuadran, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 13)))
+		havMapping := helpers.SanitizeCell(helpers.GetCell(row, 14))
+		competencyGapAnalysis := helpers.SanitizeCell(helpers.GetCell(row, 15))
+		totalGap, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 16)))
+		strength, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 17)))
+		talentClassified := helpers.SanitizeCell(helpers.GetCell(row, 18))
+		idpProgram := helpers.SanitizeCell(helpers.GetCell(row, 19))
+		havQuadran2, _ := strconv.Atoi(helpers.SanitizeCell(helpers.GetCell(row, 20)))
+		talentClassified2 := helpers.SanitizeCell(helpers.GetCell(row, 21))
+		readiness := helpers.SanitizeCell(helpers.GetCell(row, 22))
+		certificateEligible := helpers.SanitizeCell(helpers.GetCell(row, 23))
 
-		// Mapping the IDP Program
-		idp := strings.ToUpper(jabatan)
-		service.Log.Info(idp)
-		idpProgram := helpers.MapIDPProgram(idp)
+		tanggalLahir := "dd-mm-yyyy"
 
 		reports = append(reports, domain.Report{
-			SeamanCode:			   seamanCode,
-			Nama:                  nama,
-			Jabatan:               jabatan,
-			IDPProgram:            idpProgram,
-			Readiness :			   readiness,
-		})
+			SeamanCode:           seamanCode,
+			Nama:                 nama,
+			Jabatan:              jabatan,
+			VesselName:           vesselName,
+			Certificate:          certificate,
+			Age:                  age,
+			TanggalLahir:		  tanggalLahir,
+			KonditeReview:        konditeReview,
+			KpiVessel:            kpiVessel,
+			PerformanceScore:     performanceScore,
+			ValueAssessment:      valueAssessment,
+			AssessmentCenter:     assessmentCenter,
+			PotentialScore:       potentialScore,
+			HavQuadran:           havQuadran,
+			HavMapping:           havMapping,
+			CompetencyGapAnalysis: competencyGapAnalysis,
+			TotalGap:             totalGap,
+			Strength:             strength,
+			TalentClassified:     talentClassified,
+			IDPProgram:           idpProgram,
+			HavQuadran2:          havQuadran2,
+			TalentClassified2:    talentClassified2,
+			Readiness:            readiness,
+			CertificateEligible:  certificateEligible,
+		})				
 	}
 
 	// service.Log.Info(reports)

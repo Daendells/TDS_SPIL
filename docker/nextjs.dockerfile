@@ -5,7 +5,13 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
 COPY frontend/package.json frontend/package-lock.json* ./
-RUN npm ci
+
+RUN npm config set registry https://registry.npmjs.org/ \
+    && npm config set fetch-retries 5 \
+    && npm config set fetch-timeout 600000 \
+    && npm config set fetch-retry-mintimeout 20000 \
+    && npm config set fetch-retry-maxtimeout 120000 \
+    && if [ -f package-lock.json ]; then npm ci; else npm install; fi
 
 FROM base AS builder
 WORKDIR /app

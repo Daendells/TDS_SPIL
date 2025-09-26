@@ -22,8 +22,12 @@ services:
       context: .
       dockerfile: docker/golang.dockerfile
     restart: always
-    volumes:
-      - ./backend:/app
+    environment:
+      - GIN_MODE=release
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    # volumes:
+    #   - ./backend:/app
     networks:
       - spil_tds
     ports:
