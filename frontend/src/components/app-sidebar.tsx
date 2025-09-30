@@ -1,6 +1,6 @@
 "use client";
 
-import { LaptopMinimal, ChevronUp, Inbox, User2 } from "lucide-react";
+import { LaptopMinimal, ChevronUp, Inbox, User2, FileText } from "lucide-react";
 
 import {
   Sidebar,
@@ -42,6 +42,11 @@ const items = [
     url: "/dashboard/excel",
     icon: Inbox,
   },
+  {
+    title: "Report Mentoring",
+    url: "/dashboard/report-mentoring",
+    icon: FileText,
+  },
 ];
 
 export function AppSidebar() {
@@ -55,7 +60,7 @@ export function AppSidebar() {
   const logout = async () => {
     try {
       const response = await api.post("/auth/logout");
-      setUser(null); // Remove from the localstorage
+      setUser(null); 
       router.replace("/login");
     } catch (err) {
       toast.error((err as Error).message);

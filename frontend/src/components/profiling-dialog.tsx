@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogHeader } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Radar,
   RadarChart,
@@ -33,6 +33,7 @@ export default function ProfilingDialog({
       <DialogContent className="!w-[95vw] !max-w-[1600px] !h-[90vh] overflow-y-auto">
         {/* Header */}
         <DialogHeader>
+          <DialogTitle className="sr-only">Talent Profile</DialogTitle>
           <div className="flex justify-between items-center">
             <img src="/images/logo1.png" alt="Logo Kiri" className="h-12" />
             <h1 className="text-2xl font-bold uppercase">Talent Profile</h1>
