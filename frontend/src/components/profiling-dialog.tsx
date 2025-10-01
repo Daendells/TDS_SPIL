@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Radar,
@@ -7,6 +8,8 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from "recharts";
+import { ChevronRightIcon } from "lucide-react";
+import MentoringListDialog from "@/components/mentoring-list-dialog";
 
 interface ProfilingDialogProps {
   open: boolean;
@@ -19,6 +22,8 @@ export default function ProfilingDialog({
   setOpen,
   report,
 }: ProfilingDialogProps) {
+  const [mentoringDialogOpen, setMentoringDialogOpen] = useState(false);
+  
   if (!report) return null;
 
   const dataKinerja = [
@@ -118,10 +123,14 @@ export default function ProfilingDialog({
             </div>
 
             {/* Mentoring */}
-            <div className="border rounded-xl shadow-sm p-4 bg-white text-sm h-full">
-              <h2 className="font-bold text-lg mb-2">DATA MENTORING</h2>
-              <p><strong>Sudah diikuti:</strong> {report.mentoringCompleted}</p>
-              <p><strong>Belum diikuti:</strong> {report.mentoringPlanned}</p>
+            <div 
+              className="border rounded-xl shadow-sm p-4 bg-white text-sm h-full cursor-pointer hover:bg-gray-50 transition-colors"
+              onClick={() => setMentoringDialogOpen(true)}
+            >
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold text-lg">DATA MENTORING</h2>
+                <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+              </div>
             </div>
 
             {/* Coaching */}
@@ -202,6 +211,13 @@ export default function ProfilingDialog({
           </div>
         </div>
       </DialogContent>
+
+      {/* Mentoring List Dialog */}
+      <MentoringListDialog
+        open={mentoringDialogOpen}
+        setOpen={setMentoringDialogOpen}
+        menteeName={report.name || "Unknown"}
+      />
     </Dialog>
   );
 }

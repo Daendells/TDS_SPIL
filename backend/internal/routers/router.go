@@ -7,10 +7,11 @@ import (
 )
 
 type RouterConfig struct {
-	App              *gin.Engine
-	ReportController *controllers.ReportController
-	UserController   *controllers.UserController
-	AuthMiddleware   gin.HandlerFunc
+	App                       *gin.Engine
+	ReportController          *controllers.ReportController
+	UserController            *controllers.UserController
+	MentoringReportController *controllers.MentoringReportController
+	AuthMiddleware            gin.HandlerFunc
 }
 
 func (c *RouterConfig) Setup() {
@@ -38,6 +39,17 @@ func (c *RouterConfig) SetupAuthRouter() {
 		report.GET("/idp-count", c.ReportController.IDPCount)
 		report.POST("/upload", c.ReportController.CreateAll)
 		report.GET("/test", c.ReportController.TestPanic)
+	}
+
+	// TODO: Setup Mentoring Report Routes
+	mentoringReports := c.App.Group("mentoring-reports")
+	{
+		mentoringReports.POST("", c.MentoringReportController.Create)
+		mentoringReports.GET("", c.MentoringReportController.FindAll)
+		mentoringReports.GET("/:id", c.MentoringReportController.FindById)
+		mentoringReports.PUT("", c.MentoringReportController.Update)
+		mentoringReports.DELETE("/:id", c.MentoringReportController.Delete)
+		mentoringReports.GET("/by-mentee", c.MentoringReportController.FindByMenteeName)
 	}
 
 	// TODO: Setup Auth Routes
