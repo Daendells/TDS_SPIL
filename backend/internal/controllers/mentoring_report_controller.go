@@ -206,3 +206,31 @@ func (c *MentoringReportController) FindByMenteeName(ctx *gin.Context) {
 
 	ctx.JSON(response.Code, response)
 }
+
+func (c *MentoringReportController) FindByReportID(ctx *gin.Context) {
+	// Get report ID from URL parameter
+	reportID := ctx.Param("reportId")
+	if reportID == "" {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  "reportId parameter is required",
+		})
+		ctx.Abort()
+		return
+	}
+
+	// Find mentoring reports by report ID
+	response, err := c.Service.FindByReportID(reportID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		ctx.Abort()
+		return
+	}
+
+	ctx.JSON(response.Code, response)
+}

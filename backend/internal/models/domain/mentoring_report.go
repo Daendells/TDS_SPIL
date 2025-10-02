@@ -10,7 +10,7 @@ type MentoringReport struct {
 	Department      string     `json:"department" gorm:"column:department"`
 	Program         string     `json:"program" gorm:"column:program"`
 	SessionNumber   string     `json:"sessionNumber" gorm:"column:session_number"`
-	Date            time.Time  `json:"date" gorm:"column:date;type:date"`
+	Date            string     `json:"date" gorm:"column:date"`
 	Duration        string     `json:"duration" gorm:"column:duration"`
 	Purpose         string     `json:"purpose" gorm:"column:purpose"`
 	Observation     string     `json:"observation" gorm:"column:observation"`

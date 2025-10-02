@@ -50,6 +50,7 @@ func (c *RouterConfig) SetupAuthRouter() {
 		mentoringReports.PUT("", c.MentoringReportController.Update)
 		mentoringReports.DELETE("/:id", c.MentoringReportController.Delete)
 		mentoringReports.GET("/by-mentee", c.MentoringReportController.FindByMenteeName)
+		mentoringReports.GET("/reports/:reportId", c.MentoringReportController.FindByReportID)
 	}
 
 	// TODO: Setup Auth Routes

@@ -93,19 +93,17 @@ export default function ReportMentoring() {
     fetchReports();
   }, [api]);
 
-  // Filter reports when mentees are selected
   useEffect(() => {
     if (selectedMentees.length > 0) {
       const filtered = reports.filter(report => selectedMentees.includes(report.nama));
       setFilteredReports(filtered);
-      // Reset selected report IDs when mentees change
-      form.setValue("reportIds", []);
+      const allFilteredReportIds = filtered.map(report => report.id);
+      form.setValue("reportIds", allFilteredReportIds);
     } else {
       setFilteredReports([]);
+      form.setValue("reportIds", []);
     }
   }, [selectedMentees, reports, form]);
-
-  // Get unique mentee names from reports with search filtering
   const uniqueMentees = Array.from(new Set(reports.map(report => report.nama)))
     .filter(menteeName => 
       menteeName.toLowerCase().includes(menteeSearchTerm.toLowerCase())
@@ -143,14 +141,7 @@ export default function ReportMentoring() {
     form.setValue("menteeNames", newSelectedMentees);
   };
 
-  const handleReportSelection = (reportId: number, checked: boolean) => {
-    const currentIds = form.getValues("reportIds");
-    if (checked) {
-      form.setValue("reportIds", [...currentIds, reportId]);
-    } else {
-      form.setValue("reportIds", currentIds.filter(id => id !== reportId));
-    }
-  };
+
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
@@ -172,7 +163,7 @@ export default function ReportMentoring() {
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-            {/* Section 1: Informasi Mentor & Mentee */}
+            {/* Informasi Mentor & Mentee */}
             <div className="bg-white rounded-lg shadow-sm border p-8">
               <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
                 Informasi Mentor & Mentee
@@ -214,6 +205,8 @@ export default function ReportMentoring() {
                   )}
                 />
 
+                
+
                 <FormField
                   control={form.control}
                   name="menteeNames"
@@ -249,80 +242,52 @@ export default function ReportMentoring() {
                             );
                           })}
                           </div>
+
+                          <div className="space-y-3">
+                {filteredReports.length > 0 ? (
+                   
+                    <div className="grid grid-cols-1 gap-4 max-h-60 overflow-y-auto border rounded-lg p-4 bg-green-50">
+                      {filteredReports.map((report) => (
+                        <div key={report.id} className="flex items-center space-x-6 p-3 border rounded-lg bg-white">
+                          <div className="w-4 h-4 bg-green-500 rounded-full flex items-center justify-center">
+                            <svg className="w-2 h-2 text-white" fill="currentColor" viewBox="0 0 20 20">
+                              <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                            </svg>
+                          </div>
+                          <div className="flex-1">
+                            <div className="font-medium text-gray-900">{report.nama}</div>
+                            <div className="text-sm text-gray-600">
+                              {report.seamanCode} - {report.jabatan} - {report.idpProgram}
+                            </div>
+                          </div>
                         </div>
+                      ))}
+                    </div>
+                ) : (
+                  <div className="p-4 text-center text-gray-500 border rounded-lg bg-gray-50">
+                    {selectedMentees.length === 0 
+                      ? "Tidak ada report yang tersedia"
+                      : "Tidak ada report yang tersedia"
+                    }
+                  </div>
+                )}
+              
+              </div>
+                        </div>
+
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
-                />
-                {/* Summary of selected mentees */}
-                <div className="mb-6 p-4 bg-blue-50 rounded-lg">
-                  <h3 className="font-medium text-blue-900 mb-2">Mentee yang Dipilih:</h3>
-                  <div className="flex flex-wrap gap-2">
-                    {selectedMentees.map((menteeName) => {
-                      return (
-                        <span key={menteeName} className="inline-flex items-center px-3 py-1 rounded-full text-sm bg-blue-100 text-blue-800">
-                          {menteeName}
-                        </span>
-                      );
-                    })}
-                  </div>
-                </div>
-                
+                />                
+              
+              
               </div>
+              
             </div>
 
-            {/* Section 2: Pilih Report yang Terkait */}
-            <div className="bg-white rounded-lg shadow-sm border p-8">
-              <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
-                Pilih Report yang Terkait
-              </h2>
-              <FormField
-                control={form.control}
-                name="reportIds"
-                render={() => (
-                  <FormItem>
-                    <FormLabel className="font-medium text-gray-700">Pilih Report dari Mentee yang Dipilih</FormLabel>
-                    <FormControl>
-                      <div className="space-y-3">
-                        {filteredReports.length > 0 ? (
-                          <div className="grid grid-cols-1 gap-3 max-h-60 overflow-y-auto border rounded-lg p-4 bg-gray-50">
-                            {filteredReports.map((report) => (
-                              <div key={report.id} className="flex items-center space-x-3 p-3 border rounded-lg bg-white hover:bg-gray-50">
-                                <Checkbox
-                                  id={`report-${report.id}`}
-                                  onCheckedChange={(checked) => handleReportSelection(report.id, checked as boolean)}
-                                  checked={form.getValues("reportIds").includes(report.id)}
-                                />
-                                <label
-                                  htmlFor={`report-${report.id}`}
-                                  className="flex-1 cursor-pointer"
-                                >
-                                  <div className="font-medium text-gray-900">{report.nama}</div>
-                                  <div className="text-sm text-gray-600">
-                                    {report.seamanCode} - {report.jabatan} - {report.idpProgram}
-                                  </div>
-                                </label>
-                              </div>
-                            ))}
-                          </div>
-                        ) : (
-                          <div className="p-4 text-center text-gray-500 border rounded-lg bg-gray-50">
-                            {selectedMentees.length === 0 
-                              ? "Pilih mentee terlebih dahulu untuk melihat report yang tersedia"
-                              : "Tidak ada report yang tersedia untuk mentee yang dipilih"
-                            }
-                          </div>
-                        )}
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
 
-            {/* Section 3: Informasi Program */}
+            {/* Informasi Program */}
             <div className="bg-white rounded-lg shadow-sm border p-8">
               <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
                 Informasi Program
@@ -330,17 +295,40 @@ export default function ReportMentoring() {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
+                  name="purpose"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className="font-medium text-gray-700">Tujuan/Isu yang Dibahas</FormLabel>
+                      <FormControl>
+                        <Textarea
+                          placeholder="Deskripsikan tujuan atau isu yang dibahas dalam sesi mentoring"
+                          className="min-h-[80px] border-gray-300 focus:border-gray-500 focus:ring-gray-500"
+                          {...field}
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+                
+                <FormField
+                  control={form.control}
                   name="program"
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="font-medium text-gray-700">Program</FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Contoh: MDP, FDP, SDP" 
-                          {...field} 
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
-                        />
-                      </FormControl>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="border-gray-300 focus:border-gray-500 focus:ring-gray-500">
+                            <SelectValue placeholder="Pilih Program" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="FDP">FDP</SelectItem>
+                          <SelectItem value="MDP">MDP</SelectItem>
+                          <SelectItem value="SDP">SDP</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -387,10 +375,10 @@ export default function ReportMentoring() {
                   name="duration"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel className="font-medium text-gray-700">Durasi</FormLabel>
+                      <FormLabel className="font-medium text-gray-700">Durasi (Menit)</FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Contoh: 60 menit" 
+                          placeholder="Contoh: 60" 
                           {...field} 
                           className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
                         />
@@ -420,30 +408,12 @@ export default function ReportMentoring() {
               </div>
             </div>
 
-            {/* Section 4: Tujuan & Observasi */}
+            {/* Observasi */}
             <div className="bg-white rounded-lg shadow-sm border p-8">
               <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
-                Tujuan & Observasi
+                Observasi
               </h2>
-              <div className="space-y-6">
-                <FormField
-                  control={form.control}
-                  name="purpose"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-gray-700">Tujuan/Isu yang Dibahas</FormLabel>
-                      <FormControl>
-                        <Textarea
-                          placeholder="Deskripsikan tujuan atau isu yang dibahas dalam sesi mentoring"
-                          className="min-h-[120px] border-gray-300 focus:border-gray-500 focus:ring-gray-500"
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
+              <div className="space-y-6">                
                 <FormField
                   control={form.control}
                   name="observation"
@@ -464,7 +434,7 @@ export default function ReportMentoring() {
               </div>
             </div>
 
-            {/* Section 5: Refleksi Mentor */}
+            {/* Refleksi Mentor */}
             <div className="bg-white rounded-lg shadow-sm border p-8">
               <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
                 Refleksi Mentor
@@ -488,7 +458,7 @@ export default function ReportMentoring() {
               />
             </div>
 
-            {/* Section 6: Rencana Aksi */}
+            {/* Rencana Aksi */}
             <div className="bg-white rounded-lg shadow-sm border p-8">
               <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
                 Rencana Aksi (Way Forward)
@@ -512,7 +482,7 @@ export default function ReportMentoring() {
               />
             </div>
 
-            {/* Section 7: Catatan Tambahan */}
+            {/* Catatan Tambahan */}
             <div className="bg-white rounded-lg shadow-sm border p-8">
               <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
                 Catatan Tambahan

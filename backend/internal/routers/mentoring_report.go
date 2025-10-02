@@ -13,10 +13,8 @@ type MentoringReportRouterConfig struct {
 }
 
 func (c *MentoringReportRouterConfig) SetupMentoringReportRoutes() {
-	// Apply auth middleware
 	c.App.Use(c.AuthMiddleware)
 
-	// Setup Mentoring Report Routes
 	mentoringReports := c.App.Group("mentoring-reports")
 	{
 		mentoringReports.POST("", c.MentoringReportController.Create)
@@ -25,5 +23,6 @@ func (c *MentoringReportRouterConfig) SetupMentoringReportRoutes() {
 		mentoringReports.PUT("", c.MentoringReportController.Update)
 		mentoringReports.DELETE("/:id", c.MentoringReportController.Delete)
 		mentoringReports.GET("/by-mentee", c.MentoringReportController.FindByMenteeName)
+		mentoringReports.GET("/reports/:reportId", c.MentoringReportController.FindByReportID)
 	}
 }

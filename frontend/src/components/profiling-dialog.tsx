@@ -216,7 +216,8 @@ export default function ProfilingDialog({
       <MentoringListDialog
         open={mentoringDialogOpen}
         setOpen={setMentoringDialogOpen}
-        menteeName={report.name || "Unknown"}
+        reportId={report.id}
+        reportName={report.nama || "Unknown"}
       />
     </Dialog>
   );

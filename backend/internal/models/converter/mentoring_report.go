@@ -2,7 +2,6 @@ package converter
 
 import (
 	"encoding/json"
-	"time"
 
 	"backend/internal/models/domain"
 	"backend/internal/models/web"
@@ -14,9 +13,6 @@ func MentoringReportRequestToDomain(request *web.MentoringReportRequest) *domain
 	// Convert MenteeNames array to JSON string
 	menteeNamesJSON, _ := json.Marshal(request.MenteeNames)
 
-	// Parse date string to time.Time
-	date, _ := time.Parse("2006-01-02", request.Date)
-
 	return &domain.MentoringReport{
 		MentorName:      request.MentorName,
 		Period:          request.Period,
@@ -24,7 +20,7 @@ func MentoringReportRequestToDomain(request *web.MentoringReportRequest) *domain
 		Department:      request.Department,
 		Program:         request.Program,
 		SessionNumber:   request.SessionNumber,
-		Date:            date,
+		Date:            request.Date,
 		Duration:        request.Duration,
 		Purpose:         request.Purpose,
 		Observation:     request.Observation,
@@ -41,9 +37,6 @@ func MentoringReportUpdateRequestToDomain(request *web.MentoringReportUpdateRequ
 	// Convert MenteeNames array to JSON string
 	menteeNamesJSON, _ := json.Marshal(request.MenteeNames)
 
-	// Parse date string to time.Time
-	date, _ := time.Parse("2006-01-02", request.Date)
-
 	return &domain.MentoringReport{
 		ID:              request.ID,
 		MentorName:      request.MentorName,
@@ -52,7 +45,7 @@ func MentoringReportUpdateRequestToDomain(request *web.MentoringReportUpdateRequ
 		Department:      request.Department,
 		Program:         request.Program,
 		SessionNumber:   request.SessionNumber,
-		Date:            date,
+		Date:            request.Date,
 		Duration:        request.Duration,
 		Purpose:         request.Purpose,
 		Observation:     request.Observation,
@@ -84,7 +77,7 @@ func MentoringReportDomainToData(mentoringReport *domain.MentoringReport) *web.M
 		Department:      mentoringReport.Department,
 		Program:         mentoringReport.Program,
 		SessionNumber:   mentoringReport.SessionNumber,
-		Date:            mentoringReport.Date.Format("2006-01-02"),
+		Date:            mentoringReport.Date,
 		Duration:        mentoringReport.Duration,
 		Purpose:         mentoringReport.Purpose,
 		Observation:     mentoringReport.Observation,

@@ -39,3 +39,11 @@ func (r *MentoringReportRepository) CountByMenteeName(db *gorm.DB, menteeName st
 	err := db.Model(&domain.MentoringReport{}).Where("mentee_names LIKE ?", "%\""+menteeName+"\"%").Count(&total).Error
 	return total, err
 }
+
+func (r *MentoringReportRepository) FindByReportID(db *gorm.DB, mentoringReports *[]domain.MentoringReport, reportID string) error {
+	return db.Where("report_ids LIKE ? OR report_ids LIKE ? OR report_ids LIKE ? OR report_ids LIKE ?",
+		"["+reportID+"]",
+		"["+reportID+",%",
+		"%,"+reportID+"]",
+		"%,"+reportID+",%").Find(mentoringReports).Error
+}

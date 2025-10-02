@@ -119,14 +119,14 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 	err := service.Validate.Struct(request)
 	if err != nil {
 		service.Log.Warnf("Invalid request body: %+v", err)
-		return nil, fmt.Errorf("Invalid request body: %w", err)
+		return nil, fmt.Errorf("invalid request body: %w", err)
 	}
 
 	// TODO: Read Excel
 	file, err := request.File.Open()
 	if err != nil {
 		service.Log.Warnf("Cannot open the file: %+v", err)
-		return nil, fmt.Errorf("Cannot open the file: %w", err)
+		return nil, fmt.Errorf("cannot open the file: %w", err)
 	}
 	defer file.Close()
 
@@ -134,7 +134,7 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 	excel, err := excelize.OpenReader(file)
 	if err != nil {
 		service.Log.Warnf("Cannot open the excel: %+v", err)
-		return nil, fmt.Errorf("Cannot open the excel: %w", err)
+		return nil, fmt.Errorf("cannot open the excel: %w", err)
 	}
 	defer excel.Close()
 
@@ -144,7 +144,7 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 	rows, err := excel.GetRows("Sheet1")
 	if err != nil {
 		service.Log.Warnf("Cannot get the rows: %+v", err)
-		return nil, fmt.Errorf("Cannot open the rows: %w", err)
+		return nil, fmt.Errorf("cannot open the rows: %w", err)
 	}
 
 	var reports []domain.Report
@@ -183,31 +183,31 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		tanggalLahir := "dd-mm-yyyy"
 
 		reports = append(reports, domain.Report{
-			SeamanCode:           seamanCode,
-			Nama:                 nama,
-			Jabatan:              jabatan,
-			VesselName:           vesselName,
-			Certificate:          certificate,
-			Age:                  age,
-			TanggalLahir:		  tanggalLahir,
-			KonditeReview:        konditeReview,
-			KpiVessel:            kpiVessel,
-			PerformanceScore:     performanceScore,
-			ValueAssessment:      valueAssessment,
-			AssessmentCenter:     assessmentCenter,
-			PotentialScore:       potentialScore,
-			HavQuadran:           havQuadran,
-			HavMapping:           havMapping,
+			SeamanCode:            seamanCode,
+			Nama:                  nama,
+			Jabatan:               jabatan,
+			VesselName:            vesselName,
+			Certificate:           certificate,
+			Age:                   age,
+			TanggalLahir:          tanggalLahir,
+			KonditeReview:         konditeReview,
+			KpiVessel:             kpiVessel,
+			PerformanceScore:      performanceScore,
+			ValueAssessment:       valueAssessment,
+			AssessmentCenter:      assessmentCenter,
+			PotentialScore:        potentialScore,
+			HavQuadran:            havQuadran,
+			HavMapping:            havMapping,
 			CompetencyGapAnalysis: competencyGapAnalysis,
-			TotalGap:             totalGap,
-			Strength:             strength,
-			TalentClassified:     talentClassified,
-			IDPProgram:           idpProgram,
-			HavQuadran2:          havQuadran2,
-			TalentClassified2:    talentClassified2,
-			Readiness:            readiness,
-			CertificateEligible:  certificateEligible,
-		})				
+			TotalGap:              totalGap,
+			Strength:              strength,
+			TalentClassified:      talentClassified,
+			IDPProgram:            idpProgram,
+			HavQuadran2:           havQuadran2,
+			TalentClassified2:     talentClassified2,
+			Readiness:             readiness,
+			CertificateEligible:   certificateEligible,
+		})
 	}
 
 	// service.Log.Info(reports)
@@ -215,13 +215,13 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 	// TODO: Create Reports
 	if err = service.ReportRepository.CreateAll(tx, &reports); err != nil {
 		service.Log.Warnf("Failed saving to DB: %+v", err)
-		return nil, fmt.Errorf("Failed saving to DB: %w", err)
+		return nil, fmt.Errorf("failed saving to DB: %w", err)
 	}
 
 	// TODO: Commit Transaction
 	if err = tx.Commit().Error; err != nil {
 		service.Log.Warnf("Failed commit transaction: %+v", err)
-		return nil, fmt.Errorf("Failed commit transaction: %w", err)
+		return nil, fmt.Errorf("failed commit transaction: %w", err)
 	}
 
 	service.Log.Info("Reports created successfully")
@@ -248,7 +248,7 @@ func (service *ReportService) IDPCount(ctx context.Context) (*web.SuccessRespons
 	// TODO: Commit Transaction
 	if err = tx.Commit().Error; err != nil {
 		service.Log.Warnf("Failed commit transaction: %+v", err)
-		return nil, fmt.Errorf("Failed commit transaction: %w", err)
+		return nil, fmt.Errorf("failed commit transaction: %w", err)
 	}
 
 	return &web.SuccessResponse{
