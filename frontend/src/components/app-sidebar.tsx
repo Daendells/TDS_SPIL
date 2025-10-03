@@ -47,6 +47,11 @@ const items = [
     url: "/dashboard/report-mentoring",
     icon: FileText,
   },
+  {
+    title: "Training",
+    url: "/dashboard/training",
+    icon: FileText,
+  },
 ];
 
 export function AppSidebar() {
