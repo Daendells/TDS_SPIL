@@ -1,5 +1,5 @@
 import { Metadata } from "next";
-import ReportMentoring from "./report-mentoring";
+import ReportMentoring from "@/app/report-mentoring/report-mentoring";
 
 export const metadata: Metadata = {
   title: "Report Mentoring - Talent Development System",
