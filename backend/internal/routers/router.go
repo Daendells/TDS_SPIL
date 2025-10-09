@@ -11,6 +11,8 @@ type RouterConfig struct {
 	ReportController          *controllers.ReportController
 	UserController            *controllers.UserController
 	MentoringReportController *controllers.MentoringReportController
+	QuestionController        *controllers.QuestionController
+	OptionController          *controllers.OptionController
 	AuthMiddleware            gin.HandlerFunc
 }
 
@@ -46,6 +48,23 @@ func (c *RouterConfig) SetupGuestRouter() {
         mentoringReports.DELETE("/:id", c.MentoringReportController.Delete)
         mentoringReports.GET("/by-mentee", c.MentoringReportController.FindByMenteeName)
         mentoringReports.GET("/reports/:reportId", c.MentoringReportController.FindByReportID)
+    }
+
+    // Public Question Routes (no auth)
+    questions := c.App.Group("questions")
+    {
+        questions.POST("", c.QuestionController.Create)
+        questions.GET("", c.QuestionController.FindAll)
+        questions.GET("/:questionId", c.QuestionController.FindById)
+    }
+
+    // Public Option Routes (no auth)
+    options := c.App.Group("options")
+    {
+        options.POST("", c.OptionController.Create)
+        options.GET("", c.OptionController.FindAll)
+        options.GET("/:optionId", c.OptionController.FindById)
+        options.GET("/question/:questionId", c.OptionController.FindByQuestionId)
     }
 }
 
