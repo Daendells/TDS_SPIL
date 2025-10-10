@@ -107,8 +107,16 @@ export default function Questions({ onBack, assessmentData, updateAssessmentData
   };
 
   const handleSubmit = async () => {
-    setIsSubmitting(true);
     try {
+      setIsSubmitting(true);
+      
+      // Check if all questions are answered
+      const unansweredQuestions = questions.filter(q => !answers[q.questionId]);
+      if (unansweredQuestions.length > 0) {
+        toast.error(`Masih ada ${unansweredQuestions.length} soal yang belum dijawab`);
+        return;
+      }
+
       toast.success("Asesmen berhasil diselesaikan!");
       console.log("Assessment completed:", {
         ...assessmentData,
@@ -175,10 +183,21 @@ export default function Questions({ onBack, assessmentData, updateAssessmentData
           {/* Question Navigation Sidebar */}
           <div className="w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm border p-6 sticky top-8">
-              <h3 className="text-lg font-bold text-gray-800 mb-4">Navigasi Soal</h3>
+              <h3 className="font-bold text-lg mb-4 text-gray-800">Navigasi Soal</h3>
+              
+              {/* Progress Summary */}
+              <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                <div className="text-sm text-gray-600 mb-2">Progress:</div>
+                <div className="text-lg font-bold text-gray-800">
+                  {Object.keys(answers).length} / {questions.length}
+                </div>
+                <div className="text-sm text-gray-500">soal terjawab</div>
+              </div>
+
+              {/* Question Numbers Grid */}
               <div className="grid grid-cols-5 gap-2">
                 {questions.map((question, index) => {
-                  const isAnswered = answers[question.questionId];
+                  const isAnswered = answers[question.questionId] !== undefined;
                   const isCurrent = index === currentQuestionIndex;
                   
                   return (
@@ -186,12 +205,12 @@ export default function Questions({ onBack, assessmentData, updateAssessmentData
                       key={question.questionId}
                       onClick={() => handleQuestionJump(index)}
                       className={`
-                        w-10 h-10 rounded-lg border-2 font-medium text-sm transition-all duration-200
+                        w-10 h-10 rounded-lg border-2 font-medium text-sm transition-all
                         ${isCurrent 
-                          ? 'border-blue-500 bg-blue-4 text-grey-700 ring-2 ring-blue-50' 
+                          ? 'bg-blue-500 text-white border-blue-500' 
                           : isAnswered 
-                            ? 'border-gray-800 bg-gray-800 text-white hover:bg-gray-700' 
-                            : 'border-gray-300 bg-white text-gray-700 hover:border-gray-400 hover:bg-gray-50'
+                            ? 'bg-gray-800 text-white border-gray-800' 
+                            : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
                         }
                       `}
                     >
@@ -200,18 +219,20 @@ export default function Questions({ onBack, assessmentData, updateAssessmentData
                   );
                 })}
               </div>
-              
-              
-              {/* Progress Summary */}
-              <div className="mt-2 pt-4">
-                <div className="text-sm text-gray-600 mb-2">
-                  Progress: {Object.keys(answers).length} / {questions.length}
+
+              {/* Legend */}
+              <div className="mt-4 space-y-2 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-blue-500 rounded"></div>
+                  <span className="text-gray-600">Soal saat ini</span>
                 </div>
-                <div className="w-full bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-gray-800 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${(Object.keys(answers).length / questions.length) * 100}%` }}
-                  ></div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-gray-800 rounded"></div>
+                  <span className="text-gray-600">Sudah dijawab</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-4 h-4 bg-white border-2 border-gray-300 rounded"></div>
+                  <span className="text-gray-600">Belum dijawab</span>
                 </div>
               </div>
             </div>
@@ -222,9 +243,11 @@ export default function Questions({ onBack, assessmentData, updateAssessmentData
             {/* Question Section */}
             <div className="bg-white rounded-lg shadow-sm border p-8 mb-4">
               <div className="mb-6">
-                <h2 className="text-xl font-bold text-gray-800 mb-4">
-                  Soal {currentQuestionIndex + 1}
-                </h2>
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-lg font-bold text-gray-800">
+                    Soal {currentQuestionIndex + 1} dari {questions.length}
+                  </h2>
+                </div>
                 <p className="text-gray-700 leading-relaxed">
                   {currentQuestion?.questionText}
                 </p>
@@ -262,32 +285,20 @@ export default function Questions({ onBack, assessmentData, updateAssessmentData
 
             {/* Navigation */}
             <div className="bg-white rounded-lg shadow-sm border p-8">
-              <div className="flex justify-between items-center">
-                <div className="flex space-x-4">
-                  {currentQuestionIndex === 0 ? (
-                    <Button 
-                      onClick={onBack}
-                      variant="outline"
-                      className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                      Kembali ke Identitas
-                    </Button>
-                  ) : (
-                    <Button 
-                      onClick={handlePrevious}
-                      variant="outline"
-                      className="px-6 py-2 border-gray-300 text-gray-700 hover:bg-gray-50"
-                    >
-                      Soal Sebelumnya
-                    </Button>
-                  )}
-                </div>
-
-                <div className="flex space-x-4">
+              <div className="flex justify-between pt-6 border-t">
+                <Button 
+                  onClick={currentQuestionIndex === 0 ? onBack : handlePrevious}
+                  variant="outline"
+                  className="px-6 py-2"
+                >
+                  {currentQuestionIndex === 0 ? "Kembali ke Identitas" : "Soal Sebelumnya"}
+                </Button>
+                
+                <div className="flex gap-3">
                   {currentQuestionIndex < questions.length - 1 ? (
                     <Button 
                       onClick={handleNext}
-                      className="px-6 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium"
+                      className="px-6 py-2 bg-gray-800 hover:bg-gray-700"
                     >
                       Soal Berikutnya
                     </Button>
@@ -295,7 +306,7 @@ export default function Questions({ onBack, assessmentData, updateAssessmentData
                     <Button 
                       onClick={handleSubmit}
                       disabled={isSubmitting}
-                      className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white font-medium"
+                      className="px-6 py-2 bg-green-600 hover:bg-green-700"
                     >
                       {isSubmitting ? "Mengirim..." : "Selesai"}
                     </Button>
