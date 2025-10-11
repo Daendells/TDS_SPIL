@@ -135,9 +135,23 @@ export default function Section1({ onNext, onBack, assessmentData, updateAssessm
         return;
       }
 
-      // Submit answers (you can implement the API call here)
-      toast.success("Jawaban Section 1 berhasil disimpan");
-      onNext();
+      // Submit answers to backend
+      const submitData = {
+        seamanCode: assessmentData.seamanCode,
+        role: "va_1",
+        answers: answers
+      };
+
+      const response = await api.post("/assessment-results/submit", submitData);
+      
+      if (response.status === 200) {
+        // Update assessment data with section 1 answers
+        updateAssessmentData({ section1Answers: answers });
+        toast.success("Jawaban Section 1 berhasil disimpan");
+        onNext();
+      } else {
+        throw new Error("Failed to submit assessment");
+      }
       
     } catch (error) {
       console.error("Failed to submit answers:", error);

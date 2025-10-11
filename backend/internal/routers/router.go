@@ -7,13 +7,14 @@ import (
 )
 
 type RouterConfig struct {
-	App                       *gin.Engine
-	ReportController          *controllers.ReportController
-	UserController            *controllers.UserController
-	MentoringReportController *controllers.MentoringReportController
-	QuestionController        *controllers.QuestionController
-	OptionController          *controllers.OptionController
-	AuthMiddleware            gin.HandlerFunc
+	App                        *gin.Engine
+	ReportController           *controllers.ReportController
+	UserController             *controllers.UserController
+	MentoringReportController  *controllers.MentoringReportController
+	QuestionController         *controllers.QuestionController
+	OptionController           *controllers.OptionController
+	AssessmentResultController *controllers.AssessmentResultController
+	AuthMiddleware             gin.HandlerFunc
 }
 
 func (c *RouterConfig) Setup() {
@@ -22,61 +23,63 @@ func (c *RouterConfig) Setup() {
 }
 
 func (c *RouterConfig) SetupGuestRouter() {
-    // TODO: Setup Login
+	// TODO: Setup Login
 
-    auth := c.App.Group("auth")
-    {
-        auth.POST("/login", c.UserController.Login)
-    }
+	auth := c.App.Group("auth")
+	{
+		auth.POST("/login", c.UserController.Login)
+	}
 
-    // Public Report Routes (no auth)
-    report := c.App.Group("reports")
-    {
-        report.GET("", c.ReportController.FindAll)
-        report.GET("/idp-count", c.ReportController.IDPCount)
-        report.POST("/upload", c.ReportController.CreateAll)
-        report.GET("/test", c.ReportController.TestPanic)
-    }
+	report := c.App.Group("reports")
+	{
+		report.GET("", c.ReportController.FindAll)
+		report.GET("/idp-count", c.ReportController.IDPCount)
+		report.POST("/upload", c.ReportController.CreateAll)
+		report.GET("/test", c.ReportController.TestPanic)
+	}
 
-    // Public Mentoring Report Routes (no auth)
-    mentoringReports := c.App.Group("mentoring-reports")
-    {
-        mentoringReports.POST("", c.MentoringReportController.Create)
-        mentoringReports.GET("", c.MentoringReportController.FindAll)
-        mentoringReports.GET("/:id", c.MentoringReportController.FindById)
-        mentoringReports.PUT("", c.MentoringReportController.Update)
-        mentoringReports.DELETE("/:id", c.MentoringReportController.Delete)
-        mentoringReports.GET("/by-mentee", c.MentoringReportController.FindByMenteeName)
-        mentoringReports.GET("/reports/:reportId", c.MentoringReportController.FindByReportID)
-    }
+	mentoringReports := c.App.Group("mentoring-reports")
+	{
+		mentoringReports.POST("", c.MentoringReportController.Create)
+		mentoringReports.GET("", c.MentoringReportController.FindAll)
+		mentoringReports.GET("/:id", c.MentoringReportController.FindById)
+		mentoringReports.PUT("", c.MentoringReportController.Update)
+		mentoringReports.DELETE("/:id", c.MentoringReportController.Delete)
+		mentoringReports.GET("/by-mentee", c.MentoringReportController.FindByMenteeName)
+		mentoringReports.GET("/reports/:reportId", c.MentoringReportController.FindByReportID)
+	}
 
-    // Public Question Routes (no auth)
-    questions := c.App.Group("questions")
-    {
-        questions.POST("", c.QuestionController.Create)
-        questions.GET("", c.QuestionController.FindAll)
-        questions.GET("/:questionId", c.QuestionController.FindById)
-    }
+	questions := c.App.Group("questions")
+	{
+		questions.POST("", c.QuestionController.Create)
+		questions.GET("", c.QuestionController.FindAll)
+		questions.GET("/:questionId", c.QuestionController.FindById)
+	}
 
-    // Public Option Routes (no auth)
-    options := c.App.Group("options")
-    {
-        options.POST("", c.OptionController.Create)
-        options.GET("", c.OptionController.FindAll)
-        options.GET("/:optionId", c.OptionController.FindById)
-        options.GET("/question/:questionId", c.OptionController.FindByQuestionId)
-    }
+	options := c.App.Group("options")
+	{
+		options.POST("", c.OptionController.Create)
+		options.GET("", c.OptionController.FindAll)
+		options.GET("/:optionId", c.OptionController.FindById)
+		options.GET("/question/:questionId", c.OptionController.FindByQuestionId)
+	}
+
+	assessmentResults := c.App.Group("assessment-results")
+	{
+		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
+		assessmentResults.GET("/seaman/:seamanCode", c.AssessmentResultController.FindBySeamanCode)
+	}
 }
 
 func (c *RouterConfig) SetupAuthRouter() {
-    // TODO: Declare the Authmiddleware
-    c.App.Use(c.AuthMiddleware)
+	// TODO: Declare the Authmiddleware
+	c.App.Use(c.AuthMiddleware)
 
-    // Protected Auth Routes only
+	// Protected Auth Routes only
 
-    // TODO: Setup Auth Routes
-    auth := c.App.Group("auth")
-    {
-        auth.POST("/logout", c.UserController.Logout)
-    }
+	// TODO: Setup Auth Routes
+	auth := c.App.Group("auth")
+	{
+		auth.POST("/logout", c.UserController.Logout)
+	}
 }

@@ -6,7 +6,6 @@ type Question struct {
 	QuestionText string `json:"questionText" gorm:"column:question_text"`
 }
 
-// TableName specifies the table name for GORM
 func (Question) TableName() string {
 	return "questions"
 }

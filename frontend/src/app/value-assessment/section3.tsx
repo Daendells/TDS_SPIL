@@ -107,18 +107,45 @@ export default function Section3({ onNext, onBack, assessmentData, updateAssessm
         return;
       }
 
-      // Submit all assessment data (you can implement the API call here)
-      const completeAssessmentData = {
-        ...assessmentData,
-        section3Answers: answers
+      // For Section 3, we need to convert rating values to option IDs
+      // Since Section 3 uses Likert scale (1-4), we need to find the corresponding option IDs
+      const answersWithOptionIds: { [questionId: number]: number } = {};
+      
+      // Get all options for VA3 questions
+      const optionsResponse = await api.get("/options");
+      const allOptions = optionsResponse.data.data;
+      
+      for (const [questionIdStr, rating] of Object.entries(answers)) {
+        const questionId = parseInt(questionIdStr);
+        const questionOptions = allOptions.filter((opt: any) => opt.questionId === questionId);
+        
+        // Find the option that corresponds to the rating (assuming options are ordered by score/rating)
+        const selectedOption = questionOptions.find((opt: any) => opt.score === rating);
+        
+        if (selectedOption) {
+          answersWithOptionIds[questionId] = selectedOption.optionId;
+        }
+      }
+
+      // Submit answers to backend
+      const submitData = {
+        seamanCode: assessmentData.seamanCode,
+        role: "va_3",
+        answers: answersWithOptionIds
       };
+
+      const response = await api.post("/assessment-results/submit", submitData);
       
-      console.log("Complete Assessment Data:", completeAssessmentData);
-      
-      toast.success("Value Assessment berhasil diselesaikan!");
-      
-      // You can redirect to a completion page or dashboard here
-      // For now, we'll just show success message
+      if (response.status === 200) {
+        // Update assessment data with section 3 answers
+        updateAssessmentData({ section3Answers: answers });
+        toast.success("Value Assessment berhasil diselesaikan!");
+        
+        // Navigate to completion page
+        onNext();
+      } else {
+        throw new Error("Failed to submit assessment");
+      }
       
     } catch (error) {
       console.error("Failed to submit assessment:", error);

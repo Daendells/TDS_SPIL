@@ -116,9 +116,35 @@ export default function Section2({ onNext, onBack, assessmentData, updateAssessm
         return;
       }
 
-      // Submit answers (you can implement the API call here)
-      toast.success("Jawaban Section 2 berhasil disimpan");
-      onNext();
+      // Convert option letters to option IDs for backend submission
+      const answersWithOptionIds: { [questionId: number]: number } = {};
+      for (const [questionIdStr, optionLetter] of Object.entries(answers)) {
+        const questionId = parseInt(questionIdStr);
+        const questionOptions = options.filter(opt => opt.questionId === questionId);
+        const selectedOption = questionOptions.find(opt => opt.optionLetter === optionLetter);
+        
+        if (selectedOption) {
+          answersWithOptionIds[questionId] = selectedOption.optionId;
+        }
+      }
+
+      // Submit answers to backend
+      const submitData = {
+        seamanCode: assessmentData.seamanCode,
+        role: "va_2",
+        answers: answersWithOptionIds
+      };
+
+      const response = await api.post("/assessment-results/submit", submitData);
+      
+      if (response.status === 200) {
+        // Update assessment data with section 2 answers
+        updateAssessmentData({ section2Answers: answers });
+        toast.success("Jawaban Section 2 berhasil disimpan");
+        onNext();
+      } else {
+        throw new Error("Failed to submit assessment");
+      }
       
     } catch (error) {
       console.error("Failed to submit answers:", error);

@@ -22,6 +22,7 @@ const FormSchema = z.object({
   identityNumber: z.string().min(1, { message: "Nomor identitas harus diisi" }),
   rank: z.string().min(1, { message: "Rank harus dipilih" }),
   vesselName: z.string().min(1, { message: "Nama vessel/akademi harus diisi" }),
+  seamanCode: z.string().min(1, { message: "Seaman code harus diisi" }),
 });
 
 interface PersonalIdentityProps {
@@ -53,6 +54,7 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
       identityNumber: assessmentData.identityNumber,
       rank: assessmentData.rank,
       vesselName: assessmentData.vesselName,
+      seamanCode: assessmentData.seamanCode,
     },
   });
 
@@ -164,6 +166,26 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                       <FormControl>
                         <Input 
                           placeholder="Masukkan nama vessel atau akademi pelayaran" 
+                          {...field} 
+                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
+                        />
+                      </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                <FormField
+                  control={form.control}
+                  name="seamanCode"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel className="font-medium text-gray-700">
+                        Seaman Code <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <FormControl>
+                        <Input 
+                          placeholder="Masukkan seaman code" 
                           {...field} 
                           className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
                         />

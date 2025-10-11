@@ -6,6 +6,7 @@ import PersonalIdentity from "./personal_identity";
 import Section1 from "./section1";
 import Section2 from "./section2";
 import Section3 from "./section3";
+import Completion from "./completion";
 
 export interface ValueAssessmentData {
   email: string;
@@ -14,6 +15,7 @@ export interface ValueAssessmentData {
   identityNumber: string;
   rank: string;
   vesselName: string;
+  seamanCode: string;
   section1Answers: { [questionId: number]: number };
   section2Answers: { [questionId: number]: string };
   section3Answers: { [questionId: number]: number };
@@ -28,6 +30,7 @@ export default function ValueAssessmentPage() {
     identityNumber: "",
     rank: "",
     vesselName: "",
+    seamanCode: "",
     section1Answers: {},
     section2Answers: {},
     section3Answers: {},
@@ -89,6 +92,12 @@ export default function ValueAssessmentPage() {
             onBack={handleBack}
             assessmentData={assessmentData}
             updateAssessmentData={updateAssessmentData}
+          />
+        );
+      case 6:
+        return (
+          <Completion
+            assessmentData={assessmentData}
           />
         );
       default:

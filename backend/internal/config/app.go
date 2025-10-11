@@ -29,6 +29,7 @@ func Bootstrap(config *BootstrapConfig) {
 	mentoringReportRepository := repositories.NewMentoringReportRepository(config.Log)
 	questionRepository := repositories.NewQuestionRepository()
 	optionRepository := repositories.NewOptionRepository()
+	assessmentResultRepository := repositories.NewAssessmentResultRepository()
 
 	// Setup Services
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository)
@@ -36,6 +37,7 @@ func Bootstrap(config *BootstrapConfig) {
 	mentoringReportService := services.NewMentoringReportService(config.DB, config.Log, config.Validate, mentoringReportRepository)
 	questionService := services.NewQuestionService(questionRepository, config.Validate)
 	optionService := services.NewOptionService(optionRepository, config.Validate)
+	assessmentResultService := services.NewAssessmentResultService(assessmentResultRepository, questionRepository, optionRepository, config.Log, config.Validate)
 
 	// Setup Controllers
 	reportController := controllers.NewReportController(reportService, config.Log)
@@ -43,18 +45,20 @@ func Bootstrap(config *BootstrapConfig) {
 	mentoringReportController := controllers.NewMentoringReportController(mentoringReportService, config.Log)
 	questionController := controllers.NewQuestionController(questionService, config.DB)
 	optionController := controllers.NewOptionController(optionService, config.DB)
+	assessmentResultController := controllers.NewAssessmentResultController(assessmentResultService, config.Log, config.DB)
 
 	// Setup Routes and Middlewares
 	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KEY"))
 
 	routerConfig := &routers.RouterConfig{
-		App:                       config.App,
-		ReportController:          reportController,
-		UserController:            userController,
-		MentoringReportController: mentoringReportController,
-		QuestionController:        questionController,
-		OptionController:          optionController,
-		AuthMiddleware:            authMiddleware,
+		App:                        config.App,
+		ReportController:           reportController,
+		UserController:             userController,
+		MentoringReportController:  mentoringReportController,
+		QuestionController:         questionController,
+		OptionController:           optionController,
+		AssessmentResultController: assessmentResultController,
+		AuthMiddleware:             authMiddleware,
 	}
 
 	routerConfig.Setup()
