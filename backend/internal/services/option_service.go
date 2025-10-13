@@ -2,6 +2,7 @@ package services
 
 import (
 	"backend/internal/models/converter"
+	"backend/internal/models/domain"
 	"backend/internal/models/web"
 	"backend/internal/repositories"
 
@@ -30,6 +31,15 @@ func NewOptionService(optionRepository repositories.OptionRepository, validate *
 	}
 }
 
+// Helper function to convert slice of options to slice of option data
+func (service *optionServiceImpl) convertOptionsToData(options []domain.Option) []web.OptionData {
+	optionDataList := make([]web.OptionData, len(options))
+	for i, option := range options {
+		optionDataList[i] = converter.OptionToOptionData(&option)
+	}
+	return optionDataList
+}
+
 func (service *optionServiceImpl) Create(db *gorm.DB, request *web.OptionCreateRequest) (web.OptionData, error) {
 	err := service.Validate.Struct(request)
 	if err != nil {
@@ -51,13 +61,7 @@ func (service *optionServiceImpl) FindAll(db *gorm.DB) ([]web.OptionData, error)
 		return []web.OptionData{}, err
 	}
 
-	var optionDataList []web.OptionData
-	for _, option := range options {
-		optionData := converter.OptionToOptionData(&option)
-		optionDataList = append(optionDataList, optionData)
-	}
-
-	return optionDataList, nil
+	return service.convertOptionsToData(options), nil
 }
 
 func (service *optionServiceImpl) FindById(db *gorm.DB, optionId int) (web.OptionData, error) {
@@ -75,13 +79,7 @@ func (service *optionServiceImpl) FindByQuestionId(db *gorm.DB, questionId int) 
 		return []web.OptionData{}, err
 	}
 
-	var optionDataList []web.OptionData
-	for _, option := range options {
-		optionData := converter.OptionToOptionData(&option)
-		optionDataList = append(optionDataList, optionData)
-	}
-
-	return optionDataList, nil
+	return service.convertOptionsToData(options), nil
 }
 
 func (service *optionServiceImpl) Update(db *gorm.DB, request *web.OptionUpdateRequest) (web.OptionData, error) {

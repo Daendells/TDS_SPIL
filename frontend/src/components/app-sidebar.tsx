@@ -1,6 +1,6 @@
 "use client";
 
-import { LaptopMinimal, ChevronUp, Inbox, User2, FileText } from "lucide-react";
+import { LaptopMinimal, ChevronUp, Inbox, User2, FileText, Settings } from "lucide-react";
 
 import {
   Sidebar,
@@ -51,6 +51,11 @@ const items = [
     title: "Training",
     url: "/dashboard/training",
     icon: FileText,
+  },
+  {
+    title: "Questions Admin",
+    url: "/questions",
+    icon: Settings,
   },
 ];
 

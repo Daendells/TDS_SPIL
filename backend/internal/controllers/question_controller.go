@@ -96,3 +96,80 @@ func (controller *QuestionController) FindById(ctx *gin.Context) {
 		Data:   questionData,
 	})
 }
+
+func (controller *QuestionController) FindByRole(ctx *gin.Context) {
+	role := ctx.Param("role")
+
+	questionDataList, err := controller.QuestionService.FindByRole(controller.DB, role)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   questionDataList,
+	})
+}
+
+func (controller *QuestionController) Update(ctx *gin.Context) {
+	var request web.QuestionUpdateRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	questionData, err := controller.QuestionService.Update(controller.DB, &request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   questionData,
+	})
+}
+
+func (controller *QuestionController) Delete(ctx *gin.Context) {
+	questionIdStr := ctx.Param("questionId")
+	questionId, err := strconv.Atoi(questionIdStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  "Invalid question ID",
+		})
+		return
+	}
+
+	err = controller.QuestionService.Delete(controller.DB, questionId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   "Question deleted successfully",
+	})
+}

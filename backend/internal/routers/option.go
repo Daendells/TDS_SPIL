@@ -13,5 +13,7 @@ func OptionRouter(router *gin.Engine, optionController *controllers.OptionContro
 		optionRoutes.GET("", optionController.FindAll)
 		optionRoutes.GET("/:optionId", optionController.FindById)
 		optionRoutes.GET("/question/:questionId", optionController.FindByQuestionId)
+		optionRoutes.PUT("/:optionId", optionController.Update)
+		optionRoutes.DELETE("/:optionId", optionController.Delete)
 	}
 }

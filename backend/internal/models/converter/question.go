@@ -10,6 +10,9 @@ func QuestionToQuestionData(question *domain.Question) web.QuestionData {
 		QuestionID:   question.QuestionID,
 		Role:         question.Role,
 		QuestionText: question.QuestionText,
+		Category:     question.Category,
+		IsImage:      question.IsImage,
+		ImageURL:     question.ImageURL,
 	}
 }
 
@@ -17,6 +20,9 @@ func QuestionCreateRequestToQuestion(request *web.QuestionCreateRequest) domain.
 	return domain.Question{
 		Role:         request.Role,
 		QuestionText: request.QuestionText,
+		Category:     request.Category,
+		IsImage:      request.IsImage,
+		ImageURL:     request.ImageURL,
 	}
 }
 
@@ -25,5 +31,8 @@ func QuestionUpdateRequestToQuestion(request *web.QuestionUpdateRequest) domain.
 		QuestionID:   request.QuestionID,
 		Role:         request.Role,
 		QuestionText: request.QuestionText,
+		Category:     request.Category,
+		IsImage:      request.IsImage,
+		ImageURL:     request.ImageURL,
 	}
 }

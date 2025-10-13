@@ -1,10 +1,10 @@
 package controllers
 
 import (
-	"net/http"
-	"strconv"
 	"backend/internal/models/web"
 	"backend/internal/services"
+	"net/http"
+	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -123,5 +123,62 @@ func (controller *OptionController) FindByQuestionId(ctx *gin.Context) {
 		Code:   http.StatusOK,
 		Status: "OK",
 		Data:   optionDataList,
+	})
+}
+
+func (controller *OptionController) Update(ctx *gin.Context) {
+	var request web.OptionUpdateRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	optionData, err := controller.OptionService.Update(controller.DB, &request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   optionData,
+	})
+}
+
+func (controller *OptionController) Delete(ctx *gin.Context) {
+	optionIdStr := ctx.Param("optionId")
+	optionId, err := strconv.Atoi(optionIdStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  "Invalid option ID",
+		})
+		return
+	}
+
+	err = controller.OptionService.Delete(controller.DB, optionId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   "Option deleted successfully",
 	})
 }

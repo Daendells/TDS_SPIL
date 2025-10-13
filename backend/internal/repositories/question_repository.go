@@ -10,6 +10,7 @@ type QuestionRepository interface {
 	Create(db *gorm.DB, question *domain.Question) error
 	FindAll(db *gorm.DB) ([]domain.Question, error)
 	FindById(db *gorm.DB, questionId int) (domain.Question, error)
+	FindByRole(db *gorm.DB, role string) ([]domain.Question, error)
 	Update(db *gorm.DB, question *domain.Question) error
 	Delete(db *gorm.DB, questionId int) error
 }
@@ -35,6 +36,12 @@ func (repository *questionRepositoryImpl) FindById(db *gorm.DB, questionId int) 
 	var question domain.Question
 	err := db.Where("question_id = ?", questionId).First(&question).Error
 	return question, err
+}
+
+func (repository *questionRepositoryImpl) FindByRole(db *gorm.DB, role string) ([]domain.Question, error) {
+	var questions []domain.Question
+	err := db.Where("role = ?", role).Find(&questions).Error
+	return questions, err
 }
 
 func (repository *questionRepositoryImpl) Update(db *gorm.DB, question *domain.Question) error {

@@ -70,6 +70,10 @@ func (c *RouterConfig) SetupGuestRouter() {
 		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
 		assessmentResults.GET("/seaman/:seamanCode", c.AssessmentResultController.FindBySeamanCode)
 	}
+
+	// Register Question and Option routes
+	QuestionRouter(c.App, c.QuestionController)
+	OptionRouter(c.App, c.OptionController)
 }
 
 func (c *RouterConfig) SetupAuthRouter() {
