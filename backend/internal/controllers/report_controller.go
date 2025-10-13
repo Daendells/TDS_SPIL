@@ -105,3 +105,35 @@ func (controller *ReportController) IDPCount(ctx *gin.Context) {
 func (controlelr *ReportController) TestPanic(ctx *gin.Context) {
 	panic("Oopps...")
 }
+
+func (controller *ReportController) FindBySeamanCode(ctx *gin.Context) {
+	seamanCode := ctx.Param("seamanCode")
+	if seamanCode == "" {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  "Seaman code is required",
+		})
+		return
+	}
+
+	response, err := controller.Service.FindBySeamanCode(ctx, seamanCode)
+	if err != nil {
+		if err.Error() == "seaman code not found" {
+			ctx.JSON(http.StatusNotFound, web.ErrorResponse{
+				Code:   http.StatusNotFound,
+				Status: "Not Found",
+				Error:  "Seaman code not found",
+			})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(response.Code, response)
+}

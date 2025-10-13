@@ -257,3 +257,32 @@ func (service *ReportService) IDPCount(ctx context.Context) (*web.SuccessRespons
 		Data:   data,
 	}, nil
 }
+
+func (service *ReportService) FindBySeamanCode(ctx context.Context, seamanCode string) (*web.SuccessResponse, error) {
+	// TODO: Create Transaction
+	tx := service.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	var report domain.Report
+	err := service.ReportRepository.FindBySeamanCode(tx, seamanCode, &report)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("seaman code not found")
+		}
+		return nil, err
+	}
+
+	// TODO: Commit Transaction
+	if err = tx.Commit().Error; err != nil {
+		service.Log.Warnf("Failed commit transaction: %+v", err)
+		return nil, fmt.Errorf("failed commit transaction: %w", err)
+	}
+
+	reportData := converter.ToReportData(&report)
+
+	return &web.SuccessResponse{
+		Status: "Ok",
+		Code:   http.StatusOK,
+		Data:   reportData,
+	}, nil
+}

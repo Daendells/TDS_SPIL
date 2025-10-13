@@ -13,6 +13,7 @@ func SetupReportRouter(app *gin.Engine, config *viper.Viper, reportController *c
 	{
 		report.GET("", reportController.FindAll)
 		report.GET("/idp-count", reportController.IDPCount)
+		report.GET("/seaman-code/:seamanCode", reportController.FindBySeamanCode)
 		report.POST("/upload", reportController.CreateAll)
 		report.GET("/test", middlewares.AuthMiddleware(config.GetString("JWT_SECRET_KEY")), reportController.TestPanic)
 	}

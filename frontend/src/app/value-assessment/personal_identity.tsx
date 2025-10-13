@@ -19,7 +19,6 @@ import { ValueAssessmentData } from "./page";
 
 const FormSchema = z.object({
   fullName: z.string().min(1, { message: "Nama lengkap harus diisi" }),
-  identityNumber: z.string().min(1, { message: "Nomor identitas harus diisi" }),
   rank: z.string().min(1, { message: "Rank harus dipilih" }),
   vesselName: z.string().min(1, { message: "Nama vessel/akademi harus diisi" }),
   seamanCode: z.string().min(1, { message: "Seaman code harus diisi" }),
@@ -47,18 +46,80 @@ const rankOptions = [
 ];
 
 export default function PersonalIdentity({ onNext, onBack, assessmentData, updateAssessmentData }: PersonalIdentityProps) {
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationError, setVerificationError] = useState("");
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
       fullName: assessmentData.fullName,
-      identityNumber: assessmentData.identityNumber,
       rank: assessmentData.rank,
       vesselName: assessmentData.vesselName,
       seamanCode: assessmentData.seamanCode,
     },
   });
 
+  const verifySeamanCode = async (seamanCode: string) => {
+    if (!seamanCode.trim()) {
+      setVerificationError("Seaman code harus diisi");
+      return;
+    }
+
+    setIsVerifying(true);
+    setVerificationError("");
+    
+    try {
+      const response = await fetch(`http://localhost:8080/reports/seaman-code/${seamanCode}`);
+      
+      if (response.ok) {
+        const result = await response.json();
+        const reportData = result.data;
+        
+        // Auto-populate the fields with data from the report
+        form.setValue("fullName", reportData.nama || "");
+        form.setValue("rank", reportData.jabatan || "");
+        form.setValue("vesselName", reportData.vesselName || "");
+        
+        setIsVerified(true);
+        setVerificationError("");
+      } else if (response.status === 404) {
+        setVerificationError("Seaman code tidak ditemukan dalam database");
+        setIsVerified(false);
+        // Clear the auto-populated fields
+        form.setValue("fullName", "");
+        form.setValue("rank", "");
+        form.setValue("vesselName", "");
+      } else {
+        setVerificationError("Terjadi kesalahan saat memverifikasi seaman code");
+        setIsVerified(false);
+      }
+    } catch (error) {
+      setVerificationError("Terjadi kesalahan koneksi");
+      setIsVerified(false);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  const handleSeamanCodeChange = (value: string) => {
+    form.setValue("seamanCode", value);
+    setIsVerified(false);
+    setVerificationError("");
+    
+    // Clear auto-populated fields when seaman code changes
+    if (value !== assessmentData.seamanCode) {
+      form.setValue("fullName", "");
+      form.setValue("rank", "");
+      form.setValue("vesselName", "");
+    }
+  };
+
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
+    if (!isVerified) {
+      setVerificationError("Silakan verifikasi seaman code terlebih dahulu");
+      return;
+    }
     updateAssessmentData(data);
     onNext();
   };
@@ -90,19 +151,36 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="fullName"
+                  name="seamanCode"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel className="font-medium text-gray-700">
-                        Nama Lengkap (Sesuai KTP) <span className="text-red-500">*</span>
+                        Seaman Code <span className="text-red-500">*</span>
                       </FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Masukkan nama lengkap sesuai KTP" 
-                          {...field} 
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
-                        />
-                      </FormControl>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input 
+                            placeholder="Masukkan seaman code" 
+                            {...field}
+                            onChange={(e) => handleSeamanCodeChange(e.target.value)}
+                            className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
+                          />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          onClick={() => verifySeamanCode(field.value)}
+                          disabled={isVerifying || !field.value.trim()}
+                          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium disabled:bg-gray-400"
+                        >
+                          {isVerifying ? "Verifikasi..." : "Verifikasi"}
+                        </Button>
+                      </div>
+                      {verificationError && (
+                        <p className="text-sm text-red-600 mt-1">{verificationError}</p>
+                      )}
+                      {isVerified && (
+                        <p className="text-sm text-green-600 mt-1">✓ Seaman code berhasil diverifikasi</p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -110,17 +188,18 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
 
                 <FormField
                   control={form.control}
-                  name="identityNumber"
+                  name="fullName"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel className="font-medium text-gray-700">
-                        Nomor Identitas (KTP / Passport / NIK Karyawan) <span className="text-red-500">*</span>
+                        Nama Lengkap <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Masukkan nomor identitas" 
+                          placeholder="Nama akan terisi otomatis setelah verifikasi seaman code" 
                           {...field} 
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
+                          readOnly={true}
+                          className="border-gray-300 bg-gray-50 text-gray-700" 
                         />
                       </FormControl>
                       <FormMessage />
@@ -136,20 +215,14 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                       <FormLabel className="font-medium text-gray-700">
                         Rank <span className="text-red-500">*</span>
                       </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger className="border-gray-300 focus:border-gray-500 focus:ring-gray-500">
-                            <SelectValue placeholder="Pilih rank" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          {rankOptions.map((option) => (
-                            <SelectItem key={option.value} value={option.value}>
-                              {option.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <FormControl>
+                        <Input 
+                          placeholder="Rank akan terisi otomatis setelah verifikasi seaman code" 
+                          {...field} 
+                          readOnly={true}
+                          className="border-gray-300 bg-gray-50 text-gray-700" 
+                        />
+                      </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -165,29 +238,10 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                       </FormLabel>
                       <FormControl>
                         <Input 
-                          placeholder="Masukkan nama vessel atau akademi pelayaran" 
+                          placeholder="Nama vessel akan terisi otomatis setelah verifikasi seaman code" 
                           {...field} 
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
-                        />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-
-                <FormField
-                  control={form.control}
-                  name="seamanCode"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel className="font-medium text-gray-700">
-                        Seaman Code <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Masukkan seaman code" 
-                          {...field} 
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
+                          readOnly={true}
+                          className="border-gray-300 bg-gray-50 text-gray-700" 
                         />
                       </FormControl>
                       <FormMessage />
@@ -207,9 +261,9 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                 </Button>
                 <Button 
                   type="submit"
-                  className="px-8 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium"
+                  className="px-8 py-2 bg-green-600 hover:bg-green-700 text-white font-medium"
                 >
-                  Berikutnya
+                  Mulai Test
                 </Button>
               </div>
             </div>

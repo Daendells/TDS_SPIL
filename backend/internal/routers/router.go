@@ -34,6 +34,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 	{
 		report.GET("", c.ReportController.FindAll)
 		report.GET("/idp-count", c.ReportController.IDPCount)
+		report.GET("/seaman-code/:seamanCode", c.ReportController.FindBySeamanCode)
 		report.POST("/upload", c.ReportController.CreateAll)
 		report.GET("/test", c.ReportController.TestPanic)
 	}

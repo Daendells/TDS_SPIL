@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Radar,
@@ -10,6 +10,8 @@ import {
 } from "recharts";
 import { ChevronRightIcon } from "lucide-react";
 import MentoringListDialog from "@/components/mentoring-list-dialog";
+import AssessmentResultDialog from "@/components/assessment-result-dialog";
+import { useApi } from "@/hooks/use-api";
 
 interface ProfilingDialogProps {
   open: boolean;
@@ -23,6 +25,23 @@ export default function ProfilingDialog({
   report,
 }: ProfilingDialogProps) {
   const [mentoringDialogOpen, setMentoringDialogOpen] = useState(false);
+  const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
+  const [assessmentScore, setAssessmentScore] = useState<number | null>(null);
+  const { get } = useApi();
+
+  useEffect(() => {
+    if (report?.seamanCode) {
+      get(`/assessment-results/seaman/${report.seamanCode}`)
+        .then((response) => {
+          if (response.data?.totalFinalScore) {
+            setAssessmentScore(Math.round(response.data.totalFinalScore * 10) / 10);
+          }
+        })
+        .catch(() => {
+          setAssessmentScore(null);
+        });
+    }
+  }, [report?.seamanCode, get]);
   
   if (!report) return null;
 
@@ -148,9 +167,15 @@ export default function ProfilingDialog({
               <h2 className="font-bold text-lg mb-2">INFORMASI KINERJA</h2>
               <table className="w-full text-sm mb-4 border">
                 <tbody>
-                  <tr>
-                    <td className="border px-2 py-1">Values Assessment</td>
-                    <td className="border px-2 py-1">{report.valueAssessment}</td>
+                  <tr 
+                    className="cursor-pointer hover:bg-gray-50 transition-colors"
+                    onClick={() => setAssessmentDialogOpen(true)}
+                  >
+                    <td className="border px-2 py-1 flex items-center justify-between">
+                      Values Assessment
+                      <ChevronRightIcon className="h-4 w-4 text-gray-400" />
+                    </td>
+                    <td className="border px-2 py-1">{assessmentScore !== null ? assessmentScore : report.valueAssessment}</td>
                   </tr>
                   <tr>
                     <td className="border px-2 py-1">Assessment Center</td>
@@ -218,6 +243,14 @@ export default function ProfilingDialog({
         setOpen={setMentoringDialogOpen}
         reportId={report.id}
         reportName={report.nama || "Unknown"}
+      />
+
+      {/* Assessment Result Dialog */}
+      <AssessmentResultDialog
+        open={assessmentDialogOpen}
+        setOpen={setAssessmentDialogOpen}
+        seamanCode={report.seamanCode}
+        seamanName={report.nama || "Unknown"}
       />
     </Dialog>
   );

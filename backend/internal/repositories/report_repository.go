@@ -84,3 +84,7 @@ func (r *ReportRepository) IDPCount(db *gorm.DB, data *web.IDPCountData) error {
 
 	return nil
 }
+
+func (r *ReportRepository) FindBySeamanCode(db *gorm.DB, seamanCode string, report *domain.Report) error {
+	return db.Where("seaman_code = ?", seamanCode).First(report).Error
+}
