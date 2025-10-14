@@ -43,18 +43,13 @@ const items = [
     icon: Inbox,
   },
   {
-    title: "Report Mentoring",
-    url: "/dashboard/report-mentoring",
-    icon: FileText,
-  },
-  {
     title: "Training",
     url: "/dashboard/training",
     icon: FileText,
   },
   {
-    title: "Questions Admin",
-    url: "/questions",
+    title: "Assessment Manager",
+    url: "/assessment-manager",
     icon: Settings,
   },
 ];

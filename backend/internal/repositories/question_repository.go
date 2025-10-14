@@ -13,6 +13,7 @@ type QuestionRepository interface {
 	FindByRole(db *gorm.DB, role string) ([]domain.Question, error)
 	Update(db *gorm.DB, question *domain.Question) error
 	Delete(db *gorm.DB, questionId int) error
+	BulkDelete(db *gorm.DB, questionIds []int) error
 }
 
 type questionRepositoryImpl struct {
@@ -50,4 +51,8 @@ func (repository *questionRepositoryImpl) Update(db *gorm.DB, question *domain.Q
 
 func (repository *questionRepositoryImpl) Delete(db *gorm.DB, questionId int) error {
 	return db.Where("question_id = ?", questionId).Delete(&domain.Question{}).Error
+}
+
+func (repository *questionRepositoryImpl) BulkDelete(db *gorm.DB, questionIds []int) error {
+	return db.Where("question_id IN ?", questionIds).Delete(&domain.Question{}).Error
 }

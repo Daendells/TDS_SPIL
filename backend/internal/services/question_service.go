@@ -17,6 +17,7 @@ type QuestionService interface {
 	FindByRole(db *gorm.DB, role string) ([]web.QuestionData, error)
 	Update(db *gorm.DB, request *web.QuestionUpdateRequest) (web.QuestionData, error)
 	Delete(db *gorm.DB, questionId int) error
+	BulkDelete(db *gorm.DB, questionIds []int) error
 }
 
 type questionServiceImpl struct {
@@ -99,4 +100,8 @@ func (service *questionServiceImpl) Update(db *gorm.DB, request *web.QuestionUpd
 
 func (service *questionServiceImpl) Delete(db *gorm.DB, questionId int) error {
 	return service.QuestionRepository.Delete(db, questionId)
+}
+
+func (service *questionServiceImpl) BulkDelete(db *gorm.DB, questionIds []int) error {
+	return service.QuestionRepository.BulkDelete(db, questionIds)
 }

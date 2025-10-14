@@ -59,7 +59,7 @@ const getRoleDefaults = (role: string) => {
         optionCount: 3,
         optionLetters: ["a", "b", "c"],
         defaultScores: [4, 2, 0],
-        defaultTexts: ["Option A", "Option B", "Option C"]
+        defaultTexts: ["Opsi A", "Opsi B", "Opsi C"]
       };
     case "va_2":
       return {
@@ -85,7 +85,7 @@ const getRoleDefaults = (role: string) => {
         optionCount: 4,
         optionLetters: ["a", "b", "c", "d"],
         defaultScores: [2, 0, 0, 0], // First option correct by default
-        defaultTexts: ["Option A", "Option B", "Option C", "Option D"]
+        defaultTexts: ["Opsi A", "Opsi B", "Opsi C", "Opsi D"]
       };
   }
 };
@@ -205,10 +205,10 @@ export default function QuestionDialog({
         });
       }
 
-      toast.success(question?.questionId ? "Question updated successfully" : "Question created successfully");
+      toast.success(question?.questionId ? "Pertanyaan berhasil diperbarui" : "Pertanyaan berhasil dibuat");
       onClose(true);
     } catch (error) {
-      toast.error("Failed to save question");
+      toast.error("Gagal menyimpan pertanyaan");
       console.error(error);
     } finally {
       setLoading(false);
@@ -219,7 +219,7 @@ export default function QuestionDialog({
     const nextLetter = String.fromCharCode(97 + options.length); // a, b, c, d, etc.
     setOptions([...options, {
       optionLetter: nextLetter,
-      optionText: `Option ${nextLetter.toUpperCase()}`,
+      optionText: `Opsi ${nextLetter.toUpperCase()}`,
       score: 0,
       isImage: 0
     }]);
@@ -240,11 +240,11 @@ export default function QuestionDialog({
       <DialogContent className="!w-[95vw] !max-w-[1400px] !h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">
-            {question?.questionId ? "Update Question" : "Create New Question"}
+            {question?.questionId ? "Perbarui Pertanyaan" : "Buat Pertanyaan Baru"}
           </DialogTitle>
           <div className="flex justify-center items-center mb-6">
             <h1 className="text-2xl font-bold uppercase">
-              {question?.questionId ? "Update Question" : "Create New Question"}
+              {question?.questionId ? "Perbarui Pertanyaan" : "Buat Pertanyaan Baru"}
             </h1>
           </div>
         </DialogHeader>
@@ -253,28 +253,28 @@ export default function QuestionDialog({
           {/* Left Column - Question Details */}
           <div className="flex flex-col gap-6">
             <div className="border rounded-xl shadow-sm p-6 bg-white">
-              <h2 className="font-bold text-lg mb-4">Question Details</h2>
+              <h2 className="font-bold text-lg mb-4">Detail Pertanyaan</h2>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="questionText" className="text-sm font-medium">Question Text</Label>
+                  <Label htmlFor="questionText" className="text-sm font-medium">Teks Pertanyaan</Label>
                   <Textarea
                     id="questionText"
                     value={formData.questionText}
                     onChange={(e) => setFormData({ ...formData, questionText: e.target.value })}
-                    placeholder="Enter the question text..."
+                    placeholder="Masukkan teks pertanyaan..."
                     className="min-h-[120px] mt-2"
                   />
                 </div>
 
                 {role === "va_1" && (
                   <div>
-                    <Label htmlFor="category" className="text-sm font-medium">Category</Label>
+                    <Label htmlFor="category" className="text-sm font-medium">Kategori</Label>
                     <Select
                       value={formData.category}
                       onValueChange={(value) => setFormData({ ...formData, category: value })}
                     >
                       <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Select category..." />
+                        <SelectValue placeholder="Pilih kategori..." />
                       </SelectTrigger>
                       <SelectContent>
                         {categories.map((category) => (
@@ -289,7 +289,7 @@ export default function QuestionDialog({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="isImage" className="text-sm font-medium">Has Image</Label>
+                    <Label htmlFor="isImage" className="text-sm font-medium">Memiliki Gambar</Label>
                     <Select
                       value={formData.isImage}
                       onValueChange={(value) => setFormData({ ...formData, isImage: value })}
@@ -298,20 +298,20 @@ export default function QuestionDialog({
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="0">No</SelectItem>
-                        <SelectItem value="1">Yes</SelectItem>
+                        <SelectItem value="0">Tidak</SelectItem>
+                        <SelectItem value="1">Ya</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
 
                   {formData.isImage === "1" && (
                     <div>
-                      <Label htmlFor="imageUrl" className="text-sm font-medium">Image URL</Label>
+                      <Label htmlFor="imageUrl" className="text-sm font-medium">URL Gambar</Label>
                       <Input
                         id="imageUrl"
                         value={formData.imageUrl}
                         onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
-                        placeholder="Enter image URL..."
+                        placeholder="Masukkan URL gambar..."
                         className="mt-2"
                       />
                     </div>
@@ -325,7 +325,7 @@ export default function QuestionDialog({
           <div className="flex flex-col gap-6">
             <div className="border rounded-xl shadow-sm p-6 bg-white h-full">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-lg">Answer Options</h2>
+                <h2 className="font-bold text-lg">Opsi Jawaban</h2>
                 <Button
                   type="button"
                   variant="outline"
@@ -334,7 +334,7 @@ export default function QuestionDialog({
                   className="flex items-center gap-2"
                 >
                   <Plus className="h-4 w-4" />
-                  Add Option
+                  Tambah Opsi
                 </Button>
               </div>
 
@@ -343,7 +343,7 @@ export default function QuestionDialog({
                   <div key={index} className="border rounded-lg p-4 bg-gray-50">
                     <div className="flex items-center justify-between mb-3">
                       <Badge variant="outline" className="bg-white">
-                        Option {option.optionLetter.toUpperCase()}
+                        Opsi {option.optionLetter.toUpperCase()}
                       </Badge>
                       {options.length > 1 && (
                         <Button
@@ -359,16 +359,16 @@ export default function QuestionDialog({
 
                     <div className="space-y-3">
                       <div>
-                        <Label className="text-sm font-medium">Option Text</Label>
+                        <Label className="text-sm font-medium">Teks Opsi</Label>
                         <Input
                           value={option.optionText}
                           onChange={(e) => updateOption(index, "optionText", e.target.value)}
-                          placeholder="Enter option text..."
+                          placeholder="Masukkan teks opsi..."
                           className="mt-1"
                         />
                       </div>
                       <div>
-                        <Label className="text-sm font-medium">Score</Label>
+                        <Label className="text-sm font-medium">Skor</Label>
                         <Input
                           type="number"
                           value={option.score}
@@ -388,10 +388,10 @@ export default function QuestionDialog({
         <DialogFooter className="mt-6 pt-4 border-t">
           <div className="flex justify-end gap-3 w-full">
             <Button variant="outline" onClick={() => onClose()}>
-              Cancel
+              Batal
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? "Saving..." : (question?.questionId ? "Update Question" : "Create Question")}
+              {loading ? "Menyimpan..." : (question?.questionId ? "Perbarui Pertanyaan" : "Buat Pertanyaan")}
             </Button>
           </div>
         </DialogFooter>

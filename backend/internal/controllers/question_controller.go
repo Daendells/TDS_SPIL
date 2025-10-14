@@ -173,3 +173,43 @@ func (controller *QuestionController) Delete(ctx *gin.Context) {
 		Data:   "Question deleted successfully",
 	})
 }
+
+func (controller *QuestionController) BulkDelete(ctx *gin.Context) {
+	var request struct {
+		QuestionIds []int `json:"questionIds" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if len(request.QuestionIds) == 0 {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  "No question IDs provided",
+		})
+		return
+	}
+
+	err := controller.QuestionService.BulkDelete(controller.DB, request.QuestionIds)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   "Questions deleted successfully",
+	})
+}
