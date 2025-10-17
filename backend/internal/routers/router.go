@@ -104,5 +104,6 @@ func (c *RouterConfig) SetupAuthRouter() {
 		questionsWithOptionsAuth.POST("", c.QuestionOptionController.CreateQuestionWithOptions)
 		questionsWithOptionsAuth.PUT("/:questionId", c.QuestionOptionController.UpdateQuestionWithOptions)
 		questionsWithOptionsAuth.DELETE("/:questionId", c.QuestionOptionController.DeleteQuestionWithOptions)
+		questionsWithOptionsAuth.DELETE("/bulk-delete", c.QuestionOptionController.BulkDelete)
 	}
 }

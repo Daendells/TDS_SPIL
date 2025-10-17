@@ -21,7 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, Trash, FileText } from "lucide-react";
 import { toast } from "sonner";
-import { useDeleteQuestion } from "./_hooks/useQuestion";
+import { useDeleteQuestion, useBulkDeleteQuestions } from "./_hooks/useQuestion";
 import QuestionDialog from "./question-dialog";
 import DeleteConfirmationDialog from "./delete-confirmation-dialog";
 import BulkDeleteConfirmationDialog from "./bulk-delete-confirmation-dialog";
@@ -64,6 +64,7 @@ export default function QuestionsAdmin() {
 
   // React Query mutation for deleting questions
   const deleteQuestionMutation = useDeleteQuestion();
+  const bulkDeleteMutation = useBulkDeleteQuestions();
 
   const {
     data: assessmentData,
@@ -162,12 +163,8 @@ export default function QuestionsAdmin() {
   const handleConfirmBulkDelete = async () => {
     setBulkDeleteLoading(true);
     try {
-      // Delete questions one by one using the question-with-options endpoint
-      const deletePromises = selectedQuestions.map((questionId) =>
-        deleteQuestionMutation.mutateAsync(questionId)
-      );
-
-      await Promise.all(deletePromises);
+      // Use bulk delete endpoint for better performance
+      await bulkDeleteMutation.mutateAsync(selectedQuestions);
       toast.success(`${selectedQuestions.length} pertanyaan berhasil dihapus`);
       setSelectedQuestions([]);
       setBulkDeleteDialogOpen(false);

@@ -41,11 +41,11 @@ export function useDeleteQuestion() {
       const response = await api.delete<ApiReturn<void>>(
         `/api/questions-with-options/${questionId}`
       );
-      
+
       if (!response.data) {
         throw new Error("Failed to delete question");
       }
-      
+
       return response.data;
     },
     onSuccess: () => {
@@ -59,18 +59,43 @@ export function useDeleteQuestion() {
 export function useUpdateQuestion() {
   const queryClient = useQueryClient();
 
-  return useMutation<QuestionOptionResponse, Error, { questionId: number; data: QuestionUpdatePayload }>({
+  return useMutation<
+    QuestionOptionResponse,
+    Error,
+    { questionId: number; data: QuestionUpdatePayload }
+  >({
     mutationFn: async ({ questionId, data }) => {
       const response = await api.put<ApiReturn<QuestionOptionResponse>>(
         `/api/questions-with-options/${questionId}`,
         data
       );
-      
+
       if (!response.data) {
         throw new Error("Failed to update question");
       }
-      
+
       return response.data.data;
+    },
+    onSuccess: () => {
+      // Invalidate assessment queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["assessment"] });
+    },
+  });
+}
+
+export function useBulkDeleteQuestions() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, number[]>({
+    mutationFn: async (questionIds: number[]) => {
+      const response = await api.delete<ApiReturn<void>>(
+        `/api/questions-with-options/bulk-delete`,
+        { data: { questionIds } }
+      );
+
+      if (!response.data) {
+        throw new Error("Failed to bulk delete questions");
+      }
     },
     onSuccess: () => {
       // Invalidate assessment queries to refresh data
@@ -89,11 +114,11 @@ export function useCreateQuestion() {
         `/api/questions-with-options`,
         data
       );
-      
+
       if (!response.data) {
         throw new Error("Failed to create question");
       }
-      
+
       return response.data.data;
     },
     onSuccess: () => {
