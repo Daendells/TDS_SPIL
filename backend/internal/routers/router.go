@@ -14,6 +14,8 @@ type RouterConfig struct {
 	QuestionController         *controllers.QuestionController
 	OptionController           *controllers.OptionController
 	AssessmentResultController *controllers.AssessmentResultController
+	QuestionOptionController   *controllers.QuestionOptionController
+	AssessmentController       *controllers.AssessmentController
 	AuthMiddleware             gin.HandlerFunc
 }
 
@@ -35,6 +37,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		report.GET("", c.ReportController.FindAll)
 		report.GET("/idp-count", c.ReportController.IDPCount)
 		report.GET("/seaman-code/:seamanCode", c.ReportController.FindBySeamanCode)
+		report.GET("/seafarer-code/:seafarerCode", c.ReportController.FindBySeafarerCode)
 		report.POST("/upload", c.ReportController.CreateAll)
 		report.GET("/test", c.ReportController.TestPanic)
 	}
@@ -71,20 +74,35 @@ func (c *RouterConfig) SetupGuestRouter() {
 		assessmentResults.GET("/seaman/:seamanCode", c.AssessmentResultController.FindBySeamanCode)
 	}
 
+	// Combined question-option routes (Public access - only read operations)
+	questionsWithOptions := c.App.Group("api/questions-with-options")
+	{
+		questionsWithOptions.GET("", c.QuestionOptionController.FindAllQuestionsWithOptions)
+	}
+
+	assessment := c.App.Group("api/assessments")
+	{
+		assessment.GET("/:role", c.AssessmentController.FindByRole)
+		assessment.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
+	}
+
 	// Register Question and Option routes
 	QuestionRouter(c.App, c.QuestionController)
 	OptionRouter(c.App, c.OptionController)
 }
 
 func (c *RouterConfig) SetupAuthRouter() {
-	// TODO: Declare the Authmiddleware
-	c.App.Use(c.AuthMiddleware)
-
-	// Protected Auth Routes only
-
-	// TODO: Setup Auth Routes
-	auth := c.App.Group("auth")
+	// Protected Auth Routes
+	auth := c.App.Group("auth").Use(c.AuthMiddleware)
 	{
 		auth.POST("/logout", c.UserController.Logout)
+	}
+
+	// Protected Combined question-option routes
+	questionsWithOptionsAuth := c.App.Group("api/questions-with-options").Use(c.AuthMiddleware)
+	{
+		questionsWithOptionsAuth.POST("", c.QuestionOptionController.CreateQuestionWithOptions)
+		questionsWithOptionsAuth.PUT("/:questionId", c.QuestionOptionController.UpdateQuestionWithOptions)
+		questionsWithOptionsAuth.DELETE("/:questionId", c.QuestionOptionController.DeleteQuestionWithOptions)
 	}
 }

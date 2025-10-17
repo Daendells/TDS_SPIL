@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogFooter,
   DialogHeader,
   DialogTitle,
@@ -21,7 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
+
 import { Plus, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { useApi } from "@/hooks/use-api";
@@ -32,6 +31,8 @@ interface Option {
   optionText: string;
   score: number;
   isImage: number;
+  action?: "create" | "update" | "delete"; // Track operation type
+  isNew?: boolean; // Track if this is a newly added option
 }
 
 interface Question {
@@ -59,14 +60,14 @@ const getRoleDefaults = (role: string) => {
         optionCount: 3,
         optionLetters: ["a", "b", "c"],
         defaultScores: [4, 2, 0],
-        defaultTexts: ["Opsi A", "Opsi B", "Opsi C"]
+        defaultTexts: ["Opsi A", "Opsi B", "Opsi C"],
       };
     case "va_2":
       return {
         optionCount: 2,
         optionLetters: ["a", "b"],
         defaultScores: [1, 0],
-        defaultTexts: ["Benar", "Salah"]
+        defaultTexts: ["Benar", "Salah"],
       };
     case "va_3":
       return {
@@ -75,17 +76,17 @@ const getRoleDefaults = (role: string) => {
         defaultScores: [1, 2, 3, 4],
         defaultTexts: [
           "Sangat Tidak Menggambarkan Diri Saya",
-          "Tidak Menggambarkan Diri Saya", 
+          "Tidak Menggambarkan Diri Saya",
           "Menggambarkan Diri Saya",
-          "Sangat Menggambarkan Diri Saya"
-        ]
+          "Sangat Menggambarkan Diri Saya",
+        ],
       };
     default: // Crew evaluation roles
       return {
         optionCount: 4,
         optionLetters: ["a", "b", "c", "d"],
         defaultScores: [2, 0, 0, 0], // First option correct by default
-        defaultTexts: ["Opsi A", "Opsi B", "Opsi C", "Opsi D"]
+        defaultTexts: ["Opsi A", "Opsi B", "Opsi C", "Opsi D"],
       };
   }
 };
@@ -95,15 +96,16 @@ export default function QuestionDialog({
   onClose,
   question,
   role,
-  categories
+  categories,
 }: QuestionDialogProps) {
   const [formData, setFormData] = useState({
     questionText: "",
     category: "",
     isImage: "0",
-    imageUrl: ""
+    imageUrl: "",
   });
   const [options, setOptions] = useState<Option[]>([]);
+
   const [loading, setLoading] = useState(false);
   const api = useApi();
 
@@ -115,9 +117,16 @@ export default function QuestionDialog({
           questionText: question.questionText,
           category: question.category || "",
           isImage: question.isImage || "0",
-          imageUrl: question.imageUrl || ""
+          imageUrl: question.imageUrl || "",
         });
-        setOptions(question.options || []);
+
+        const existingOptions = (question.options || []).map((option) => ({
+          ...option,
+          action: "update" as const,
+          isNew: false,
+        }));
+
+        setOptions(existingOptions);
       } else {
         // Creating new question
         const defaults = getRoleDefaults(role);
@@ -125,16 +134,20 @@ export default function QuestionDialog({
           questionText: "",
           category: "",
           isImage: "0",
-          imageUrl: ""
+          imageUrl: "",
         });
-        
-        const defaultOptions: Option[] = defaults.optionLetters.map((letter, index) => ({
-          optionLetter: letter,
-          optionText: defaults.defaultTexts[index],
-          score: defaults.defaultScores[index],
-          isImage: 0
-        }));
-        
+
+        const defaultOptions: Option[] = defaults.optionLetters.map(
+          (letter, index) => ({
+            optionLetter: letter,
+            optionText: defaults.defaultTexts[index],
+            score: defaults.defaultScores[index],
+            isImage: 0,
+            action: "create" as const,
+            isNew: true,
+          })
+        );
+
         setOptions(defaultOptions);
       }
     }
@@ -158,58 +171,66 @@ export default function QuestionDialog({
 
     setLoading(true);
     try {
-      let questionData;
-      
       if (question?.questionId) {
-        // Update existing question
+        // Update existing question using combined endpoint
         const updateData = {
-          questionId: question.questionId,
           role,
           questionText: formData.questionText,
           category: role === "va_1" ? formData.category : null,
           isImage: formData.isImage,
-          imageUrl: formData.imageUrl || null
+          imageUrl: formData.imageUrl || null,
+          options: options.map((option) => {
+            // Determine action based on option state
+            let action = option.action || "update";
+
+            // If option has no ID, it's a create operation
+            if (!option.optionId) {
+              action = "create";
+            }
+
+            return {
+              optionId: option.optionId || null,
+              optionLetter: option.optionLetter,
+              optionText: option.optionText,
+              score: option.score,
+              isImage: option.isImage,
+              action: action,
+            };
+          }),
         };
-        
-        const response = await api.put(`/api/questions/${question.questionId}`, updateData);
-        questionData = response.data.data;
-        
-        // Delete existing options and create new ones
-        for (const option of question.options || []) {
-          if (option.optionId) {
-            await api.delete(`/api/options/${option.optionId}`);
-          }
-        }
+
+        await api.put(
+          `/api/questions-with-options/${question.questionId}`,
+          updateData
+        );
+        toast.success("Pertanyaan berhasil diperbarui");
       } else {
-        // Create new question
+        // Create new question using combined endpoint
         const createData = {
           role,
           questionText: formData.questionText,
-          category: role === "va_1" ? formData.category : null,
+          category: role === "va_1" ? formData.category : "",
           isImage: formData.isImage,
-          imageUrl: formData.imageUrl || null
+          imageUrl: formData.imageUrl || "",
+          options: options.map((option) => ({
+            optionLetter: option.optionLetter,
+            optionText: option.optionText,
+            score: option.score,
+            isImage: option.isImage,
+          })),
         };
-        
-        const response = await api.post("/api/questions", createData);
-        questionData = response.data.data;
+
+        await api.post("/api/questions-with-options", createData);
+        toast.success("Pertanyaan berhasil dibuat");
       }
 
-      // Create options
-      for (const option of options) {
-        await api.post("/api/options", {
-          questionId: questionData.questionId,
-          optionLetter: option.optionLetter,
-          optionText: option.optionText,
-          score: option.score,
-          isImage: option.isImage
-        });
-      }
-
-      toast.success(question?.questionId ? "Pertanyaan berhasil diperbarui" : "Pertanyaan berhasil dibuat");
       onClose(true);
     } catch (error) {
-      toast.error("Gagal menyimpan pertanyaan");
-      console.error(error);
+      console.error("Error saving question:", error);
+      const errorMessage =
+        (error as { response?: { data?: { error?: string } } })?.response?.data
+          ?.error || "Gagal menyimpan pertanyaan";
+      toast.error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -217,19 +238,37 @@ export default function QuestionDialog({
 
   const addOption = () => {
     const nextLetter = String.fromCharCode(97 + options.length); // a, b, c, d, etc.
-    setOptions([...options, {
-      optionLetter: nextLetter,
-      optionText: `Opsi ${nextLetter.toUpperCase()}`,
-      score: 0,
-      isImage: 0
-    }]);
+    setOptions([
+      ...options,
+      {
+        optionLetter: nextLetter,
+        optionText: `Opsi ${nextLetter.toUpperCase()}`,
+        score: 0,
+        isImage: 0,
+        action: "create" as const,
+        isNew: true,
+      },
+    ]);
   };
 
   const removeOption = (index: number) => {
-    setOptions(options.filter((_, i) => i !== index));
+    const optionToRemove = options[index];
+
+    if (optionToRemove.isNew) {
+      // If it's a newly added option, just remove it from the array
+      setOptions(options.filter((_, i) => i !== index));
+    } else {
+      // If it's an existing option, mark it for deletion but keep in array for backend processing
+      // We'll filter it out when sending to backend but keep the record for deletion
+      setOptions(options.filter((_, i) => i !== index));
+    }
   };
 
-  const updateOption = (index: number, field: keyof Option, value: any) => {
+  const updateOption = (
+    index: number,
+    field: keyof Option,
+    value: string | boolean | number
+  ) => {
     const updatedOptions = [...options];
     updatedOptions[index] = { ...updatedOptions[index], [field]: value };
     setOptions(updatedOptions);
@@ -240,11 +279,15 @@ export default function QuestionDialog({
       <DialogContent className="!w-[95vw] !max-w-[1400px] !h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">
-            {question?.questionId ? "Perbarui Pertanyaan" : "Buat Pertanyaan Baru"}
+            {question?.questionId
+              ? "Perbarui Pertanyaan"
+              : "Buat Pertanyaan Baru"}
           </DialogTitle>
           <div className="flex justify-center items-center mb-6">
             <h1 className="text-2xl font-bold uppercase">
-              {question?.questionId ? "Perbarui Pertanyaan" : "Buat Pertanyaan Baru"}
+              {question?.questionId
+                ? "Perbarui Pertanyaan"
+                : "Buat Pertanyaan Baru"}
             </h1>
           </div>
         </DialogHeader>
@@ -256,11 +299,15 @@ export default function QuestionDialog({
               <h2 className="font-bold text-lg mb-4">Detail Pertanyaan</h2>
               <div className="space-y-4">
                 <div>
-                  <Label htmlFor="questionText" className="text-sm font-medium">Teks Pertanyaan</Label>
+                  <Label htmlFor="questionText" className="text-sm font-medium">
+                    Teks Pertanyaan <span className="text-red-500">*</span>
+                  </Label>
                   <Textarea
                     id="questionText"
                     value={formData.questionText}
-                    onChange={(e) => setFormData({ ...formData, questionText: e.target.value })}
+                    onChange={(e) =>
+                      setFormData({ ...formData, questionText: e.target.value })
+                    }
                     placeholder="Masukkan teks pertanyaan..."
                     className="min-h-[120px] mt-2"
                   />
@@ -268,10 +315,14 @@ export default function QuestionDialog({
 
                 {role === "va_1" && (
                   <div>
-                    <Label htmlFor="category" className="text-sm font-medium">Kategori</Label>
+                    <Label htmlFor="category" className="text-sm font-medium">
+                      Kategori <span className="text-red-500">*</span>
+                    </Label>
                     <Select
                       value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value })}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, category: value })
+                      }
                     >
                       <SelectTrigger className="mt-2">
                         <SelectValue placeholder="Pilih kategori..." />
@@ -289,10 +340,14 @@ export default function QuestionDialog({
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="isImage" className="text-sm font-medium">Memiliki Gambar</Label>
+                    <Label htmlFor="isImage" className="text-sm font-medium">
+                      Memiliki Gambar 
+                    </Label>
                     <Select
                       value={formData.isImage}
-                      onValueChange={(value) => setFormData({ ...formData, isImage: value })}
+                      onValueChange={(value) =>
+                        setFormData({ ...formData, isImage: value })
+                      }
                     >
                       <SelectTrigger className="mt-2">
                         <SelectValue />
@@ -306,11 +361,15 @@ export default function QuestionDialog({
 
                   {formData.isImage === "1" && (
                     <div>
-                      <Label htmlFor="imageUrl" className="text-sm font-medium">URL Gambar</Label>
+                      <Label htmlFor="imageUrl" className="text-sm font-medium">
+                        URL Gambar
+                      </Label>
                       <Input
                         id="imageUrl"
                         value={formData.imageUrl}
-                        onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+                        onChange={(e) =>
+                          setFormData({ ...formData, imageUrl: e.target.value })
+                        }
                         placeholder="Masukkan URL gambar..."
                         className="mt-2"
                       />
@@ -362,7 +421,9 @@ export default function QuestionDialog({
                         <Label className="text-sm font-medium">Teks Opsi</Label>
                         <Input
                           value={option.optionText}
-                          onChange={(e) => updateOption(index, "optionText", e.target.value)}
+                          onChange={(e) =>
+                            updateOption(index, "optionText", e.target.value)
+                          }
                           placeholder="Masukkan teks opsi..."
                           className="mt-1"
                         />
@@ -372,7 +433,13 @@ export default function QuestionDialog({
                         <Input
                           type="number"
                           value={option.score}
-                          onChange={(e) => updateOption(index, "score", parseInt(e.target.value) || 0)}
+                          onChange={(e) =>
+                            updateOption(
+                              index,
+                              "score",
+                              parseInt(e.target.value) || 0
+                            )
+                          }
                           placeholder="0"
                           className="mt-1"
                         />
@@ -391,7 +458,11 @@ export default function QuestionDialog({
               Batal
             </Button>
             <Button onClick={handleSubmit} disabled={loading}>
-              {loading ? "Menyimpan..." : (question?.questionId ? "Perbarui Pertanyaan" : "Buat Pertanyaan")}
+              {loading
+                ? "Menyimpan..."
+                : question?.questionId
+                ? "Perbarui Pertanyaan"
+                : "Buat Pertanyaan"}
             </Button>
           </div>
         </DialogFooter>

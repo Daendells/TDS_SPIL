@@ -88,3 +88,8 @@ func (r *ReportRepository) IDPCount(db *gorm.DB, data *web.IDPCountData) error {
 func (r *ReportRepository) FindBySeamanCode(db *gorm.DB, seamanCode string, report *domain.Report) error {
 	return db.Where("seaman_code = ?", seamanCode).First(report).Error
 }
+
+func (r *ReportRepository) FindBySeafarerCode(db *gorm.DB, seafarerCode string, report *domain.Report) error {
+	return db.Where("seafarer_code = ?", seafarerCode).First(report).Error
+}
+

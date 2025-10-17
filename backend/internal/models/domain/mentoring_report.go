@@ -9,6 +9,7 @@ type MentoringReport struct {
 	MenteeNames     string     `json:"menteeNames" gorm:"column:mentee_names"` // JSON string of mentee names
 	Department      string     `json:"department" gorm:"column:department"`
 	Program         string     `json:"program" gorm:"column:program"`
+	ProgramTitle    string     `json:"programTitle" gorm:"column:program_title"`
 	SessionNumber   string     `json:"sessionNumber" gorm:"column:session_number"`
 	Date            string     `json:"date" gorm:"column:date"`
 	Duration        string     `json:"duration" gorm:"column:duration"`

@@ -225,6 +225,7 @@ CREATE TABLE `mentoring_reports` (
   `mentee_names` text NOT NULL COMMENT 'JSON array of mentee names',
   `department` varchar(255) NOT NULL,
   `program` varchar(100) NOT NULL,
+  `program_title` varchar(255) NOT NULL,
   `session_number` varchar(50) NOT NULL,
   `date` date NOT NULL,
   `duration` varchar(100) NOT NULL,

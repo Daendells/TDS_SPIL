@@ -6,6 +6,8 @@ type MentoringReportRequest struct {
 	MenteeNames     []string `json:"menteeNames" binding:"required"` // Array of mentee names
 	Department      string   `json:"department" binding:"required"`
 	Program         string   `json:"program" binding:"required"`
+	ProgramTitle    string   `json:"programTitle" binding:"required"`
+	
 	SessionNumber   string   `json:"sessionNumber" binding:"required"`
 	Date            string   `json:"date" binding:"required"`
 	Duration        string   `json:"duration" binding:"required"`
@@ -24,6 +26,7 @@ type MentoringReportUpdateRequest struct {
 	MenteeNames     []string `json:"menteeNames" binding:"required"` // Array of mentee names
 	Department      string   `json:"department" binding:"required"`
 	Program         string   `json:"program" binding:"required"`
+	ProgramTitle    string   `json:"programTitle" binding:"required"`
 	SessionNumber   string   `json:"sessionNumber" binding:"required"`
 	Date            string   `json:"date" binding:"required"`
 	Duration        string   `json:"duration" binding:"required"`

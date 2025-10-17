@@ -38,6 +38,7 @@ func Bootstrap(config *BootstrapConfig) {
 	questionService := services.NewQuestionService(questionRepository, config.Validate)
 	optionService := services.NewOptionService(optionRepository, config.Validate)
 	assessmentResultService := services.NewAssessmentResultService(assessmentResultRepository, questionRepository, optionRepository, config.Log, config.Validate)
+	assessmentService := services.NewAssessmentService(repositories.NewAssessmentRepository(), config.Validate)
 
 	// Setup Controllers
 	reportController := controllers.NewReportController(reportService, config.Log)
@@ -46,6 +47,8 @@ func Bootstrap(config *BootstrapConfig) {
 	questionController := controllers.NewQuestionController(questionService, config.DB)
 	optionController := controllers.NewOptionController(optionService, config.DB)
 	assessmentResultController := controllers.NewAssessmentResultController(assessmentResultService, config.Log, config.DB)
+	questionOptionController := controllers.NewQuestionOptionController(config.DB, questionService, optionService, config.Log)
+	assessmentController := controllers.NewAssessmentController(config.Log, config.DB, assessmentService, questionService, optionService)
 
 	// Setup Routes and Middlewares
 	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KEY"))
@@ -58,6 +61,8 @@ func Bootstrap(config *BootstrapConfig) {
 		QuestionController:         questionController,
 		OptionController:           optionController,
 		AssessmentResultController: assessmentResultController,
+		QuestionOptionController:   questionOptionController,
+		AssessmentController:       assessmentController,
 		AuthMiddleware:             authMiddleware,
 	}
 

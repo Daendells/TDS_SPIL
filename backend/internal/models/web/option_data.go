@@ -8,3 +8,11 @@ type OptionData struct {
 	Score        int    `json:"score"`
 	IsImage      int    `json:"isImage"`
 }
+
+type OptionResponse struct {
+	OptionID     int    `json:"optionId"`
+	OptionLetter string `json:"optionLetter"`
+	OptionText   string `json:"optionText"`
+	Score        int    `json:"score"`
+	IsImage      int    `json:"isImage"`
+}

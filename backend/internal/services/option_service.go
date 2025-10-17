@@ -17,6 +17,7 @@ type OptionService interface {
 	FindByQuestionId(db *gorm.DB, questionId int) ([]web.OptionData, error)
 	Update(db *gorm.DB, request *web.OptionUpdateRequest) (web.OptionData, error)
 	Delete(db *gorm.DB, optionId int) error
+	DeleteByQuestionId(db *gorm.DB, questionId int) error
 }
 
 type optionServiceImpl struct {
@@ -99,4 +100,8 @@ func (service *optionServiceImpl) Update(db *gorm.DB, request *web.OptionUpdateR
 
 func (service *optionServiceImpl) Delete(db *gorm.DB, optionId int) error {
 	return service.OptionRepository.Delete(db, optionId)
+}
+
+func (service *optionServiceImpl) DeleteByQuestionId(db *gorm.DB, questionId int) error {
+	return service.OptionRepository.DeleteByQuestionId(db, questionId)
 }

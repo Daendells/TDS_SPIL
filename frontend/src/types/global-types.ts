@@ -75,3 +75,14 @@ export interface IPaginationRequest {
   pageSize: number;
   filter: FilterType;
 }
+
+// Re-export report types from specific types module
+export type {
+  ReportData,
+  ApiResponse,
+  ReportSection,
+  SectionAnswer,
+  PersonalInfo,
+  ApiError,
+  AssessmentAnswer,
+} from "./report-types";

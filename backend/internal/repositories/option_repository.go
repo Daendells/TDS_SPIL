@@ -13,6 +13,7 @@ type OptionRepository interface {
 	FindByQuestionId(db *gorm.DB, questionId int) ([]domain.Option, error)
 	Update(db *gorm.DB, option *domain.Option) error
 	Delete(db *gorm.DB, optionId int) error
+	DeleteByQuestionId(db *gorm.DB, questionId int) error
 }
 
 type optionRepositoryImpl struct {
@@ -50,4 +51,8 @@ func (repository *optionRepositoryImpl) Update(db *gorm.DB, option *domain.Optio
 
 func (repository *optionRepositoryImpl) Delete(db *gorm.DB, optionId int) error {
 	return db.Where("option_id = ?", optionId).Delete(&domain.Option{}).Error
+}
+
+func (repository *optionRepositoryImpl) DeleteByQuestionId(db *gorm.DB, questionId int) error {
+	return db.Where("question_id = ?", questionId).Delete(&domain.Option{}).Error
 }
