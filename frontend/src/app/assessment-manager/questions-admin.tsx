@@ -19,12 +19,13 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, Trash, FileText } from "lucide-react";
+import { Plus, Edit, Trash2, Trash, FileText, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { useDeleteQuestion, useBulkDeleteQuestions } from "./_hooks/useQuestion";
 import QuestionDialog from "./question-dialog";
 import DeleteConfirmationDialog from "./delete-confirmation-dialog";
 import BulkDeleteConfirmationDialog from "./bulk-delete-confirmation-dialog";
+import AssessmentConfigDialog from "@/components/assessment-config-dialog";
 import { useGetAssessmentByRole } from "./_hooks/useAssessment";
 import { QuestionOptionResponse } from "@/types/assessment";
 
@@ -32,7 +33,7 @@ const ROLES = [
   { value: "va_1", label: "VA_1 (COREVA)" },
   { value: "va_2", label: "VA_2 (Value Assessment)" },
   { value: "va_3", label: "VA_3 (Value Assessment)" },
-  { value: "kkm", label: "KKM (Crew Evaluation)" },
+  { value: "KKM", label: "KKM (Crew Evaluation)" },
   { value: "masinis_2", label: "Masinis 2 (Crew Evaluation)" },
   { value: "masinis_3", label: "Masinis 3 (Crew Evaluation)" },
   { value: "masinis_4", label: "Masinis 4 (Crew Evaluation)" },
@@ -61,6 +62,7 @@ export default function QuestionsAdmin() {
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [configDialogOpen, setConfigDialogOpen] = useState(false);
 
   // React Query mutation for deleting questions
   const deleteQuestionMutation = useDeleteQuestion();
@@ -94,6 +96,10 @@ export default function QuestionsAdmin() {
 
   const handleValueAssessmentForm = () => {
     window.open("/value-assessment", "_blank");
+  };
+
+  const handleConfigClick = () => {
+    setConfigDialogOpen(true);
   };
 
   const handleEditQuestion = () => {
@@ -211,13 +217,23 @@ export default function QuestionsAdmin() {
             </Select>
 
             {selectedRole && (
-              <Button
-                onClick={handleAddQuestion}
-                className="flex items-center gap-2"
-              >
-                <Plus className="h-4 w-4" />
-                Tambah Pertanyaan
-              </Button>
+              <>
+                <Button
+                  onClick={handleAddQuestion}
+                  className="flex items-center gap-2"
+                >
+                  <Plus className="h-4 w-4" />
+                  Tambah Pertanyaan
+                </Button>
+                <Button
+                  onClick={handleConfigClick}
+                  variant="outline"
+                  className="flex items-center gap-2"
+                >
+                  <Settings className="h-4 w-4" />
+                  Konfigurasi Assessment
+                </Button>
+              </>
             )}
             {selectedRole &&
               ["va_1", "va_2", "va_3"].includes(selectedRole) && (
@@ -421,6 +437,13 @@ export default function QuestionsAdmin() {
         onCancel={handleCancelBulkDelete}
         selectedCount={selectedQuestions.length}
         loading={bulkDeleteLoading}
+      />
+
+      <AssessmentConfigDialog
+        open={configDialogOpen}
+        onOpenChange={setConfigDialogOpen}
+        selectedRole={selectedRole}
+        onAssessmentChange={() => refetch()}
       />
     </div>
   );

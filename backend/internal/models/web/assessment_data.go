@@ -3,6 +3,7 @@ package web
 type AssessmentData struct {
 	AssessmentID      uint64  `json:"assessmentId"`
 	Role              string  `json:"role"`
+	AssessmentName    string  `json:"assessmentName"`
 	UsingTimer        bool    `json:"usingTimer"`
 	TimerLimitMinutes *uint64 `json:"timerLimitMinutes"`
 }
@@ -10,6 +11,7 @@ type AssessmentData struct {
 type AssessmentResponse struct {
 	AssessmentID      uint64                   `json:"assessmentId"`
 	Role              string                   `json:"role"`
+	AssessmentName    string                   `json:"assessmentName"`
 	UsingTimer        bool                     `json:"usingTimer"`
 	TimerLimitMinutes *uint64                  `json:"timerLimitMinutes"`
 	Questions         []QuestionOptionResponse `json:"questions"`

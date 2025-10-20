@@ -82,8 +82,11 @@ func (c *RouterConfig) SetupGuestRouter() {
 
 	assessment := c.App.Group("api/assessments")
 	{
+		assessment.GET("", c.AssessmentController.FindAllAssessments)
 		assessment.GET("/:role", c.AssessmentController.FindByRole)
+		assessment.POST("", c.AssessmentController.CreateAssessment)
 		assessment.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
+		assessment.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
 	}
 
 	// Register Question and Option routes

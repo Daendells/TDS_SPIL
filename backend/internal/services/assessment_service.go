@@ -12,6 +12,9 @@ import (
 type AssessmentService interface {
 	FindByRole(db *gorm.DB, role string) (web.AssessmentData, error)
 	Update(db *gorm.DB, request *web.AssessmentUpdateRequest) (web.AssessmentData, error)
+	Create(db *gorm.DB, request *web.AssessmentCreateRequest) (web.AssessmentData, error)
+	FindAll(db *gorm.DB) ([]web.AssessmentData, error)
+	Delete(db *gorm.DB, id uint64) error
 }
 
 type assessmentServiceImpl struct {
@@ -48,4 +51,37 @@ func (service *assessmentServiceImpl) Update(db *gorm.DB, request *web.Assessmen
 	}
 
 	return converter.AssessmentToAssessmentData(&assessment), nil
+}
+
+func (service *assessmentServiceImpl) Create(db *gorm.DB, request *web.AssessmentCreateRequest) (web.AssessmentData, error) {
+	err := service.Validate.Struct(request)
+	if err != nil {
+		return web.AssessmentData{}, err
+	}
+
+	assessment := converter.AssessmentCreateRequestToAssessment(request)
+	err = service.AssessmentRepository.Create(db, &assessment)
+	if err != nil {
+		return web.AssessmentData{}, err
+	}
+
+	return converter.AssessmentToAssessmentData(&assessment), nil
+}
+
+func (service *assessmentServiceImpl) FindAll(db *gorm.DB) ([]web.AssessmentData, error) {
+	assessments, err := service.AssessmentRepository.FindAll(db)
+	if err != nil {
+		return []web.AssessmentData{}, err
+	}
+
+	var assessmentDataList []web.AssessmentData
+	for _, assessment := range assessments {
+		assessmentDataList = append(assessmentDataList, converter.AssessmentToAssessmentData(&assessment))
+	}
+
+	return assessmentDataList, nil
+}
+
+func (service *assessmentServiceImpl) Delete(db *gorm.DB, id uint64) error {
+	return service.AssessmentRepository.Delete(db, id)
 }
