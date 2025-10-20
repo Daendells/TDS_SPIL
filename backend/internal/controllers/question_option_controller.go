@@ -19,7 +19,7 @@ func ptrToString(s *string) string {
 	return *s
 }
 
-// Helper function to convert string to string pointer  
+// Helper function to convert string to string pointer
 func stringToPtr(s string) *string {
 	if s == "" {
 		return nil
@@ -224,9 +224,9 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 	var request web.UpdateQuestionWithOptionsRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
-			Code: http.StatusBadRequest,
+			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
-			Error: err.Error(),
+			Error:  err.Error(),
 		})
 		return
 	}
@@ -255,7 +255,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 
 	// Update question within transaction
 	questionRequest := web.QuestionUpdateRequest{
-		QuestionID: questionId,
+		QuestionID:   questionId,
 		Role:         request.Role,
 		QuestionText: request.QuestionText,
 		Category:     request.Category,
@@ -277,7 +277,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 
 	// Handle options operations (create, update, delete) within transaction
 	var resultOptions []web.OptionData
-	
+
 	// Step 1: Get current options for this question to compare what needs to be deleted
 	currentOptions, err := controller.OptionService.FindByQuestionId(tx, questionId)
 	if err != nil {
@@ -358,7 +358,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 				Score:        optionReq.Score,
 				IsImage:      0, // default value
 			}
-			
+
 			if optionReq.IsImage != nil {
 				optionRequest.IsImage = *optionReq.IsImage
 			}
@@ -385,7 +385,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 				Score:        optionReq.Score,
 				IsImage:      0, // default value
 			}
-			
+
 			if optionReq.IsImage != nil {
 				optionRequest.IsImage = *optionReq.IsImage
 			}
@@ -415,7 +415,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 					Score:        optionReq.Score,
 					IsImage:      0,
 				}
-				
+
 				if optionReq.IsImage != nil {
 					optionRequest.IsImage = *optionReq.IsImage
 				}
@@ -441,7 +441,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 					Score:        optionReq.Score,
 					IsImage:      0,
 				}
-				
+
 				if optionReq.IsImage != nil {
 					optionRequest.IsImage = *optionReq.IsImage
 				}
@@ -610,16 +610,13 @@ func (controller *QuestionOptionController) BulkDelete(ctx *gin.Context) {
 		})
 		return
 	}
-	err := controller.OptionService.BulkDeleteByQuestionIds(controller.DB, request.QuestionIds)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+	// err := controller.OptionService.BulkDeleteByQuestionIds(controller.DB, request.QuestionIds)
+	// if err != nil {
+	// 	ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
 
-
-	ctx.JSON(http.StatusOK, web.SuccessResponse{
-		Code:   http.StatusOK,
-		Status: "OK",
-		Data:   "Questions deleted successfully",
-	})
+	// ctx.JSON(http.StatusOK, web.SuccessResponse{
+	// 	Code:   http.StatusOK,
+	// 	Status: "OK",
+	// 	Data:   "Questions deleted successfully",
+	// })
 }
-
-
