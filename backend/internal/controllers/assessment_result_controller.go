@@ -58,22 +58,22 @@ func (controller *AssessmentResultController) Submit(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, webResponse)
 }
 
-func (controller *AssessmentResultController) FindBySeamanCode(ctx *gin.Context) {
-	seamanCode := ctx.Param("seamanCode")
-	if seamanCode == "" {
-		controller.Log.Error("Seaman code is required")
+func (controller *AssessmentResultController) FindBySeafarerCode(ctx *gin.Context) {
+	seafarerCode := ctx.Param("seafarerCode")
+	if seafarerCode == "" {
+		controller.Log.Error("Seafarer code is required")
 		webResponse := web.ErrorResponse{
 			Code:   http.StatusBadRequest,
 			Status: "BAD REQUEST",
-			Error:  "Seaman code is required",
+			Error:  "Seafarer code is required",
 		}
 		ctx.JSON(http.StatusBadRequest, webResponse)
 		return
 	}
 
-	assessmentResult, err := controller.AssessmentResultService.FindBySeamanCode(controller.DB, seamanCode)
+	assessmentResult, err := controller.AssessmentResultService.FindBySeafarerCode(controller.DB, seafarerCode)
 	if err != nil {
-		controller.Log.WithError(err).Error("Error finding assessment result by seaman code")
+		controller.Log.WithError(err).Error("Error finding assessment result by seafarer code")
 		webResponse := web.ErrorResponse{
 			Code:   http.StatusNotFound,
 			Status: "NOT FOUND",

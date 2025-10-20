@@ -8,21 +8,8 @@ import { toast } from "sonner";
 import { useApi } from "@/hooks/use-api";
 import { useCountdown } from "@/hooks/use-session-storage";
 import { ValueAssessmentData } from "./page";
-
-interface Question {
-  questionId: number;
-  role: string;
-  questionText: string;
-}
-
-interface Option {
-  optionId: number;
-  questionId: number;
-  optionLetter: string;
-  optionText: string;
-  score: number;
-  isImage: number;
-}
+import Image from "next/image";
+import { useGetAssessmentByRole } from "./_hooks/useAssessment";
 
 interface Section1Props {
   onNext: () => void;
@@ -37,29 +24,35 @@ export default function Section1({
   assessmentData,
   updateAssessmentData,
 }: Section1Props) {
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [options, setOptions] = useState<Option[]>([]);
-  const [loading, setLoading] = useState(true);
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [questionId: number]: number }>(
-    assessmentData.section1Answers
+    assessmentData.section1Answers ?? {}
   );
   const [isSubmitting, setIsSubmitting] = useState(false);
   const api = useApi();
 
-  // Use countdown hook
+  // Fetch assessment data using the hook
+  const { data: assessment, isLoading, error } = useGetAssessmentByRole("va_1");
+
+  // Use countdown hook with timer from fetched assessment data
+  const timerMinutes = assessment?.timerLimitMinutes ?? 30;
   const { timeLeft, formatTime } = useCountdown(
     assessmentData.section1StartTime,
-    30
+    timerMinutes
   );
 
   const handleSubmit = useCallback(async () => {
     try {
       setIsSubmitting(true);
 
+      if (!assessment?.questions) {
+        toast.error("Data soal tidak tersedia");
+        return;
+      }
+
       // Check if all questions are answered
-      const unansweredQuestions = questions.filter(
-        (q) => !answers[q.questionId]
+      const unansweredQuestions = assessment.questions.filter(
+        (q) => answers[q.questionId] === undefined
       );
       if (unansweredQuestions.length > 0) {
         toast.error(
@@ -68,12 +61,30 @@ export default function Section1({
         return;
       }
 
+      // Filter out undefined values and ensure all values are numbers
+      const filteredAnswers: { [questionId: number]: number } = {};
+      Object.entries(answers).forEach(([questionId, optionId]) => {
+        const numQuestionId = parseInt(questionId);
+        if (
+          optionId !== undefined &&
+          !isNaN(numQuestionId) &&
+          !isNaN(optionId)
+        ) {
+          filteredAnswers[numQuestionId] = optionId;
+        }
+      });
+
+      console.log("Original answers:", answers);
+      console.log("Filtered answers:", filteredAnswers);
+
       // Submit answers to backend
       const submitData = {
         seafarerCode: assessmentData.seafarerCode,
         role: "va_1",
-        answers: answers,
+        answers: filteredAnswers,
       };
+
+      console.log("Submit data:", JSON.stringify(submitData, null, 2));
 
       const response = await api.post("/assessment-results/submit", submitData);
 
@@ -92,7 +103,7 @@ export default function Section1({
       setIsSubmitting(false);
     }
   }, [
-    questions,
+    assessment?.questions,
     answers,
     assessmentData.seafarerCode,
     api,
@@ -104,78 +115,51 @@ export default function Section1({
   const timeOutRef = useRef(false);
 
   useEffect(() => {
-    if (timeLeft === 0 && !timeOutRef.current && questions.length > 0) {
+    if (
+      timeLeft === 0 &&
+      !timeOutRef.current &&
+      assessment?.questions &&
+      assessment.questions.length > 0
+    ) {
       timeOutRef.current = true;
       handleSubmit();
     }
-  }, [timeLeft, handleSubmit, questions.length]);
+  }, [timeLeft, handleSubmit, assessment?.questions]);
 
-  // Fetch questions and options on component mount
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
+  const currentQuestion = assessment?.questions
+    ? assessment.questions[currentQuestionIndex]
+    : undefined;
+  const currentOptions = currentQuestion?.options ?? [];
 
-        const questionsResponse = await api.get("/questions");
-        const allQuestions = questionsResponse.data.data;
+  const handleAnswerChange = (optionId: number) => {
+    console.log("Selected Option ID:", currentQuestion?.questionId, optionId);
 
-        const filteredQuestions = allQuestions.filter(
-          (q: Question) => q.role === "va_1"
-        );
+    if (!currentQuestion?.questionId) {
+      console.log("No current question ID, skipping");
+      return;
+    }
 
-        filteredQuestions.sort(
-          (a: Question, b: Question) => a.questionId - b.questionId
-        );
+    if (isNaN(optionId)) {
+      console.log("Invalid option ID (NaN), skipping");
+      return;
+    }
 
-        setQuestions(filteredQuestions);
-
-        const optionsResponse = await api.get("/options");
-        const allOptions = optionsResponse.data.data;
-
-        const questionIds = filteredQuestions.map(
-          (q: Question) => q.questionId
-        );
-        const filteredOptions = allOptions.filter((o: Option) =>
-          questionIds.includes(o.questionId)
-        );
-
-        filteredOptions.sort((a: Option, b: Option) => {
-          if (a.questionId !== b.questionId) {
-            return a.questionId - b.questionId;
-          }
-          return a.optionLetter.localeCompare(b.optionLetter);
-        });
-
-        setOptions(filteredOptions);
-      } catch (error) {
-        console.error("Failed to fetch questions and options:", error);
-        toast.error("Gagal memuat soal dan pilihan jawaban");
-      } finally {
-        setLoading(false);
-      }
+    // For public assessment, we only track the option selected, not the score
+    const newAnswers = {
+      ...answers,
+      [currentQuestion.questionId]: optionId,
     };
-
-    fetchData();
-  }, [api]);
-
-  const currentQuestion = questions[currentQuestionIndex];
-  const currentOptions = options.filter(
-    (option) => option.questionId === currentQuestion?.questionId
-  );
-
-  const handleAnswerChange = useCallback(
-    (optionId: number) => {
-      if (!currentQuestion) return;
-
-      const newAnswers = { ...answers, [currentQuestion.questionId]: optionId };
-      setAnswers(newAnswers);
-      updateAssessmentData({ section1Answers: newAnswers });
-    },
-    [answers, currentQuestion, updateAssessmentData]
-  );
+    console.log("New Answers:", newAnswers);
+    setAnswers(newAnswers);
+    // Update parent immediately when answer changes
+    updateAssessmentData({ section1Answers: newAnswers });
+  };
 
   const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
+    if (
+      assessment?.questions &&
+      currentQuestionIndex < assessment.questions.length - 1
+    ) {
       setCurrentQuestionIndex((prev) => prev + 1);
     }
   };
@@ -190,7 +174,7 @@ export default function Section1({
     setCurrentQuestionIndex(index);
   };
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -201,7 +185,22 @@ export default function Section1({
     );
   }
 
-  if (questions.length === 0) {
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-red-600">
+            Gagal memuat data assessment: {error.message}
+          </p>
+          <Button onClick={onBack} className="mt-4">
+            Kembali
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!assessment?.questions || assessment.questions.length === 0) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -222,13 +221,25 @@ export default function Section1({
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-3">
           <div className="flex justify-between items-center mb-6">
-            <img src="/images/logo1.png" alt="Logo Kiri" className="h-16" />
+            <Image
+              width={64}
+              height={64}
+              src="/images/logo1.png"
+              alt="Logo Kiri"
+              className="h-16"
+            />
             <div className="text-center">
               <h1 className="text-3xl font-bold uppercase text-gray-800 mb-2">
                 Value Assessment Section 1
               </h1>
             </div>
-            <img src="/images/logo2.png" alt="Logo Kanan" className="h-16" />
+            <Image
+              width={64}
+              height={64}
+              src="/images/logo2.png"
+              alt="Logo Kanan"
+              className="h-16"
+            />
           </div>
         </div>
 
@@ -278,16 +289,16 @@ export default function Section1({
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-600 mb-2">Progress:</div>
               <div className="text-lg font-bold text-gray-800">
-                {Object.keys(answers).length} / {questions.length}
+                {Object.keys(answers).length} /{" "}
+                {assessment?.questions?.length ?? 0}
               </div>
               <div className="text-sm text-gray-500">soal terjawab</div>
             </div>
 
             {/* Question Numbers Grid */}
             <div className="grid grid-cols-5 gap-2">
-              {questions.map((_, index) => {
-                const questionId = questions[index].questionId;
-                const isAnswered = answers[questionId] !== undefined;
+              {assessment?.questions?.map((q, index) => {
+                const isAnswered = answers[q.questionId] !== undefined;
                 const isCurrent = index === currentQuestionIndex;
 
                 return (
@@ -334,7 +345,8 @@ export default function Section1({
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-bold text-gray-800">
-                    Soal {currentQuestionIndex + 1} dari {questions.length}
+                    Soal {currentQuestionIndex + 1} dari{" "}
+                    {assessment?.questions?.length ?? 0}
                   </h3>
                 </div>
 
@@ -343,14 +355,35 @@ export default function Section1({
                 </div>
 
                 <RadioGroup
-                  value={answers[currentQuestion?.questionId]?.toString() || ""}
-                  onValueChange={(value) => handleAnswerChange(parseInt(value))}
+                  key={`question-${currentQuestion?.questionId}`}
+                  value={
+                    currentQuestion?.questionId !== undefined &&
+                    answers[currentQuestion.questionId] !== undefined
+                      ? String(answers[currentQuestion.questionId])
+                      : undefined
+                  }
+                  onValueChange={(value) => {
+                    console.log("RadioGroup value changed:", value);
+                    const optionId = parseInt(value, 10);
+                    if (!isNaN(optionId)) {
+                      handleAnswerChange(optionId);
+                    } else {
+                      console.log("Invalid value for parseInt:", value);
+                    }
+                  }}
                 >
                   <div className="space-y-4">
                     {currentOptions.map((option) => (
                       <div
                         key={option.optionId}
-                        className="flex items-start space-x-3 p-4 rounded-lg border hover:bg-gray-50"
+                        className="flex items-center space-x-3 p-4 rounded-lg border hover:bg-gray-50 cursor-pointer"
+                        onClick={() => {
+                          console.log(
+                            "Div clicked for option:",
+                            option.optionId
+                          );
+                          handleAnswerChange(option.optionId);
+                        }}
                       >
                         <RadioGroupItem
                           value={option.optionId.toString()}
@@ -385,7 +418,8 @@ export default function Section1({
                 </Button>
 
                 <div className="flex gap-3">
-                  {currentQuestionIndex < questions.length - 1 ? (
+                  {currentQuestionIndex <
+                  (assessment?.questions?.length ?? 1) - 1 ? (
                     <Button
                       onClick={handleNext}
                       className="px-6 py-2 bg-gray-800 hover:bg-gray-700"

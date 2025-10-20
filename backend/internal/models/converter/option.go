@@ -13,8 +13,10 @@ func OptionToOptionData(option *domain.Option) web.OptionData {
 		OptionText:   option.OptionText,
 		Score:        option.Score,
 		IsImage:      option.IsImage,
+		ImageUrl: option.ImageUrl,
 	}
 }
+
 
 func OptionCreateRequestToOption(request *web.OptionCreateRequest) domain.Option {
 	return domain.Option{

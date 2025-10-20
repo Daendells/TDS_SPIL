@@ -95,6 +95,78 @@ func (controller *AssessmentController) FindByRole (ctx *gin.Context) {
 	})
 }
 
+
+
+func (controller *AssessmentController) FindByRolePublic(ctx *gin.Context) {
+	role := ctx.Param("role")
+
+	assessment, err := controller.AssessmentService.FindByRole(controller.DB, role)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code: http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error: err.Error(),
+		})
+		return
+	}
+
+	questionData, err := controller.QuestionService.FindByRole(controller.DB, role)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code: http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error: err.Error(),
+		})
+		return
+	}
+
+	var questionsWithOptions []web.QuestionOptionPublicResponse
+	for _, question := range questionData {
+		options, err := controller.OptionService.FindByQuestionId(controller.DB, question.QuestionID)
+		if err != nil {
+			options = []web.OptionData{}
+		}
+
+		// Convert OptionData to OptionPublicResponse
+		var publicOptions []web.OptionPublicResponse
+		for _, option := range options {
+			publicOption := web.OptionPublicResponse{
+				OptionID:     option.OptionID,
+				OptionLetter: option.OptionLetter,
+				OptionText:   option.OptionText,
+				IsImage:      option.IsImage,
+				ImageUrl:     option.ImageUrl,
+			}
+			publicOptions = append(publicOptions, publicOption)
+		}
+
+		questionWithOptions := web.QuestionOptionPublicResponse{
+			QuestionId: question.QuestionID,
+			QuestionText: question.QuestionText,
+			Category: helpers.PtrToString(question.Category),
+			IsImage: helpers.PtrToString(question.IsImage),
+			ImageUrl: helpers.PtrToString(question.ImageURL),
+			Options: publicOptions,
+		}
+		questionsWithOptions = append(questionsWithOptions, questionWithOptions)
+	}
+
+	assessmentResponse := web.AssessmentPublicResponse{
+		AssessmentID: assessment.AssessmentID,
+		Role: assessment.Role,
+		UsingTimer: assessment.UsingTimer,
+		TimerLimitMinutes: assessment.TimerLimitMinutes,
+		Questions: questionsWithOptions,
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse {
+		Code: http.StatusOK,
+		Status: "Fetch assessment successfully",
+		Data: assessmentResponse,
+	})
+}
+
 func (controller *AssessmentController) UpdateAssessment(ctx *gin.Context) {
 	assessmentId, _ := strconv.Atoi(ctx.Param("assessmentId"))
 	var request web.AssessmentDataRequest

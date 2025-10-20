@@ -15,7 +15,7 @@ import (
 
 type AssessmentResultService interface {
 	SubmitAssessment(db *gorm.DB, request *web.AssessmentSubmitRequest) (*web.AssessmentResultData, error)
-	FindBySeamanCode(db *gorm.DB, seamanCode string) (*web.AssessmentResultData, error)
+	FindBySeafarerCode(db *gorm.DB, seafarerCode string) (*web.AssessmentResultData, error)
 }
 
 type assessmentResultServiceImpl struct {
@@ -50,7 +50,7 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 	}
 
 	// Find or create assessment result
-	assessmentResult, err := service.AssessmentResultRepository.FindBySeamanCode(db, request.SeamanCode)
+	assessmentResult, err := service.AssessmentResultRepository.FindBySeafarerCode(db, request.SeafarerCode)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		service.Log.WithError(err).Error("Error finding assessment result")
 		return nil, err
@@ -59,7 +59,7 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 	if assessmentResult == nil {
 		// Create new assessment result
 		assessmentResult = &domain.AssessmentResult{
-			SeamanCode:        request.SeamanCode,
+			SeafarerCode:        request.SeafarerCode,
 			VA1CategoryScores: "{}",
 		}
 		assessmentResult, err = service.AssessmentResultRepository.Create(db, assessmentResult)
@@ -236,10 +236,10 @@ func (service *assessmentResultServiceImpl) calculateFinalScores(assessmentResul
 	}
 }
 
-func (service *assessmentResultServiceImpl) FindBySeamanCode(db *gorm.DB, seamanCode string) (*web.AssessmentResultData, error) {
-	assessmentResult, err := service.AssessmentResultRepository.FindBySeamanCode(db, seamanCode)
+func (service *assessmentResultServiceImpl) FindBySeafarerCode(db *gorm.DB, seafarerCode string) (*web.AssessmentResultData, error) {
+	assessmentResult, err := service.AssessmentResultRepository.FindBySeafarerCode(db, seafarerCode)
 	if err != nil {
-		service.Log.WithError(err).Error("Error finding assessment result by seaman code")
+		service.Log.WithError(err).Error("Error finding assessment result by seafarer code")
 		return nil, err
 	}
 
@@ -249,7 +249,7 @@ func (service *assessmentResultServiceImpl) FindBySeamanCode(db *gorm.DB, seaman
 func (service *assessmentResultServiceImpl) convertToAssessmentResultData(assessmentResult *domain.AssessmentResult) *web.AssessmentResultData {
 	return &web.AssessmentResultData{
 		ID:                assessmentResult.ID,
-		SeamanCode:        assessmentResult.SeamanCode,
+		SeafarerCode:        assessmentResult.SeafarerCode,
 		VA1RawScore:       assessmentResult.VA1RawScore,
 		VA2RawScore:       assessmentResult.VA2RawScore,
 		VA3RawScore:       assessmentResult.VA3RawScore,

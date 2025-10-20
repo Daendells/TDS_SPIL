@@ -21,7 +21,10 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, Trash, FileText, Settings } from "lucide-react";
 import { toast } from "sonner";
-import { useDeleteQuestion, useBulkDeleteQuestions } from "./_hooks/useQuestion";
+import {
+  useDeleteQuestion,
+  useBulkDeleteQuestions,
+} from "./_hooks/useQuestion";
 import QuestionDialog from "./question-dialog";
 import DeleteConfirmationDialog from "./delete-confirmation-dialog";
 import BulkDeleteConfirmationDialog from "./bulk-delete-confirmation-dialog";

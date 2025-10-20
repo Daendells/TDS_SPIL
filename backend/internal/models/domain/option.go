@@ -7,6 +7,7 @@ type Option struct {
 	OptionText   string `json:"optionText" gorm:"column:option_text"`
 	Score        int    `json:"score" gorm:"column:score;default:0"`
 	IsImage      int    `json:"isImage" gorm:"column:is_image;default:0"`
+	ImageUrl     string `json:"imageUrl" gorm:"column:image_url"`
 }
 
 // TableName specifies the table name for GORM

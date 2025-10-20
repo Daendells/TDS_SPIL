@@ -71,7 +71,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 	assessmentResults := c.App.Group("assessment-results")
 	{
 		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
-		assessmentResults.GET("/seaman/:seamanCode", c.AssessmentResultController.FindBySeamanCode)
+		assessmentResults.GET("/seafarer/:seafarerCode", c.AssessmentResultController.FindBySeafarerCode)
 	}
 
 	// Combined question-option routes (Public access - only read operations)
@@ -82,6 +82,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 
 	assessment := c.App.Group("api/assessments")
 	{
+		assessment.GET("/public/:role", c.AssessmentController.FindByRolePublic)
 		assessment.GET("", c.AssessmentController.FindAllAssessments)
 		assessment.GET("/:role", c.AssessmentController.FindByRole)
 		assessment.POST("", c.AssessmentController.CreateAssessment)
@@ -100,6 +101,13 @@ func (c *RouterConfig) SetupAuthRouter() {
 	{
 		auth.POST("/logout", c.UserController.Logout)
 	}
+
+	assessmentAuth := c.App.Group("api/assessments")
+	{
+		assessmentAuth.GET("/:role", c.AssessmentController.FindByRole)
+		assessmentAuth.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
+	}
+
 
 	// Protected Combined question-option routes
 	questionsWithOptionsAuth := c.App.Group("api/questions-with-options").Use(c.AuthMiddleware)
