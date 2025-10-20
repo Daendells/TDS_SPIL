@@ -2,6 +2,7 @@ package routers
 
 import (
 	"backend/internal/controllers"
+	traininggen "backend/internal/controllers/training"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +12,8 @@ type RouterConfig struct {
 	ReportController           *controllers.ReportController
 	UserController             *controllers.UserController
 	MentoringReportController  *controllers.MentoringReportController
+	TrainingController        *controllers.TrainingController   // DB
+	TrainingGenController     *traininggen.TrainingController    // LLM Generator
 	QuestionController         *controllers.QuestionController
 	OptionController           *controllers.OptionController
 	AssessmentResultController *controllers.AssessmentResultController
@@ -20,6 +23,7 @@ type RouterConfig struct {
 }
 
 func (c *RouterConfig) Setup() {
+	c.App.Static("/files", "./public")
 	c.SetupGuestRouter()
 	c.SetupAuthRouter()
 }
@@ -42,6 +46,20 @@ func (c *RouterConfig) SetupGuestRouter() {
 		report.GET("/test", c.ReportController.TestPanic)
 	}
 
+	mentoring := c.App.Group("mentoring-reports")
+	{
+		mentoring.POST("", c.MentoringReportController.Create)
+		mentoring.GET("", c.MentoringReportController.FindAll)
+		mentoring.GET("/:id", c.MentoringReportController.FindById)
+		mentoring.PUT("", c.MentoringReportController.Update)
+		mentoring.DELETE("/:id", c.MentoringReportController.Delete)
+	}
+
+    trainings := c.App.Group("trainings")
+    {
+        trainings.GET("", c.TrainingGenController.FindAll)       // dari DB
+        trainings.POST("/generate", c.TrainingGenController.Generate) // dari LLM
+    }    
 	mentoringReports := c.App.Group("mentoring-reports")
 	{
 		mentoringReports.POST("", c.MentoringReportController.Create)
