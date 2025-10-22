@@ -30,6 +30,7 @@ func Bootstrap(config *BootstrapConfig) {
 	questionRepository := repositories.NewQuestionRepository()
 	optionRepository := repositories.NewOptionRepository()
 	assessmentResultRepository := repositories.NewAssessmentResultRepository()
+	masterRepository := repositories.NewMasterRepository(config.Log)
 
 	// Setup Services
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository)
@@ -39,6 +40,7 @@ func Bootstrap(config *BootstrapConfig) {
 	optionService := services.NewOptionService(optionRepository, config.Validate)
 	assessmentResultService := services.NewAssessmentResultService(assessmentResultRepository, questionRepository, optionRepository, config.Log, config.Validate)
 	assessmentService := services.NewAssessmentService(repositories.NewAssessmentRepository(), config.Validate)
+	masterService := services.NewMasterService(config.DB, config.Log, config.Validate, masterRepository)
 
 	// Setup Controllers
 	reportController := controllers.NewReportController(reportService, config.Log)
@@ -49,6 +51,7 @@ func Bootstrap(config *BootstrapConfig) {
 	assessmentResultController := controllers.NewAssessmentResultController(assessmentResultService, config.Log, config.DB)
 	questionOptionController := controllers.NewQuestionOptionController(config.DB, questionService, optionService, config.Log)
 	assessmentController := controllers.NewAssessmentController(config.Log, config.DB, assessmentService, questionService, optionService)
+	masterController := controllers.NewMasterController(masterService, config.Log)
 
 	// Setup Routes and Middlewares
 	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KEY"))
@@ -63,9 +66,9 @@ func Bootstrap(config *BootstrapConfig) {
 		AssessmentResultController: assessmentResultController,
 		QuestionOptionController:   questionOptionController,
 		AssessmentController:       assessmentController,
+		MasterController:           masterController,
 		AuthMiddleware:             authMiddleware,
 	}
-
 	routerConfig.Setup()
 
 	// fmt.Println(report)

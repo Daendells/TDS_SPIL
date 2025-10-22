@@ -578,11 +578,13 @@ func (controller *QuestionOptionController) DeleteQuestionWithOptions(ctx *gin.C
 	})
 }
 
+// DELETE /api/question-with-options (body: { "questionIds": [1,2,3] })
 func (controller *QuestionOptionController) BulkDelete(ctx *gin.Context) {
 	var request struct {
 		QuestionIds []int `json:"questionIds" binding:"required"`
 	}
 
+	// 1) Validasi payload
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
 			Code:   http.StatusBadRequest,
@@ -591,7 +593,6 @@ func (controller *QuestionOptionController) BulkDelete(ctx *gin.Context) {
 		})
 		return
 	}
-
 	if len(request.QuestionIds) == 0 {
 		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
 			Code:   http.StatusBadRequest,
@@ -601,22 +602,93 @@ func (controller *QuestionOptionController) BulkDelete(ctx *gin.Context) {
 		return
 	}
 
-	err := controller.QuestionService.BulkDelete(controller.DB, request.QuestionIds)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
-			Code:   http.StatusBadRequest,
-			Status: "BAD REQUEST",
-			Error:  "No question IDs provided",
+	controller.Log.WithField("questionIds", request.QuestionIds).
+		Info("Bulk deleting questions WITH options (transactional)")
+
+	// 2) Begin transaction
+	tx := controller.DB.Begin()
+	if tx.Error != nil {
+		controller.Log.WithError(tx.Error).Error("Failed to begin transaction")
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  "Failed to begin transaction",
 		})
 		return
 	}
-	// err := controller.OptionService.BulkDeleteByQuestionIds(controller.DB, request.QuestionIds)
-	// if err != nil {
-	// 	ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
 
-	// ctx.JSON(http.StatusOK, web.SuccessResponse{
-	// 	Code:   http.StatusOK,
-	// 	Status: "OK",
-	// 	Data:   "Questions deleted successfully",
-	// })
+	// 3) Pastikan rollback kalau panic
+	defer func() {
+		if r := recover(); r != nil {
+			_ = tx.Rollback()
+			controller.Log.Error("Transaction rolled back due to panic")
+		}
+	}()
+
+	// 4) Hapus OPTIONS dulu untuk tiap question (aman untuk skema tanpa ON DELETE CASCADE)
+	//    Jika kamu punya method batch `DeleteByQuestionIds`, gunakan itu agar lebih efisien.
+	for _, qid := range request.QuestionIds {
+		if qid <= 0 {
+			_ = tx.Rollback()
+			controller.Log.WithField("questionId", qid).
+				Error("Invalid questionId in payload - transaction rolled back")
+			ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+				Code:   http.StatusBadRequest,
+				Status: "BAD REQUEST",
+				Error:  "Invalid questionId in payload",
+			})
+			return
+		}
+		// Asumsikan kamu punya OptionService.DeleteByQuestionId(*gorm.DB, int) error
+		if err := controller.OptionService.DeleteByQuestionId(tx, qid); err != nil {
+			_ = tx.Rollback()
+			controller.Log.WithError(err).WithField("questionId", qid).
+				Error("Failed to delete options for question - transaction rolled back")
+			ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+				Code:   http.StatusInternalServerError,
+				Status: "INTERNAL SERVER ERROR",
+				Error:  "Failed to delete options for questionId " + strconv.Itoa(qid) + ": " + err.Error(),
+			})
+			return
+		}
+	}
+
+	// 5) Setelah semua options dihapus, hapus QUESTIONS secara bulk
+	if err := controller.QuestionService.BulkDelete(tx, request.QuestionIds); err != nil {
+		_ = tx.Rollback()
+		controller.Log.WithError(err).
+			WithField("questionIds", request.QuestionIds).
+			Error("Failed to bulk delete questions - transaction rolled back")
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	// 6) Commit
+	if err := tx.Commit().Error; err != nil {
+		controller.Log.WithError(err).Error("Failed to commit transaction")
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  "Failed to commit transaction",
+		})
+		return
+	}
+
+	// 7) Sukses
+	controller.Log.WithField("questionIds", request.QuestionIds).
+		Info("Successfully bulk deleted questions and their options")
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data: gin.H{
+			"message":          "Questions and their options deleted",
+			"questionsDeleted": len(request.QuestionIds),
+			"questionIds":      request.QuestionIds,
+		},
+	})
 }

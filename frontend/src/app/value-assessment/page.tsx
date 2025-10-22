@@ -24,6 +24,7 @@ export interface ValueAssessmentData {
   section1StartTime?: string;
   section2StartTime?: string;
   section3StartTime?: string;
+  seamanCode?: string;
 }
 
 export default function ValueAssessmentPage() {

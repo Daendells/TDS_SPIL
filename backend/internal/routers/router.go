@@ -16,12 +16,15 @@ type RouterConfig struct {
 	AssessmentResultController *controllers.AssessmentResultController
 	QuestionOptionController   *controllers.QuestionOptionController
 	AssessmentController       *controllers.AssessmentController
+	MasterController           *controllers.MasterController
 	AuthMiddleware             gin.HandlerFunc
 }
 
 func (c *RouterConfig) Setup() {
 	c.SetupGuestRouter()
 	c.SetupAuthRouter()
+	c.SetupMasterRouter()
+
 }
 
 func (c *RouterConfig) SetupGuestRouter() {
@@ -89,6 +92,15 @@ func (c *RouterConfig) SetupGuestRouter() {
 	// Register Question and Option routes
 	QuestionRouter(c.App, c.QuestionController)
 	OptionRouter(c.App, c.OptionController)
+}
+func (c *RouterConfig) SetupMasterRouter() {
+
+	masters := c.App.Group("api/master-reports")
+
+	{
+		masters.GET("", c.MasterController.FindAll)
+		masters.POST("", c.MasterController.Create)
+	}
 }
 
 func (c *RouterConfig) SetupAuthRouter() {
