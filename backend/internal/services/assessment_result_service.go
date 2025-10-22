@@ -117,10 +117,12 @@ func (service *assessmentResultServiceImpl) updateReport(db *gorm.DB, assessment
 	// 2 if score >= 60 and < 80
 	// 3 if score >= 80
 	valueAssessmentScore := convertScoreToValueAssessment(assessmentResults.TotalFinalScore)
-	report.ValueAssessment = valueAssessmentScore
 
-	// Update report with new value_assessment score
-	err = service.ReportRepository.Update(db, report)
+	// Update only value_assessment field to avoid overwriting empty fields
+	err = db.Model(&domain.Report{}).
+		Where("seafarer_code = ?", assessmentResults.SeafarerCode).
+		Update("value_assessment", valueAssessmentScore).Error
+	
 	if err != nil {
 		service.Log.WithError(err).Error("Error updating report with value assessment score")
 		return err
