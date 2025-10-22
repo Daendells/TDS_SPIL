@@ -9,6 +9,7 @@ func AssessmentToAssessmentData(assessment *domain.Assessment) web.AssessmentDat
 	return web.AssessmentData{
 		AssessmentID:      assessment.AssessmentID,
 		Role:              assessment.Role,
+		AssessmentName:    assessment.AssessmentName,
 		UsingTimer:        assessment.UsingTimer,
 		TimerLimitMinutes: assessment.TimerLimitMinutes,
 	}
@@ -18,6 +19,16 @@ func AssessmentUpdateRequestToAssessment(request *web.AssessmentUpdateRequest) d
 	return domain.Assessment{
 		AssessmentID:     request.AssessmentID,
 		Role:             request.Role,
+		AssessmentName:   request.AssessmentName,
+		UsingTimer:       request.UsingTimer,
+		TimerLimitMinutes: request.TimerLimitMinutes,
+	}
+}
+
+func AssessmentCreateRequestToAssessment(request *web.AssessmentCreateRequest) domain.Assessment {
+	return domain.Assessment{
+		Role:             request.Role,
+		AssessmentName:   request.AssessmentName,
 		UsingTimer:       request.UsingTimer,
 		TimerLimitMinutes: request.TimerLimitMinutes,
 	}

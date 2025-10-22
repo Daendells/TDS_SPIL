@@ -15,13 +15,14 @@ import (
 
 type AssessmentResultService interface {
 	SubmitAssessment(db *gorm.DB, request *web.AssessmentSubmitRequest) (*web.AssessmentResultData, error)
-	FindBySeamanCode(db *gorm.DB, seamanCode string) (*web.AssessmentResultData, error)
+	FindBySeafarerCode(db *gorm.DB, seafarerCode string) (*web.AssessmentResultData, error)
 }
 
 type assessmentResultServiceImpl struct {
 	AssessmentResultRepository repositories.AssessmentResultRepository
 	QuestionRepository         repositories.QuestionRepository
 	OptionRepository           repositories.OptionRepository
+	ReportRepository          *repositories.ReportRepository
 	Log                        *logrus.Logger
 	Validate                   *validator.Validate
 }
@@ -30,6 +31,7 @@ func NewAssessmentResultService(
 	assessmentResultRepository repositories.AssessmentResultRepository,
 	questionRepository repositories.QuestionRepository,
 	optionRepository repositories.OptionRepository,
+	reportRepository *repositories.ReportRepository,
 	log *logrus.Logger,
 	validate *validator.Validate,
 ) AssessmentResultService {
@@ -37,6 +39,7 @@ func NewAssessmentResultService(
 		AssessmentResultRepository: assessmentResultRepository,
 		QuestionRepository:         questionRepository,
 		OptionRepository:           optionRepository,
+		ReportRepository:          reportRepository,
 		Log:                        log,
 		Validate:                   validate,
 	}
@@ -50,7 +53,7 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 	}
 
 	// Find or create assessment result
-	assessmentResult, err := service.AssessmentResultRepository.FindBySeamanCode(db, request.SeamanCode)
+	assessmentResult, err := service.AssessmentResultRepository.FindBySeafarerCode(db, request.SeafarerCode)
 	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
 		service.Log.WithError(err).Error("Error finding assessment result")
 		return nil, err
@@ -59,7 +62,7 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 	if assessmentResult == nil {
 		// Create new assessment result
 		assessmentResult = &domain.AssessmentResult{
-			SeamanCode:        request.SeamanCode,
+			SeafarerCode:        request.SeafarerCode,
 			VA1CategoryScores: "{}",
 		}
 		assessmentResult, err = service.AssessmentResultRepository.Create(db, assessmentResult)
@@ -88,6 +91,11 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 	service.calculateFinalScores(assessmentResult)
 
 	assessmentResult, err = service.AssessmentResultRepository.Update(db, assessmentResult)
+
+	if request.Role == "va_3" {
+		err = service.updateReport(db, assessmentResult)
+	}
+
 	if err != nil {
 		service.Log.WithError(err).Error("Error updating assessment result")
 		return nil, err
@@ -95,6 +103,47 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 
 	return service.convertToAssessmentResultData(assessmentResult), nil
 }
+
+func (service *assessmentResultServiceImpl) updateReport(db *gorm.DB, assessmentResults *domain.AssessmentResult) error {
+	report := &domain.Report{}
+	_, err := service.ReportRepository.FindBySeafarerCode(db, assessmentResults.SeafarerCode, report)
+
+	if err != nil {
+		return err
+	}
+
+	// Convert total_final_score to value_assessment scale
+	// 1 if score < 60
+	// 2 if score >= 60 and < 80
+	// 3 if score >= 80
+	valueAssessmentScore := convertScoreToValueAssessment(assessmentResults.TotalFinalScore)
+
+	// Update only value_assessment field to avoid overwriting empty fields
+	err = db.Model(&domain.Report{}).
+		Where("seafarer_code = ?", assessmentResults.SeafarerCode).
+		Update("value_assessment", valueAssessmentScore).Error
+	
+	if err != nil {
+		service.Log.WithError(err).Error("Error updating report with value assessment score")
+		return err
+	}
+
+	service.Log.Infof("Report updated successfully: SeafarerCode=%s, TotalFinalScore=%.2f, ValueAssessment=%d", 
+		assessmentResults.SeafarerCode, assessmentResults.TotalFinalScore, valueAssessmentScore)
+
+	return nil
+}
+
+func convertScoreToValueAssessment(totalScore float64) int {
+	if totalScore < 60 {
+		return 1
+	} else if totalScore < 80 {
+		return 2
+	} else {
+		return 3
+	}
+}
+
 
 func (service *assessmentResultServiceImpl) calculateVA1Scores(db *gorm.DB, assessmentResult *domain.AssessmentResult, answers map[int]int) error {
 	allQuestions, err := service.QuestionRepository.FindAll(db)
@@ -188,6 +237,7 @@ func (service *assessmentResultServiceImpl) calculateVA1Scores(db *gorm.DB, asse
 	return nil
 }
 
+
 func (service *assessmentResultServiceImpl) calculateVA2Scores(db *gorm.DB, assessmentResult *domain.AssessmentResult, answers map[int]int) error {
 	totalScore := 0
 
@@ -236,10 +286,10 @@ func (service *assessmentResultServiceImpl) calculateFinalScores(assessmentResul
 	}
 }
 
-func (service *assessmentResultServiceImpl) FindBySeamanCode(db *gorm.DB, seamanCode string) (*web.AssessmentResultData, error) {
-	assessmentResult, err := service.AssessmentResultRepository.FindBySeamanCode(db, seamanCode)
+func (service *assessmentResultServiceImpl) FindBySeafarerCode(db *gorm.DB, seafarerCode string) (*web.AssessmentResultData, error) {
+	assessmentResult, err := service.AssessmentResultRepository.FindBySeafarerCode(db, seafarerCode)
 	if err != nil {
-		service.Log.WithError(err).Error("Error finding assessment result by seaman code")
+		service.Log.WithError(err).Error("Error finding assessment result by seafarer code")
 		return nil, err
 	}
 
@@ -249,7 +299,7 @@ func (service *assessmentResultServiceImpl) FindBySeamanCode(db *gorm.DB, seaman
 func (service *assessmentResultServiceImpl) convertToAssessmentResultData(assessmentResult *domain.AssessmentResult) *web.AssessmentResultData {
 	return &web.AssessmentResultData{
 		ID:                assessmentResult.ID,
-		SeamanCode:        assessmentResult.SeamanCode,
+		SeafarerCode:        assessmentResult.SeafarerCode,
 		VA1RawScore:       assessmentResult.VA1RawScore,
 		VA2RawScore:       assessmentResult.VA2RawScore,
 		VA3RawScore:       assessmentResult.VA3RawScore,

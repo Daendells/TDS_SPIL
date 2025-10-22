@@ -5,6 +5,22 @@ import (
 	"strings"
 )
 
+// Helper function to convert string pointer to string
+func PtrToString(s *string) string {
+	if s == nil {
+		return ""
+	}
+	return *s
+}
+
+// Helper function to convert string to string pointer  
+func StringToPtr(s string) *string {
+	if s == "" {
+		return nil
+	}
+	return &s
+}
+
 func SliceContains[T comparable](slice []T, val T) bool {
 	for _, v := range slice {
 		if v == val {

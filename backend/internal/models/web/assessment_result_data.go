@@ -4,7 +4,7 @@ import "time"
 
 type AssessmentResultData struct {
 	ID                  int       `json:"id"`
-	SeamanCode          string    `json:"seamanCode"`
+	SeafarerCode          string    `json:"seafarerCode"`
 	VA1RawScore         int       `json:"va1RawScore"`
 	VA2RawScore         int       `json:"va2RawScore"`
 	VA3RawScore         int       `json:"va3RawScore"`

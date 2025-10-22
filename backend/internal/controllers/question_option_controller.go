@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"backend/internal/helpers"
 	"backend/internal/models/web"
 	"backend/internal/services"
 	"net/http"
@@ -11,21 +12,13 @@ import (
 	"gorm.io/gorm"
 )
 
-// Helper function to convert string pointer to string
-func ptrToString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
-}
-
 // Helper function to convert string to string pointer
-func stringToPtr(s string) *string {
-	if s == "" {
-		return nil
-	}
-	return &s
-}
+// func stringToPtr(s string) *string {
+// 	if s == "" {
+// 		return nil
+// 	}
+// 	return &s
+// }
 
 type QuestionOptionController struct {
 	Log             *logrus.Logger
@@ -89,9 +82,9 @@ func (controller *QuestionOptionController) FindAllQuestionsWithOptions(ctx *gin
 			QuestionId:   question.QuestionID,
 			Role:         question.Role,
 			QuestionText: question.QuestionText,
-			Category:     ptrToString(question.Category),
-			IsImage:      ptrToString(question.IsImage),
-			ImageUrl:     ptrToString(question.ImageURL),
+			Category:     helpers.PtrToString(question.Category),
+			IsImage:      helpers.PtrToString(question.IsImage),
+			ImageUrl:     helpers.PtrToString(question.ImageURL),
 			Options:      options,
 		}
 
@@ -144,9 +137,9 @@ func (controller *QuestionOptionController) CreateQuestionWithOptions(ctx *gin.C
 	questionRequest := web.QuestionCreateRequest{
 		Role:         request.Role,
 		QuestionText: request.QuestionText,
-		Category:     stringToPtr(request.Category),
-		IsImage:      stringToPtr(request.IsImage),
-		ImageURL:     stringToPtr(request.ImageUrl),
+		Category:     helpers.StringToPtr(request.Category),
+		IsImage:      helpers.StringToPtr(request.IsImage),
+		ImageURL:     helpers.StringToPtr(request.ImageUrl),
 	}
 
 	questionData, err := controller.QuestionService.Create(tx, &questionRequest)
@@ -205,9 +198,9 @@ func (controller *QuestionOptionController) CreateQuestionWithOptions(ctx *gin.C
 		QuestionId:   questionData.QuestionID,
 		Role:         questionData.Role,
 		QuestionText: questionData.QuestionText,
-		Category:     ptrToString(questionData.Category),
-		IsImage:      ptrToString(questionData.IsImage),
-		ImageUrl:     ptrToString(questionData.ImageURL),
+		Category:     helpers.PtrToString(questionData.Category),
+		IsImage:      helpers.PtrToString(questionData.IsImage),
+		ImageUrl:     helpers.PtrToString(questionData.ImageURL),
 		Options:      createdOptions,
 	}
 
@@ -480,9 +473,9 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 		QuestionId:   questionData.QuestionID,
 		Role:         questionData.Role,
 		QuestionText: questionData.QuestionText,
-		Category:     ptrToString(questionData.Category),
-		IsImage:      ptrToString(questionData.IsImage),
-		ImageUrl:     ptrToString(questionData.ImageURL),
+		Category:     helpers.PtrToString(questionData.Category),
+		IsImage:      helpers.PtrToString(questionData.IsImage),
+		ImageUrl:     helpers.PtrToString(questionData.ImageURL),
 		Options:      resultOptions,
 	}
 

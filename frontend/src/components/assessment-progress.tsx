@@ -20,45 +20,7 @@ export default function AssessmentProgress({
   currentStep,
   onDataRestore,
 }: AssessmentProgressProps) {
-  const [isUploading, setIsUploading] = useState(false);
-
   const progress = ValueAssessmentStorage.getProgress(assessmentData);
-
-  const handleExport = () => {
-    ValueAssessmentStorage.exportToFile();
-    toast.success("Data assessment berhasil di-export");
-  };
-
-  const handleImport = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setIsUploading(true);
-    try {
-      const data = await ValueAssessmentStorage.importFromFile(file);
-      if (data && onDataRestore) {
-        onDataRestore(data);
-        toast.success("Data assessment berhasil di-import");
-      } else {
-        toast.error("File tidak valid atau rusak");
-      }
-    } catch {
-      toast.error("Gagal mengimport data");
-    } finally {
-      setIsUploading(false);
-      event.target.value = "";
-    }
-  };
-
-  const handleClearData = () => {
-    if (
-      confirm("Apakah Anda yakin ingin menghapus semua data yang tersimpan?")
-    ) {
-      ValueAssessmentStorage.clear();
-      toast.success("Data assessment berhasil dihapus");
-      window.location.reload();
-    }
-  };
 
   const stepNames = [
     "Email & Persetujuan",
@@ -146,55 +108,12 @@ export default function AssessmentProgress({
           </div>
         )}
 
-        {/* Action Buttons */}
-        <div className="flex flex-wrap gap-2 pt-2">
-          <Button
-            onClick={handleExport}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2"
-          >
-            <Download className="h-4 w-4" />
-            Export Data
-          </Button>
-
-          <div className="relative">
-            <input
-              type="file"
-              accept=".json"
-              onChange={handleImport}
-              className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-              disabled={isUploading}
-            />
-            <Button
-              variant="outline"
-              size="sm"
-              className="flex items-center gap-2"
-              disabled={isUploading}
-            >
-              <Upload className="h-4 w-4" />
-              {isUploading ? "Importing..." : "Import Data"}
-            </Button>
-          </div>
-
-          <Button
-            onClick={handleClearData}
-            variant="outline"
-            size="sm"
-            className="flex items-center gap-2 text-red-600 hover:text-red-700"
-          >
-            <Trash2 className="h-4 w-4" />
-            Hapus Data
-          </Button>
-        </div>
-
         {/* Info Text */}
         <div className="text-xs text-gray-500">
           <p>
             * Data akan otomatis tersimpan di browser dan akan hilang jika cache
             dibersihkan.
           </p>
-          <p>* Gunakan Export/Import untuk backup data ke file.</p>
         </div>
       </CardContent>
     </Card>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useGetReportByIdentityNumber } from "./_hooks/useReportData";
 import {
   Form,
   FormControl,
@@ -11,11 +12,18 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { AssessmentData } from "./page";
+import Image from "next/image";
 
 const FormSchema = z.object({
   fullName: z.string().min(1, { message: "Nama lengkap harus diisi" }),
@@ -42,7 +50,16 @@ const rankOptions = [
   { value: "masinis_4", label: "Masinis IV" },
 ];
 
-export default function PersonalIdentity({ onNext, onBack, assessmentData, updateAssessmentData }: PersonalIdentityProps) {
+export default function PersonalIdentity({
+  onNext,
+  onBack,
+  assessmentData,
+  updateAssessmentData,
+}: PersonalIdentityProps) {
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isVerified, setIsVerified] = useState(false);
+  const [verificationError, setVerificationError] = useState("");
+
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
     defaultValues: {
@@ -53,7 +70,81 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
     },
   });
 
+  // Use React Query hook at component level
+  const [queryIdentityNumber, setQueryIdentityNumber] = useState<string>("");
+  const reportQuery = useGetReportByIdentityNumber(queryIdentityNumber);
+
+  const verifyIdentityNumber = async (identityNumber: string) => {
+    if (!identityNumber.trim()) {
+      setVerificationError("Nomor identitas harus diisi");
+      return;
+    }
+
+    setIsVerifying(true);
+    setVerificationError("");
+
+    // Trigger the query by setting the identity number
+    setQueryIdentityNumber(identityNumber);
+  };
+
+  // Effect to handle query results
+  useEffect(() => {
+    if (reportQuery.data) {
+      const reportData = reportQuery.data;
+
+      // Auto-populate the fields with data from the report
+      form.setValue("fullName", reportData.nama || "");
+      form.setValue("rank", reportData.jabatan || "");
+      form.setValue("vesselName", reportData.vesselName || "");
+
+      setIsVerified(true);
+      setVerificationError("");
+      setIsVerifying(false);
+    } else if (reportQuery.error) {
+      const errorMessage =
+        reportQuery.error instanceof Error
+          ? reportQuery.error.message
+          : "Terjadi kesalahan koneksi";
+
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+        setVerificationError("Nomor identitas tidak ditemukan dalam database");
+        // Clear the auto-populated fields
+        form.setValue("fullName", "");
+        form.setValue("rank", "");
+        form.setValue("vesselName", "");
+      } else {
+        setVerificationError(errorMessage);
+      }
+
+      setIsVerified(false);
+      setIsVerifying(false);
+    }
+
+    if (reportQuery.isLoading) {
+      setIsVerifying(true);
+    }
+  }, [reportQuery.data, reportQuery.error, reportQuery.isLoading, form]);
+
+  const handleIdentityNumberChange = (value: string) => {
+    form.setValue("identityNumber", value);
+    setIsVerified(false);
+    setVerificationError("");
+
+    // Clear auto-populated fields when identity number changes
+    if (value !== assessmentData.identityNumber) {
+      form.setValue("fullName", "");
+      form.setValue("rank", "");
+      form.setValue("vesselName", "");
+    }
+  };
+
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
+    if (!isVerified) {
+      setVerificationError(
+        "Silakan verifikasi nomor identitas terlebih dahulu"
+      );
+      return;
+    }
     updateAssessmentData(data);
     onNext();
   };
@@ -64,13 +155,25 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-3">
           <div className="flex justify-between items-center mb-6">
-            <img src="/images/logo1.png" alt="Logo Kiri" className="h-16" />
+            <Image
+              width={64}
+              height={64}
+              src="/images/logo1.png"
+              alt="Logo Kiri"
+              className="h-16"
+            />
             <div className="text-center">
               <h1 className="text-3xl font-bold uppercase text-gray-800 mb-2">
                 Crew Evaluation System
               </h1>
             </div>
-            <img src="/images/logo2.png" alt="Logo Kanan" className="h-16" />
+            <Image
+              width={64}
+              height={64}
+              src="/images/logo2.png"
+              alt="Logo Kanan"
+              className="h-16"
+            />
           </div>
         </div>
 
@@ -81,23 +184,47 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
               <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
                 Identitas Diri
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="fullName"
+                  name="identityNumber"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel className="font-medium text-gray-700">
-                        Nama Lengkap (Sesuai KTP) <span className="text-red-500">*</span>
+                        Nomor Identitas (NIK Karyawan / KTP / Paspor){" "}
+                        <span className="text-red-500">*</span>
                       </FormLabel>
-                      <FormControl>
-                        <Input 
-                          placeholder="Masukkan nama lengkap sesuai KTP" 
-                          {...field} 
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
-                        />
-                      </FormControl>
+                      <div className="flex gap-2">
+                        <FormControl>
+                          <Input
+                            placeholder="Masukkan nomor identitas"
+                            {...field}
+                            onChange={(e) =>
+                              handleIdentityNumberChange(e.target.value)
+                            }
+                            className="border-gray-300 focus:border-gray-500 focus:ring-gray-500"
+                          />
+                        </FormControl>
+                        <Button
+                          type="button"
+                          onClick={() => verifyIdentityNumber(field.value)}
+                          disabled={isVerifying || !field.value.trim()}
+                          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium disabled:bg-gray-400"
+                        >
+                          {isVerifying ? "Verifikasi..." : "Verifikasi"}
+                        </Button>
+                      </div>
+                      {verificationError && (
+                        <p className="text-sm text-red-600 mt-1">
+                          {verificationError}
+                        </p>
+                      )}
+                      {isVerified && (
+                        <p className="text-sm text-green-600 mt-1">
+                          ✓ Nomor identitas berhasil diverifikasi
+                        </p>
+                      )}
                       <FormMessage />
                     </FormItem>
                   )}
@@ -105,17 +232,19 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
 
                 <FormField
                   control={form.control}
-                  name="identityNumber"
+                  name="fullName"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel className="font-medium text-gray-700">
-                        Nomor Identitas (NIK Karyawan / KTP / Paspor) <span className="text-red-500">*</span>
+                        Nama Lengkap (Sesuai KTP){" "}
+                        <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Masukkan nomor identitas" 
-                          {...field} 
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
+                        <Input
+                          placeholder="Nama akan terisi otomatis setelah verifikasi nomor identitas"
+                          {...field}
+                          readOnly={true}
+                          className="border-gray-300 bg-gray-50 text-gray-700"
                         />
                       </FormControl>
                       <FormMessage />
@@ -131,10 +260,13 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                       <FormLabel className="font-medium text-gray-700">
                         Rank <span className="text-red-500">*</span>
                       </FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <Select
+                        onValueChange={field.onChange}
+                        defaultValue={field.value}
+                      >
                         <FormControl>
                           <SelectTrigger className="border-gray-300 focus:border-gray-500 focus:ring-gray-500">
-                            <SelectValue placeholder="Pilih rank" />
+                            <SelectValue placeholder="Rank akan terisi otomatis setelah verifikasi nomor identitas" />
                           </SelectTrigger>
                         </FormControl>
                         <SelectContent>
@@ -159,10 +291,11 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                         Nama Vessel / KM <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Masukkan nama vessel" 
-                          {...field} 
-                          className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
+                        <Input
+                          placeholder="Nama vessel akan terisi otomatis setelah verifikasi nomor identitas"
+                          {...field}
+                          readOnly={true}
+                          className="border-gray-300 bg-gray-50 text-gray-700"
                         />
                       </FormControl>
                       <FormMessage />
@@ -172,7 +305,7 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
               </div>
 
               <div className="flex justify-between pt-8">
-                <Button 
+                <Button
                   type="button"
                   onClick={onBack}
                   variant="outline"
@@ -180,9 +313,10 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                 >
                   Kembali
                 </Button>
-                <Button 
+                <Button
                   type="submit"
-                  className="px-8 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium"
+                  disabled={!isVerified}
+                  className="px-8 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium disabled:bg-gray-400"
                 >
                   Berikutnya
                 </Button>

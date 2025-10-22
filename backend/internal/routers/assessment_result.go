@@ -10,6 +10,6 @@ func AssessmentResultRouter(router *gin.Engine, assessmentResultController *cont
 	assessmentRoutes := router.Group("/assessment-results")
 	{
 		assessmentRoutes.POST("/submit", assessmentResultController.Submit)
-		assessmentRoutes.GET("/seaman/:seamanCode", assessmentResultController.FindBySeamanCode)
+		assessmentRoutes.GET("/seafarer/:seafarerCode", assessmentResultController.FindBySeafarerCode)
 	}
 }

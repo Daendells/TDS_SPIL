@@ -1,8 +1,10 @@
 export type OptionResponse = {
   optionId: number;
-  questionId: number;
+  questionId?: number;
   optionLetter: string;
   optionText: string;
-  score: number;
+  score?: number;
   isImage: number;
+  imageUrl: string;
 };
+

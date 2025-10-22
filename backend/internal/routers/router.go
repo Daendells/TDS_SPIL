@@ -2,6 +2,7 @@ package routers
 
 import (
 	"backend/internal/controllers"
+	traininggen "backend/internal/controllers/training"
 
 	"github.com/gin-gonic/gin"
 )
@@ -11,6 +12,8 @@ type RouterConfig struct {
 	ReportController           *controllers.ReportController
 	UserController             *controllers.UserController
 	MentoringReportController  *controllers.MentoringReportController
+	TrainingController        *controllers.TrainingController   // DB
+	TrainingGenController     *traininggen.TrainingController    // LLM Generator
 	QuestionController         *controllers.QuestionController
 	OptionController           *controllers.OptionController
 	AssessmentResultController *controllers.AssessmentResultController
@@ -21,6 +24,7 @@ type RouterConfig struct {
 }
 
 func (c *RouterConfig) Setup() {
+	c.App.Static("/files", "./public")
 	c.SetupGuestRouter()
 	c.SetupAuthRouter()
 	c.SetupMasterRouter()
@@ -45,6 +49,12 @@ func (c *RouterConfig) SetupGuestRouter() {
 		report.GET("/test", c.ReportController.TestPanic)
 	}
 
+
+    trainings := c.App.Group("trainings")
+    {
+        trainings.GET("", c.TrainingGenController.FindAll)       // dari DB
+        trainings.POST("/generate", c.TrainingGenController.Generate) // dari LLM
+    }    
 	mentoringReports := c.App.Group("mentoring-reports")
 	{
 		mentoringReports.POST("", c.MentoringReportController.Create)
@@ -74,7 +84,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 	assessmentResults := c.App.Group("assessment-results")
 	{
 		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
-		assessmentResults.GET("/seaman/:seamanCode", c.AssessmentResultController.FindBySeamanCode)
+		assessmentResults.GET("/seafarer/:seafarerCode", c.AssessmentResultController.FindBySeafarerCode)
 	}
 
 	// Combined question-option routes (Public access - only read operations)
@@ -85,8 +95,9 @@ func (c *RouterConfig) SetupGuestRouter() {
 
 	assessment := c.App.Group("api/assessments")
 	{
-		assessment.GET("/:role", c.AssessmentController.FindByRole)
-		assessment.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
+		assessment.GET("/public/:role", c.AssessmentController.FindByRolePublic)
+		assessment.GET("", c.AssessmentController.FindAllAssessments)
+		
 	}
 
 	// Register Question and Option routes
@@ -110,11 +121,21 @@ func (c *RouterConfig) SetupAuthRouter() {
 		auth.POST("/logout", c.UserController.Logout)
 	}
 
+	assessmentAuth := c.App.Group("api/assessments")
+	{
+		assessmentAuth.GET("/:role", c.AssessmentController.FindByRole)
+		assessmentAuth.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
+		assessmentAuth.POST("", c.AssessmentController.CreateAssessment)
+		assessmentAuth.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
+	}
+
+
 	// Protected Combined question-option routes
 	questionsWithOptionsAuth := c.App.Group("api/questions-with-options").Use(c.AuthMiddleware)
 	{
 		questionsWithOptionsAuth.POST("", c.QuestionOptionController.CreateQuestionWithOptions)
 		questionsWithOptionsAuth.PUT("/:questionId", c.QuestionOptionController.UpdateQuestionWithOptions)
 		questionsWithOptionsAuth.DELETE("/:questionId", c.QuestionOptionController.DeleteQuestionWithOptions)
+		questionsWithOptionsAuth.DELETE("/bulk-delete", c.QuestionOptionController.BulkDelete)
 	}
 }

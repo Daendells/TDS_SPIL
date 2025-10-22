@@ -89,7 +89,12 @@ func (r *ReportRepository) FindBySeamanCode(db *gorm.DB, seamanCode string, repo
 	return db.Where("seaman_code = ?", seamanCode).First(report).Error
 }
 
-func (r *ReportRepository) FindBySeafarerCode(db *gorm.DB, seafarerCode string, report *domain.Report) error {
-	return db.Where("seafarer_code = ?", seafarerCode).First(report).Error
+func (r *ReportRepository) FindBySeafarerCode(db *gorm.DB, seafarerCode string, report *domain.Report) (domain.Report, error) {
+	err := db.Where("seafarer_code = ?", seafarerCode).First(report).Error
+	return *report, err
+}
+
+func (r *ReportRepository) Update(db *gorm.DB, report *domain.Report) error {
+	return db.Save(report).Error
 }
 
