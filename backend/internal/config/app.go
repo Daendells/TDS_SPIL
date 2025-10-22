@@ -12,12 +12,12 @@ import (
 	"gorm.io/gorm"
 
 	"backend/internal/controllers"
-	trainingController "backend/internal/controllers/training" 
+	trainingController "backend/internal/controllers/training"
 	"backend/internal/middlewares"
 	"backend/internal/repositories"
 	"backend/internal/routers"
 	"backend/internal/services"
-	trainingService "backend/internal/services/training" 
+	trainingService "backend/internal/services/training"
 )
 
 type BootstrapConfig struct {
@@ -73,7 +73,7 @@ func Bootstrap(config *BootstrapConfig) {
 	mentoringReportService := services.NewMentoringReportService(config.DB, config.Log, config.Validate, mentoringReportRepository)
 	questionService := services.NewQuestionService(questionRepository, config.Validate)
 	optionService := services.NewOptionService(optionRepository, config.Validate)
-	assessmentResultService := services.NewAssessmentResultService(assessmentResultRepository, questionRepository, optionRepository, config.Log, config.Validate)
+	assessmentResultService := services.NewAssessmentResultService(assessmentResultRepository, questionRepository, optionRepository, reportRepository, config.Log, config.Validate)
 	assessmentService := services.NewAssessmentService(repositories.NewAssessmentRepository(), config.Validate)
 	trainingServiceDB := services.NewTrainingService(config.DB, config.Log, config.Validate, trainingRepository)
 
@@ -89,7 +89,12 @@ func Bootstrap(config *BootstrapConfig) {
 	trainingControllerDB := controllers.NewTrainingController(trainingServiceDB, config.Log)
 
 	// --- Generator Service & Controller (LLM/PDF)
-	trainingGenService := trainingService.NewTrainingService(config.Log)
+	trainingGenService := trainingService.NewTrainingService(
+		config.Log,
+		config.Config.GetString("GROQ_API_KEY"),
+		config.Config.GetString("GROQ_MODEL"),
+		config.Config.GetString("BACKEND_PUBLIC_URL"),
+	)
 	trainingGenController := trainingController.NewTrainingController(trainingServiceDB, trainingGenService, config.Log)
 
 	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KEY"))

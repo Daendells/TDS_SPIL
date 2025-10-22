@@ -22,6 +22,7 @@ type assessmentResultServiceImpl struct {
 	AssessmentResultRepository repositories.AssessmentResultRepository
 	QuestionRepository         repositories.QuestionRepository
 	OptionRepository           repositories.OptionRepository
+	ReportRepository          *repositories.ReportRepository
 	Log                        *logrus.Logger
 	Validate                   *validator.Validate
 }
@@ -30,6 +31,7 @@ func NewAssessmentResultService(
 	assessmentResultRepository repositories.AssessmentResultRepository,
 	questionRepository repositories.QuestionRepository,
 	optionRepository repositories.OptionRepository,
+	reportRepository *repositories.ReportRepository,
 	log *logrus.Logger,
 	validate *validator.Validate,
 ) AssessmentResultService {
@@ -37,6 +39,7 @@ func NewAssessmentResultService(
 		AssessmentResultRepository: assessmentResultRepository,
 		QuestionRepository:         questionRepository,
 		OptionRepository:           optionRepository,
+		ReportRepository:          reportRepository,
 		Log:                        log,
 		Validate:                   validate,
 	}
@@ -88,6 +91,11 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 	service.calculateFinalScores(assessmentResult)
 
 	assessmentResult, err = service.AssessmentResultRepository.Update(db, assessmentResult)
+
+	if request.Role == "va_3" {
+		err = service.updateReport(db, assessmentResult)
+	}
+
 	if err != nil {
 		service.Log.WithError(err).Error("Error updating assessment result")
 		return nil, err
@@ -95,6 +103,45 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 
 	return service.convertToAssessmentResultData(assessmentResult), nil
 }
+
+func (service *assessmentResultServiceImpl) updateReport(db *gorm.DB, assessmentResults *domain.AssessmentResult) error {
+	report := &domain.Report{}
+	_, err := service.ReportRepository.FindBySeafarerCode(db, assessmentResults.SeafarerCode, report)
+
+	if err != nil {
+		return err
+	}
+
+	// Convert total_final_score to value_assessment scale
+	// 1 if score < 60
+	// 2 if score >= 60 and < 80
+	// 3 if score >= 80
+	valueAssessmentScore := convertScoreToValueAssessment(assessmentResults.TotalFinalScore)
+	report.ValueAssessment = valueAssessmentScore
+
+	// Update report with new value_assessment score
+	err = service.ReportRepository.Update(db, report)
+	if err != nil {
+		service.Log.WithError(err).Error("Error updating report with value assessment score")
+		return err
+	}
+
+	service.Log.Infof("Report updated successfully: SeafarerCode=%s, TotalFinalScore=%.2f, ValueAssessment=%d", 
+		assessmentResults.SeafarerCode, assessmentResults.TotalFinalScore, valueAssessmentScore)
+
+	return nil
+}
+
+func convertScoreToValueAssessment(totalScore float64) int {
+	if totalScore < 60 {
+		return 1
+	} else if totalScore < 80 {
+		return 2
+	} else {
+		return 3
+	}
+}
+
 
 func (service *assessmentResultServiceImpl) calculateVA1Scores(db *gorm.DB, assessmentResult *domain.AssessmentResult, answers map[int]int) error {
 	allQuestions, err := service.QuestionRepository.FindAll(db)
@@ -187,6 +234,7 @@ func (service *assessmentResultServiceImpl) calculateVA1Scores(db *gorm.DB, asse
 
 	return nil
 }
+
 
 func (service *assessmentResultServiceImpl) calculateVA2Scores(db *gorm.DB, assessmentResult *domain.AssessmentResult, answers map[int]int) error {
 	totalScore := 0

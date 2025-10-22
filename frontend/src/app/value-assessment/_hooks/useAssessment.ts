@@ -1,7 +1,7 @@
 import api from "@/app/lib/api";
 import { ApiReturn } from "@/app/types/api";
 import { AssessmentResponse } from "@/types/assessment";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
 
 export function useGetAssessmentByRole(role: string) {
   const response = useQuery<AssessmentResponse>({
@@ -40,4 +40,53 @@ export function useGetAssessmentByRole(role: string) {
   });
 
   return response;
+}
+
+interface AssessmentResultSubmit {
+  seafarerCode: string;
+  role: string;
+  answers: { [questionId: number]: number };
+}
+
+interface AssessmentResultResponse {
+  id: number;
+  seafarerCode: string;
+  role: string;
+  answers: { [questionId: number]: number };
+  submittedAt: string;
+}
+
+export function usePostAssessmentResults(onSuccess?: () => void) {
+  const mutation = useMutation<
+    AssessmentResultResponse,
+    Error,
+    AssessmentResultSubmit
+  >({
+    mutationFn: async (data: AssessmentResultSubmit) => {
+      try {
+        const response = await api.post<ApiReturn<AssessmentResultResponse>>(
+          "/assessment-results/submit",
+          data
+        );
+
+        if (!response.data || !response.data.data) {
+          throw new Error("Failed to submit assessment results");
+        }
+
+        return response.data.data;
+      } catch (error: unknown) {
+        console.error("Error submitting assessment results:", error);
+        throw error;
+      }
+    },
+    onSuccess: () => {
+      
+      
+      if (onSuccess) {
+        onSuccess();
+      }
+    },
+  });
+
+  return mutation;
 }

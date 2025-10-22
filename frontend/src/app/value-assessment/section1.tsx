@@ -5,11 +5,14 @@ import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useApi } from "@/hooks/use-api";
 import { useCountdown } from "@/hooks/use-session-storage";
+import { useStorageCountdown } from "@/hooks/use-local-storage";
 import { ValueAssessmentData } from "./page";
 import Image from "next/image";
-import { useGetAssessmentByRole } from "./_hooks/useAssessment";
+import {
+  useGetAssessmentByRole,
+  usePostAssessmentResults,
+} from "./_hooks/useAssessment";
 
 interface Section1Props {
   onNext: () => void;
@@ -28,88 +31,64 @@ export default function Section1({
   const [answers, setAnswers] = useState<{ [questionId: number]: number }>(
     assessmentData.section1Answers ?? {}
   );
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const api = useApi();
+  const storageTimeOutRef = useRef(false);
 
   // Fetch assessment data using the hook
   const { data: assessment, isLoading, error } = useGetAssessmentByRole("va_1");
 
-  // Use countdown hook with timer from fetched assessment data
+  // POST mutation hook
+  const { mutate, isPending } = usePostAssessmentResults(onNext);
+
+  // Use countdown hook with timer from fetched assessment data (section timer)
   const timerMinutes = assessment?.timerLimitMinutes ?? 30;
   const { timeLeft, formatTime } = useCountdown(
     assessmentData.section1StartTime,
     timerMinutes
   );
 
-  const handleSubmit = useCallback(async () => {
-    try {
-      setIsSubmitting(true);
+  // Overall assessment timer (24 hours)
+  const {
+    timeLeft: overallTimeLeft,
+    isExpired: isOverallExpired,
+    formatTime: formatOverallTime,
+  } = useStorageCountdown("valueAssessmentFormData");
 
-      if (!assessment?.questions) {
-        toast.error("Data soal tidak tersedia");
-        return;
-      }
-
-      // Check if all questions are answered
-      const unansweredQuestions = assessment.questions.filter(
-        (q) => answers[q.questionId] === undefined
-      );
-      if (unansweredQuestions.length > 0) {
-        toast.error(
-          `Masih ada ${unansweredQuestions.length} soal yang belum dijawab`
-        );
-        return;
-      }
-
-      // Filter out undefined values and ensure all values are numbers
-      const filteredAnswers: { [questionId: number]: number } = {};
-      Object.entries(answers).forEach(([questionId, optionId]) => {
-        const numQuestionId = parseInt(questionId);
-        if (
-          optionId !== undefined &&
-          !isNaN(numQuestionId) &&
-          !isNaN(optionId)
-        ) {
-          filteredAnswers[numQuestionId] = optionId;
-        }
-      });
-
-      console.log("Original answers:", answers);
-      console.log("Filtered answers:", filteredAnswers);
-
-      // Submit answers to backend
-      const submitData = {
-        seafarerCode: assessmentData.seafarerCode,
-        role: "va_1",
-        answers: filteredAnswers,
-      };
-
-      console.log("Submit data:", JSON.stringify(submitData, null, 2));
-
-      const response = await api.post("/assessment-results/submit", submitData);
-
-      if (response.status === 200) {
-        // Update assessment data with section 1 answers
-        updateAssessmentData({ section1Answers: answers });
-        toast.success("Jawaban Section 1 berhasil disimpan");
-        onNext();
-      } else {
-        throw new Error("Failed to submit assessment");
-      }
-    } catch (error) {
-      console.error("Failed to submit answers:", error);
-      toast.error("Gagal menyimpan jawaban");
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = useCallback(() => {
+    if (!assessment?.questions) {
+      toast.error("Data soal tidak tersedia");
+      return;
     }
-  }, [
-    assessment?.questions,
-    answers,
-    assessmentData.seafarerCode,
-    api,
-    updateAssessmentData,
-    onNext,
-  ]);
+
+    // Check if all questions are answered
+    const unansweredQuestions = assessment.questions.filter(
+      (q) => answers[q.questionId] === undefined
+    );
+    if (unansweredQuestions.length > 0 && timeLeft > 0) {
+      toast.error(
+        `Masih ada ${unansweredQuestions.length} soal yang belum dijawab`
+      );
+      return;
+    }
+
+    // Filter out undefined values and ensure all values are numbers
+    const filteredAnswers: { [questionId: number]: number } = {};
+    Object.entries(answers).forEach(([questionId, optionId]) => {
+      const numQuestionId = parseInt(questionId);
+      if (optionId !== undefined && !isNaN(numQuestionId) && !isNaN(optionId)) {
+        filteredAnswers[numQuestionId] = optionId;
+      }
+    });
+
+    console.log("Original answers:", answers);
+    console.log("Filtered answers:", filteredAnswers);
+
+    // Submit answers using mutation
+    mutate({
+      seafarerCode: assessmentData.seafarerCode,
+      role: "va_1",
+      answers: filteredAnswers,
+    });
+  }, [assessment?.questions, answers, assessmentData.seafarerCode, mutate]);
 
   // Auto submit when time runs out - use ref to avoid infinite loop
   const timeOutRef = useRef(false);
@@ -125,6 +104,22 @@ export default function Section1({
       handleSubmit();
     }
   }, [timeLeft, handleSubmit, assessment?.questions]);
+
+  // Auto-submit when overall assessment expires (24 hours)
+  useEffect(() => {
+    if (
+      isOverallExpired &&
+      !storageTimeOutRef.current &&
+      assessment?.questions &&
+      assessment.questions.length > 0
+    ) {
+      storageTimeOutRef.current = true;
+      toast.warning(
+        "Waktu assessment telah habis. Form akan di-submit otomatis."
+      );
+      handleSubmit();
+    }
+  }, [isOverallExpired, handleSubmit, assessment?.questions]);
 
   const currentQuestion = assessment?.questions
     ? assessment.questions[currentQuestionIndex]
@@ -226,10 +221,10 @@ export default function Section1({
               height={64}
               src="/images/logo1.png"
               alt="Logo Kiri"
-              className="h-16"
+              className="h-10 w-auto md:h-16"
             />
             <div className="text-center">
-              <h1 className="text-3xl font-bold uppercase text-gray-800 mb-2">
+              <h1 className="text-lg md:text-3xl font-bold uppercase text-gray-800 mb-2">
                 Value Assessment Section 1
               </h1>
             </div>
@@ -238,7 +233,7 @@ export default function Section1({
               height={64}
               src="/images/logo2.png"
               alt="Logo Kanan"
-              className="h-16"
+              className="h-10 w-auto md:h-16"
             />
           </div>
         </div>
@@ -278,9 +273,9 @@ export default function Section1({
           </div>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex flex-col-reverse md:flex-row gap-6">
           {/* Question Navigation Sidebar */}
-          <div className="w-64 bg-white rounded-lg shadow-sm border p-6">
+          <div className="w-full md:w-64 bg-white rounded-lg shadow-sm border p-6">
             <h3 className="font-bold text-lg mb-4 text-gray-800">
               Navigasi Soal
             </h3>
@@ -341,7 +336,7 @@ export default function Section1({
 
           {/* Main Question Area */}
           <div className="flex-1">
-            <div className="bg-white rounded-lg shadow-sm border p-8">
+            <div className="bg-white rounded-lg shadow-sm border p-8 w-full">
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-bold text-gray-800">
@@ -406,11 +401,11 @@ export default function Section1({
               </div>
 
               {/* Navigation Buttons */}
-              <div className="flex justify-between pt-6 border-t">
+              <div className="flex flex-col-reverse md:flex-row gap-3 justify-between pt-6 border-t w-full">
                 <Button
                   onClick={currentQuestionIndex === 0 ? onBack : handlePrevious}
                   variant="outline"
-                  className="px-6 py-2"
+                  className="px-6 py-2 cursor-pointer"
                 >
                   {currentQuestionIndex === 0
                     ? "Kembali ke Identitas"
@@ -422,17 +417,17 @@ export default function Section1({
                   (assessment?.questions?.length ?? 1) - 1 ? (
                     <Button
                       onClick={handleNext}
-                      className="px-6 py-2 bg-gray-800 hover:bg-gray-700"
+                      className="px-6 py-2 bg-gray-800 hover:bg-gray-700 w-full cursor-pointer"
                     >
                       Soal Berikutnya
                     </Button>
                   ) : (
                     <Button
                       onClick={handleSubmit}
-                      disabled={isSubmitting}
-                      className="px-6 py-2 bg-green-600 hover:bg-green-700"
+                      disabled={isPending}
+                      className="px-6 py-2 bg-green-600 hover:bg-green-700 cursor-pointer"
                     >
-                      {isSubmitting ? "Menyimpan..." : "Selesai Section 1"}
+                      {isPending ? "Menyimpan..." : "Selesai Section 1"}
                     </Button>
                   )}
                 </div>

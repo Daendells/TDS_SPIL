@@ -46,6 +46,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		report.GET("/test", c.ReportController.TestPanic)
 	}
 
+
     trainings := c.App.Group("trainings")
     {
         trainings.GET("", c.TrainingGenController.FindAll)       // dari DB
@@ -93,10 +94,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 	{
 		assessment.GET("/public/:role", c.AssessmentController.FindByRolePublic)
 		assessment.GET("", c.AssessmentController.FindAllAssessments)
-		assessment.GET("/:role", c.AssessmentController.FindByRole)
-		assessment.POST("", c.AssessmentController.CreateAssessment)
-		assessment.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
-		assessment.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
+		
 	}
 
 	// Register Question and Option routes
@@ -110,6 +108,15 @@ func (c *RouterConfig) SetupAuthRouter() {
 	{
 		auth.POST("/logout", c.UserController.Logout)
 	}
+
+	assessmentAuth := c.App.Group("api/assessments")
+	{
+		assessmentAuth.GET("/:role", c.AssessmentController.FindByRole)
+		assessmentAuth.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
+		assessmentAuth.POST("", c.AssessmentController.CreateAssessment)
+		assessmentAuth.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
+	}
+
 
 	// Protected Combined question-option routes
 	questionsWithOptionsAuth := c.App.Group("api/questions-with-options").Use(c.AuthMiddleware)

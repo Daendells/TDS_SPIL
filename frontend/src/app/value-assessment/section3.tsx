@@ -1,27 +1,18 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useCallback, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
-import { useApi } from "@/hooks/use-api";
 import { ValueAssessmentData } from "./page";
-
-interface Question {
-  questionId: number;
-  role: string;
-  questionText: string;
-}
-
-interface Option {
-  optionId: number;
-  questionId: number;
-  optionLetter: string;
-  optionText: string;
-  score: number;
-  isImage: number;
-}
+import {
+  useGetAssessmentByRole,
+  usePostAssessmentResults,
+} from "./_hooks/useAssessment";
+import { useStorageCountdown } from "@/hooks/use-local-storage";
+import Image from "next/image";
+import { useCountdown } from "@/hooks/use-session-storage";
 
 interface Section3Props {
   onNext: () => void;
@@ -34,61 +25,60 @@ const LIKERT_SCALE = [
   { value: "1", label: "1 - Sangat Tidak Menggambarkan Diri Saya" },
   { value: "2", label: "2 - Tidak Menggambarkan Diri Saya" },
   { value: "3", label: "3 - Menggambarkan Diri Saya" },
-  { value: "4", label: "4 - Sangat Menggambarkan Diri Saya" }
+  { value: "4", label: "4 - Sangat Menggambarkan Diri Saya" },
 ];
 
-export default function Section3({ onNext, onBack, assessmentData, updateAssessmentData }: Section3Props) {
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loading, setLoading] = useState(true);
+export default function Section3({
+  onNext,
+  onBack,
+  assessmentData,
+  updateAssessmentData,
+}: Section3Props) {
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [answers, setAnswers] = useState<{ [questionId: number]: number }>(assessmentData.section3Answers);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const api = useApi();
+  const [answers, setAnswers] = useState<{ [questionId: number]: number }>(
+    assessmentData.section3Answers ?? {}
+  );
+  const timeOutRef = useRef(false);
 
-  // Fetch questions on component mount
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true);
-        
-        const questionsResponse = await api.get("/questions");
-        const allQuestions = questionsResponse.data.data;
-        
-        const filteredQuestions = allQuestions.filter((q: Question) => q.role === "va_3");
-        
-        filteredQuestions.sort((a: Question, b: Question) => a.questionId - b.questionId);
-        
-        setQuestions(filteredQuestions);
-        
-      } catch (error) {
-        console.error("Failed to fetch questions:", error);
-        toast.error("Gagal memuat soal");
-      } finally {
-        setLoading(false);
-      }
+  // Fetch assessment data using the hook
+  const { data: assessment, isLoading, error } = useGetAssessmentByRole("va_3");
+
+  // POST mutation hook
+  const { mutate, isPending, isSuccess } = usePostAssessmentResults(onNext);
+
+  // Use storage-based countdown for auto-submit when assessment expires (24 hours)
+  // const { timeLeft, isExpired, formatTime } = useStorageCountdown(
+  //   "valueAssessmentFormData"
+  // );
+  const timerMinutes = assessment?.timerLimitMinutes ?? 30;
+
+  const { timeLeft, formatTime } = useCountdown(
+    assessmentData.section3StartTime,
+    timerMinutes
+  );
+
+  const currentQuestion = assessment?.questions?.[currentQuestionIndex];
+
+  const handleAnswerChange = (questionId: number, value: string) => {
+    console.log("Debug:", questionId, value);
+    const newAnswers = {
+      ...answers,
+      [questionId]: parseInt(value, 10),
     };
-
-    fetchData();
-  }, [api]);
-
-  const currentQuestion = questions[currentQuestionIndex];
-
-  const handleAnswerChange = (rating: string) => {
-    const ratingNumber = parseInt(rating);
-    const newAnswers = { ...answers, [currentQuestion.questionId]: ratingNumber };
     setAnswers(newAnswers);
+
     updateAssessmentData({ section3Answers: newAnswers });
   };
 
   const handleNext = () => {
-    if (currentQuestionIndex < questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+    if (currentQuestionIndex < (assessment?.questions?.length ?? 0) - 1) {
+      setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
 
   const handlePrevious = () => {
     if (currentQuestionIndex > 0) {
-      setCurrentQuestionIndex(prev => prev - 1);
+      setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
 
@@ -96,66 +86,58 @@ export default function Section3({ onNext, onBack, assessmentData, updateAssessm
     setCurrentQuestionIndex(index);
   };
 
-  const handleSubmit = async () => {
-    try {
-      setIsSubmitting(true);
-      
-      // Check if all questions are answered
-      const unansweredQuestions = questions.filter(q => !answers[q.questionId]);
-      if (unansweredQuestions.length > 0) {
-        toast.error(`Masih ada ${unansweredQuestions.length} soal yang belum dijawab`);
-        return;
-      }
-
-      // For Section 3, we need to convert rating values to option IDs
-      // Since Section 3 uses Likert scale (1-4), we need to find the corresponding option IDs
-      const answersWithOptionIds: { [questionId: number]: number } = {};
-      
-      // Get all options for VA3 questions
-      const optionsResponse = await api.get("/options");
-      const allOptions = optionsResponse.data.data;
-      
-      for (const [questionIdStr, rating] of Object.entries(answers)) {
-        const questionId = parseInt(questionIdStr);
-        const questionOptions = allOptions.filter((opt: any) => opt.questionId === questionId);
-        
-        // Find the option that corresponds to the rating (assuming options are ordered by score/rating)
-        const selectedOption = questionOptions.find((opt: any) => opt.score === rating);
-        
-        if (selectedOption) {
-          answersWithOptionIds[questionId] = selectedOption.optionId;
-        }
-      }
-
-      // Submit answers to backend
-      const submitData = {
-        seamanCode: assessmentData.seamanCode,
-        role: "va_3",
-        answers: answersWithOptionIds
-      };
-
-      const response = await api.post("/assessment-results/submit", submitData);
-      
-      if (response.status === 200) {
-        // Update assessment data with section 3 answers
-        updateAssessmentData({ section3Answers: answers });
-        toast.success("Value Assessment berhasil diselesaikan!");
-        
-        // Navigate to completion page
-        onNext();
-      } else {
-        throw new Error("Failed to submit assessment");
-      }
-      
-    } catch (error) {
-      console.error("Failed to submit assessment:", error);
-      toast.error("Gagal menyelesaikan assessment");
-    } finally {
-      setIsSubmitting(false);
+  const handleSubmit = useCallback(() => {
+    if (!assessment?.questions) {
+      toast.error("Soal belum dimuat");
+      return;
     }
-  };
 
-  if (loading) {
+    // Check for unanswered questions
+    const unansweredQuestions = assessment.questions.filter(
+      (q) => !(q.questionId in answers)
+    );
+
+    if (unansweredQuestions.length > 0 && timeLeft > 0) {
+      toast.error(
+        `Masih ada ${unansweredQuestions.length} soal yang belum dijawab`
+      );
+      return;
+    }
+
+    // Filter out undefined values and ensure all values are numbers
+    const filteredAnswers: { [questionId: number]: number } = {};
+    Object.entries(answers).forEach(([questionId, optionId]) => {
+      const numQuestionId = parseInt(questionId);
+      if (optionId !== undefined && !isNaN(numQuestionId) && !isNaN(optionId)) {
+        filteredAnswers[numQuestionId] = optionId;
+      }
+    });
+
+    // Submit answers using mutation
+    mutate({
+      seafarerCode: assessmentData.seafarerCode,
+      role: "va_3",
+      answers: filteredAnswers,
+    });
+
+    if (isSuccess) {
+      // Remove localStorage when assessment submission is successful
+      localStorage.removeItem("valueAssessmentFormData");
+    }
+  }, [assessment?.questions, answers, assessmentData.seafarerCode, mutate]);
+
+  // Auto-submit ketika assessment expires (24 jam)
+  useEffect(() => {
+    if (!timeOutRef.current && assessment?.questions) {
+      timeOutRef.current = true;
+      toast.warning(
+        "Waktu assessment telah habis. Form akan di-submit otomatis."
+      );
+      handleSubmit();
+    }
+  }, [handleSubmit, assessment?.questions]);
+
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -166,11 +148,26 @@ export default function Section3({ onNext, onBack, assessmentData, updateAssessm
     );
   }
 
-  if (questions.length === 0) {
+  if (error) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">Tidak ada soal yang tersedia untuk Section 3</p>
+          <p className="text-gray-600">Gagal memuat soal</p>
+          <Button onClick={onBack} className="mt-4">
+            Kembali
+          </Button>
+        </div>
+      </div>
+    );
+  }
+
+  if (!assessment?.questions || assessment.questions.length === 0) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <p className="text-gray-600">
+            Tidak ada soal yang tersedia untuk Section 3
+          </p>
           <Button onClick={onBack} className="mt-4">
             Kembali
           </Button>
@@ -185,65 +182,100 @@ export default function Section3({ onNext, onBack, assessmentData, updateAssessm
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-3">
           <div className="flex justify-between items-center mb-6">
-            <img src="/images/logo1.png" alt="Logo Kiri" className="h-16" />
+            <Image
+              width={64}
+              height={64}
+              src="/images/logo1.png"
+              alt="Logo Kiri"
+              className="h-10 w-auto md:h-16"
+            />
             <div className="text-center">
-              <h1 className="text-3xl font-bold uppercase text-gray-800 mb-2">
+              <h1 className="text-lg md:text-3xl font-bold uppercase text-gray-800 mb-2">
                 Value Assessment Section 3
               </h1>
             </div>
-            <img src="/images/logo2.png" alt="Logo Kanan" className="h-16" />
+            <Image
+              width={64}
+              height={64}
+              src="/images/logo2.png"
+              alt="Logo Kanan"
+              className="h-10 w-auto md:h-16"
+            />
           </div>
         </div>
 
         {/* Instructions */}
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-3">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">Panduan Pengisian:</h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">
+            Panduan Pengisian:
+          </h2>
           <div className="space-y-3 text-gray-700 mb-6">
-            <p>Pada bagian ini, terdapat sejumlah pernyataan mengenai diri Anda. Bacalah dengan seksama setiap pernyataan yang ada. Jawablah setiap pernyataan sesuai dengan diri Anda. Tidak ada jawaban benar dan salah dalam asesmen ini.</p>
+            <p>
+              Pada bagian ini, terdapat sejumlah pernyataan mengenai diri Anda.
+              Bacalah dengan seksama setiap pernyataan yang ada. Jawablah setiap
+              pernyataan sesuai dengan diri Anda. Tidak ada jawaban benar dan
+              salah dalam asesmen ini.
+            </p>
           </div>
-          
+
           <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
-            <h3 className="font-bold text-blue-800 mb-3">Setiap pernyataan terdiri skala 1 hingga 4 dengan keterangan sebagai berikut:</h3>
+            <h3 className="font-bold text-blue-800 mb-3">
+              Setiap pernyataan terdiri skala 1 hingga 4 dengan keterangan
+              sebagai berikut:
+            </h3>
             <div className="space-y-2 text-blue-700">
               {LIKERT_SCALE.map((scale) => (
-                <p key={scale.value}><strong>{scale.label}</strong></p>
+                <p key={scale.value}>
+                  <strong>{scale.label}</strong>
+                </p>
               ))}
+            </div>
+          </div>
+          {/* Timer */}
+          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+            <div className="flex items-center justify-center">
+              <span className="text-red-600 font-bold text-xl">
+                Waktu tersisa: {formatTime(timeLeft)}
+              </span>
             </div>
           </div>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex flex-col-reverse md:flex-row gap-6">
           {/* Question Navigation Sidebar */}
-          <div className="w-64 bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="font-bold text-lg mb-4 text-gray-800">Navigasi Soal</h3>
-            
+          <div className="w-full md:w-64 bg-white rounded-lg shadow-sm border p-6">
+            <h3 className="font-bold text-lg mb-4 text-gray-800">
+              Navigasi Soal
+            </h3>
+
             {/* Progress Summary */}
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-600 mb-2">Progress:</div>
               <div className="text-lg font-bold text-gray-800">
-                {Object.keys(answers).length} / {questions.length}
+                {Object.keys(answers).length} /{" "}
+                {assessment?.questions?.length ?? 0}
               </div>
               <div className="text-sm text-gray-500">soal terjawab</div>
             </div>
 
             {/* Question Numbers Grid */}
-            <div className="grid grid-cols-5 gap-2 max-h-96 overflow-y-auto">
-              {questions.map((_, index) => {
-                const questionId = questions[index].questionId;
-                const isAnswered = answers[questionId] !== undefined;
+            <div className="grid grid-cols-5 gap-2">
+              {assessment?.questions?.map((q, index) => {
+                const isAnswered = answers[q.questionId] !== undefined;
                 const isCurrent = index === currentQuestionIndex;
-                
+
                 return (
                   <button
                     key={index}
                     onClick={() => jumpToQuestion(index)}
                     className={`
                       w-10 h-10 rounded-lg border-2 font-medium text-sm transition-all
-                      ${isCurrent 
-                        ? 'bg-blue-500 text-white border-blue-500' 
-                        : isAnswered 
-                          ? 'bg-gray-800 text-white border-gray-800' 
-                          : 'bg-white text-gray-600 border-gray-300 hover:border-gray-400'
+                      ${
+                        isCurrent
+                          ? "bg-blue-500 text-white border-blue-500"
+                          : isAnswered
+                          ? "bg-gray-800 text-white border-gray-800"
+                          : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
                       }
                     `}
                   >
@@ -276,7 +308,8 @@ export default function Section3({ onNext, onBack, assessmentData, updateAssessm
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-bold text-gray-800">
-                    Pernyataan {currentQuestionIndex + 1} dari {questions.length}
+                    Pernyataan {currentQuestionIndex + 1} dari{" "}
+                    {assessment?.questions?.length ?? 0}
                   </h3>
                 </div>
 
@@ -289,21 +322,37 @@ export default function Section3({ onNext, onBack, assessmentData, updateAssessm
 
                 {/* Likert Scale Options */}
                 <RadioGroup
-                  value={answers[currentQuestion?.questionId]?.toString() || ""}
-                  onValueChange={(value) => handleAnswerChange(value)}
+                  value={
+                    currentQuestion?.questionId
+                      ? answers[currentQuestion.questionId]?.toString() || ""
+                      : ""
+                  }
+                  onValueChange={(value) =>
+                    currentQuestion &&
+                    handleAnswerChange(currentQuestion.questionId, value)
+                  }
                 >
                   <div className="space-y-4">
-                    {LIKERT_SCALE.map((scale) => (
-                      <div key={scale.value} className="flex items-center space-x-4 p-4 rounded-lg border-2 hover:bg-gray-50 transition-colors">
-                        <RadioGroupItem 
-                          value={scale.value} 
-                          id={`scale-${scale.value}`}
+                    {currentQuestion?.options.map((scale) => (
+                      <div
+                        key={scale.optionId}
+                        className="flex items-center space-x-4 p-4 rounded-lg border-2 hover:bg-gray-50 transition-colors cursor-pointer"
+                        onClick={() => {
+                          handleAnswerChange(
+                            currentQuestion?.questionId || 0,
+                            scale.optionId.toString()
+                          );
+                        }}
+                      >
+                        <RadioGroupItem
+                          value={scale.optionId.toString()}
+                          id={`scale-${scale.optionId}`}
                         />
-                        <Label 
-                          htmlFor={`scale-${scale.value}`} 
+                        <Label
+                          htmlFor={`scale-${scale.optionId}`}
                           className="flex-1 cursor-pointer text-gray-700 text-lg"
                         >
-                          {scale.label}
+                          {scale.optionText}
                         </Label>
                       </div>
                     ))}
@@ -312,31 +361,32 @@ export default function Section3({ onNext, onBack, assessmentData, updateAssessm
               </div>
 
               {/* Navigation Buttons */}
-              <div className="flex justify-between pt-6 border-t">
-                <Button 
+              <div className="flex flex-col-reverse md:flex-row gap-3 justify-between pt-6 border-t">
+                <Button
                   onClick={handlePrevious}
                   variant="outline"
-                  className="px-6 py-2"
+                  className="px-6 py-2 cursor-pointer"
                   disabled={currentQuestionIndex === 0}
                 >
                   Soal Sebelumnya
                 </Button>
-                
+
                 <div className="flex gap-3">
-                  {currentQuestionIndex < questions.length - 1 ? (
-                    <Button 
+                  {currentQuestionIndex <
+                  (assessment?.questions?.length ?? 0) - 1 ? (
+                    <Button
                       onClick={handleNext}
-                      className="px-6 py-2 bg-gray-800 hover:bg-gray-700"
+                      className="px-6 py-2 bg-gray-800 hover:bg-gray-700 cursor-pointer"
                     >
                       Soal Berikutnya
                     </Button>
                   ) : (
-                    <Button 
+                    <Button
                       onClick={handleSubmit}
-                      disabled={isSubmitting}
-                      className="px-6 py-2 bg-green-600 hover:bg-green-700"
+                      disabled={isPending}
+                      className="px-6 py-2 bg-green-600 hover:bg-green-700 cursor-pointer"
                     >
-                      {isSubmitting ? "Menyelesaikan..." : "Selesaikan Assessment"}
+                      {isPending ? "Menyelesaikan..." : "Selesaikan Assessment"}
                     </Button>
                   )}
                 </div>

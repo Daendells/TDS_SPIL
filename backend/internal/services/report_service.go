@@ -293,7 +293,7 @@ func (service *ReportService) FindBySeafarerCode(ctx context.Context, seafarerCo
 	defer tx.Rollback()
 
 	var report domain.Report
-	err := service.ReportRepository.FindBySeafarerCode(tx, seafarerCode, &report)
+	_, err := service.ReportRepository.FindBySeafarerCode(tx, seafarerCode, &report)
 	if err != nil {
 		if err == gorm.ErrRecordNotFound {
 			return nil, fmt.Errorf("seafarer code not found")

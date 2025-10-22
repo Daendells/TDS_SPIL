@@ -17,7 +17,7 @@ export interface ValueAssessmentData {
   vesselName: string;
   seafarerCode: string;
   section1Answers: { [questionId: number]: number };
-  section2Answers: { [questionId: number]: string };
+  section2Answers: { [questionId: number]: number };
   section3Answers: { [questionId: number]: number };
   startTime?: string;
   currentStep?: number;
@@ -44,20 +44,34 @@ export default function ValueAssessmentPage() {
     startTime: undefined,
   });
 
-  // Set client-side flag and load data after mount - only once
+  // localStorage key untuk menyimpan assessment data dengan expiry 24 jam
+  const STORAGE_KEY = "valueAssessmentFormData";
+  const EXPIRY_MINUTES = 24 * 60; // 24 jam
+
+  // Set client-side flag dan load data dari localStorage setelah mount
   useEffect(() => {
     setIsClient(true);
-    // Load stored data only once on mount
     try {
-      const saved = sessionStorage.getItem("valueAssessmentFormData");
-      if (saved) {
-        const data = JSON.parse(saved);
-        if (
-          data.assessmentData &&
-          (data.assessmentData.email || data.currentStep > 1)
-        ) {
-          setAssessmentData(data.assessmentData);
-          setCurrentStep(data.currentStep);
+      const item = window.localStorage.getItem(STORAGE_KEY);
+      if (item) {
+        const parsed = JSON.parse(item);
+
+        // Check if data has expiry field dan belum expired
+        if (parsed.expiresAt) {
+          const now = new Date().getTime();
+          if (now <= parsed.expiresAt) {
+            const data = parsed.value;
+            if (
+              data.assessmentData &&
+              (data.assessmentData.email || data.currentStep > 1)
+            ) {
+              setAssessmentData(data.assessmentData);
+              setCurrentStep(data.currentStep);
+            }
+          } else {
+            // Data expired, hapus dari localStorage
+            window.localStorage.removeItem(STORAGE_KEY);
+          }
         }
       }
     } catch (error) {
@@ -65,27 +79,33 @@ export default function ValueAssessmentPage() {
     }
   }, []);
 
-  // Save data to sessionStorage whenever assessmentData or currentStep changes
+  // Save data ke localStorage dengan expiry 24 jam setiap kali assessmentData atau currentStep berubah
   useEffect(() => {
     if (
       isClient &&
       (assessmentData.email || assessmentData.fullName || currentStep > 1)
     ) {
       try {
+        const now = new Date().getTime();
+        const expiryTime = now + EXPIRY_MINUTES * 60 * 1000; // Convert minutes to ms
+
         const dataToSave = {
           assessmentData,
           currentStep,
           timestamp: new Date().toISOString(),
         };
-        sessionStorage.setItem(
-          "valueAssessmentFormData",
-          JSON.stringify(dataToSave)
-        );
+
+        const storageData = {
+          value: dataToSave,
+          expiresAt: expiryTime,
+        };
+
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
       } catch (error) {
         console.warn("Error saving data:", error);
       }
     }
-  }, [isClient, assessmentData, currentStep]);
+  }, [isClient, assessmentData, currentStep, EXPIRY_MINUTES, STORAGE_KEY]);
 
   const handleNext = () => {
     const nextStep = currentStep + 1;
@@ -127,7 +147,7 @@ export default function ValueAssessmentPage() {
   // Function to clear all stored data (useful when assessment is completed)
   const handleClearStoredData = () => {
     try {
-      sessionStorage.removeItem("valueAssessmentFormData");
+      window.localStorage.removeItem(STORAGE_KEY);
     } catch (error) {
       console.warn("Error clearing stored data:", error);
     }

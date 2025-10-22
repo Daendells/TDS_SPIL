@@ -26,18 +26,15 @@ type Service struct {
 	outDir  string // ./public/materi
 }
 
-func NewTrainingService(log *logrus.Logger) *Service {
-	apiKey := os.Getenv("GROQ_API_KEY")
+func NewTrainingService(log *logrus.Logger, apiKey, model, pubBase string) *Service {
 	if apiKey == "" {
 		log.Warn("GROQ_API_KEY kosong — panggilan LLM akan gagal")
 	}
-	model := os.Getenv("GROQ_MODEL")
 	if model == "" {
 		model = "llama-3.1-8b-instant"
 	}
-	base := os.Getenv("BACKEND_PUBLIC_URL")
-	if base == "" {
-		base = "http://localhost:8080"
+	if pubBase == "" {
+		pubBase = "http://localhost:8080"
 	}
 
 	outDir := "./public/materi"
@@ -48,7 +45,7 @@ func NewTrainingService(log *logrus.Logger) *Service {
 		http:    &http.Client{Timeout: 90 * time.Second},
 		apiKey:  apiKey,
 		model:   model,
-		pubBase: strings.TrimRight(base, "/"),
+		pubBase: strings.TrimRight(pubBase, "/"),
 		outDir:  outDir,
 	}
 }
