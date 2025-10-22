@@ -201,7 +201,6 @@ export default function QuestionsAdmin() {
               onValueChange={(value) => {
                 const assessmentId = parseInt(value);
                 setSelectedAssessmentId(assessmentId);
-                // Find the corresponding role for backward compatibility
                 const assessment = assessments?.find(a => a.assessmentId === assessmentId);
                 if (assessment) {
                   setSelectedRole(assessment.role);
@@ -209,15 +208,18 @@ export default function QuestionsAdmin() {
               }}
             >
               <SelectTrigger className="w-[300px]">
-                <SelectValue placeholder="Pilih posisi..." />
+                <SelectValue placeholder="Pilih posisi" />
               </SelectTrigger>
               <SelectContent>
-                {assessments?.map((assessment) => (
-                  <SelectItem key={assessment.assessmentId} value={assessment.assessmentId.toString()}>
-                    {assessment.assessmentName} ({assessment.role.toUpperCase()})
-                  </SelectItem>
-                ))}
-              </SelectContent>
+                  {assessments?.map((assessment) => (
+                    <SelectItem
+                      key={assessment.assessmentId}
+                      value={assessment.assessmentId.toString()}
+                    >
+                      {assessment.assessmentName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
             </Select>
 
             {selectedAssessmentId > 0 && (
@@ -270,7 +272,7 @@ export default function QuestionsAdmin() {
               <div>
                 <CardTitle>
                   Pertanyaan untuk{" "}
-                  {assessments?.find((a: any) => a.assessmentId === selectedAssessmentId)?.role || "Assessment"}
+                  {assessments?.find((a: any) => a.assessmentId === selectedAssessmentId)?.assessmentName || "Assessment"}
                 </CardTitle>
                 <CardDescription>
                   {questions.length} question ditemukan

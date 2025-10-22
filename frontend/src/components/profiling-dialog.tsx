@@ -30,18 +30,27 @@ export default function ProfilingDialog({
   const { get } = useApi();
 
   useEffect(() => {
-    if (report?.seamanCode) {
-      get(`/assessment-results/seaman/${report.seamanCode}`)
+    if (report?.seafarerCode) {
+      get(`/assessment-results/seafarer/${report.seafarerCode}`)
         .then((response) => {
-          if (response.data?.totalFinalScore) {
-            setAssessmentScore(Math.round(response.data.totalFinalScore * 10) / 10);
+          // Check if response is successful and has data
+          if (response.data && response.data.code === 200) {
+            if (response.data.data && response.data.data.totalFinalScore) {
+              setAssessmentScore(Math.round(response.data.data.totalFinalScore * 10) / 10);
+            } else {
+              // Backend returned success but with null data (seafarer hasn't completed assessment)
+              setAssessmentScore(null);
+            }
+          } else {
+            setAssessmentScore(null);
           }
         })
         .catch(() => {
+          // Handle any network or other errors
           setAssessmentScore(null);
         });
     }
-  }, [report?.seamanCode, get]);
+  }, [report?.seafarerCode, get]);
   
   if (!report) return null;
 
@@ -249,7 +258,7 @@ export default function ProfilingDialog({
       <AssessmentResultDialog
         open={assessmentDialogOpen}
         setOpen={setAssessmentDialogOpen}
-        seamanCode={report.seamanCode}
+        seafarerCode={report.seafarerCode}
         seamanName={report.nama || "Unknown"}
       />
     </Dialog>

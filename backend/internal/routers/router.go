@@ -12,8 +12,8 @@ type RouterConfig struct {
 	ReportController           *controllers.ReportController
 	UserController             *controllers.UserController
 	MentoringReportController  *controllers.MentoringReportController
-	TrainingController        *controllers.TrainingController   // DB
-	TrainingGenController     *traininggen.TrainingController    // LLM Generator
+	TrainingController         *controllers.TrainingController // DB
+	TrainingGenController      *traininggen.TrainingController // LLM Generator
 	QuestionController         *controllers.QuestionController
 	OptionController           *controllers.OptionController
 	AssessmentResultController *controllers.AssessmentResultController
@@ -46,12 +46,11 @@ func (c *RouterConfig) SetupGuestRouter() {
 		report.GET("/test", c.ReportController.TestPanic)
 	}
 
-
-    trainings := c.App.Group("trainings")
-    {
-        trainings.GET("", c.TrainingGenController.FindAll)       // dari DB
-        trainings.POST("/generate", c.TrainingGenController.Generate) // dari LLM
-    }    
+	trainings := c.App.Group("trainings")
+	{
+		trainings.GET("", c.TrainingGenController.FindAll)            // dari DB
+		trainings.POST("/generate", c.TrainingGenController.Generate) // dari LLM
+	}
 	mentoringReports := c.App.Group("mentoring-reports")
 	{
 		mentoringReports.POST("", c.MentoringReportController.Create)
@@ -94,7 +93,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 	{
 		assessment.GET("/public/:role", c.AssessmentController.FindByRolePublic)
 		assessment.GET("", c.AssessmentController.FindAllAssessments)
-		
+
 	}
 
 	// Register Question and Option routes
@@ -116,7 +115,6 @@ func (c *RouterConfig) SetupAuthRouter() {
 		assessmentAuth.POST("", c.AssessmentController.CreateAssessment)
 		assessmentAuth.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
 	}
-
 
 	// Protected Combined question-option routes
 	questionsWithOptionsAuth := c.App.Group("api/questions-with-options").Use(c.AuthMiddleware)

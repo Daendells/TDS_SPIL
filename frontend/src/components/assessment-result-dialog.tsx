@@ -6,7 +6,7 @@ import { Loader2 } from "lucide-react";
 
 interface AssessmentResult {
   id: number;
-  seamanCode: string;
+  seafarerCode: string;
   va1RawScore: number;
   va2RawScore: number;
   va3RawScore: number;
@@ -27,34 +27,61 @@ interface AssessmentResult {
 interface AssessmentResultDialogProps {
   open: boolean;
   setOpen: (open: boolean) => void;
-  seamanCode: string;
+  seafarerCode: string;
   seamanName: string;
 }
 
 export default function AssessmentResultDialog({
   open,
   setOpen,
-  seamanCode,
+  seafarerCode,
   seamanName,
 }: AssessmentResultDialogProps) {
   const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const api = useApi();
 
   useEffect(() => {
-    if (open && seamanCode) {
+    if (open && seafarerCode) {
       fetchAssessmentResult();
     }
-  }, [open, seamanCode]);
+  }, [open, seafarerCode]);
 
   const fetchAssessmentResult = async () => {
     try {
       setLoading(true);
-      const response = await api.get(`/assessment-results/seaman/${seamanCode}`);
-      setAssessmentResult(response.data.data);
-    } catch (error) {
+      setError(null);
+      const response = await api.get(`/assessment-results/seafarer/${seafarerCode}`);
+      
+      if (response.data && response.data.code === 200) {
+        if (response.data.data) {
+          setAssessmentResult(response.data.data);
+        } else {
+          setAssessmentResult(null);
+          setError("Assessment belum dikerjakan");
+        }
+      } else {
+        setAssessmentResult(null);
+        setError("Data assessment tidak ditemukan");
+      }
+    } catch (error: any) {
       console.error("Failed to fetch assessment result:", error);
-      toast.error("Gagal memuat hasil assessment");
+      setAssessmentResult(null);
+      
+      // Handle different error types
+      if (error.response?.status === 404) {
+        setError("Assessment belum dikerjakan atau data tidak ditemukan");
+      } else if (error.response?.status >= 500) {
+        setError("Terjadi kesalahan server. Silakan coba lagi nanti");
+      } else {
+        setError("Gagal memuat data assessment");
+      }
+      
+      // Don't show toast for 404 errors as they're expected
+      if (error.response?.status !== 404) {
+        toast.error("Gagal memuat hasil assessment");
+      }
     } finally {
       setLoading(false);
     }
@@ -103,13 +130,27 @@ export default function AssessmentResultDialog({
             <Loader2 className="h-8 w-8 animate-spin" />
             <span className="ml-2">Memuat hasil assessment...</span>
           </div>
+        ) : error ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="text-center">
+              <div className="mb-4">
+                <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                </svg>
+              </div>
+              <p className="text-gray-500 mb-2">{error}</p>
+              <p className="text-sm text-gray-400">
+                Seafarer Code: <span className="font-mono">{seafarerCode}</span>
+              </p>
+            </div>
+          </div>
         ) : assessmentResult ? (
           <div className="space-y-6 mt-6">
             <div className="border rounded-xl shadow-sm p-4 bg-white">
               <h2 className="font-bold text-lg mb-4">INFORMASI PESERTA</h2>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <p><strong>Nama:</strong> {seamanName}</p>
-                <p><strong>Seaman Code:</strong> {assessmentResult.seamanCode}</p>
+                <p><strong>Seafarer Code:</strong> {assessmentResult.seafarerCode}</p>
                 <p><strong>Status:</strong> {assessmentResult.isCompleted ? "Selesai" : "Belum Selesai"}</p>
                 <p><strong>Tanggal Selesai:</strong> {assessmentResult.completedAt ? formatDate(assessmentResult.completedAt) : "-"}</p>
               </div>
@@ -196,7 +237,7 @@ export default function AssessmentResultDialog({
         ) : (
           <div className="flex items-center justify-center h-64">
             <div className="text-center">
-              <p className="text-gray-500 mb-2">Tidak ada data assessment untuk seaman code ini</p>
+              <p className="text-gray-500 mb-2">Tidak ada data assessment untuk seafarer code ini</p>
               <p className="text-sm text-gray-400">Pastikan assessment sudah diselesaikan</p>
             </div>
           </div>

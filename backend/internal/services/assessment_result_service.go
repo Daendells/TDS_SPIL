@@ -289,6 +289,12 @@ func (service *assessmentResultServiceImpl) calculateFinalScores(assessmentResul
 func (service *assessmentResultServiceImpl) FindBySeafarerCode(db *gorm.DB, seafarerCode string) (*web.AssessmentResultData, error) {
 	assessmentResult, err := service.AssessmentResultRepository.FindBySeafarerCode(db, seafarerCode)
 	if err != nil {
+		// Check if it's a "record not found" error (normal case for seafarer who hasn't completed assessment)
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("assessment result not found")
+		}
+		
+		// For other database errors, log and return the error
 		service.Log.WithError(err).Error("Error finding assessment result by seafarer code")
 		return nil, err
 	}

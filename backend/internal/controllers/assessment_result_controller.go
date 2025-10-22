@@ -73,13 +73,25 @@ func (controller *AssessmentResultController) FindBySeafarerCode(ctx *gin.Contex
 
 	assessmentResult, err := controller.AssessmentResultService.FindBySeafarerCode(controller.DB, seafarerCode)
 	if err != nil {
+		// Check if it's a "not found" error (case for seafarer who hasn't completed assessment)
+		if err.Error() == "assessment result not found" {
+			webResponse := web.SuccessResponse{
+				Code:   http.StatusOK,
+				Status: "OK",
+				Data:   nil,
+			}
+			ctx.JSON(http.StatusOK, webResponse)
+			return
+		}
+
+		// For other errors (database connection, etc.), return internal server error
 		controller.Log.WithError(err).Error("Error finding assessment result by seafarer code")
 		webResponse := web.ErrorResponse{
-			Code:   http.StatusNotFound,
-			Status: "NOT FOUND",
-			Error:  "Assessment result not found",
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  "Internal server error",
 		}
-		ctx.JSON(http.StatusNotFound, webResponse)
+		ctx.JSON(http.StatusInternalServerError, webResponse)
 		return
 	}
 

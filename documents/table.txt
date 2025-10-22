@@ -12,7 +12,7 @@ CREATE TABLE `assessments` (
 
 CREATE TABLE `assessment_results` (
   `id` int NOT NULL,
-  `seaman_code` varchar(50) NOT NULL,
+  `seafarer_code` varchar(50) CHARACTER SET latin1 COLLATE latin1_swedish_ci NOT NULL,
   `va_1_raw_score` int DEFAULT '0',
   `va_2_raw_score` int DEFAULT '0',
   `va_3_raw_score` int DEFAULT '0',
@@ -29,6 +29,18 @@ CREATE TABLE `assessment_results` (
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+--
+-- Dumping data for table `assessment_results`
+--
+
+INSERT INTO `assessment_results` (`id`, `seafarer_code`, `va_1_raw_score`, `va_2_raw_score`, `va_3_raw_score`, `va_1_category_scores`, `coreva_ocai`, `aware_converted`, `grit_converted`, `coreva_final`, `aware_final`, `grit_final`, `total_final_score`, `is_completed`, `completed_at`, `created_at`, `updated_at`) VALUES
+(1, '6201095355', 96, 0, 0, '{\"teamWork\": 6.5, \"visioner\": 9.6, \"integrity\": 12, \"competitive\": 9.3, \"customerOriented\": 6.6000000000000005}', 44.00, 0.00, 0.00, 17.60, 0.00, 0.00, 17.60, 0, NULL, '2025-10-15 07:52:11', '2025-10-21 01:15:54'),
+(2, '6200521998', 36, 34, 0, '{\"teamWork\": 2.5, \"visioner\": 2.4000000000000004, \"integrity\": 3.5999999999999996, \"competitive\": 7.75, \"customerOriented\": 1.7999999999999998}', 18.05, 34.00, 0.00, 7.22, 20.40, 0.00, 27.62, 0, NULL, '2025-10-21 01:39:33', '2025-10-21 06:51:45'),
+(3, '6200402427', 84, 0, 0, '{\"teamWork\": 7, \"visioner\": 3.5999999999999996, \"integrity\": 9.6, \"competitive\": 15.5, \"customerOriented\": 4.199999999999999}', 39.90, 0.00, 0.00, 15.96, 0.00, 0.00, 15.96, 0, NULL, '2025-10-21 01:46:44', '2025-10-21 01:46:44'),
+(4, '6200159366', 120, 50, 31, '{\"teamWork\": 4, \"visioner\": 6, \"integrity\": 9.6, \"competitive\": 17.05, \"customerOriented\": 4.800000000000001}', 80.00, 60.00, 31.00, 32.00, 36.00, 19.38, 87.38, 1, '2025-10-22 03:54:23', '2025-10-21 07:11:53', '2025-10-22 03:54:23'),
+(5, '6201572177', 0, 1, 27, '{\"teamWork\": 0, \"visioner\": 0, \"integrity\": 0, \"competitive\": 0, \"customerOriented\": 0}', 0.00, 1.00, 27.00, 0.00, 0.60, 16.88, 17.48, 0, NULL, '2025-10-21 07:54:28', '2025-10-22 03:51:06'),
+(6, '1234567890', 0, 1, 31, '{\"teamWork\": 0, \"visioner\": 0, \"integrity\": 0, \"competitive\": 0, \"customerOriented\": 0}', 0.00, 1.00, 31.00, 0.00, 0.60, 19.38, 19.98, 0, NULL, '2025-10-22 00:31:24', '2025-10-22 00:36:20');
 
 
 CREATE TABLE `mentoring_reports` (
