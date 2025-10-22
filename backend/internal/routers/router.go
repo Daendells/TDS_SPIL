@@ -46,15 +46,6 @@ func (c *RouterConfig) SetupGuestRouter() {
 		report.GET("/test", c.ReportController.TestPanic)
 	}
 
-	mentoring := c.App.Group("mentoring-reports")
-	{
-		mentoring.POST("", c.MentoringReportController.Create)
-		mentoring.GET("", c.MentoringReportController.FindAll)
-		mentoring.GET("/:id", c.MentoringReportController.FindById)
-		mentoring.PUT("", c.MentoringReportController.Update)
-		mentoring.DELETE("/:id", c.MentoringReportController.Delete)
-	}
-
     trainings := c.App.Group("trainings")
     {
         trainings.GET("", c.TrainingGenController.FindAll)       // dari DB
@@ -119,13 +110,6 @@ func (c *RouterConfig) SetupAuthRouter() {
 	{
 		auth.POST("/logout", c.UserController.Logout)
 	}
-
-	assessmentAuth := c.App.Group("api/assessments")
-	{
-		assessmentAuth.GET("/:role", c.AssessmentController.FindByRole)
-		assessmentAuth.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
-	}
-
 
 	// Protected Combined question-option routes
 	questionsWithOptionsAuth := c.App.Group("api/questions-with-options").Use(c.AuthMiddleware)
