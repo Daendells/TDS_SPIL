@@ -4,6 +4,10 @@ import * as React from "react";
 import { useState } from "react";
 import axios from "axios";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+
 
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -82,7 +86,7 @@ export default function MasterPage() {
   };
 
   return (
-    <div className="mt-8 p-6 m-6">
+    <div className="mt-8 p-4 m-6">
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Master Report</h1>
 
@@ -165,7 +169,16 @@ export default function MasterPage() {
           </TableHeader>
 
           <TableBody>
-    {paginationData?.data?.map((row, i) => (
+  {onCallApi ? (
+    // 
+    <TableRow>
+      <TableCell colSpan={TABLE_COLUMNS.length} className="text-center text-gray-400">
+        Loading...
+      </TableCell>
+    </TableRow>
+  ) : paginationData?.data?.length ? (
+    // 
+    paginationData.data.map((row, i) => (
       <TableRow key={row.id}>
         <TableCell className="text-center">{i + 1}</TableCell>
         <TableCell className="text-center">{row.nama}</TableCell>
@@ -188,10 +201,72 @@ export default function MasterPage() {
         <TableCell className="text-center">{row.readiness}</TableCell>
         <TableCell className="text-center">{row.certificateEligible}</TableCell>
       </TableRow>
-    ))}
-  </TableBody>
+    ))
+  ) : (
+    // 
+    <TableRow>
+      <TableCell colSpan={TABLE_COLUMNS.length} className="text-center text-gray-400">
+        No Data
+      </TableCell>
+    </TableRow>
+  )}
+</TableBody>
+
         </Table>
       </div>
+      {/* PAGE SIZE SELECTOR */}
+<div className="flex items-center justify-between mb-4 p-4">
+  <Popover>
+    <PopoverTrigger asChild>
+      <Button
+        variant="outline"
+        role="combobox"
+        className="w-[120px] justify-between"
+      >
+        {paginationRequest.pageSize}
+        <ChevronsUpDownIcon className="ml-2 h-4 w-4 opacity-50" />
+      </Button>
+    </PopoverTrigger>
+
+    <PopoverContent className="w-[120px] p-0">
+      <Command>
+        <CommandList>
+          <CommandGroup>
+            {PAGE_SIZES.map((size) => (
+              <CommandItem
+                key={size}
+                value={size.toString()}
+                onSelect={() => {
+                  setPaginationRequest({
+                    ...paginationRequest,
+                    pageSize: size,
+                    anchorId: 0,
+                    page: "next",
+                  });
+                  setPageSize(size);
+                }}
+              >
+                <CheckIcon
+                  className={cn(
+                    "mr-2 h-4 w-4",
+                    paginationRequest.pageSize === size
+                      ? "opacity-100"
+                      : "opacity-0"
+                  )}
+                />
+                {size}
+              </CommandItem>
+            ))}
+          </CommandGroup>
+        </CommandList>
+      </Command>
+    </PopoverContent>
+  </Popover>
+
+  <span className="text-sm text-gray-600">
+    Showing {paginationRequest.pageSize} rows per page
+  </span>
+</div>
 
       {/* PAGINATION */}
       <Pagination className="m-4">
