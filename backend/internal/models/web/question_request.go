@@ -2,6 +2,7 @@ package web
 
 type QuestionCreateRequest struct {
 	Role         string  `json:"role" validate:"required"`
+	AssessmentID uint64  `json:"assessmentId" validate:"required"`
 	QuestionText string  `json:"questionText" validate:"required"`
 	Category     *string `json:"category"`
 	IsImage      *string `json:"isImage"`
@@ -11,6 +12,7 @@ type QuestionCreateRequest struct {
 type QuestionUpdateRequest struct {
 	QuestionID   int     `json:"questionId" validate:"required"`
 	Role         string  `json:"role" validate:"required"`
+	AssessmentID uint64  `json:"assessmentId" validate:"required"`
 	QuestionText string  `json:"questionText" validate:"required"`
 	Category     *string `json:"category"`
 	IsImage      *string `json:"isImage"`

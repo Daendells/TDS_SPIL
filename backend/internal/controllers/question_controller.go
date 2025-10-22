@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"backend/internal/helpers"
 	"backend/internal/models/web"
 	"backend/internal/services"
 	"net/http"
@@ -12,12 +13,14 @@ import (
 
 type QuestionController struct {
 	QuestionService services.QuestionService
+	OptionService   services.OptionService
 	DB              *gorm.DB
 }
 
-func NewQuestionController(questionService services.QuestionService, db *gorm.DB) *QuestionController {
+func NewQuestionController(questionService services.QuestionService, optionService services.OptionService, db *gorm.DB) *QuestionController {
 	return &QuestionController{
 		QuestionService: questionService,
+		OptionService:   optionService,
 		DB:              db,
 	}
 }
@@ -117,6 +120,53 @@ func (controller *QuestionController) FindByRole(ctx *gin.Context) {
 	})
 }
 
+func (controller *QuestionController) FindByAssessmentId(ctx *gin.Context) {
+	assessmentIdStr := ctx.Param("assessmentId")
+	assessmentId, err := strconv.ParseUint(assessmentIdStr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  "Invalid assessment ID",
+		})
+		return
+	}
+
+	questionDataList, err := controller.QuestionService.FindByAssessmentId(controller.DB, assessmentId)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	// Convert to questions with options format
+	var questionsWithOptions []web.QuestionOptionResponse
+	for _, question := range questionDataList {
+		options, err := controller.OptionService.FindByQuestionId(controller.DB, question.QuestionID)
+		if err != nil {
+			options = []web.OptionData{}
+		}
+
+		questionWithOptions := web.QuestionOptionResponse{
+			QuestionId:   question.QuestionID,
+			QuestionText: question.QuestionText,
+			Category:     helpers.PtrToString(question.Category),
+			IsImage:      helpers.PtrToString(question.IsImage),
+			ImageUrl:     helpers.PtrToString(question.ImageURL),
+			Options:      options,
+		}
+		questionsWithOptions = append(questionsWithOptions, questionWithOptions)
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   questionsWithOptions,
+	})
+}
 func (controller *QuestionController) Update(ctx *gin.Context) {
 	var request web.QuestionUpdateRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {

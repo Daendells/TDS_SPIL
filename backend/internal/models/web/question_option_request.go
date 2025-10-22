@@ -6,6 +6,7 @@ type QuestionWithOptionsRequest struct {
 
 type CreateQuestionWithOptionsRequest struct {
 	Role         string                `json:"role" binding:"required"`
+	AssessmentID uint64                `json:"assessmentId" binding:"required"`
 	QuestionText string                `json:"questionText" binding:"required"`
 	Category     string                `json:"category"`
 	IsImage      string                `json:"isImage"`

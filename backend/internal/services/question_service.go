@@ -15,6 +15,7 @@ type QuestionService interface {
 	FindAll(db *gorm.DB) ([]web.QuestionData, error)
 	FindById(db *gorm.DB, questionId int) (web.QuestionData, error)
 	FindByRole(db *gorm.DB, role string) ([]web.QuestionData, error)
+	FindByAssessmentId(db *gorm.DB, assessmentId uint64) ([]web.QuestionData, error)
 	Update(db *gorm.DB, request *web.QuestionUpdateRequest) (web.QuestionData, error)
 	Delete(db *gorm.DB, questionId int) error
 	BulkDelete(db *gorm.DB, questionIds []int) error
@@ -76,6 +77,15 @@ func (service *questionServiceImpl) FindById(db *gorm.DB, questionId int) (web.Q
 
 func (service *questionServiceImpl) FindByRole(db *gorm.DB, role string) ([]web.QuestionData, error) {
 	questions, err := service.QuestionRepository.FindByRole(db, role)
+	if err != nil {
+		return []web.QuestionData{}, err
+	}
+
+	return service.convertQuestionsToData(questions), nil
+}
+
+func (service *questionServiceImpl) FindByAssessmentId(db *gorm.DB, assessmentId uint64) ([]web.QuestionData, error) {
+	questions, err := service.QuestionRepository.FindByAssessmentId(db, assessmentId)
 	if err != nil {
 		return []web.QuestionData{}, err
 	}

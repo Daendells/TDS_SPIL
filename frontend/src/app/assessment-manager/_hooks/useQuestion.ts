@@ -1,11 +1,12 @@
 import api from "@/app/lib/api";
 import { ApiReturn } from "@/app/types/api";
 import { QuestionOptionResponse } from "@/types/assessment";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-// Types for question operations
+
 export type QuestionCreatePayload = {
   role: string;
+  assessmentId: number;
   questionText: string;
   category?: string;
   isImage?: number;
@@ -19,6 +20,8 @@ export type QuestionCreatePayload = {
 };
 
 export type QuestionUpdatePayload = {
+  role: string;
+  assessmentId: number;
   questionText: string;
   category?: string;
   isImage?: number;
@@ -29,6 +32,7 @@ export type QuestionUpdatePayload = {
     optionText: string;
     score: number;
     isImage?: number;
+    action?: string;
   }[];
 };
 
@@ -127,3 +131,27 @@ export function useCreateQuestion() {
     },
   });
 }
+
+export const useGetQuestionsByAssessmentId = (assessmentId: number) => {
+  return useQuery({
+    queryKey: ["questions", "assessment", assessmentId],
+    queryFn: async () => {
+      if (assessmentId === 0) return null;
+      
+      const baseURL = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8080";
+      const response = await fetch(`${baseURL}/api/questions/assessment/${assessmentId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch questions by assessment ID");
+      }
+
+      return response.json();
+    },
+    enabled: assessmentId > 0,
+  });
+};

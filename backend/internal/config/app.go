@@ -81,7 +81,7 @@ func Bootstrap(config *BootstrapConfig) {
 	reportController := controllers.NewReportController(reportService, config.Log)
 	userController := controllers.NewUserController(userService, config.Log)
 	mentoringReportController := controllers.NewMentoringReportController(mentoringReportService, config.Log)
-	questionController := controllers.NewQuestionController(questionService, config.DB)
+	questionController := controllers.NewQuestionController(questionService, optionService, config.DB)
 	optionController := controllers.NewOptionController(optionService, config.DB)
 	assessmentResultController := controllers.NewAssessmentResultController(assessmentResultService, config.Log, config.DB)
 	questionOptionController := controllers.NewQuestionOptionController(config.DB, questionService, optionService, config.Log)

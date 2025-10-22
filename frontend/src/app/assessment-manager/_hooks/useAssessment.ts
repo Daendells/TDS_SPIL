@@ -42,6 +42,31 @@ export function useGetAssessmentByRole(role: string) {
   return response;
 }
 
+export function useGetAssessmentById(assessmentId: number) {
+  const response = useQuery<AssessmentResponse>({
+    queryKey: ["assessment", "id", assessmentId],
+    enabled: !!assessmentId && assessmentId > 0,
+    queryFn: async () => {
+      try {
+        const response = await api.get<ApiReturn<AssessmentResponse>>(
+          `/api/assessments/id/${assessmentId}`
+        );
+
+        if (!response.data) {
+          throw new Error("Failed to fetch assessment data");
+        }
+
+        return response.data.data;
+      } catch (error: unknown) {
+        console.error("Error fetching assessment:", error);
+        throw error;
+      }
+    },
+  });
+
+  return response;
+}
+
 export function useUpdateAssessmentById() {
   return useMutation<AssessmentResponse, Error, AssessmentPayload>({
     mutationFn: async (payload) => {
@@ -59,6 +84,28 @@ export function useUpdateAssessmentById() {
       }
 
       return response.data.data;
+    },
+  });
+}
+
+export function useGetAllAssessments() {
+  return useQuery<{ assessmentId: number; role: string; assessmentName: string; usingTimer: boolean; timerLimitMinutes: number | null }[]>({
+    queryKey: ["assessments"],
+    queryFn: async () => {
+      try {
+        const response = await api.get<ApiReturn<{ assessmentId: number; role: string; assessmentName: string; usingTimer: boolean; timerLimitMinutes: number | null }[]>>(
+          `/api/assessments`
+        );
+
+        if (!response.data) {
+          throw new Error("Failed to fetch assessments data");
+        }
+
+        return response.data.data;
+      } catch (error: unknown) {
+        console.error("Error fetching assessments:", error);
+        throw error;
+      }
     },
   });
 }

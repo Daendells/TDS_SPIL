@@ -15,7 +15,8 @@ type QuestionWithOptionsListResponse struct {
 }
 
 type UpdateQuestionWithOptionsRequest struct {
-	Role         string                   `json:"role" validate:"required"`
+	Role         string                   `json:"role"`
+	AssessmentID uint64                   `json:"assessmentId" validate:"required"`
 	QuestionText string                   `json:"questionText" validate:"required"`
 	Category     *string                  `json:"category"`
 	IsImage      *string                  `json:"isImage"`

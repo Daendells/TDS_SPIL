@@ -24,27 +24,15 @@ import { toast } from "sonner";
 import {
   useDeleteQuestion,
   useBulkDeleteQuestions,
+  useGetQuestionsByAssessmentId,
 } from "./_hooks/useQuestion";
 import QuestionDialog from "./question-dialog";
 import DeleteConfirmationDialog from "./delete-confirmation-dialog";
 import BulkDeleteConfirmationDialog from "./bulk-delete-confirmation-dialog";
 import AssessmentConfigDialog from "@/components/assessment-config-dialog";
-import { useGetAssessmentByRole } from "./_hooks/useAssessment";
+import { useGetAssessmentByRole, useGetAllAssessments } from "./_hooks/useAssessment";
 import { QuestionOptionResponse } from "@/types/assessment";
 
-const ROLES = [
-  { value: "va_1", label: "VA_1 (COREVA)" },
-  { value: "va_2", label: "VA_2 (Value Assessment)" },
-  { value: "va_3", label: "VA_3 (Value Assessment)" },
-  { value: "KKM", label: "KKM (Crew Evaluation)" },
-  { value: "masinis_2", label: "Masinis 2 (Crew Evaluation)" },
-  { value: "masinis_3", label: "Masinis 3 (Crew Evaluation)" },
-  { value: "masinis_4", label: "Masinis 4 (Crew Evaluation)" },
-  { value: "mualim_1", label: "Mualim 1 (Crew Evaluation)" },
-  { value: "mualim_2", label: "Mualim 2 (Crew Evaluation)" },
-  { value: "mualim_3", label: "Mualim 3 (Crew Evaluation)" },
-  { value: "nahkoda", label: "Nahkoda (Crew Evaluation)" },
-];
 
 const VA_1_CATEGORIES = [
   "Integrity",
@@ -55,6 +43,7 @@ const VA_1_CATEGORIES = [
 ];
 
 export default function QuestionsAdmin() {
+  const [selectedAssessmentId, setSelectedAssessmentId] = useState<number>(0);
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [questions, setQuestions] = useState<QuestionOptionResponse[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -67,29 +56,32 @@ export default function QuestionsAdmin() {
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
 
-  // React Query mutation for deleting questions
+  const [editingQuestion, setEditingQuestion] = useState<QuestionOptionResponse | null>(null);
+
   const deleteQuestionMutation = useDeleteQuestion();
   const bulkDeleteMutation = useBulkDeleteQuestions();
 
+  const { data: assessments, isLoading: assessmentsLoading } = useGetAllAssessments();
+
   const {
-    data: assessmentData,
+    data: questionsData,
     isLoading: loading,
     error,
     refetch,
-  } = useGetAssessmentByRole(selectedRole);
+  } = useGetQuestionsByAssessmentId(selectedAssessmentId);
 
-  // Update questions when assessment data changes
   useEffect(() => {
-    if (assessmentData && assessmentData.questions) {
-      setQuestions(assessmentData.questions);
-      setSelectedQuestions([]); // Reset selected questions when data changes
-    } else if (selectedRole) {
+    if (questionsData && questionsData.data) {
+      setQuestions(questionsData.data);
+      setSelectedQuestions([]); 
+    } else if (selectedAssessmentId > 0) {
       setQuestions([]);
       setSelectedQuestions([]);
     }
-  }, [assessmentData, selectedRole]);
+  }, [questionsData, selectedAssessmentId]);
 
   const handleAddQuestion = () => {
+    setEditingQuestion(null);
     setDialogOpen(true);
   };
 
@@ -105,8 +97,8 @@ export default function QuestionsAdmin() {
     setConfigDialogOpen(true);
   };
 
-  const handleEditQuestion = () => {
-    // TODO: Pass question data to dialog for editing
+  const handleEditQuestion = (question: QuestionOptionResponse) => {
+    setEditingQuestion(question);
     setDialogOpen(true);
   };
 
@@ -124,7 +116,6 @@ export default function QuestionsAdmin() {
       toast.success("Pertanyaan berhasil dihapus");
       setDeleteDialogOpen(false);
       setQuestionToDelete(null);
-      // No need to call refetch() - mutation handles query invalidation
     } catch (error) {
       toast.error("Gagal menghapus pertanyaan");
       console.error(error);
@@ -140,6 +131,7 @@ export default function QuestionsAdmin() {
 
   const handleDialogClose = (refresh?: boolean) => {
     setDialogOpen(false);
+    setEditingQuestion(null);
     if (refresh) {
       refetch();
     }
@@ -172,12 +164,10 @@ export default function QuestionsAdmin() {
   const handleConfirmBulkDelete = async () => {
     setBulkDeleteLoading(true);
     try {
-      // Use bulk delete endpoint for better performance
       await bulkDeleteMutation.mutateAsync(selectedQuestions);
       toast.success(`${selectedQuestions.length} pertanyaan berhasil dihapus`);
       setSelectedQuestions([]);
       setBulkDeleteDialogOpen(false);
-      // No need to call refetch() - mutations handle query invalidation automatically
     } catch (error) {
       toast.error("Gagal menghapus pertanyaan yang dipilih");
       console.error(error);
@@ -206,20 +196,31 @@ export default function QuestionsAdmin() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
-            <Select value={selectedRole} onValueChange={setSelectedRole}>
+            <Select 
+              value={selectedAssessmentId.toString()} 
+              onValueChange={(value) => {
+                const assessmentId = parseInt(value);
+                setSelectedAssessmentId(assessmentId);
+                // Find the corresponding role for backward compatibility
+                const assessment = assessments?.find(a => a.assessmentId === assessmentId);
+                if (assessment) {
+                  setSelectedRole(assessment.role);
+                }
+              }}
+            >
               <SelectTrigger className="w-[300px]">
                 <SelectValue placeholder="Pilih posisi..." />
               </SelectTrigger>
               <SelectContent>
-                {ROLES.map((role) => (
-                  <SelectItem key={role.value} value={role.value}>
-                    {role.label}
+                {assessments?.map((assessment) => (
+                  <SelectItem key={assessment.assessmentId} value={assessment.assessmentId.toString()}>
+                    {assessment.assessmentName} ({assessment.role.toUpperCase()})
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
 
-            {selectedRole && (
+            {selectedAssessmentId > 0 && (
               <>
                 <Button
                   onClick={handleAddQuestion}
@@ -262,14 +263,14 @@ export default function QuestionsAdmin() {
         </CardContent>
       </Card>
 
-      {selectedRole && (
+      {selectedAssessmentId > 0 && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
                 <CardTitle>
                   Pertanyaan untuk{" "}
-                  {ROLES.find((r) => r.value === selectedRole)?.label}
+                  {assessments?.find((a: any) => a.assessmentId === selectedAssessmentId)?.role || "Assessment"}
                 </CardTitle>
                 <CardDescription>
                   {questions.length} question ditemukan
@@ -308,7 +309,7 @@ export default function QuestionsAdmin() {
           <CardContent>
             {loading ? (
               <div className="text-center py-8">Memuat pertanyaan...</div>
-            ) : error && !assessmentData ? (
+            ) : error && !questionsData ? (
               <div className="text-center py-8 text-red-500">
                 Error memuat data: {error.message}
               </div>
@@ -365,7 +366,7 @@ export default function QuestionsAdmin() {
                         <Button
                           variant="outline"
                           size="sm"
-                          onClick={() => handleEditQuestion()}
+                          onClick={() => handleEditQuestion(question)}
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
@@ -421,7 +422,19 @@ export default function QuestionsAdmin() {
       <QuestionDialog
         open={dialogOpen}
         onClose={handleDialogClose}
-        question={null} // TODO: Fix type compatibility between QuestionOptionResponse and Question
+        question={editingQuestion ? {
+          questionId: editingQuestion.questionId,
+          assessmentId: selectedAssessmentId,
+          questionText: editingQuestion.questionText,
+          category: editingQuestion.category,
+          isImage: editingQuestion.isImage.toString(),
+          imageUrl: editingQuestion.imageUrl,
+          options: editingQuestion.options.map(option => ({
+            ...option,
+            score: option.score ?? 0 
+          }))
+        } : null}
+        assessmentId={selectedAssessmentId}
         role={selectedRole}
         categories={selectedRole === "va_1" ? VA_1_CATEGORIES : []}
       />
@@ -430,7 +443,7 @@ export default function QuestionsAdmin() {
         open={deleteDialogOpen}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
-        question={null} // TODO: Fix type compatibility between QuestionOptionResponse and QuestionWithOptions
+        question={null} 
         loading={deleteLoading}
       />
 

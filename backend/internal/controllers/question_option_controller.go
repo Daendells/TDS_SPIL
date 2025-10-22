@@ -12,8 +12,6 @@ import (
 	"gorm.io/gorm"
 )
 
-
-
 type QuestionOptionController struct {
 	Log             *logrus.Logger
 	DB              *gorm.DB
@@ -130,6 +128,7 @@ func (controller *QuestionOptionController) CreateQuestionWithOptions(ctx *gin.C
 	// Create question within transaction
 	questionRequest := web.QuestionCreateRequest{
 		Role:         request.Role,
+		AssessmentID: request.AssessmentID,
 		QuestionText: request.QuestionText,
 		Category:     helpers.StringToPtr(request.Category),
 		IsImage:      helpers.StringToPtr(request.IsImage),
@@ -211,9 +210,9 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 	var request web.UpdateQuestionWithOptionsRequest
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
-			Code: http.StatusBadRequest,
+			Code:   http.StatusBadRequest,
 			Status: "Bad Request",
-			Error: err.Error(),
+			Error:  err.Error(),
 		})
 		return
 	}
@@ -242,8 +241,9 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 
 	// Update question within transaction
 	questionRequest := web.QuestionUpdateRequest{
-		QuestionID: questionId,
+		QuestionID:   questionId,
 		Role:         request.Role,
+		AssessmentID: request.AssessmentID,
 		QuestionText: request.QuestionText,
 		Category:     request.Category,
 		IsImage:      request.IsImage,
@@ -264,7 +264,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 
 	// Handle options operations (create, update, delete) within transaction
 	var resultOptions []web.OptionData
-	
+
 	// Step 1: Get current options for this question to compare what needs to be deleted
 	currentOptions, err := controller.OptionService.FindByQuestionId(tx, questionId)
 	if err != nil {
@@ -345,7 +345,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 				Score:        optionReq.Score,
 				IsImage:      0, // default value
 			}
-			
+
 			if optionReq.IsImage != nil {
 				optionRequest.IsImage = *optionReq.IsImage
 			}
@@ -372,7 +372,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 				Score:        optionReq.Score,
 				IsImage:      0, // default value
 			}
-			
+
 			if optionReq.IsImage != nil {
 				optionRequest.IsImage = *optionReq.IsImage
 			}
@@ -402,7 +402,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 					Score:        optionReq.Score,
 					IsImage:      0,
 				}
-				
+
 				if optionReq.IsImage != nil {
 					optionRequest.IsImage = *optionReq.IsImage
 				}
@@ -428,7 +428,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 					Score:        optionReq.Score,
 					IsImage:      0,
 				}
-				
+
 				if optionReq.IsImage != nil {
 					optionRequest.IsImage = *optionReq.IsImage
 				}
@@ -679,5 +679,3 @@ func (controller *QuestionOptionController) BulkDelete(ctx *gin.Context) {
 		},
 	})
 }
-
-

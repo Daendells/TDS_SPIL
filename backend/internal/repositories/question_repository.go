@@ -11,6 +11,7 @@ type QuestionRepository interface {
 	FindAll(db *gorm.DB) ([]domain.Question, error)
 	FindById(db *gorm.DB, questionId int) (domain.Question, error)
 	FindByRole(db *gorm.DB, role string) ([]domain.Question, error)
+	FindByAssessmentId(db *gorm.DB, assessmentId uint64) ([]domain.Question, error)
 	Update(db *gorm.DB, question *domain.Question) error
 	Delete(db *gorm.DB, questionId int) error
 	BulkDelete(db *gorm.DB, questionIds []int) error
@@ -42,6 +43,12 @@ func (repository *questionRepositoryImpl) FindById(db *gorm.DB, questionId int) 
 func (repository *questionRepositoryImpl) FindByRole(db *gorm.DB, role string) ([]domain.Question, error) {
 	var questions []domain.Question
 	err := db.Where("role = ?", role).Find(&questions).Error
+	return questions, err
+}
+
+func (repository *questionRepositoryImpl) FindByAssessmentId(db *gorm.DB, assessmentId uint64) ([]domain.Question, error) {
+	var questions []domain.Question
+	err := db.Where("assessment_id = ?", assessmentId).Find(&questions).Error
 	return questions, err
 }
 

@@ -13,6 +13,7 @@ func QuestionRouter(router *gin.Engine, questionController *controllers.Question
 		questionRoutes.GET("", questionController.FindAll)
 		questionRoutes.GET("/:questionId", questionController.FindById)
 		questionRoutes.GET("/role/:role", questionController.FindByRole)
+		questionRoutes.GET("/assessment/:assessmentId", questionController.FindByAssessmentId)
 		questionRoutes.PUT("/:questionId", questionController.Update)
 		questionRoutes.DELETE("/:questionId", questionController.Delete)
 		questionRoutes.DELETE("/bulk", questionController.BulkDelete)

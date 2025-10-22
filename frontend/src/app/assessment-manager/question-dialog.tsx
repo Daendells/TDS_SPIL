@@ -37,7 +37,7 @@ interface Option {
 
 interface Question {
   questionId?: number;
-  role: string;
+  assessmentId: number;
   questionText: string;
   category?: string;
   isImage?: string;
@@ -49,7 +49,8 @@ interface QuestionDialogProps {
   open: boolean;
   onClose: (refresh?: boolean) => void;
   question?: Question | null;
-  role: string;
+  assessmentId: number;
+  role: string; // Keep for backward compatibility with getRoleDefaults
   categories: string[];
 }
 
@@ -95,6 +96,7 @@ export default function QuestionDialog({
   open,
   onClose,
   question,
+  assessmentId,
   role,
   categories,
 }: QuestionDialogProps) {
@@ -175,6 +177,7 @@ export default function QuestionDialog({
         // Update existing question using combined endpoint
         const updateData = {
           role,
+          assessmentId,
           questionText: formData.questionText,
           category: role === "va_1" ? formData.category : null,
           isImage: formData.isImage,
@@ -208,6 +211,7 @@ export default function QuestionDialog({
         // Create new question using combined endpoint
         const createData = {
           role,
+          assessmentId,
           questionText: formData.questionText,
           category: role === "va_1" ? formData.category : "",
           isImage: formData.isImage,
