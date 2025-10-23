@@ -1,6 +1,5 @@
 "use client";
-
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef, startTransition, useDeferredValue } from "react";
 import { toast } from "sonner";
 import { useApi } from "@/hooks/use-api";
 import { IPaginationData, IPaginationRequest, IReport } from "@/types/global-types";
@@ -10,24 +9,24 @@ import axios from "axios";
 
 export function useMasterReports(initialPageSize = 10) {
   const api = useApi();
-
   const [onCallApi, setOnCallApi] = useState(false);
   const [paginationData, setPaginationData] = useState<IPaginationData<IReport> | null>(null);
   const [pageSize, setPageSize] = useState(initialPageSize);
-
   const [paginationRequest, setPaginationRequest] = useState<IPaginationRequest>({
     anchorId: 0,
     page: "next",
     pageSize: initialPageSize,
     filter: "",
   });
-
   const [searchName, setSearchName] = useState("");
-  const [searchCode, setSearchCode] = useState("");
-
   const [debouncedName] = useDebounce(searchName, 500);
+  const lastQueryRef = useRef<string>("");
+  const pendingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  
+  //  Use deferred value to keep old data visible during loading
+  const deferredData = useDeferredValue(paginationData);
 
-  // ✅ Fetch list data
+  //  Fetch data
   useEffect(() => {
     const controller = new AbortController();
     const fetchData = async () => {
@@ -37,49 +36,75 @@ export function useMasterReports(initialPageSize = 10) {
         page: paginationRequest.page,
         page_size: paginationRequest.pageSize.toString(),
       });
-
       if (debouncedName) params.set("query", debouncedName);
+      const queryKey = params.toString();
+      lastQueryRef.current = queryKey;
 
       try {
-        const response = await api.get(`/api/master-reports?${params.toString()}`, {
+        const response = await api.get(`/api/master-reports?${queryKey}`, {
           signal: controller.signal,
         });
         const data = response.data.data;
-        setPaginationData(parsePaginationData<IReport>(data, parseReports));
+        const parsed = parsePaginationData<IReport>(data, parseReports);
+
+        // Outdated response check
+        if (lastQueryRef.current !== queryKey) return;
+
+        //  Add minimum 300ms delay for smooth transition
+        const minDelay = new Promise(resolve => {
+          pendingTimeoutRef.current = setTimeout(resolve, 150);
+        });
+        
+        await minDelay;
+
+        // Update data in transition for smooth UI
+        startTransition(() => {
+          setPaginationData(parsed);
+        });
       } catch (err: any) {
-        if (!axios.isCancel(err)) toast.error(err.message);
+        if (!axios.isCancel(err)) {
+          console.error("Fetch error:", err);
+          toast.error(err.response?.data?.error || err.message);
+        }
       } finally {
         setOnCallApi(false);
       }
     };
-
     fetchData();
-    return () => controller.abort(); // ✅ cancel old requests
+    
+    return () => {
+      controller.abort();
+      if (pendingTimeoutRef.current) {
+        clearTimeout(pendingTimeoutRef.current);
+      }
+    };
   }, [paginationRequest, debouncedName]);
 
-  // ✅ Reset pagination on new search
+  //  Reset pagination on search
   useEffect(() => {
-    setPaginationRequest((prev) => ({
-      ...prev,
-      anchorId: 0,
-      page: "next",
-    }));
-  }, [debouncedName]);
-
-  // ✅ POST new report
-  const createReport = async (report: Partial<IReport>) => {
-    setOnCallApi(true);
-    try {
-      const res = await api.post("/api/master-reports", report);
-      toast.success("Report added successfully!");
-
-      // Optional: refresh list after insert
+    startTransition(() => {
       setPaginationRequest((prev) => ({
         ...prev,
         anchorId: 0,
         page: "next",
       }));
+    });
+  }, [debouncedName]);
 
+  //  POST new report
+  const createReport = async (report: Partial<IReport>) => {
+    setOnCallApi(true);
+    try {
+      const res = await api.post("/api/master-reports", report);
+      toast.success("Report added successfully!");
+      // Refresh without flicker
+      startTransition(() => {
+        setPaginationRequest((prev) => ({
+          ...prev,
+          anchorId: 0,
+          page: "next",
+        }));
+      });
       return res.data;
     } catch (err: any) {
       console.error("Failed to create report:", err);
@@ -90,17 +115,16 @@ export function useMasterReports(initialPageSize = 10) {
     }
   };
 
+  //  Return deferred data (shows old data while loading new)
   return {
     onCallApi,
-    paginationData,
+    paginationData: deferredData,
     paginationRequest,
     setPaginationRequest,
     pageSize,
     setPageSize,
     searchName,
     setSearchName,
-    searchCode,
-    setSearchCode,
-    createReport, // ✅ exposed here
+    createReport,
   };
 }

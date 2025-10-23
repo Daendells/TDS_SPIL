@@ -156,7 +156,7 @@ export default function MasterPage() {
       </div>
 
       {/* TABLE */}
-      <div className={`overflow-auto border rounded-md transition-opacity ${onCallApi ? "opacity-70" : "opacity-100"}`}>
+      <div className={`transition-opacity duration-300 ${onCallApi ? "opacity-70" : "opacity-100"}`}>
         <Table>
           <TableHeader>
             <TableRow>
