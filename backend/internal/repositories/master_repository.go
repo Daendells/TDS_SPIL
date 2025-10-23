@@ -70,3 +70,15 @@ func (r *MasterRepository) Create(db *gorm.DB, master *domain.FullReport) error 
 	}
 	return nil
 }
+
+func (r *MasterRepository) FindByID(tx *gorm.DB, id uint) (*domain.FullReport, error) {
+	var report domain.FullReport
+	if err := tx.First(&report, id).Error; err != nil {
+		return nil, err
+	}
+	return &report, nil
+}
+
+func (r *MasterRepository) Delete(tx *gorm.DB, id uint) error {
+	return tx.Delete(&domain.FullReport{}, id).Error
+}

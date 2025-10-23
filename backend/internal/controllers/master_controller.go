@@ -72,3 +72,32 @@ func (c *MasterController) Create(ctx *gin.Context) {
 
 	ctx.JSON(res.Code, res)
 }
+
+// DELETE /master-reports/:id
+func (c *MasterController) Delete(ctx *gin.Context) {
+	idParam := ctx.Param("id")
+	var req web.DeleteMasterRequest
+
+	// Parse string ke uint
+	if err := req.ParseID(idParam); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	// Panggil service
+	res, err := c.Service.Delete(ctx, req.ID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(res.Code, res)
+}

@@ -2,6 +2,8 @@ package services
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"net/http"
 
 	"backend/internal/helpers"
@@ -176,5 +178,41 @@ func (s *MasterService) Create(ctx context.Context, req *web.ReportData) (*web.S
 		Code:   http.StatusCreated,
 		Status: "Created",
 		Data:   report,
+	}, nil
+}
+
+func (s *MasterService) Delete(ctx context.Context, id uint) (*web.SuccessResponse, error) {
+	tx := s.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	// Cek apakah data ada
+	report, err := s.MasterRepository.FindByID(tx, id)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			s.Log.Warnf("Data tidak ditemukan untuk ID %d", id)
+			return nil, fmt.Errorf("data dengan ID %d tidak ditemukan", id)
+		}
+		return nil, err
+	}
+
+	// Hapus data
+	if err := s.MasterRepository.Delete(tx, id); err != nil {
+		s.Log.Errorf("Gagal menghapus ID %d: %v", id, err)
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	s.Log.Infof("Berhasil menghapus data ID %d (%s)", report.ID, report.Nama)
+
+	return &web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "Deleted",
+		Data: map[string]interface{}{
+			"id":   id,
+			"nama": report.Nama,
+		},
 	}, nil
 }

@@ -22,7 +22,7 @@ export function useMasterReports(initialPageSize = 10) {
   const [debouncedName] = useDebounce(searchName, 500);
   const lastQueryRef = useRef<string>("");
   const pendingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   //  Use deferred value to keep old data visible during loading
   const deferredData = useDeferredValue(paginationData);
 
@@ -91,6 +91,8 @@ export function useMasterReports(initialPageSize = 10) {
     });
   }, [debouncedName]);
 
+
+
   //  POST new report
   const createReport = async (report: Partial<IReport>) => {
     setOnCallApi(true);
@@ -115,6 +117,32 @@ export function useMasterReports(initialPageSize = 10) {
     }
   };
 
+ const deleteReport = async (id: number) => {
+  setOnCallApi(true);
+  try {
+    const res = await api.delete(`/api/master-reports/${id}`);
+    toast.success("Report deleted successfully!");
+    
+    // Refresh UI
+    startTransition(() => {
+      setPaginationRequest((prev) => ({
+        ...prev,
+        anchorId: 0,
+        page: "next",
+      }));
+    });
+
+    return res.data;
+  } catch (err: any) {
+    console.error("Failed to delete report:", err);
+    toast.error(err.response?.data?.error || "Failed to delete report");
+    throw err;
+  } finally {
+    setOnCallApi(false);
+  }
+};
+
+
   //  Return deferred data (shows old data while loading new)
   return {
     onCallApi,
@@ -126,5 +154,6 @@ export function useMasterReports(initialPageSize = 10) {
     searchName,
     setSearchName,
     createReport,
+    deleteReport,
   };
 }

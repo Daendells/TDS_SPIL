@@ -1,5 +1,9 @@
 package web
 
+import (
+	"strconv"
+)
+
 // MasterReportData is the JSON shape returned by /master-reports.
 // Mirrors domain.MasterReport 1:1 so the frontend gets all columns.
 type MasterReportData struct {
@@ -42,4 +46,17 @@ type MasterListRequest struct {
 	Name         string `form:"name"`
 	SeafarerCode string `form:"seafarer_code"`
 	Query        string `form:"query"`
+}
+
+type DeleteMasterRequest struct {
+	ID uint `json:"id"`
+}
+
+func (r *DeleteMasterRequest) ParseID(param string) error {
+	id, err := strconv.ParseUint(param, 10, 32)
+	if err != nil {
+		return err
+	}
+	r.ID = uint(id)
+	return nil
 }

@@ -7,11 +7,12 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { RadioGroupItem } from "@/components/ui/radio-group";
 
 import { Input } from "@/components/ui/input";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, ChevronsUpDownIcon, PlusIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, ChevronsUpDownIcon, PlusIcon, EditIcon, TrashIcon, XIcon } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { useMasterReports } from "./_hooks/master";
@@ -27,16 +28,25 @@ export default function MasterPage() {
     searchName,
     setSearchName,
     createReport,
+    deleteReport,
   } = useMasterReports(10);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [form, setForm] = useState({
+    vesselName: "",
     nama: "",
+    jabatan: "",
     seamanCode: "",
     seafarerCode: "",
+    certificate: "",
   });
 
-  // Track current page number
+  // Edit mode state
+  const [isEditMode, setIsEditMode] = useState(false);
+  
+  // ✅ Selected rows for deletion (store IDs across all pages)
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
   const [currentPage, setCurrentPage] = useState(1);
 
   const PAGE_SIZES = [10, 20, 30, 50, 100];
@@ -63,12 +73,20 @@ export default function MasterPage() {
     "Certificate Eligible",
   ];
 
+  const isFormValid = () => {
+    return (
+      form.vesselName.trim() !== "" &&
+      form.nama.trim() !== "" &&
+      form.jabatan.trim() !== "" &&
+      form.seamanCode.trim() !== "" &&
+      form.seafarerCode.trim() !== "" &&
+      form.certificate.trim() !== ""
+    );
+  };
+
   const navigatePage = (page: "prev" | "next") => {
     if (!paginationData) return;
-    
-    // ✅ Update page number
     setCurrentPage(prev => page === "next" ? prev + 1 : prev - 1);
-    
     setPaginationRequest({
       ...paginationRequest,
       page,
@@ -77,10 +95,22 @@ export default function MasterPage() {
   };
 
   const handleAdd = async () => {
+    if (!isFormValid()) {
+      toast.error("Please fill in all fields!");
+      return;
+    }
+
     try {
       await createReport(form);
       setOpenDialog(false);
-      // Reset to page 1
+      setForm({
+        vesselName: "",
+        nama: "",
+        jabatan: "",
+        seamanCode: "",
+        seafarerCode: "",
+        certificate: "",
+      });
       setCurrentPage(1);
       setPaginationRequest({ ...paginationRequest, anchorId: 0, page: "next" });
     } catch (err: any) {
@@ -89,9 +119,66 @@ export default function MasterPage() {
     }
   };
 
-  // Calculate starting row number
+  const toggleEditMode = () => {
+    if (isEditMode) {
+      setSelectedIds(new Set());
+    }
+    setIsEditMode(!isEditMode);
+  };
+
+  //  Toggle row selection (acts like checkbox but uses radio styling)
+  const toggleRowSelection = (id: number) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  //  Select all on current page
+  const toggleSelectAll = () => {
+    if (!paginationData?.data) return;
+    
+    const currentPageIds = paginationData.data.map(row => row.id);
+    const allSelected = currentPageIds.every(id => selectedIds.has(id));
+    
+    const newSelected = new Set(selectedIds);
+    if (allSelected) {
+      currentPageIds.forEach(id => newSelected.delete(id));
+    } else {
+      currentPageIds.forEach(id => newSelected.add(id));
+    }
+    setSelectedIds(newSelected);
+  };
+
+  //  Delete selected rows
+  const handleDeleteSelected = async () => {
+    if (selectedIds.size === 0) {
+      toast.error("No rows selected!");
+      return;
+    }
+    try {
+      for (const id of selectedIds) {
+        await deleteReport(id);
+      }
+      toast.success("Selected reports deleted successfully!");
+      setSelectedIds(new Set());
+      setCurrentPage(1);
+      setPaginationRequest({ ...paginationRequest, anchorId: 0, page: "next" });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to delete selected reports");
+    }
+  }
   const getRowNumber = (index: number) => {
     return (currentPage - 1) * paginationRequest.pageSize + index + 1;
+  };
+
+  const isAllCurrentPageSelected = () => {
+    if (!paginationData?.data) return false;
+    return paginationData.data.every(row => selectedIds.has(row.id));
   };
 
   return (
@@ -99,65 +186,122 @@ export default function MasterPage() {
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Master Table</h1>
 
-        {/* ADD BUTTON */}
-        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-          <DialogTrigger asChild>
-            <Button size="lg" className="flex items-center gap-2">
-              <PlusIcon className="w-4 h-4" /> Add Report
+        <div className="flex gap-2">
+          <Button
+            size="lg"
+            variant={isEditMode ? "destructive" : "outline"}
+            className="flex items-center gap-2"
+            onClick={toggleEditMode}
+          >
+            {isEditMode ? (
+              <>
+                <XIcon className="w-4 h-4" /> Cancel
+              </>
+            ) : (
+              <>
+                <EditIcon className="w-4 h-4" /> Edit
+              </>
+            )}
+          </Button>
+
+          {isEditMode && (
+            <Button
+              size="lg"
+              variant="destructive"
+              className="flex items-center gap-2"
+              onClick={handleDeleteSelected}
+              disabled={selectedIds.size === 0}
+            >
+              <TrashIcon className="w-4 h-4" /> Delete ({selectedIds.size})
             </Button>
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Report</DialogTitle>
-            </DialogHeader>
+          )}
 
-            <div className="grid gap-4 py-2">
-              <Input
-                placeholder="Name"
-                value={form.nama}
-                onChange={(e) => setForm({ ...form, nama: e.target.value.toUpperCase() })}
-              />
-              <Input
-                placeholder="Seaman Code"
-                value={form.seamanCode}
-                onChange={(e) => setForm({ ...form, seamanCode: e.target.value.toUpperCase() })}
-              />
-              <Input
-                placeholder="Seafarer Code"
-                value={form.seafarerCode}
-                onChange={(e) => setForm({ ...form, seafarerCode: e.target.value.toUpperCase() })}
-              />
-            </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpenDialog(false)}>
-                Cancel
+          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+            <DialogTrigger asChild>
+              <Button size="lg" className="flex items-center gap-2">
+                <PlusIcon className="w-4 h-4" /> Add Report
               </Button>
-              <Button onClick={handleAdd}>Save</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Report</DialogTitle>
+              </DialogHeader>
+
+              <div className="grid gap-4 py-2">
+                <Input
+                  placeholder="Vessel Name"
+                  value={form.vesselName}
+                  onChange={(e) => setForm({ ...form, vesselName: e.target.value.toUpperCase() })}
+                />
+                <Input
+                  placeholder="Name"
+                  value={form.nama}
+                  onChange={(e) => setForm({ ...form, nama: e.target.value.toUpperCase() })}
+                />
+                <Input
+                  placeholder="Position"
+                  value={form.jabatan}
+                  onChange={(e) => setForm({ ...form, jabatan: e.target.value.toUpperCase() })}
+                />
+                <Input
+                  placeholder="Seaman Code"
+                  value={form.seamanCode}
+                  onChange={(e) => setForm({ ...form, seamanCode: e.target.value.toUpperCase() })}
+                />
+                <Input
+                  placeholder="Seafarer Code"
+                  value={form.seafarerCode}
+                  onChange={(e) => setForm({ ...form, seafarerCode: e.target.value.toUpperCase() })}
+                />
+                <Input
+                  placeholder="Certificate"
+                  value={form.certificate}
+                  onChange={(e) => setForm({ ...form, certificate: e.target.value.toUpperCase() })}
+                />
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setOpenDialog(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleAdd} disabled={!isFormValid()}>
+                  Save
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </div>
       </div>
 
-      {/* SEARCH INPUT */}
       <div className="flex gap-4 mb-4">
         <Input
           placeholder="Search by Name or Seafarer Code.."
           value={searchName}
           onChange={(e) => {
             setSearchName(e.target.value);
-            // Reset to page 1 when searching
             setCurrentPage(1);
           }}
           className="w-[250px]"
         />
       </div>
 
-      {/* TABLE */}
       <div className={`transition-opacity duration-300 ${onCallApi ? "opacity-70" : "opacity-100"}`}>
         <Table>
           <TableHeader>
             <TableRow>
+              {isEditMode && (
+                <TableHead className="text-center w-[50px]">
+                  {/* Select All button styled as radio */}
+                  <button
+                    onClick={toggleSelectAll}
+                    className="aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 inline-flex items-center justify-center"
+                  >
+                    {isAllCurrentPageSelected() && (
+                      <div className="h-2.5 w-2.5 rounded-full bg-current" />
+                    )}
+                  </button>
+                </TableHead>
+              )}
               {TABLE_COLUMNS.map((col, index) => (
                 <TableHead key={index} className="text-center">
                   {col}
@@ -169,14 +313,26 @@ export default function MasterPage() {
           <TableBody>
             {onCallApi ? (
               <TableRow>
-                <TableCell colSpan={TABLE_COLUMNS.length} className="text-center text-gray-400">
+                <TableCell colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)} className="text-center text-gray-400">
                   Loading...
                 </TableCell>
               </TableRow>
             ) : paginationData?.data?.length ? (
               paginationData.data.map((row, i) => (
-                <TableRow key={row.id}>
-                  {/* ✅ Use calculated row number */}
+                <TableRow key={row.id} className={selectedIds.has(row.id) ? "bg-blue-50" : ""}>
+                  {isEditMode && (
+                    <TableCell className="text-center">
+                      {/* Radio button that acts like checkbox */}
+                      <button
+                        onClick={() => toggleRowSelection(row.id)}
+                        className="aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center"
+                      >
+                        {selectedIds.has(row.id) && (
+                          <div className="h-2.5 w-2.5 rounded-full bg-current" />
+                        )}
+                      </button>
+                    </TableCell>
+                  )}
                   <TableCell className="text-center">{getRowNumber(i)}</TableCell>
                   <TableCell className="text-center">{row.nama}</TableCell>
                   <TableCell className="text-center">{row.seamanCode}</TableCell>
@@ -201,7 +357,7 @@ export default function MasterPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={TABLE_COLUMNS.length} className="text-center text-gray-400">
+                <TableCell colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)} className="text-center text-gray-400">
                   No Data
                 </TableCell>
               </TableRow>
@@ -210,7 +366,6 @@ export default function MasterPage() {
         </Table>
       </div>
 
-      {/* PAGE SIZE SELECTOR */}
       <div className="flex items-center justify-between mb-4 p-4">
         <Popover>
           <PopoverTrigger asChild>
@@ -229,7 +384,6 @@ export default function MasterPage() {
                       key={size}
                       value={size.toString()}
                       onSelect={() => {
-                        // ✅ Reset to page 1 when changing page size
                         setCurrentPage(1);
                         setPaginationRequest({
                           ...paginationRequest,
@@ -257,10 +411,10 @@ export default function MasterPage() {
 
         <span className="text-sm text-gray-600">
           Showing {paginationRequest.pageSize} rows per page | Page {currentPage}
+          {isEditMode && selectedIds.size > 0 && ` | ${selectedIds.size} selected`}
         </span>
       </div>
 
-      {/* PAGINATION */}
       <Pagination className="m-4">
         <PaginationContent className="flex justify-items-center w-full">
           <PaginationItem>
