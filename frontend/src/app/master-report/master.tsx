@@ -33,18 +33,15 @@ export default function MasterPage() {
 
   const [openDialog, setOpenDialog] = useState(false);
   const [form, setForm] = useState({
-    vesselName: "",
     nama: "",
-    jabatan: "",
     seamanCode: "",
     seafarerCode: "",
-    certificate: "",
   });
 
   // Edit mode state
   const [isEditMode, setIsEditMode] = useState(false);
   
-  // ✅ Selected rows for deletion (store IDs across all pages)
+  // Selected rows for deletion (store IDs across all pages)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -75,13 +72,10 @@ export default function MasterPage() {
 
   const isFormValid = () => {
     return (
-      form.vesselName.trim() !== "" &&
       form.nama.trim() !== "" &&
-      form.jabatan.trim() !== "" &&
       form.seamanCode.trim() !== "" &&
       form.seafarerCode.trim() !== "" &&
-      form.certificate.trim() !== ""
-    );
+      true);
   };
 
   const navigatePage = (page: "prev" | "next") => {
@@ -104,12 +98,9 @@ export default function MasterPage() {
       await createReport(form);
       setOpenDialog(false);
       setForm({
-        vesselName: "",
         nama: "",
-        jabatan: "",
         seamanCode: "",
         seafarerCode: "",
-        certificate: "",
       });
       setCurrentPage(1);
       setPaginationRequest({ ...paginationRequest, anchorId: 0, page: "next" });
@@ -229,19 +220,9 @@ export default function MasterPage() {
 
               <div className="grid gap-4 py-2">
                 <Input
-                  placeholder="Vessel Name"
-                  value={form.vesselName}
-                  onChange={(e) => setForm({ ...form, vesselName: e.target.value.toUpperCase() })}
-                />
-                <Input
                   placeholder="Name"
                   value={form.nama}
                   onChange={(e) => setForm({ ...form, nama: e.target.value.toUpperCase() })}
-                />
-                <Input
-                  placeholder="Position"
-                  value={form.jabatan}
-                  onChange={(e) => setForm({ ...form, jabatan: e.target.value.toUpperCase() })}
                 />
                 <Input
                   placeholder="Seaman Code"
@@ -252,11 +233,6 @@ export default function MasterPage() {
                   placeholder="Seafarer Code"
                   value={form.seafarerCode}
                   onChange={(e) => setForm({ ...form, seafarerCode: e.target.value.toUpperCase() })}
-                />
-                <Input
-                  placeholder="Certificate"
-                  value={form.certificate}
-                  onChange={(e) => setForm({ ...form, certificate: e.target.value.toUpperCase() })}
                 />
               </div>
 
