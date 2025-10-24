@@ -101,40 +101,71 @@ type QA struct {
 func (s *Service) buildPrompt(in GenerateInput) string {
 	return fmt.Sprintf(`You are a professional instructional designer. Create a high-quality, instructor-led training plan in JSON for Indonesian learners.
 
-CONTEXT:
-- KODE: %s
-- TOPIK: %s
-- KOMPETENSI: %s
-- LEVEL: %d
-- TOOLS/MODEL: %s
-- REFERENSI TAMBAHAN (opsional): %s
+KONTEKS:
 
-REQUIREMENTS:
-1) Bahasa Indonesia profesional, ringkas namun padat makna.
-2) Durasi total ±60–90 menit (cantumkan di overview.duration).
-3) Format JSON wajib sesuai dan hanya berisi JSON, tanpa teks lain:
+KODE: %s
+
+TOPIK: %s
+
+KOMPETENSI: %s
+
+LEVEL: %d
+
+TOOLS/MODEL: %s
+
+REFERENSI TAMBAHAN (opsional): %s
+
+PERSYARATAN UMUM:
+
+Gunakan Bahasa Indonesia profesional, ringkas dan padat makna.
+
+Durasi total 60–90 menit, cantumkan di overview.duration.
+
+Keluarkan hanya JSON valid (tanpa komentar/teks lain), mengikuti skema persis:
 {
- "title": string,
- "overview": { "goals": string[], "outcomes": string[], "duration": string, "audience": string },
- "slides": [
-   {"heading": string, "bullets": string[3..5], "speaker_notes": string}
- ],
- "activities": [
-   {"title": string, "instructions": string, "time": string}
- ],
- "assessment": [
-   {"question": string, "answer": string}
- ],
- "references": string[]
+"title": string,
+"overview": { "goals": string[], "outcomes": string[], "duration": string, "audience": string },
+"slides": [
+{"heading": string, "bullets": string[3..5], "speaker_notes": string}
+],
+"activities": [
+{"title": string, "instructions": string, "time": string}
+],
+"assessment": [
+{"question": string, "answer": string}
+],
+"references": string[]
 }
-4) Gunakan 8–12 slide dengan bullet singkat (≤14 kata).
-5) "speaker_notes" berisi poin fasilitator (1–3 kalimat informatif).
-6) Jika REFERENSI diberikan, gunakan ide, teori, atau istilah dari referensi tersebut di beberapa slide dan kegiatan.
-7) Jangan ulangi isi antar slide. Setiap slide harus membangun topik secara progresif dan praktikal.
-8) Tambahkan contoh konkret di slide yang relevan.
 
-OUTPUT: JSON valid tanpa markdown fences. 
-Isi harus konkret, bervariasi, dan relevan untuk pelatihan nyata.`, in.Kode, in.TopikTraining, in.Kompetensi, in.Level, valueOrDash(in.Tools), valueOrDash(in.Referensi))
+Buat 8–12 slide. Setiap bullets berisi materi nyata (≤14 kata per bullet): definisi singkat, langkah praktis, checklist, contoh angka, contoh kalimat, mini-prosedur, atau tip operasional—hindari judul generik seperti “Pendahuluan/Isi/Penutup” tanpa isi.
+
+speaker_notes berisi poin fasilitator (1–3 kalimat informatif): instruksi penyampaian, pertanyaan pemantik, atau catatan demonstrasi.
+
+Jika REFERENSI diberikan, sisipkan istilah, teori, kerangka, atau praktik baik dari referensi tersebut pada beberapa slide/aktivitas (sebutkan nama teori/istilahnya di bullets atau notes).
+
+Setiap slide harus progresif dan praktikal, tanpa pengulangan. Bangun dari konteks → konsep inti → prosedur → contoh → praktik → evaluasi.
+
+Sertakan contoh konkret kontekstual Indonesia pada slide relevan (misal: studi kasus singkat, data sederhana, nama peran/proses, regulasi/lazim industri jika sesuai).
+
+Kedalaman sesuai LEVEL:
+
+LEVEL 1 (Pemula): istilah dasar, langkah sederhana, contoh langsung.
+
+LEVEL 2 (Menengah): variasi kasus, keputusan praktis, jebakan umum.
+
+LEVEL 3 (Lanjutan): pertimbangan risiko, trade-off, metrik/evaluasi.
+
+Jika TOOLS/MODEL diisi, tampilkan penggunaannya secara praktis (contoh input/output, perintah singkat, atau formula) di minimal 1 slide dan 1 aktivitas.
+
+activities wajib eksecutable di kelas: instruksi langkah demi langkah, kriteria keberhasilan, dan contoh jawaban ringkas/ekspektasi output di akhir instruksi. Alokasikan waktu per aktivitas (mis. “10 menit”).
+
+assessment berisi 3–5 soal campuran (pilihan ganda singkat atau skenario ringkas) dengan jawaban kunci yang spesifik dan operasional (bukan “jawaban bervariasi”).
+
+references: jika tidak ada sumber tambahan, isi dengan "-". Jika ada, tulis rapi (judul/penulis/tahun atau URL singkat).
+
+Larangan: placeholder seperti “[isi di sini]”, “dll.”, “contoh X”, konten meta tentang pembuatan slide, atau instruksi kepada model. Tampilkan materi jadi.
+
+OUTPUT: JSON valid tanpa markdown fences.Isi harus konkret, bervariasi, dan relevan untuk pelatihan nyata.`, in.Kode, in.TopikTraining, in.Kompetensi, in.Level, valueOrDash(in.Tools), valueOrDash(in.Referensi))
 }
 
 func valueOrDash(s string) string {

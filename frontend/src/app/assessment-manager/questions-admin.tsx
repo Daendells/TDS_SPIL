@@ -21,6 +21,7 @@ import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Plus, Edit, Trash2, Trash, FileText, Settings } from "lucide-react";
 import { toast } from "sonner";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   useDeleteQuestion,
   useBulkDeleteQuestions,
@@ -29,10 +30,10 @@ import {
 import QuestionDialog from "./question-dialog";
 import DeleteConfirmationDialog from "./delete-confirmation-dialog";
 import BulkDeleteConfirmationDialog from "./bulk-delete-confirmation-dialog";
+import AddAssessmentDialog from "./add-assessment-dialog";
 import AssessmentConfigDialog from "@/components/assessment-config-dialog";
-import { useGetAssessmentByRole, useGetAllAssessments } from "./_hooks/useAssessment";
+import { useGetAllAssessments } from "./_hooks/useAssessment";
 import { QuestionOptionResponse } from "@/types/assessment";
-
 
 const VA_1_CATEGORIES = [
   "Integrity",
@@ -43,6 +44,8 @@ const VA_1_CATEGORIES = [
 ];
 
 export default function QuestionsAdmin() {
+  const queryClient = useQueryClient();
+
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<number>(0);
   const [selectedRole, setSelectedRole] = useState<string>("");
   const [questions, setQuestions] = useState<QuestionOptionResponse[]>([]);
@@ -55,13 +58,15 @@ export default function QuestionsAdmin() {
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
+  const [addAssessmentDialogOpen, setAddAssessmentDialogOpen] = useState(false);
 
-  const [editingQuestion, setEditingQuestion] = useState<QuestionOptionResponse | null>(null);
+  const [editingQuestion, setEditingQuestion] =
+    useState<QuestionOptionResponse | null>(null);
 
   const deleteQuestionMutation = useDeleteQuestion();
   const bulkDeleteMutation = useBulkDeleteQuestions();
 
-  const { data: assessments, isLoading: assessmentsLoading } = useGetAllAssessments();
+  const { data: assessments } = useGetAllAssessments();
 
   const {
     data: questionsData,
@@ -73,7 +78,7 @@ export default function QuestionsAdmin() {
   useEffect(() => {
     if (questionsData && questionsData.data) {
       setQuestions(questionsData.data);
-      setSelectedQuestions([]); 
+      setSelectedQuestions([]);
     } else if (selectedAssessmentId > 0) {
       setQuestions([]);
       setSelectedQuestions([]);
@@ -180,6 +185,12 @@ export default function QuestionsAdmin() {
     setBulkDeleteDialogOpen(false);
   };
 
+  const handleAddAssessmentSuccess = () => {
+    setAddAssessmentDialogOpen(false);
+    // Invalidate assessments query to refetch the list
+    queryClient.invalidateQueries({ queryKey: ["assessments"] });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -188,6 +199,13 @@ export default function QuestionsAdmin() {
             Assessment Manager
           </h1>
         </div>
+        <Button
+          onClick={() => setAddAssessmentDialogOpen(true)}
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" />
+          Tambah Assessment
+        </Button>
       </div>
 
       <Card>
@@ -196,12 +214,14 @@ export default function QuestionsAdmin() {
         </CardHeader>
         <CardContent>
           <div className="flex items-center gap-4">
-            <Select 
-              value={selectedAssessmentId.toString()} 
+            <Select
+              value={selectedAssessmentId.toString()}
               onValueChange={(value) => {
                 const assessmentId = parseInt(value);
                 setSelectedAssessmentId(assessmentId);
-                const assessment = assessments?.find(a => a.assessmentId === assessmentId);
+                const assessment = assessments?.find(
+                  (a) => a.assessmentId === assessmentId
+                );
                 if (assessment) {
                   setSelectedRole(assessment.role);
                 }
@@ -211,15 +231,15 @@ export default function QuestionsAdmin() {
                 <SelectValue placeholder="Pilih posisi" />
               </SelectTrigger>
               <SelectContent>
-                  {assessments?.map((assessment) => (
-                    <SelectItem
-                      key={assessment.assessmentId}
-                      value={assessment.assessmentId.toString()}
-                    >
-                      {assessment.assessmentName}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
+                {assessments?.map((assessment) => (
+                  <SelectItem
+                    key={assessment.assessmentId}
+                    value={assessment.assessmentId.toString()}
+                  >
+                    {assessment.assessmentName}
+                  </SelectItem>
+                ))}
+              </SelectContent>
             </Select>
 
             {selectedAssessmentId > 0 && (
@@ -272,7 +292,9 @@ export default function QuestionsAdmin() {
               <div>
                 <CardTitle>
                   Pertanyaan untuk{" "}
-                  {assessments?.find((a: any) => a.assessmentId === selectedAssessmentId)?.assessmentName || "Assessment"}
+                  {assessments?.find(
+                    (a) => a.assessmentId === selectedAssessmentId
+                  )?.assessmentName || "Assessment"}
                 </CardTitle>
                 <CardDescription>
                   {questions.length} question ditemukan
@@ -424,18 +446,22 @@ export default function QuestionsAdmin() {
       <QuestionDialog
         open={dialogOpen}
         onClose={handleDialogClose}
-        question={editingQuestion ? {
-          questionId: editingQuestion.questionId,
-          assessmentId: selectedAssessmentId,
-          questionText: editingQuestion.questionText,
-          category: editingQuestion.category,
-          isImage: editingQuestion.isImage.toString(),
-          imageUrl: editingQuestion.imageUrl,
-          options: editingQuestion.options.map(option => ({
-            ...option,
-            score: option.score ?? 0 
-          }))
-        } : null}
+        question={
+          editingQuestion
+            ? {
+                questionId: editingQuestion.questionId,
+                assessmentId: selectedAssessmentId,
+                questionText: editingQuestion.questionText,
+                category: editingQuestion.category,
+                isImage: editingQuestion.isImage.toString(),
+                imageUrl: editingQuestion.imageUrl,
+                options: editingQuestion.options.map((option) => ({
+                  ...option,
+                  score: option.score ?? 0,
+                })),
+              }
+            : null
+        }
         assessmentId={selectedAssessmentId}
         role={selectedRole}
         categories={selectedRole === "va_1" ? VA_1_CATEGORIES : []}
@@ -445,7 +471,7 @@ export default function QuestionsAdmin() {
         open={deleteDialogOpen}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
-        question={null} 
+        question={null}
         loading={deleteLoading}
       />
 
@@ -462,6 +488,12 @@ export default function QuestionsAdmin() {
         onOpenChange={setConfigDialogOpen}
         selectedRole={selectedRole}
         onAssessmentChange={() => refetch()}
+      />
+
+      <AddAssessmentDialog
+        open={addAssessmentDialogOpen}
+        setOpen={setAddAssessmentDialogOpen}
+        onSuccess={handleAddAssessmentSuccess}
       />
     </div>
   );

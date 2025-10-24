@@ -61,12 +61,12 @@ export interface IReport {
 }
 
 export interface IPaginationData<T> {
-  data: T[];
-  firstId: number | null;
-  lastId: number | null;
-  pageSize: number;
-  hasMore: boolean;
-  firstPage: boolean;
+  results: T[];
+  first_id: number | null;
+  last_id: number | null;
+  page_size: number;
+  has_more: boolean;
+  first_page: boolean;
 }
 
 export interface IPaginationRequest {

@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import ProfilingDialog from "@/components/profiling-dialog";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -33,98 +33,63 @@ import {
   ChevronsUpDownIcon,
 } from "lucide-react";
 import CardCompetence from "@/components/card-competence";
-import {
-  IPaginationData,
-  IPaginationRequest,
-  IReport,
-  PageType,
-} from "@/types/global-types";
+import { IReport, IPaginationRequest, PageType } from "@/types/global-types";
 import { Button } from "@/components/ui/button";
-import { cn, parsePaginationData, parseReports } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { SkeletonCard } from "@/components/skeleton-card";
-import { useApi } from "@/hooks/use-api";
+import { useGetIdpCount, useGetReports } from "./_hooks/useReports";
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
-export default function DashboardClient({
-  initialReports,
-  initialCounts,
-}: {
-  initialReports?: IPaginationData<IReport> | null;
-  initialCounts?: { mdp: number; fdp: number; sdp: number } | null;
-}) {
-  const api = useApi();
-  const [onCallApi, setOnCallApi] = useState(false);
+export default function DashboardClient() {
+  const router = useRouter();
 
-  // Kompetensi count
-  const [mdp, setMdp] = useState<number | null>(initialCounts?.mdp ?? null);
-  const [fdp, setFdp] = useState<number | null>(initialCounts?.fdp ?? null);
-  const [sdp, setSdp] = useState<number | null>(initialCounts?.sdp ?? null);
+  // React Query hooks for fetching data
+  const { data: idpCountData, error: idpCountError } = useGetIdpCount();
 
-  // Pagination Data
-  const [paginationData, setPaginationData] = useState<
-    IPaginationData<IReport> | null
-  >(initialReports ?? null);
+  // Pagination request state
+  const [paginationRequest, setPaginationRequest] =
+    useState<IPaginationRequest>({
+      anchorId: 0,
+      page: "next",
+      pageSize: 10,
+      filter: "",
+    });
+
+  // Fetch reports using React Query
+  const {
+    data: paginationData,
+    isLoading: reportsLoading,
+    error: reportsError,
+  } = useGetReports(paginationRequest);
 
   // Page size
   const [pageSize, setPageSize] = useState(10);
   const [open, setOpen] = useState(false);
 
-  // Profiling dialog
-  const [openProfiling, setOpenProfiling] = useState(false);
-  const [selectedReport, setSelectedReport] = useState<IReport | null>(null);
+  // Determine FDP, MDP, SDP counts from React Query data
+  const fdp = idpCountData?.fdp ?? null;
+  const mdp = idpCountData?.mdp ?? null;
+  const sdp = idpCountData?.sdp ?? null;
 
-  // Pagination request state
-  const [paginationRequest, setPaginationRequest] = useState<IPaginationRequest>({
-    anchorId: 0,
-    page: "next",
-    pageSize: pageSize,
-    filter: "",
-  });
+  // Debug: Log data states
+  console.log("paginationData:", paginationData);
+  console.log("reportsLoading:", reportsLoading);
+  console.log("reportsError:", reportsError);
+  console.log("paginationRequest:", paginationRequest);
 
-  // Fetch IDP Count
-  useEffect(() => {
-    const fetchIdp = async () => {
-      try {
-        const response = await api.get("/reports/idp-count");
-        const data = response.data.data;
-        setMdp(data.mdp);
-        setFdp(data.fdp);
-        setSdp(data.sdp);
-      } catch (err) {
-        toast.error((err as any).response?.data.error);
-      }
-    };
-    fetchIdp();
-  }, []);
+  // Show error notification if IDP count fetch fails
+  if (idpCountError) {
+    toast.error("Failed to fetch competence counts");
+  }
 
-  // Fetch reports data
-  useEffect(() => {
-    const fetchData = async () => {
-      setOnCallApi(true);
-      const params = new URLSearchParams({
-        anchor_id: paginationRequest.anchorId!.toString(),
-        page: paginationRequest.page,
-        page_size: paginationRequest.pageSize.toString(),
-      });
-
-      if (paginationRequest.filter) {
-        params.set("filter", paginationRequest.filter);
-      }
-
-      try {
-        const response = await api.get(`/reports?${params.toString()}`);
-        const data = response.data.data;
-        setPaginationData(parsePaginationData<IReport>(data, parseReports));
-      } catch (err) {
-        toast.error((err as Error).message);
-      } finally {
-        setOnCallApi(false);
-      }
-    };
-    fetchData();
-  }, [paginationRequest]);
+  // Show error notification if reports fetch fails
+  if (reportsError) {
+    toast.error(
+      (reportsError as Error).message || "Failed to fetch reports data"
+    );
+  }
 
   // Pagination navigation
   const navigatePage = (page: PageType) => {
@@ -133,16 +98,13 @@ export default function DashboardClient({
       ...paginationRequest,
       page: page,
       anchorId:
-        page == "next"
-          ? paginationData?.lastId
-          : paginationData?.firstId,
+        page == "next" ? paginationData?.last_id : paginationData?.first_id,
     });
   };
 
-  // Profiling modal handler
+  // Navigate to talent profile detail page
   const handleRowClick = (report: IReport) => {
-    setSelectedReport(report);
-    setOpenProfiling(true);
+    router.push(`/dashboard/${report.seafarerCode}`);
   };
 
   return (
@@ -162,7 +124,7 @@ export default function DashboardClient({
                 anchorId: 0,
               })
             }
-            disabled={onCallApi}
+            disabled={reportsLoading}
           />
         )}
 
@@ -179,7 +141,7 @@ export default function DashboardClient({
                 anchorId: 0,
               })
             }
-            disabled={onCallApi}
+            disabled={reportsLoading}
           />
         )}
 
@@ -196,7 +158,7 @@ export default function DashboardClient({
                 anchorId: 0,
               })
             }
-            disabled={onCallApi}
+            disabled={reportsLoading}
           />
         )}
       </div>
@@ -237,9 +199,7 @@ export default function DashboardClient({
                       <CheckIcon
                         className={cn(
                           "mr-2 h-4 w-4",
-                          pageSize === size
-                            ? "opacity-100"
-                            : "opacity-0"
+                          pageSize === size ? "opacity-100" : "opacity-0"
                         )}
                       />
                       {size}
@@ -266,8 +226,25 @@ export default function DashboardClient({
             </TableRow>
           </TableHeader>
           <TableBody>
-            {paginationData?.data && paginationData.data.length > 0 ? (
-              paginationData.data.map((report) => (
+            {reportsLoading ? (
+              <TableRow>
+                <TableCell colSpan={5} className="text-center py-8">
+                  <div className="flex justify-center">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : reportsError ? (
+              <TableRow>
+                <TableCell
+                  colSpan={5}
+                  className="text-center font-bold text-red-500 py-8"
+                >
+                  Error: {(reportsError as Error).message}
+                </TableCell>
+              </TableRow>
+            ) : paginationData?.results && paginationData.results.length > 0 ? (
+              paginationData.results.map((report) => (
                 <TableRow
                   key={report.id}
                   className="cursor-pointer hover:bg-gray-100"
@@ -277,9 +254,15 @@ export default function DashboardClient({
                     {report.seamanCode}
                   </TableCell>
                   <TableCell className="text-center">{report.nama}</TableCell>
-                  <TableCell className="text-center">{report.jabatan}</TableCell>
-                  <TableCell className="text-center">{report.idpProgram}</TableCell>
-                  <TableCell className="text-center">{report.readiness}</TableCell>
+                  <TableCell className="text-center">
+                    {report.jabatan}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {report.idpProgram}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {report.readiness}
+                  </TableCell>
                 </TableRow>
               ))
             ) : (
@@ -302,7 +285,7 @@ export default function DashboardClient({
           <PaginationItem>
             <Button
               className="cursor-pointer transition duration-300 active:scale-95 disabled:cursor-not-allowed"
-              disabled={paginationData?.firstPage}
+              disabled={paginationData?.first_page}
               onClick={() => navigatePage("prev")}
             >
               <ChevronLeftIcon />
@@ -312,7 +295,7 @@ export default function DashboardClient({
           <PaginationItem>
             <Button
               className="cursor-pointer transition duration-300 active:scale-95 disabled:cursor-not-allowed"
-              disabled={!paginationData?.hasMore}
+              disabled={!paginationData?.has_more}
               onClick={() => navigatePage("next")}
             >
               Next
@@ -321,15 +304,6 @@ export default function DashboardClient({
           </PaginationItem>
         </PaginationContent>
       </Pagination>
-
-      {/* Profiling Modal */}
-      {selectedReport && (
-        <ProfilingDialog
-          open={openProfiling}
-          setOpen={setOpenProfiling}
-          report={selectedReport}
-        />
-      )}
     </>
   );
 }

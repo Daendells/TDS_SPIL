@@ -89,13 +89,29 @@ export function useUpdateAssessmentById() {
 }
 
 export function useGetAllAssessments() {
-  return useQuery<{ assessmentId: number; role: string; assessmentName: string; usingTimer: boolean; timerLimitMinutes: number | null }[]>({
+  return useQuery<
+    {
+      assessmentId: number;
+      role: string;
+      assessmentName: string;
+      usingTimer: boolean;
+      timerLimitMinutes: number | null;
+    }[]
+  >({
     queryKey: ["assessments"],
     queryFn: async () => {
       try {
-        const response = await api.get<ApiReturn<{ assessmentId: number; role: string; assessmentName: string; usingTimer: boolean; timerLimitMinutes: number | null }[]>>(
-          `/api/assessments`
-        );
+        const response = await api.get<
+          ApiReturn<
+            {
+              assessmentId: number;
+              role: string;
+              assessmentName: string;
+              usingTimer: boolean;
+              timerLimitMinutes: number | null;
+            }[]
+          >
+        >(`/api/assessments`);
 
         if (!response.data) {
           throw new Error("Failed to fetch assessments data");
@@ -106,6 +122,28 @@ export function useGetAllAssessments() {
         console.error("Error fetching assessments:", error);
         throw error;
       }
+    },
+  });
+}
+
+export function usePostAssessment() {
+  return useMutation<AssessmentResponse, Error, AssessmentPayload>({
+    mutationFn: async (payload) => {
+      const response = await api.post<ApiReturn<AssessmentResponse>>(
+        `/api/assessments`,
+        {
+          role: payload.role,
+          assessmentName: payload.assessmentName,
+          usingTimer: payload.usingTimer,
+          timerLimitMinutes: payload.timerLimitMinutes,
+        }
+      );
+
+      if (!response.data) {
+        throw new Error("Failed to update assessment data");
+      }
+
+      return response.data.data;
     },
   });
 }

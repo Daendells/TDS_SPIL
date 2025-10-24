@@ -16,6 +16,7 @@ export type QuestionOptionResponse = {
 export type AssessmentPayload = {
   id?: number;
   role: string;
+  assessmentName?: string;
   usingTimer: boolean;
   timerLimitMinutes: number;
 };
