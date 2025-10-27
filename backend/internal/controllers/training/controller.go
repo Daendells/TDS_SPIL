@@ -66,7 +66,7 @@ func (h *TrainingController) Generate(c *gin.Context) {
 		return
 	}
 
-	link, meta, err := h.aiSvc.GenerateAndBuildPDF(c.Request.Context(), training.GenerateInput{
+	link, meta, err := h.aiSvc.GenerateAndBuildPPTX(c.Request.Context(), training.GenerateInput{
 		Kode:          req.Kode,
 		TopikTraining: req.TopikTraining,
 		Kompetensi:    req.Kompetensi,
