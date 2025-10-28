@@ -5,8 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-
-	// "encoding/xml"
 	"errors"
 	"fmt"
 	"io"
@@ -17,7 +15,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AlexGames73/unioffice-free/measurement" // <-- DITAMBAHKAN
+	"github.com/AlexGames73/unioffice-free/measurement"
 	"github.com/AlexGames73/unioffice-free/presentation"
 	"github.com/jung-kurt/gofpdf"
 	"github.com/sirupsen/logrus"
@@ -28,8 +26,8 @@ type Service struct {
 	http    *http.Client
 	apiKey  string
 	model   string
-	pubBase string // BACKEND_PUBLIC_URL
-	outDir  string // ./public/materi
+	pubBase string
+	outDir  string
 }
 
 func NewTrainingService(log *logrus.Logger, apiKey, model, pubBase string) *Service {
@@ -37,7 +35,7 @@ func NewTrainingService(log *logrus.Logger, apiKey, model, pubBase string) *Serv
 		log.Warn("GROQ_API_KEY kosong — panggilan LLM akan gagal")
 	}
 	if model == "" {
-		model = "llama-3.1-8b-instant"
+		model = "llama-3.3-70b-versatile"
 	}
 	if pubBase == "" {
 		pubBase = "http://localhost:8080"
@@ -56,9 +54,6 @@ func NewTrainingService(log *logrus.Logger, apiKey, model, pubBase string) *Serv
 	}
 }
 
-// ========================
-// Input & Model Structures
-// ========================
 type GenerateInput struct {
 	Kode          string
 	TopikTraining string
@@ -85,10 +80,10 @@ type Overview struct {
 }
 
 type Slide struct {
-	Heading      string   `json:"heading"`
-	Bullets      []string `json:"bullets"`
-	SpeakerNotes string   `json:"speaker_notes"`
-	SlideType    string   `json:"slide_type"`
+	Heading           string   `json:"heading"`
+	ContentParagraphs []string `json:"content_paragraphs"`
+	SpeakerNotes      string   `json:"speaker_notes"`
+	SlideType         string   `json:"slide_type"`
 }
 
 type Activity struct {
@@ -102,11 +97,7 @@ type QA struct {
 	Answer   string `json:"answer"`
 }
 
-// ========================
-// Prompt Builder (Refined)
-// ========================
 func (s *Service) buildPrompt(in GenerateInput) string {
-	// Determine topic type for specialized templates
 	topicType := s.determineTopicType(in.TopikTraining, in.Tools)
 
 	basePrompt := fmt.Sprintf(`You are a professional instructional designer. Create a high-quality, instructor-led training plan in JSON for Indonesian learners following the OBJECTIVE → KONSEP → LANGKAH → STUDI KASUS → PENUTUP structure.
@@ -136,62 +127,68 @@ Ikuti struktur konsisten berikut untuk setiap materi pelatihan:
 	- Ekspektasi hasil akhir pelatihan yang jelas
 	- Key performance indicators untuk mengukur keberhasilan
 
-3. KONSEP (2-3 slide):
+3. KONSEP (4-6 slide):
 	- slide_type: "concept"
-	- Definisi dan teori dasar yang mudah dipahami dengan contoh detail
-	- Prinsip-prinsip fundamental dengan ilustrasi praktis dan analogi
-	- Framework atau model yang digunakan dengan penjelasan mendalam
-	- Terminologi penting dengan definisi lengkap dan konteks penggunaan
-	- Hubungan antar konsep yang logis dengan diagram verbal
-	- Background theory dan research findings yang mendukung
+	- Definisi dan teori dasar yang mudah dipahami dengan contoh detail, ilustrasi praktis, dan analogi yang relevan dengan konteks Indonesia. Berikan minimal 3-4 contoh konkret dari berbagai industri dan situasi nyata yang dapat direlasikan peserta
+	- Prinsip-prinsip fundamental dengan penjelasan mendalam, analogi yang relevan, contoh nyata dari best practices perusahaan Indonesia dan internasional, serta breakdown implementasi step-by-step yang actionable
+	- Framework atau model yang digunakan dengan breakdown komponen detail, cara implementasi praktis, tools pendukung, timeline realistis, dan success metrics yang terukur
+	- Terminologi penting dengan definisi lengkap, konteks penggunaan dalam berbagai situasi, contoh aplikasi real-world, dan common mistakes yang harus dihindari
+	- Hubungan antar konsep yang logis dengan penjelasan sebab-akibat, interdependensi, impact analysis, dan strategic implications untuk organisasi
+	- Background theory dan research findings yang mendukung dengan data terbaru, statistik industri, case studies dari perusahaan ternama, dan trend analysis yang relevan
 
-4. LANGKAH (3-4 slide):
+4. LANGKAH (5-7 slide):
 	- slide_type: "steps"
-	- Prosedur step-by-step yang praktis dan actionable dengan detail implementasi
-	- Checklist atau panduan operasional yang komprehensif
-	- Best practices dan tips implementasi dari praktisi dengan contoh nyata
-	- Tools dan teknik yang digunakan dengan tutorial penggunaan lengkap
-	- Common pitfalls dan cara menghindarinya dengan solusi alternatif
-	- Troubleshooting guide untuk masalah umum
+	- Prosedur step-by-step yang praktis dan actionable dengan detail implementasi lengkap, timeline realistis, resource requirements, dan checkpoint milestones untuk monitoring progress
+	- Checklist atau panduan operasional yang komprehensif dengan kriteria keberhasilan terukur, quality gates, approval processes, dan escalation procedures
+	- Best practices dan tips implementasi dari praktisi berpengalaman dengan contoh nyata, lessons learned dari project sukses, dan pitfall avoidance strategies
+	- Tools dan teknik yang digunakan dengan tutorial penggunaan lengkap, troubleshooting guide, alternative solutions, dan integration considerations
+	- Common pitfalls dan cara menghindarinya dengan solusi alternatif, contingency planning, risk mitigation strategies, dan recovery procedures
+	- Quality assurance dan monitoring untuk memastikan hasil optimal dengan KPIs, measurement frameworks, reporting mechanisms, dan continuous improvement processes
 
-5. STUDI KASUS (1-2 slide):
+5. STUDI KASUS (3-4 slide):
 	- slide_type: "case_study"
-	- Contoh nyata dari konteks Indonesia atau industri lokal dengan detail lengkap
-	- Analisis situasi praktis dengan problem statement yang jelas dan background
-	- Problem solving scenarios dengan multiple solutions dan trade-offs
-	- Lessons learned dan key insights dengan actionable recommendations
-	- ROI atau impact measurement dari implementasi dengan data konkret
-	- Success factors dan critical success criteria
+	- Contoh nyata dari konteks Indonesia atau industri lokal dengan detail lengkap, background perusahaan, situational context, stakeholder analysis, dan business environment yang mempengaruhi keputusan
+	- Analisis situasi praktis dengan problem statement yang jelas dan terstruktur, root cause analysis, stakeholder mapping, constraint identification, dan impact assessment yang komprehensif
+	- Problem solving scenarios dengan multiple solution alternatives, trade-off analysis, decision matrix dengan scoring criteria, implementation roadmap, dan risk-benefit evaluation
+	- Lessons learned dan key insights dengan actionable recommendations, implementation guidelines, success factors identification, dan replication strategies untuk konteks berbeda
+	- ROI atau impact measurement dari implementasi dengan data konkret, financial metrics, operational improvements, success metrics tracking, dan long-term sustainability analysis
+	- Success factors dan critical success criteria dengan risk mitigation strategies, change management considerations, stakeholder buy-in approaches, dan scalability planning
 
 6. PENUTUP (1 slide):
 	- slide_type: "closing"
-	- Ringkasan key takeaways yang memorable dengan action points
-	- Action items konkret untuk peserta dengan timeline dan deliverables
-	- Next steps atau follow-up yang terstruktur dengan milestone
-	- Resources tambahan untuk pembelajaran lanjutan dengan prioritas
+	- Ringkasan key takeaways yang memorable dengan action points dan quick wins
+	- Action items konkret untuk peserta dengan timeline, deliverables, dan accountability measures
+	- Next steps atau follow-up yang terstruktur dengan milestone dan progress indicators
+	- Resources tambahan untuk pembelajaran lanjutan dengan prioritas dan learning path
 
 %s
 
-PERSYARATAN KONTEN:
-- Gunakan Bahasa Indonesia profesional, ringkas namun komprehensif
-- Setiap bullet point harus actionable, specific, dan detailed (minimal 15-25 kata per bullet)
-- Berikan penjelasan mendalam dengan contoh praktis dan ilustrasi
-- Durasi total 60–90 menit, cantumkan di overview.duration
-- Speaker notes harus detailed dan praktis untuk instructor (minimal 50-100 kata)
-- Sertakan minimal 2-3 activities yang interaktif dengan instruksi lengkap
-- Buat 5-8 assessment questions yang menguji pemahaman praktis dengan scenario
-- Referensi harus credible dan up-to-date
+PERSYARATAN KONTEN NARATIF - WAJIB PARAGRAF PANJANG, BUKAN BULLET POINTS:
+- SETIAP KONTEN SLIDE HARUS BERUPA PARAGRAF NARATIF YANG PANJANG DAN SUBSTANTIF
+- MINIMAL 150-200 kata per paragraf konten slide, dengan target 250-400 kata total per slide
+- JANGAN PERNAH gunakan format bullet points tradisional - gunakan paragraf mengalir yang natural dan conversational
+- Gunakan Bahasa Indonesia profesional yang engaging dan mudah dipahami dengan storytelling yang menarik
+- Berikan penjelasan mendalam dengan minimal 3-4 contoh praktis konkret, ilustrasi detail, dan analogi yang mudah dipahami dari konteks Indonesia
+- Sertakan data terbaru, statistik industri, research findings, case studies perusahaan ternama, dan best practices dari berbagai sektor
+- Integrasikan creative elements seperti analogi unik, metaphor bisnis, dan situational examples yang memorable dan applicable
+- Durasi total 90–120 menit, cantumkan di overview.duration
+- Speaker notes harus sangat detailed dan praktis untuk instructor (minimal 300-400 kata) dengan tips delivery dan interaction cues
+- Sertakan minimal 5-7 activities yang interaktif dan kreatif dengan instruksi lengkap, variasi metode, dan expected outcomes
+- Buat 12-18 assessment questions yang menguji pemahaman praktis dengan scenario real-world dan problem-solving cases
+- Referensi harus credible, up-to-date, dan beragam (buku terbaru, artikel jurnal, research, industry reports, best practices)
 - JANGAN gunakan emoji sama sekali dalam konten
-- Fokus pada substansi dan kedalaman materi
+- Fokus pada substansi tinggi, kedalaman materi yang comprehensive, dan aplikasi praktis yang immediately actionable
+- Setiap slide harus memberikan value yang sangat tinggi dengan informasi yang actionable, implementable, dan transformative untuk peserta
+- Pastikan setiap paragraf konten memiliki hook yang menarik, body yang informatif, dan conclusion yang actionable
 
-PERSYARATAN OUTPUT:
+PERSYARATAN OUTPUT - HANYA JSON DENGAN PARAGRAF NARATIF:
 Keluarkan hanya JSON valid (tanpa komentar/teks lain), mengikuti skema persis:
 
 {
 "title": string,
 "overview": { "goals": string[], "outcomes": string[], "duration": string, "audience": string },
 "slides": [
-{"heading": string, "bullets": string[4..6], "speaker_notes": string, "slide_type": string}
+{"heading": string, "content_paragraphs": string[3..5], "speaker_notes": string, "slide_type": string}
 ],
 "activities": [
 {"title": string, "instructions": string, "time": string}
@@ -202,12 +199,27 @@ Keluarkan hanya JSON valid (tanpa komentar/teks lain), mengikuti skema persis:
 "references": string[]
 }
 
-DETAIL SLIDE:
-- Buat 8–12 slide total mengikuti struktur di atas
-- slide_type: "pembuka", "objective", "konsep", "langkah", "studi_kasus", atau "penutup"
-- Setiap slide harus memiliki 4-6 bullet points yang substantif dan informatif
-- Bullet points harus berisi penjelasan lengkap, bukan hanya poin singkat
-- Prioritaskan kedalaman dan praktikalitas konten`,
+CONTOH FORMAT CONTENT_PARAGRAPHS YANG DIHARAPKAN:
+"content_paragraphs": [
+"Manajemen risiko dalam konteks bisnis modern merupakan sebuah pendekatan sistematis yang dirancang untuk mengidentifikasi, menganalisis, dan mengelola berbagai ancaman yang dapat mempengaruhi pencapaian tujuan organisasi. Dalam era digital saat ini, perusahaan-perusahaan Indonesia seperti Gojek, Tokopedia, dan Bank BCA telah mengimplementasikan framework manajemen risiko yang komprehensif untuk mengantisipasi volatilitas pasar, perubahan regulasi, dan disruption teknologi. Pendekatan ini tidak hanya melibatkan identifikasi risiko operasional seperti kegagalan sistem atau human error, tetapi juga risiko strategis seperti perubahan preferensi konsumen dan kompetisi yang semakin ketat. Implementasi yang efektif memerlukan komitmen dari seluruh level organisasi, mulai dari board of directors hingga karyawan operasional, dengan dukungan teknologi yang memadai dan budaya organisasi yang proaktif terhadap manajemen risiko.",
+"Framework ISO 31000 yang telah diadopsi oleh lebih dari 80% perusahaan multinasional di Indonesia memberikan panduan struktural untuk mengembangkan sistem manajemen risiko yang terintegrasi dengan strategi bisnis. Proses implementasi dimulai dengan penetapan konteks risiko yang mencakup analisis lingkungan internal dan eksternal, identifikasi stakeholder kunci, dan penentuan kriteria risiko yang sesuai dengan risk appetite organisasi. Tahap selanjutnya melibatkan risk assessment yang komprehensif menggunakan metodologi kualitatif dan kuantitatif, seperti probability impact matrix, Monte Carlo simulation, dan scenario analysis. Perusahaan seperti Pertamina dan Telkom Indonesia telah berhasil mengintegrasikan sistem early warning yang dapat mendeteksi potensi risiko 3-6 bulan sebelum materialisasi, memungkinkan implementasi strategi mitigasi yang proaktif dan cost-effective."
+]
+
+DETAIL SLIDE NARATIF - WAJIB PARAGRAF PANJANG:
+- Buat 12–18 slide total mengikuti struktur di atas untuk konten yang lebih komprehensif dan mendalam
+- slide_type: "opening", "objective", "concept", "steps", "case_study", atau "closing"
+- Setiap slide harus memiliki 3-5 paragraf naratif yang substantif, informatif, dan berbobot tinggi
+- Konten harus berupa paragraf penjelasan yang natural dan engaging, seperti PPT profesional premium pada umumnya
+- Setiap paragraf dalam content_paragraphs adalah penjelasan lengkap dengan contoh detail, implementasi praktis, dan actionable insights
+- MINIMAL 150-200 kata per paragraf konten, dengan total 250-500 kata per slide untuk konten yang sangat kaya dan comprehensive
+- Prioritaskan kedalaman maksimal, praktikalitas tinggi, dan kemudahan pemahaman dengan multiple learning approaches
+- Gunakan storytelling yang compelling, case examples yang relatable, dan narrative techniques untuk membuat materi sangat engaging dan memorable
+- Sertakan data konkret terbaru, statistik industri yang relevan, research findings yang credible, dan benchmarking data yang valuable
+- Berikan actionable insights yang immediately implementable, practical recommendations yang tested, dan strategic guidance yang proven
+- Gunakan analogi kreatif, metaphor bisnis yang powerful, dan ilustrasi yang mudah dipahami untuk konsep kompleks dengan multiple perspectives
+- Pastikan setiap slide memiliki clear takeaway yang powerful, applicable untuk berbagai konteks, dan transformative untuk peserta dalam daily practice
+- Integrasikan creative elements seperti scenario planning, what-if analysis, dan problem-solving frameworks yang interactive dan engaging
+- Sertakan implementation roadmaps, success metrics, dan monitoring mechanisms untuk setiap konsep yang dibahas dengan practical timelines`,
 		in.Kode,
 		in.TopikTraining,
 		in.Kompetensi,
@@ -221,12 +233,10 @@ DETAIL SLIDE:
 	return basePrompt
 }
 
-// determineTopicType categorizes the training topic for specialized templates
 func (s *Service) determineTopicType(topik, tools string) string {
 	topikLower := strings.ToLower(topik)
 	toolsLower := strings.ToLower(tools)
 
-	// Technical/Tools-based topics
 	if strings.Contains(toolsLower, "excel") || strings.Contains(toolsLower, "powerpoint") ||
 		strings.Contains(toolsLower, "word") || strings.Contains(toolsLower, "office") ||
 		strings.Contains(topikLower, "teknologi") || strings.Contains(topikLower, "software") ||
@@ -234,7 +244,6 @@ func (s *Service) determineTopicType(topik, tools string) string {
 		return "technical"
 	}
 
-	// Soft Skills topics
 	if strings.Contains(topikLower, "komunikasi") || strings.Contains(topikLower, "leadership") ||
 		strings.Contains(topikLower, "teamwork") || strings.Contains(topikLower, "trust") ||
 		strings.Contains(topikLower, "accountability") || strings.Contains(topikLower, "interpersonal") ||
@@ -242,7 +251,6 @@ func (s *Service) determineTopicType(topik, tools string) string {
 		return "soft_skill"
 	}
 
-	// Framework/Methodology topics
 	if strings.Contains(topikLower, "framework") || strings.Contains(topikLower, "model") ||
 		strings.Contains(topikLower, "methodology") || strings.Contains(topikLower, "agile") ||
 		strings.Contains(topikLower, "smart") || strings.Contains(topikLower, "grpi") ||
@@ -250,7 +258,6 @@ func (s *Service) determineTopicType(topik, tools string) string {
 		return "framework"
 	}
 
-	// Management/Process topics
 	if strings.Contains(topikLower, "management") || strings.Contains(topikLower, "planning") ||
 		strings.Contains(topikLower, "execution") || strings.Contains(topikLower, "control") ||
 		strings.Contains(topikLower, "prioritization") || strings.Contains(topikLower, "goals") {
@@ -260,7 +267,6 @@ func (s *Service) determineTopicType(topik, tools string) string {
 	return "general"
 }
 
-// getTopicSpecificGuidelines provides specialized instructions based on topic type
 func (s *Service) getTopicSpecificGuidelines(topicType string) string {
 	switch topicType {
 	case "technical":
@@ -316,9 +322,6 @@ func valueOrDash(s string) string {
 	return s
 }
 
-// ========================
-// LLM API Call (Groq)
-// ========================
 func (s *Service) callGroq(ctx context.Context, prompt string) (*Plan, error) {
 	if s.apiKey == "" {
 		return nil, errors.New("GROQ_API_KEY tidak di-set")
@@ -383,19 +386,14 @@ func (s *Service) callGroq(ctx context.Context, prompt string) (*Plan, error) {
 	return &plan, nil
 }
 
-// ========================
-// PDF Generation (No changes)
-// ========================
 func (s *Service) buildPDF(plan *Plan, filename string) error {
 	pdf := gofpdf.New("P", "mm", "A4", "")
 	pdf.SetMargins(15, 15, 15)
 	pdf.SetAutoPageBreak(true, 15)
 
-	// ✅ Register UTF-8 fonts
 	pdf.AddUTF8Font("DejaVu", "", "fonts/DejaVuSans.ttf")
 	pdf.AddUTF8Font("DejaVu", "B", "fonts/DejaVuSans-Bold.ttf")
 
-	// Optional — gunakan bold sebagai fallback untuk italic
 	pdf.AddUTF8Font("DejaVu", "I", "fonts/DejaVuSans.ttf")
 	pdf.AddUTF8Font("DejaVu", "BI", "fonts/DejaVuSans-Bold.ttf")
 
@@ -417,7 +415,7 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 		pdf.CellFormat(0, 10, fmt.Sprintf("Slide %d – %s", i+1, sl.Heading), "", 1, "L", false, 0, "")
 		pdf.Ln(2)
 		pdf.SetFont("DejaVu", "", 12)
-		for _, b := range sl.Bullets {
+		for _, b := range sl.ContentParagraphs {
 			pdf.CellFormat(5, 6, "•", "", 0, "L", false, 0, "")
 			pdf.MultiCell(0, 6, b, "", "L", false)
 		}
@@ -430,7 +428,6 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 		}
 	}
 
-	// ✅ Activities
 	if len(plan.Activities) > 0 {
 		pdf.AddPage()
 		pdf.SetFont("DejaVu", "B", 16)
@@ -445,7 +442,6 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 		}
 	}
 
-	// ✅ Assessment
 	if len(plan.Assessment) > 0 {
 		pdf.AddPage()
 		pdf.SetFont("DejaVu", "B", 16)
@@ -460,7 +456,6 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 		}
 	}
 
-	// ✅ References
 	if len(plan.References) > 0 {
 		pdf.AddPage()
 		pdf.SetFont("DejaVu", "B", 16)
@@ -474,14 +469,8 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 	return pdf.OutputFileAndClose(filename)
 }
 
-// ========================
-// PPTX Generation (FIXED FOR UNIOFFICE-FREE)
-// ========================
 func (s *Service) buildPPTX(plan *Plan, filename string) error {
-	// Using measurement constants correctly - they are constants, not functions
-	// Margin 0.5 inch = 0.5 * 72 points
 	const margin = 0.5 * measurement.Inch
-	// Content width 9.0 inch = 9.0 * 72 points
 	const contentWidth = 9.0 * measurement.Inch
 
 	ppt := presentation.New()
@@ -492,9 +481,7 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 
 	// Box Judul Utama (Centered)
 	titleTextBox := titleSlide.AddTextBox()
-	// Position: X=0.5", Y=1.5"
 	titleTextBox.Properties().SetPosition(margin, 1.5*measurement.Inch)
-	// Size: W=9.0", H=2.0"
 	titleTextBox.Properties().SetSize(contentWidth, 2.0*measurement.Inch)
 
 	titleParagraph := titleTextBox.AddParagraph()
@@ -503,14 +490,10 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 	titleRun.Properties().SetSize(40)
 	titleRun.Properties().SetBold(true)
 
-	// Box Overview (Centered)
 	overviewTextBox := titleSlide.AddTextBox()
-	// Position: X=0.5", Y=3.5"
 	overviewTextBox.Properties().SetPosition(margin, 3.5*measurement.Inch)
-	// Size: W=9.0", H=3.5"
 	overviewTextBox.Properties().SetSize(contentWidth, 3.5*measurement.Inch)
 
-	// Info Durasi & Audiens
 	infoParagraph := overviewTextBox.AddParagraph()
 	infoRun := infoParagraph.AddRun()
 	infoRun.SetText(fmt.Sprintf("Durasi: %s\nAudiens: %s",
@@ -518,9 +501,8 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 		plan.Overview.Audience))
 	infoRun.Properties().SetSize(18)
 
-	// Info Tujuan Pembelajaran
 	if len(plan.Overview.Goals) > 0 {
-		overviewTextBox.AddParagraph() // Spasi
+		overviewTextBox.AddParagraph()
 
 		goalsTitleParagraph := overviewTextBox.AddParagraph()
 		goalsTitleRun := goalsTitleParagraph.AddRun()
@@ -536,15 +518,11 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 		}
 	}
 
-	// --- Slide Konten ---
 	for _, slide := range plan.Slides {
 		contentSlide := ppt.AddSlide()
 
-		// Box Judul Slide
 		titleBox := contentSlide.AddTextBox()
-		// Position: X=0.5", Y=0.25"
 		titleBox.Properties().SetPosition(margin, 0.25*measurement.Inch)
-		// Size: W=9.0", H=1.0"
 		titleBox.Properties().SetSize(contentWidth, 1.0*measurement.Inch)
 
 		titleP := titleBox.AddParagraph()
@@ -553,35 +531,27 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 		titleR.Properties().SetSize(32)
 		titleR.Properties().SetBold(true)
 
-		// Box Konten (Bullets) dengan spacing yang lebih baik
 		contentBox := contentSlide.AddTextBox()
-		// Position: X=0.5", Y=1.25"
 		contentBox.Properties().SetPosition(margin, 1.25*measurement.Inch)
-		// Size: W=9.0", H=5.0"
-		contentBox.Properties().SetSize(contentWidth, 5.0*measurement.Inch)
+		contentBox.Properties().SetSize(contentWidth, 5.5*measurement.Inch)
 
-		for i, bullet := range slide.Bullets {
-			bulletP := contentBox.AddParagraph()
-			bulletR := bulletP.AddRun()
-			
-			// Remove all emojis and use simple bullet points
-			bulletR.SetText("• " + bullet)
-			bulletR.Properties().SetSize(18) // Slightly smaller to fit more content
+		for i, content := range slide.ContentParagraphs {
+			contentP := contentBox.AddParagraph()
+			contentR := contentP.AddRun()
 
-			if i < len(slide.Bullets)-1 {
+			contentR.SetText(content)
+			contentR.Properties().SetSize(16)
+			if i < len(slide.ContentParagraphs)-1 {
 				spacingP := contentBox.AddParagraph()
 				spacingR := spacingP.AddRun()
 				spacingR.SetText(" ")
-				spacingR.Properties().SetSize(3) // Reduced spacing for more content
+				spacingR.Properties().SetSize(8)
 			}
 		}
 
-		// Box Catatan Fasilitator
 		if strings.TrimSpace(slide.SpeakerNotes) != "" {
 			notesBox := contentSlide.AddTextBox()
-			// Position: X=0.5", Y=6.5"
 			notesBox.Properties().SetPosition(margin, 6.5*measurement.Inch)
-			// Size: W=9.0", H=1.0"
 			notesBox.Properties().SetSize(contentWidth, 1.0*measurement.Inch)
 
 			notesP := notesBox.AddParagraph()
@@ -591,11 +561,9 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 		}
 	}
 
-	// --- Slide Aktivitas ---
 	if len(plan.Activities) > 0 {
 		activitiesSlide := ppt.AddSlide()
 
-		// Judul
 		titleBox := activitiesSlide.AddTextBox()
 		titleBox.Properties().SetPosition(margin, 0.25*measurement.Inch)
 		titleBox.Properties().SetSize(contentWidth, 1.0*measurement.Inch)
@@ -606,7 +574,6 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 		titleR.Properties().SetSize(32)
 		titleR.Properties().SetBold(true)
 
-		// Konten
 		contentBox := activitiesSlide.AddTextBox()
 		contentBox.Properties().SetPosition(margin, 1.25*measurement.Inch)
 		contentBox.Properties().SetSize(contentWidth, 5.5*measurement.Inch)
@@ -632,11 +599,9 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 		}
 	}
 
-	// --- Slide Assessment ---
 	if len(plan.Assessment) > 0 {
 		assessmentSlide := ppt.AddSlide()
 
-		// Judul
 		titleBox := assessmentSlide.AddTextBox()
 		titleBox.Properties().SetPosition(margin, 0.25*measurement.Inch)
 		titleBox.Properties().SetSize(contentWidth, 1.0*measurement.Inch)
@@ -647,7 +612,6 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 		titleR.Properties().SetSize(32)
 		titleR.Properties().SetBold(true)
 
-		// Konten
 		contentBox := assessmentSlide.AddTextBox()
 		contentBox.Properties().SetPosition(margin, 1.25*measurement.Inch)
 		contentBox.Properties().SetSize(contentWidth, 5.5*measurement.Inch)
@@ -677,43 +641,36 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 		return fmt.Errorf("PPTX validation failed: %w", err)
 	}
 
-	// Save the initial PPTX
 	if err := ppt.SaveToFile(filename); err != nil {
 		return fmt.Errorf("failed to save PPTX: %w", err)
 	}
 
-	// Now enhance the PPTX with background image and colors
 	return s.enhancePPTXWithBackgroundAndColors(filename)
 }
 
-// enhancePPTXWithBackgroundAndColors adds background image and text colors via XML manipulation
 func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
-	// Read the PPTX file as a ZIP
 	reader, err := zip.OpenReader(filename)
 	if err != nil {
 		return fmt.Errorf("failed to open PPTX as ZIP: %w", err)
 	}
 
-	// Create a temporary file for the enhanced PPTX
 	tempFile := filename + ".tmp"
 	writer, err := os.Create(tempFile)
 	if err != nil {
-		reader.Close() // Close reader if temp file creation fails
+		reader.Close()
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
 
 	zipWriter := zip.NewWriter(writer)
 
-	// Copy background image to PPTX media folder
 	backgroundImagePath := "d:\\Intern\\2-dev.bryan\\backend\\public\\ppt-background.png"
 
-	// Add background image to media folder
 	mediaWriter, err := zipWriter.Create("ppt/media/image1.png")
 	if err != nil {
 		zipWriter.Close()
 		writer.Close()
 		reader.Close()
-		os.Remove(tempFile) // Clean up temp file
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to create media entry: %w", err)
 	}
 
@@ -722,7 +679,7 @@ func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
 		zipWriter.Close()
 		writer.Close()
 		reader.Close()
-		os.Remove(tempFile) // Clean up temp file
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to open background image: %w", err)
 	}
 
@@ -731,45 +688,41 @@ func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
 		zipWriter.Close()
 		writer.Close()
 		reader.Close()
-		os.Remove(tempFile) // Clean up temp file
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to copy background image: %w", err)
 	}
 	backgroundFile.Close()
 
-	// Process each file in the PPTX
 	for _, file := range reader.File {
 		if err := s.processZipFile(file, zipWriter); err != nil {
 			zipWriter.Close()
 			writer.Close()
 			reader.Close()
-			os.Remove(tempFile) // Clean up temp file
+			os.Remove(tempFile)
 			return fmt.Errorf("failed to process file %s: %w", file.Name, err)
 		}
 	}
 
-	// Close all resources in proper order
 	if err := zipWriter.Close(); err != nil {
 		writer.Close()
 		reader.Close()
-		os.Remove(tempFile) // Clean up temp file
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to close zip writer: %w", err)
 	}
 
 	if err := writer.Close(); err != nil {
 		reader.Close()
-		os.Remove(tempFile) // Clean up temp file
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to close temp file: %w", err)
 	}
 
-	// CRITICAL: Close the zip reader BEFORE attempting to remove the original file
 	if err := reader.Close(); err != nil {
-		os.Remove(tempFile) // Clean up temp file
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to close zip reader: %w", err)
 	}
 
-	// Replace original file with enhanced version
 	if err := os.Remove(filename); err != nil {
-		os.Remove(tempFile) // Clean up temp file
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to remove original file: %w", err)
 	}
 
@@ -780,7 +733,6 @@ func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
 	return nil
 }
 
-// processZipFile processes individual files within the PPTX ZIP
 func (s *Service) processZipFile(file *zip.File, zipWriter *zip.Writer) error {
 	reader, err := file.Open()
 	if err != nil {
@@ -793,27 +745,22 @@ func (s *Service) processZipFile(file *zip.File, zipWriter *zip.Writer) error {
 		return err
 	}
 
-	// Special processing for slide XML files
 	if strings.HasPrefix(file.Name, "ppt/slides/slide") && strings.HasSuffix(file.Name, ".xml") {
 		return s.enhanceSlideXML(reader, writer)
 	}
 
-	// Special processing for content types
 	if file.Name == "[Content_Types].xml" {
 		return s.enhanceContentTypes(reader, writer)
 	}
 
-	// Special processing for slide relationships
 	if strings.HasPrefix(file.Name, "ppt/slides/_rels/slide") && strings.HasSuffix(file.Name, ".xml.rels") {
 		return s.enhanceSlideRels(reader, writer)
 	}
 
-	// Copy other files as-is
 	_, err = io.Copy(writer, reader)
 	return err
 }
 
-// enhanceSlideXML adds background image and text colors to slide XML
 func (s *Service) enhanceSlideXML(reader io.Reader, writer io.Writer) error {
 	content, err := io.ReadAll(reader)
 	if err != nil {
@@ -822,7 +769,6 @@ func (s *Service) enhanceSlideXML(reader io.Reader, writer io.Writer) error {
 
 	xmlStr := string(content)
 
-	// Add background image to slide with proper XML structure
 	backgroundXML := `<p:bg>
 		<p:bgPr>
 			<a:blipFill dpi="0" rotWithShape="1">
@@ -834,111 +780,90 @@ func (s *Service) enhanceSlideXML(reader io.Reader, writer io.Writer) error {
 		</p:bgPr>
 	</p:bg>`
 
-	// Insert background after <p:cSld> opening tag
 	xmlStr = strings.Replace(xmlStr, "<p:cSld>", "<p:cSld>"+backgroundXML, 1)
 
-	// Enhanced text coloring system based on content analysis
-	// Green color for titles and headings (RGB: 46, 125, 50)
 	greenColorXML := `<a:solidFill><a:srgbClr val="2E7D32"/></a:solidFill>`
-	// Red color for important/strong points (RGB: 198, 40, 40)  
 	redColorXML := `<a:solidFill><a:srgbClr val="C62828"/></a:solidFill>`
-	// Black color for regular explanations (RGB: 33, 33, 33)
 	blackColorXML := `<a:solidFill><a:srgbClr val="212121"/></a:solidFill>`
 
-	// Apply intelligent text coloring based on content patterns
 	xmlStr = s.applyIntelligentTextColors(xmlStr, greenColorXML, redColorXML, blackColorXML)
 
 	_, err = writer.Write([]byte(xmlStr))
 	return err
 }
 
-// applyIntelligentTextColors applies colors based on content analysis
 func (s *Service) applyIntelligentTextColors(xmlStr, greenColorXML, redColorXML, blackColorXML string) string {
-	// Pattern for finding text runs with proper XML structure
 	textRunPattern := `(<a:t>)([^<]+)(</a:t>)`
 	re := regexp.MustCompile(textRunPattern)
-	
+
 	return re.ReplaceAllStringFunc(xmlStr, func(match string) string {
-		// Extract the text content
 		matches := re.FindStringSubmatch(match)
 		if len(matches) != 4 {
-			return match // Return original if pattern doesn't match properly
+			return match
 		}
-		
+
 		openTag := matches[1]
 		textContent := strings.TrimSpace(matches[2])
 		closeTag := matches[3]
-		
-		// Determine color based on content analysis
+
 		var colorXML string
-		
-		// Green for titles and headings
+
 		if s.isTitle(textContent) {
 			colorXML = greenColorXML
 		} else if s.isStrongPoint(textContent) {
-			// Red for strong/important points
 			colorXML = redColorXML
 		} else {
-			// Black for regular explanations
 			colorXML = blackColorXML
 		}
-		
-		// Apply color with proper XML structure
+
 		return `<a:rPr>` + colorXML + `</a:rPr>` + openTag + textContent + closeTag
 	})
 }
 
-// isTitle determines if text content should be colored as a title (green)
 func (s *Service) isTitle(text string) bool {
-	// Check for title indicators
 	titleIndicators := []string{
 		"OBJECTIVE", "KONSEP", "LANGKAH", "STUDI KASUS", "PENUTUP",
 		"Tujuan", "Definisi", "Prinsip", "Framework", "Prosedur",
 		"Aktivitas", "Assessment", "Evaluasi", "Ringkasan",
 	}
-	
+
 	upperText := strings.ToUpper(text)
 	for _, indicator := range titleIndicators {
 		if strings.Contains(upperText, strings.ToUpper(indicator)) {
 			return true
 		}
 	}
-	
-	// Check if it's likely a heading (short, ends with colon, all caps, etc.)
+
 	if len(text) < 50 && (strings.HasSuffix(text, ":") || strings.ToUpper(text) == text) {
 		return true
 	}
-	
+
 	return false
 }
 
-// isStrongPoint determines if text content should be colored as important (red)
 func (s *Service) isStrongPoint(text string) bool {
-	// Check for strong point indicators
 	strongIndicators := []string{
 		"penting", "kritis", "utama", "key", "fundamental", "essential",
 		"harus", "wajib", "perlu", "sangat", "critical", "vital",
 		"best practice", "tips", "warning", "perhatian", "ingat",
 		"jangan", "hindari", "pastikan", "ensure", "remember",
 	}
-	
+
 	lowerText := strings.ToLower(text)
 	for _, indicator := range strongIndicators {
 		if strings.Contains(lowerText, strings.ToLower(indicator)) {
 			return true
 		}
 	}
-	
-	// Check for emphasis patterns (text in quotes, parentheses, or with exclamation)
-	if strings.Contains(text, "!") || strings.Contains(text, "\"") || 
-	   (strings.Contains(text, "(") && strings.Contains(text, ")")) {
+
+	if strings.Contains(text, "!") || strings.Contains(text, "\"") ||
+		(strings.Contains(text, "(") && strings.Contains(text, ")")) {
 		return true
 	}
-	
+
 	return false
 }
 
-// enhanceContentTypes adds PNG image type to content types
 func (s *Service) enhanceContentTypes(reader io.Reader, writer io.Writer) error {
 	content, err := io.ReadAll(reader)
 	if err != nil {
@@ -947,7 +872,6 @@ func (s *Service) enhanceContentTypes(reader io.Reader, writer io.Writer) error 
 
 	xmlStr := string(content)
 
-	// Add PNG extension if not present
 	if !strings.Contains(xmlStr, `Extension="png"`) {
 		pngType := `<Default Extension="png" ContentType="image/png"/>`
 		xmlStr = strings.Replace(xmlStr, "</Types>", pngType+"</Types>", 1)
@@ -957,7 +881,6 @@ func (s *Service) enhanceContentTypes(reader io.Reader, writer io.Writer) error 
 	return err
 }
 
-// enhanceSlideRels adds relationship for background image
 func (s *Service) enhanceSlideRels(reader io.Reader, writer io.Writer) error {
 	content, err := io.ReadAll(reader)
 	if err != nil {
@@ -966,7 +889,6 @@ func (s *Service) enhanceSlideRels(reader io.Reader, writer io.Writer) error {
 
 	xmlStr := string(content)
 
-	// Add relationship for background image
 	imageRel := `<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image1.png"/>`
 	xmlStr = strings.Replace(xmlStr, "</Relationships>", imageRel+"</Relationships>", 1)
 
@@ -974,9 +896,6 @@ func (s *Service) enhanceSlideRels(reader io.Reader, writer io.Writer) error {
 	return err
 }
 
-// ========================
-// Orchestration (No changes)
-// ========================
 type GenerateMeta struct {
 	Title      string `json:"title"`
 	SlideCount int    `json:"slide_count"`
