@@ -29,6 +29,7 @@ export default function MasterPage() {
     setSearchName,
     createReport,
     deleteReport,
+    updateReport, // Make sure you have this function in your hook
   } = useMasterReports(10);
 
   const [openDialog, setOpenDialog] = useState(false);
@@ -43,6 +44,10 @@ export default function MasterPage() {
   
   // Selected rows for deletion (store IDs across all pages)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+
+  // Edit dialog state
+  const [editingRow, setEditingRow] = useState<any>(null);
+  const [openEditDialog, setOpenEditDialog] = useState(false);
 
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -78,6 +83,14 @@ export default function MasterPage() {
       true);
   };
 
+  const isEditFormValid = () => {
+    return (
+      editingRow?.nama?.trim() !== "" &&
+      editingRow?.seamanCode?.trim() !== "" &&
+      editingRow?.seafarerCode?.trim() !== ""
+    );
+  };
+
   const navigatePage = (page: "prev" | "next") => {
     if (!paginationData) return;
     setCurrentPage(prev => page === "next" ? prev + 1 : prev - 1);
@@ -107,6 +120,30 @@ export default function MasterPage() {
     } catch (err: any) {
       console.error(err);
       toast.error(err.response?.data?.error || "Failed to add report");
+    }
+  };
+
+  const handleEdit = async () => {
+    if (!isEditFormValid()) {
+      toast.error("Please fill in all fields!");
+      return;
+    }
+
+    try {
+      // You'll need to implement updateReport in your hook
+      await updateReport(editingRow.id, {
+        nama: editingRow.nama,
+        seamanCode: editingRow.seamanCode,
+        seafarerCode: editingRow.seafarerCode,
+      });
+      toast.success("Report updated successfully!");
+      setOpenEditDialog(false);
+      setEditingRow(null);
+      // Refresh the current page
+      setPaginationRequest({ ...paginationRequest });
+    } catch (err: any) {
+      console.error(err);
+      toast.error(err.response?.data?.error || "Failed to update report");
     }
   };
 
@@ -163,6 +200,14 @@ export default function MasterPage() {
       toast.error(err.response?.data?.error || "Failed to delete selected reports");
     }
   }
+
+  const handleRowClick = (row: any) => {
+    if (isEditMode) {
+      setEditingRow({ ...row });
+      setOpenEditDialog(true);
+    }
+  };
+
   const getRowNumber = (index: number) => {
     return (currentPage - 1) * paginationRequest.pageSize + index + 1;
   };
@@ -249,6 +294,45 @@ export default function MasterPage() {
         </div>
       </div>
 
+      {/* Edit Dialog */}
+      <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Report</DialogTitle>
+          </DialogHeader>
+
+          <div className="grid gap-4 py-2">
+            <Input
+              placeholder="Name"
+              value={editingRow?.nama || ""}
+              onChange={(e) => setEditingRow({ ...editingRow, nama: e.target.value.toUpperCase() })}
+            />
+            <Input
+              placeholder="Seaman Code"
+              value={editingRow?.seamanCode || ""}
+              onChange={(e) => setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })}
+            />
+            <Input
+              placeholder="Seafarer Code"
+              value={editingRow?.seafarerCode || ""}
+              onChange={(e) => setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })}
+            />
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setOpenEditDialog(false);
+              setEditingRow(null);
+            }}>
+              Cancel
+            </Button>
+            <Button onClick={handleEdit} disabled={!isEditFormValid()}>
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="flex gap-4 mb-4">
         <Input
           placeholder="Search by Name or Seafarer Code.."
@@ -295,12 +379,21 @@ export default function MasterPage() {
               </TableRow>
             ) : paginationData?.data?.length ? (
               paginationData.data.map((row, i) => (
-                <TableRow key={row.id} className={selectedIds.has(row.id) ? "bg-blue-50" : ""}>
+                <TableRow 
+                  key={row.id} 
+                  className={`${selectedIds.has(row.id) ? "bg-blue-50" : ""} ${isEditMode ? "cursor-pointer hover:bg-gray-50" : ""}`}
+                  onClick={() => handleRowClick(row)}
+                >
                   {isEditMode && (
-                    <TableCell className="text-center">
+                    <TableCell 
+                      className="text-center"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        toggleRowSelection(row.id);
+                      }}
+                    >
                       {/* Radio button that acts like checkbox */}
                       <button
-                        onClick={() => toggleRowSelection(row.id)}
                         className="aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center"
                       >
                         {selectedIds.has(row.id) && (
