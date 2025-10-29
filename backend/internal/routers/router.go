@@ -103,14 +103,16 @@ func (c *RouterConfig) SetupGuestRouter() {
 	QuestionRouter(c.App, c.QuestionController)
 	OptionRouter(c.App, c.OptionController)
 }
-func (c *RouterConfig) SetupMasterRouter() {
+func (r *RouterConfig) SetupMasterRouter() {
 
-	masters := c.App.Group("/api/master-reports")
+	group := r.App.Group("/api/master-reports")
 
 	{
-		masters.GET("", c.MasterController.FindAll)
-		masters.POST("", c.MasterController.Create)
-		masters.DELETE("/:id", c.MasterController.Delete)
+		group.GET("", r.MasterController.FindAll)
+		group.GET("/:id", r.MasterController.FindById)
+		group.POST("", r.MasterController.Create)
+		group.PUT("/:id", r.MasterController.Update)
+		group.DELETE("/:id", r.MasterController.Delete)
 
 	}
 }

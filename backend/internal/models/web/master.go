@@ -60,3 +60,33 @@ func (r *DeleteMasterRequest) ParseID(param string) error {
 	r.ID = uint(id)
 	return nil
 }
+
+type UpdateMasterRequest struct {
+	ID           uint    `json:"id"`
+	Nama         *string `json:"nama"`
+	SeafarerCode *string `json:"seafarerCode"`
+	SeamanCode   *string `json:"seamanCode"`
+	Jabatan      *string `json:"jabatan"`
+	VesselName   *string `json:"vesselName"`
+	StartDate    *string `json:"startDate"`
+}
+
+func (r *UpdateMasterRequest) ParseID(param string) error {
+	id, err := strconv.ParseUint(param, 10, 32)
+	if err != nil {
+		return err
+	}
+	r.ID = uint(id)
+	return nil
+}
+
+// MasterReportListResponse adalah bentuk response untuk endpoint GET /master-reports
+type MasterReportListResponse struct {
+	Data      []MasterReportData `json:"data"`
+	FirstID   int                `json:"firstId,omitempty"`
+	LastID    int                `json:"lastId,omitempty"`
+	PageSize  int                `json:"pageSize"`
+	HasMore   bool               `json:"hasMore"`
+	FirstPage bool               `json:"firstPage"`
+	Total     int                `json:"total"`
+}

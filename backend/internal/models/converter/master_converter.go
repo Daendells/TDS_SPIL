@@ -1,6 +1,7 @@
 package converter
 
 import (
+	"backend/internal/helpers"
 	"backend/internal/models/domain"
 	"backend/internal/models/web"
 )
@@ -41,9 +42,21 @@ func ToMasterReport(d *domain.MasterReport) web.MasterReportData {
 }
 
 func ToMasterReportList(list *[]domain.MasterReport) []web.MasterReportData {
-	out := make([]web.MasterReportData, len(*list))
-	for i := range *list {
-		out[i] = ToMasterReport(&(*list)[i])
+	var result []web.MasterReportData
+	for _, item := range *list {
+		result = append(result, ToMasterReport(&item))
 	}
-	return out
+	return result
+}
+
+// Convert request to domain
+func MasterReportRequestToDomain(req *web.ReportData) *domain.FullReport {
+	return &domain.FullReport{
+		VesselName:   helpers.StringToPtr(req.VesselName),
+		Nama:         helpers.StringToPtr(req.Nama),
+		Jabatan:      helpers.StringToPtr(req.Jabatan),
+		SeamanCode:   helpers.StringToPtr(req.SeamanCode),
+		SeafarerCode: helpers.StringToPtr(req.SeafarerCode),
+		Certificate:  helpers.StringToPtr(req.Certificate),
+	}
 }

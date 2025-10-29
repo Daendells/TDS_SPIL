@@ -22,11 +22,9 @@ export function useMasterReports(initialPageSize = 10) {
   const [debouncedName] = useDebounce(searchName, 500);
   const lastQueryRef = useRef<string>("");
   const pendingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  //  Use deferred value to keep old data visible during loading
+  
   const deferredData = useDeferredValue(paginationData);
 
-  //  Fetch data
   useEffect(() => {
     const controller = new AbortController();
     const fetchData = async () => {
@@ -44,22 +42,90 @@ export function useMasterReports(initialPageSize = 10) {
         const response = await api.get(`/api/master-reports?${queryKey}`, {
           signal: controller.signal,
         });
-        const data = response.data.data;
-        const parsed = parsePaginationData<IReport>(data, parseReports);
+
+        console.log("Raw response:", response.data);
+        
+        let apiData = [];
+        
+        // Handle the nested structure
+        if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
+          apiData = response.data.data.data;
+        } 
+        else if (response.data?.data && Array.isArray(response.data.data)) {
+          apiData = response.data.data;
+        }
+        else if (Array.isArray(response.data)) {
+          apiData = response.data;
+        }
+
+        console.log("Extracted apiData:", apiData);
+        console.log("Number of records:", apiData.length);
+
+        // FIX: parseReports expects an array, not individual items
+        let parsedReports: IReport[] = [];
+        
+        try {
+          // If parseReports expects an array, pass the whole array
+          parsedReports = parseReports(apiData);
+          console.log("Parsed reports (array method):", parsedReports);
+        } catch (err) {
+          console.error("Error parsing reports as array:", err);
+          
+          // Fallback: Try parsing individual items
+          try {
+            parsedReports = apiData.map((item: any) => ({
+              id: item.id,
+              nama: item.nama || "",
+              seamanCode: item.seamanCode || "",
+              seafarerCode: item.seafarerCode || "",
+              vesselName: item.vesselName || "",
+              jabatan: item.jabatan || "",
+              idpProgram: item.idpProgram || "",
+              age: item.age || "",
+              certificate: item.certificate || "",
+              konditeReview: item.konditeReview || "",
+              kpiVessel: item.kpiVessel || "",
+              performanceScore: item.performanceScore || "",
+              valueAssessment: item.valueAssessment || "",
+              competencyGapAnalysis: item.competencyGapAnalysis || "",
+              totalGap: item.totalGap || "",
+              strength: item.strength || "",
+              havQuadran: item.havQuadran || "",
+              talentClassified: item.talentClassified || "",
+              readiness: item.readiness || "",
+              certificateEligible: item.certificateEligible || "",
+            }));
+            console.log("Parsed reports (manual mapping):", parsedReports);
+          } catch (mapErr) {
+            console.error("Error in manual mapping:", mapErr);
+            parsedReports = [];
+          }
+        }
+
+        console.log("Number of parsed reports:", parsedReports.length);
+
+        const paginationResult: IPaginationData<IReport> = {
+          data: parsedReports,
+          firstId: parsedReports.length > 0 ? parsedReports[0].id : null,
+          lastId: parsedReports.length > 0 ? parsedReports[parsedReports.length - 1].id : null,
+          pageSize: paginationRequest.pageSize,
+          hasMore: parsedReports.length >= paginationRequest.pageSize,
+          firstPage: paginationRequest.anchorId === 0,
+        };
+
+        console.log("Final pagination result:", paginationResult);
 
         // Outdated response check
         if (lastQueryRef.current !== queryKey) return;
 
-        //  Add minimum 300ms delay for smooth transition
         const minDelay = new Promise(resolve => {
           pendingTimeoutRef.current = setTimeout(resolve, 150);
         });
         
         await minDelay;
 
-        // Update data in transition for smooth UI
         startTransition(() => {
-          setPaginationData(parsed);
+          setPaginationData(paginationResult);
         });
       } catch (err: any) {
         if (!axios.isCancel(err)) {
@@ -80,7 +146,6 @@ export function useMasterReports(initialPageSize = 10) {
     };
   }, [paginationRequest, debouncedName]);
 
-  //  Reset pagination on search
   useEffect(() => {
     startTransition(() => {
       setPaginationRequest((prev) => ({
@@ -91,15 +156,11 @@ export function useMasterReports(initialPageSize = 10) {
     });
   }, [debouncedName]);
 
-
-
-  //  POST new report
   const createReport = async (report: Partial<IReport>) => {
     setOnCallApi(true);
     try {
       const res = await api.post("/api/master-reports", report);
       toast.success("Report added successfully!");
-      // Refresh without flicker
       startTransition(() => {
         setPaginationRequest((prev) => ({
           ...prev,
@@ -117,33 +178,54 @@ export function useMasterReports(initialPageSize = 10) {
     }
   };
 
- const deleteReport = async (id: number) => {
-  setOnCallApi(true);
-  try {
-    const res = await api.delete(`/api/master-reports/${id}`);
-    toast.success("Report deleted successfully!");
-    
-    // Refresh UI
-    startTransition(() => {
-      setPaginationRequest((prev) => ({
-        ...prev,
-        anchorId: 0,
-        page: "next",
-      }));
-    });
+  const deleteReport = async (id: number) => {
+    setOnCallApi(true);
+    try {
+      const res = await api.delete(`/api/master-reports/${id}`);
+      toast.success("Report deleted successfully!");
+      
+      startTransition(() => {
+        setPaginationRequest((prev) => ({
+          ...prev,
+          anchorId: 0,
+          page: "next",
+        }));
+      });
 
-    return res.data;
-  } catch (err: any) {
-    console.error("Failed to delete report:", err);
-    toast.error(err.response?.data?.error || "Failed to delete report");
-    throw err;
-  } finally {
-    setOnCallApi(false);
-  }
-};
+      return res.data;
+    } catch (err: any) {
+      console.error("Failed to delete report:", err);
+      toast.error(err.response?.data?.error || "Failed to delete report");
+      throw err;
+    } finally {
+      setOnCallApi(false);
+    }
+  };
 
+  const updateReport = async (id: number, updates: Partial<IReport>) => {
+    setOnCallApi(true);
+    try {
+      const res = await api.put(`/api/master-reports/${id}`, updates);
+      toast.success("Report updated successfully!");
+      
+      startTransition(() => {
+        setPaginationRequest((prev) => ({
+          ...prev,
+          anchorId: 0,
+          page: "next",
+        }));
+      });
 
-  //  Return deferred data (shows old data while loading new)
+      return res.data;
+    } catch (err: any) {
+      console.error("Failed to update report:", err);
+      toast.error(err.response?.data?.error || "Failed to update report");
+      throw err;
+    } finally {
+      setOnCallApi(false);
+    }
+  };
+
   return {
     onCallApi,
     paginationData: deferredData,
@@ -155,5 +237,6 @@ export function useMasterReports(initialPageSize = 10) {
     setSearchName,
     createReport,
     deleteReport,
+    updateReport,
   };
 }

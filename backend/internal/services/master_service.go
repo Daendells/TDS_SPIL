@@ -1,12 +1,12 @@
 package services
 
 import (
-	"context"
 	"errors"
 	"fmt"
 	"net/http"
+	"strings"
+	"time"
 
-	"backend/internal/helpers"
 	"backend/internal/models/converter"
 	"backend/internal/models/domain"
 	"backend/internal/models/web"
@@ -26,193 +26,269 @@ type MasterService struct {
 
 func NewMasterService(db *gorm.DB, log *logrus.Logger, validate *validator.Validate, repo *repositories.MasterRepository) *MasterService {
 	return &MasterService{
-		DB:               db,
-		Log:              log,
-		Validate:         validate,
-		MasterRepository: repo,
+		DB: db, Log: log, Validate: validate, MasterRepository: repo,
 	}
 }
 
-func (s *MasterService) FindAll(ctx context.Context, req *web.MasterListRequest) (*web.SuccessResponse, error) {
-	// Validate query params
-	if err := s.Validate.Struct(req); err != nil {
-		return nil, err
+func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse, error) {
+	db := s.DB.Model(&domain.MasterReport{})
+
+	// --- optional search filter ---
+	// search by partial name (case-insensitive) OR seafarer_code exact/partial
+	if req.Query != "" {
+		q := req.Query
+		db = db.Where(
+			s.DB.
+				Where("LOWER(nama) LIKE ?", "%"+q+"%").
+				Or("seafarer_code LIKE ?", "%"+req.Query+"%"),
+		)
 	}
 
-	tx := s.DB.WithContext(ctx).Begin()
-	defer tx.Rollback()
-
-	var reports []domain.MasterReport
-	err := s.MasterRepository.SelectAll(tx, req, &reports)
-	if err != nil {
-		return nil, err
-	}
-
-	// Handle empty results
-	if len(reports) == 0 {
-		return &web.SuccessResponse{
-			Status: "Ok",
-			Code:   http.StatusOK,
-			Data: map[string]interface{}{
-				"results":    []domain.MasterReport{},
-				"first_id":   nil,
-				"last_id":    nil,
-				"page_size":  req.PageSize,
-				"has_more":   false,
-				"first_page": req.AnchorID == 0,
-			},
-		}, nil
-	}
-
-	// Convert and handle pagination
-	data := converter.ToMasterReportList(&reports)
-
-	hasMore := false
-	firstPage := req.AnchorID == 0
-
-	if req.Page == "prev" {
-		if len(data) > req.PageSize {
-			firstPage = false
-			data = data[:req.PageSize]
-		} else {
-			firstPage = true
-		}
-		helpers.Reverse(&data)
-		hasMore = true
+	// --- cursor pagination logic ---
+	if req.Page == "next" && req.AnchorID > 0 {
+		// get rows with id > anchor_id, ascending
+		db = db.Where("id > ?", req.AnchorID).Order("id ASC")
+	} else if req.Page == "prev" && req.AnchorID > 0 {
+		// get rows with id < anchor_id, DESC first (we'll reverse after fetch)
+		db = db.Where("id < ?", req.AnchorID).Order("id DESC")
 	} else {
-		if len(data) > req.PageSize {
-			hasMore = true
-			data = data[:req.PageSize]
+		// first load
+		db = db.Order("id ASC")
+	}
+
+	// enforce limit
+	limit := req.PageSize
+	if limit <= 0 {
+		limit = 10
+	}
+	db = db.Limit(limit)
+
+	var rows []domain.MasterReport
+	if err := db.Find(&rows).Error; err != nil {
+		s.Log.WithError(err).Error("failed to query master reports")
+		return nil, fmt.Errorf("failed to retrieve master reports: %w", err)
+	}
+
+	// If we loaded "prev", rows are in DESC order; reverse so UI is still ascending.
+	if req.Page == "prev" && len(rows) > 1 {
+		for i, j := 0, len(rows)-1; i < j; i, j = i+1, j-1 {
+			rows[i], rows[j] = rows[j], rows[i]
 		}
 	}
 
-	firstId := data[0].ID
-	lastId := data[len(data)-1].ID
+	// map domain.MasterReport -> web.MasterReportData
+	result := make([]web.MasterReportData, 0, len(rows))
+	for _, r := range rows {
+		result = append(result, web.MasterReportData{
+			ID:                         r.ID,
+			VesselName:                 r.VesselName,
+			Nama:                       r.Nama,
+			Jabatan:                    r.Jabatan,
+			User:                       r.User,
+			SeamanCode:                 r.SeamanCode,
+			SeafarerCode:               r.SeafarerCode,
+			Certificate:                r.Certificate,
+			Age:                        r.Age,
+			KonditeReview:              r.KonditeReview,
+			KpiVessel:                  r.KpiVessel,
+			PerformanceScore:           r.PerformanceScore,
+			ValueAssessment:            r.ValueAssessment,
+			AssessmentCenter:           r.AssessmentCenter,
+			PotentialScore:             r.PotentialScore,
+			HavQuadran:                 r.HavQuadran,
+			HavMapping:                 r.HavMapping,
+			CompetencyGapAnalysis:      r.CompetencyGapAnalysis,
+			TotalGap:                   r.TotalGap,
+			Strength:                   r.Strength,
+			TalentClassified:           r.TalentClassified,
+			IDPProgram:                 r.IDPProgram,
+			HavQuadran2:                r.HavQuadran2,
+			TalentClassified2:          r.TalentClassified2,
+			ReadinessMonth:             r.ReadinessMonth,
+			CertificateEligible:        r.CertificateEligible,
+			EducationFulfillmentMonths: r.EducationFulfillmentMonths,
+			TotalReadinessUpdateMonths: r.TotalReadinessUpdateMonths,
+			Keterangan:                 r.Keterangan,
+			TmNm:                       r.TmNm,
+		})
+	}
 
-	if err := tx.Commit().Error; err != nil {
-		return nil, err
+	// build pagination metadata for frontend
+	responsePayload := web.MasterReportListResponse{
+		Data:      result,
+		PageSize:  limit,
+		HasMore:   len(result) >= limit, // naive: "we filled the page" => probably more data
+		FirstPage: req.AnchorID == 0,    // first load if anchorId=0 in request
+	}
+
+	if len(result) > 0 {
+		responsePayload.FirstID = result[0].ID
+		responsePayload.LastID = result[len(result)-1].ID
 	}
 
 	return &web.SuccessResponse{
-		Status: "Ok",
 		Code:   http.StatusOK,
-		Data: map[string]interface{}{
-			"results":    data,
-			"first_id":   firstId,
-			"last_id":    lastId,
-			"page_size":  req.PageSize,
-			"has_more":   hasMore,
-			"first_page": firstPage,
-		},
+		Status: "OK",
+		Data:   responsePayload,
 	}, nil
 }
 
-func (s *MasterService) Create(ctx context.Context, req *web.ReportData) (*web.SuccessResponse, error) {
-	tx := s.DB.WithContext(ctx).Begin()
-	defer tx.Rollback()
+// FindById
+func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
+	var master domain.FullReport
 
-	if err := s.Validate.Struct(req); err != nil {
-		s.Log.Warnf("Invalid input: %+v", err)
-		return nil, err
+	if err := s.MasterRepository.FindById(s.DB, &master, id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("master report not found")
+		}
+		s.Log.WithError(err).Error("failed to find master report by ID")
+		return nil, fmt.Errorf("failed to retrieve master report: %w", err)
 	}
 
-	report := domain.FullReport{
-		VesselName:    req.VesselName,
-		Nama:          req.Nama,
-		Jabatan:       req.Jabatan,
-		SeamanCode:    req.SeamanCode,
-		SeafarerCode:  req.SeafarerCode,
-		Certificate:   req.Certificate,
-		Age:           req.Age,
-		TanggalLahir:  req.TanggalLahir,
-		StartDate:     req.StartDate,
-		WarningLetter: req.WarningLetter,
-		CaseHistory:   req.CaseHistory,
-		YearOfCase:    req.YearOfCase,
-		VesselHistory: req.VesselHistory,
-		// Optional numeric fields — safe defaults
-		KonditeReview:              req.KonditeReview,
-		KpiVessel:                  req.KpiVessel,
-		PerformanceScore:           req.PerformanceScore,
-		ValueAssessment:            req.ValueAssessment,
-		AssessmentCenter:           req.AssessmentCenter,
-		PotentialScore:             req.PotentialScore,
-		HavQuadran:                 req.HavQuadran,
-		HavMapping:                 req.HavMapping,
-		CompetencyGapAnalysis:      req.CompetencyGapAnalysis,
-		TotalGap:                   req.TotalGap,
-		Strength:                   req.Strength,
-		TalentClassified:           req.TalentClassified,
-		IDPProgram:                 req.IDPProgram,
-		HavQuadran2:                req.HavQuadran2,
-		TalentClassified2:          req.TalentClassified2,
-		Readiness:                  req.Readiness,
-		CertificateEligible:        req.CertificateEligible,
-		TrainingCompleted:          req.TrainingCompleted,
-		TrainingPlanned:            req.TrainingPlanned,
-		MentoringCompleted:         req.MentoringCompleted,
-		MentoringPlanned:           req.MentoringPlanned,
-		CoachingCompleted:          req.CoachingCompleted,
-		CoachingPlanned:            req.CoachingPlanned,
-		DataIncumbent:              req.DataIncumbent,
-		SuccessionVessel:           req.SuccessionVessel,
-		SuccessionRank:             req.SuccessionRank,
-		IDPStart:                   req.IDPStart,
-		IDPMentor:                  req.IDPMentor,
-		IDPCoach:                   req.IDPCoach,
-		ReadinessMonth:             0,
-		EducationFulfillmentMonths: 0,
-		TotalReadinessUpdateMonths: 0,
-		Keterangan:                 req.VesselHistory,
+	return &web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   master,
+	}, nil
+}
+
+// Create
+func (s *MasterService) Create(request *web.ReportData) (*web.SuccessResponse, error) {
+	if err := s.Validate.Struct(request); err != nil {
+		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
-	if err := s.MasterRepository.Create(tx, &report); err != nil {
-		return nil, err
-	}
+	master := converter.MasterReportRequestToDomain(request)
 
-	if err := tx.Commit().Error; err != nil {
-		return nil, err
+	if err := s.MasterRepository.Create(s.DB, master); err != nil {
+		s.Log.WithError(err).Error("failed to create master report")
+		return nil, fmt.Errorf("failed to create master report: %w", err)
 	}
 
 	return &web.SuccessResponse{
 		Code:   http.StatusCreated,
 		Status: "Created",
-		Data:   report,
+		Data:   master,
 	}, nil
 }
 
-func (s *MasterService) Delete(ctx context.Context, id uint) (*web.SuccessResponse, error) {
-	tx := s.DB.WithContext(ctx).Begin()
-	defer tx.Rollback()
+// Update
+func nullifyStringPtr(p *string) *string {
+	if p == nil {
+		return nil
+	}
+	if strings.TrimSpace(*p) == "" {
+		return nil
+	}
+	return p
+}
 
-	// Cek apakah data ada
-	report, err := s.MasterRepository.FindByID(tx, id)
+// helper: parse "YYYY-MM-DD" atau kosong -> nil
+func parseDateOrNil(p *string) (*time.Time, error) {
+	if p == nil {
+		return nil, nil
+	}
+	if strings.TrimSpace(*p) == "" {
+		return nil, nil
+	}
+	t, err := time.Parse("2006-01-02", *p)
 	if err != nil {
+		return nil, fmt.Errorf("invalid date format for startDate, expected YYYY-MM-DD")
+	}
+	return &t, nil
+}
+
+func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.SuccessResponse, error) {
+	// Validasi basic request struct (opsional/berguna untuk field required tertentu)
+	if err := s.Validate.Struct(request); err != nil {
+		return nil, fmt.Errorf("validation error: %w", err)
+	}
+
+	// 1. Ambil data existing
+	var existing domain.FullReport
+	if err := s.MasterRepository.FindById(s.DB, &existing, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			s.Log.Warnf("Data tidak ditemukan untuk ID %d", id)
-			return nil, fmt.Errorf("data dengan ID %d tidak ditemukan", id)
+			return nil, errors.New("master report not found")
 		}
 		return nil, err
 	}
 
-	// Hapus data
-	if err := s.MasterRepository.Delete(tx, id); err != nil {
-		s.Log.Errorf("Gagal menghapus ID %d: %v", id, err)
+	// 2. Terapkan perubahan PARSIAL
+
+	// String fields (dengan sanitasi "")
+	if request.Nama != nil {
+		existing.Nama = nullifyStringPtr(request.Nama)
+	}
+	if request.SeafarerCode != nil {
+		existing.SeafarerCode = nullifyStringPtr(request.SeafarerCode)
+	}
+	if request.SeamanCode != nil {
+		existing.SeamanCode = nullifyStringPtr(request.SeamanCode)
+	}
+	if request.Jabatan != nil {
+		existing.Jabatan = nullifyStringPtr(request.Jabatan)
+	}
+	if request.VesselName != nil {
+		existing.VesselName = nullifyStringPtr(request.VesselName)
+	}
+
+	// Date field (string -> *time.Time)
+	if request.StartDate != nil {
+		t, err := parseDateOrNil(request.StartDate)
+		if err != nil {
+			return nil, err // invalid format dari frontend
+		}
+		existing.StartDate = t
+	}
+
+	// 3. (opsional tapi direkomendasikan)
+	// Pastikan beberapa kolom inti tidak jadi nil setelah update.
+	// Misal: Nama tidak boleh hilang.
+	if existing.Nama == nil || strings.TrimSpace(*existing.Nama) == "" {
+		return nil, fmt.Errorf("field 'nama' is required and cannot be empty")
+	}
+	if existing.SeamanCode == nil || strings.TrimSpace(*existing.SeamanCode) == "" {
+		return nil, fmt.Errorf("field 'seamanCode' is required and cannot be empty")
+	}
+	if existing.SeafarerCode == nil || strings.TrimSpace(*existing.SeafarerCode) == "" {
+		return nil, fmt.Errorf("field 'seafarerCode' is required and cannot be empty")
+	}
+	// tambahkan aturan lain sesuai kebutuhan bisnis kamu:
+	// jabatan wajib? vesselName wajib? dll.
+
+	// 4. Simpan
+	if err := s.MasterRepository.Update(s.DB, &existing); err != nil {
+		s.Log.WithError(err).Error("failed to update master report")
+		return nil, fmt.Errorf("failed to update master report: %w", err)
+	}
+
+	// 5. Response balik
+	return &web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "Updated",
+		Data:   existing,
+	}, nil
+}
+
+// Delete
+func (s *MasterService) Delete(id uint) (*web.SuccessResponse, error) {
+	var master domain.FullReport
+
+	if err := s.MasterRepository.FindById(s.DB, &master, id); err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return nil, errors.New("master report not found")
+		}
 		return nil, err
 	}
 
-	if err := tx.Commit().Error; err != nil {
-		return nil, err
+	if err := s.MasterRepository.Delete(s.DB, &master); err != nil {
+		s.Log.WithError(err).Error("failed to delete master report")
+		return nil, fmt.Errorf("failed to delete master report: %w", err)
 	}
-
-	s.Log.Infof("Berhasil menghapus data ID %d (%s)", report.ID, report.Nama)
 
 	return &web.SuccessResponse{
 		Code:   http.StatusOK,
 		Status: "Deleted",
-		Data: map[string]interface{}{
-			"id":   id,
-			"nama": report.Nama,
-		},
+		Data:   fmt.Sprintf("master report with ID %d deleted successfully", id),
 	}, nil
 }
