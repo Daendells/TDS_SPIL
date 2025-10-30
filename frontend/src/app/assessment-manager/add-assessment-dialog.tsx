@@ -85,35 +85,28 @@ export default function AddAssessmentDialog({
           {/* Role Input */}
           <div className="space-y-2">
             <Label htmlFor="role" className="text-sm font-medium">
-              Nama Posisi/Role <span className="text-red-500">*</span>
+              Role
             </Label>
             <Input
               id="role"
-              placeholder="Contoh: Nahkoda, Kepala Kabin, dll"
+              placeholder="Masukkan nama role assessment"
               value={role}
               onChange={(e) => setRole(e.target.value)}
               disabled={loading}
             />
-            <p className="text-xs text-gray-500">
-              Masukkan nama posisi atau role yang akan dievaluasi
-            </p>
           </div>
 
-          {/* Assessment Name Input */}
           <div className="space-y-2">
             <Label htmlFor="assessmentName" className="text-sm font-medium">
               Nama Assessment
             </Label>
             <Input
               id="assessmentName"
-              placeholder="Contoh: Penilaian Nahkoda 2024, dll"
+              placeholder="Masukkan nama assessment"
               value={assessmentName}
               onChange={(e) => setAssessmentName(e.target.value)}
               disabled={loading}
             />
-            <p className="text-xs text-gray-500">
-              (Opsional) Nama deskriptif untuk assessment ini
-            </p>
           </div>
 
           {/* Timer Option */}

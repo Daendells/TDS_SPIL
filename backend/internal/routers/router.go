@@ -24,6 +24,7 @@ type RouterConfig struct {
 
 func (c *RouterConfig) Setup() {
 	c.App.Static("/files", "./public")
+	c.App.Static("/storage", "./storage")
 	c.SetupGuestRouter()
 	c.SetupAuthRouter()
 }
@@ -114,6 +115,7 @@ func (c *RouterConfig) SetupAuthRouter() {
 		assessmentAuth.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
 		assessmentAuth.POST("", c.AssessmentController.CreateAssessment)
 		assessmentAuth.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
+		assessmentAuth.POST("/upload-image", c.AssessmentController.UploadAssessmentImage)
 	}
 
 	// Protected Combined question-option routes

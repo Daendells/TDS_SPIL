@@ -25,6 +25,7 @@ func OptionCreateRequestToOption(request *web.OptionCreateRequest) domain.Option
 		OptionText:   request.OptionText,
 		Score:        request.Score,
 		IsImage:      request.IsImage,
+		ImageUrl:     request.ImageURL,
 	}
 }
 
@@ -36,5 +37,6 @@ func OptionUpdateRequestToOption(request *web.OptionUpdateRequest) domain.Option
 		OptionText:   request.OptionText,
 		Score:        request.Score,
 		IsImage:      request.IsImage,
+		ImageUrl:     request.ImageURL,
 	}
 }

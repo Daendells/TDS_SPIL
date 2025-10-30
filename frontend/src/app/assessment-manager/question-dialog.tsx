@@ -21,9 +21,11 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, Upload, X } from "lucide-react";
+import Image from "next/image";
 import { toast } from "sonner";
 import { useApi } from "@/hooks/use-api";
+import { useUploadAssessmentImage } from "./_hooks/useAssessment";
 
 interface Option {
   optionId?: number;
@@ -31,6 +33,9 @@ interface Option {
   optionText: string;
   score: number;
   isImage: number;
+  imageUrl?: string;
+  imageFile?: File | null;
+  imagePreview?: string;
   action?: "create" | "update" | "delete"; // Track operation type
   isNew?: boolean; // Track if this is a newly added option
 }
@@ -109,7 +114,11 @@ export default function QuestionDialog({
   const [options, setOptions] = useState<Option[]>([]);
 
   const [loading, setLoading] = useState(false);
+  const [questionImageFile, setQuestionImageFile] = useState<File | null>(null);
+  const [questionImagePreview, setQuestionImagePreview] = useState<string>("");
+
   const api = useApi();
+  const uploadImageMutation = useUploadAssessmentImage();
 
   useEffect(() => {
     if (open) {
@@ -121,6 +130,10 @@ export default function QuestionDialog({
           isImage: question.isImage || "0",
           imageUrl: question.imageUrl || "",
         });
+
+        // If question has existing image, don't show preview (keep as URL only)
+        setQuestionImageFile(null);
+        setQuestionImagePreview("");
 
         const existingOptions = (question.options || []).map((option) => ({
           ...option,
@@ -139,6 +152,10 @@ export default function QuestionDialog({
           imageUrl: "",
         });
 
+        // Reset image upload state for new question
+        setQuestionImageFile(null);
+        setQuestionImagePreview("");
+
         const defaultOptions: Option[] = defaults.optionLetters.map(
           (letter, index) => ({
             optionLetter: letter,
@@ -154,6 +171,42 @@ export default function QuestionDialog({
       }
     }
   }, [open, question, role]);
+
+  const handleQuestionImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("Ukuran file tidak boleh lebih dari 10MB");
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Tipe file harus berupa gambar (JPEG, PNG, GIF, WebP)");
+      return;
+    }
+
+    setQuestionImageFile(file);
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setQuestionImagePreview(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveQuestionImage = () => {
+    setQuestionImageFile(null);
+    setQuestionImagePreview("");
+    setFormData({ ...formData, imageUrl: "" });
+  };
 
   const handleSubmit = async () => {
     if (!formData.questionText.trim()) {
@@ -173,6 +226,49 @@ export default function QuestionDialog({
 
     setLoading(true);
     try {
+      let imageUrl = formData.imageUrl;
+
+      // Upload image if one was selected
+      if (questionImageFile && formData.isImage === "1") {
+        try {
+          const uploadResult = await uploadImageMutation.mutateAsync(
+            questionImageFile
+          );
+          imageUrl = uploadResult.imageUrl;
+        } catch {
+          toast.error("Gagal mengunggah gambar");
+          setLoading(false);
+          return;
+        }
+      }
+
+      // Upload option images if any
+      const optionsWithUploadedImages = await Promise.all(
+        options.map(async (option) => {
+          let optionImageUrl = option.imageUrl || "";
+
+          // If option has a new image file, upload it
+          if (option.imageFile) {
+            try {
+              const uploadResult = await uploadImageMutation.mutateAsync(
+                option.imageFile
+              );
+              optionImageUrl = uploadResult.imageUrl;
+            } catch (error) {
+              toast.error(
+                `Gagal mengunggah gambar untuk opsi ${option.optionLetter}`
+              );
+              throw error;
+            }
+          }
+
+          return {
+            ...option,
+            imageUrl: optionImageUrl,
+          };
+        })
+      );
+
       if (question?.questionId) {
         // Update existing question using combined endpoint
         const updateData = {
@@ -181,8 +277,8 @@ export default function QuestionDialog({
           questionText: formData.questionText,
           category: role === "va_1" ? formData.category : null,
           isImage: formData.isImage,
-          imageUrl: formData.imageUrl || null,
-          options: options.map((option) => {
+          imageUrl: imageUrl || null,
+          options: optionsWithUploadedImages.map((option) => {
             // Determine action based on option state
             let action = option.action || "update";
 
@@ -197,6 +293,7 @@ export default function QuestionDialog({
               optionText: option.optionText,
               score: option.score,
               isImage: option.isImage,
+              imageUrl: option.imageUrl || null,
               action: action,
             };
           }),
@@ -215,12 +312,13 @@ export default function QuestionDialog({
           questionText: formData.questionText,
           category: role === "va_1" ? formData.category : "",
           isImage: formData.isImage,
-          imageUrl: formData.imageUrl || "",
-          options: options.map((option) => ({
+          imageUrl: imageUrl || "",
+          options: optionsWithUploadedImages.map((option) => ({
             optionLetter: option.optionLetter,
             optionText: option.optionText,
             score: option.score,
             isImage: option.isImage,
+            imageUrl: option.imageUrl || null,
           })),
         };
 
@@ -275,6 +373,52 @@ export default function QuestionDialog({
   ) => {
     const updatedOptions = [...options];
     updatedOptions[index] = { ...updatedOptions[index], [field]: value };
+    setOptions(updatedOptions);
+  };
+
+  const handleOptionImageChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    index: number
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    // Validate file size
+    const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("Ukuran file tidak boleh lebih dari 10MB");
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      toast.error("Tipe file harus berupa gambar (JPEG, PNG, GIF, WebP)");
+      return;
+    }
+
+    // Create preview
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const updatedOptions = [...options];
+      updatedOptions[index] = {
+        ...updatedOptions[index],
+        imageFile: file,
+        imagePreview: reader.result as string,
+      };
+      setOptions(updatedOptions);
+    };
+    reader.readAsDataURL(file);
+  };
+
+  const handleRemoveOptionImage = (index: number) => {
+    const updatedOptions = [...options];
+    updatedOptions[index] = {
+      ...updatedOptions[index],
+      imageFile: null,
+      imagePreview: "",
+      imageUrl: "",
+    };
     setOptions(updatedOptions);
   };
 
@@ -345,7 +489,7 @@ export default function QuestionDialog({
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="isImage" className="text-sm font-medium">
-                      Memiliki Gambar 
+                      Memiliki Gambar
                     </Label>
                     <Select
                       value={formData.isImage}
@@ -364,19 +508,54 @@ export default function QuestionDialog({
                   </div>
 
                   {formData.isImage === "1" && (
-                    <div>
-                      <Label htmlFor="imageUrl" className="text-sm font-medium">
-                        URL Gambar
+                    <div className="col-span-2 gap-2">
+                      <Label className="text-sm font-medium">
+                        Upload Gambar
                       </Label>
-                      <Input
-                        id="imageUrl"
-                        value={formData.imageUrl}
-                        onChange={(e) =>
-                          setFormData({ ...formData, imageUrl: e.target.value })
-                        }
-                        placeholder="Masukkan URL gambar..."
-                        className="mt-2"
-                      />
+
+                      {questionImagePreview && (
+                        <div className="relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden mt-2 mb-3">
+                          <Image
+                            src={questionImagePreview}
+                            alt="Preview"
+                            fill
+                            unoptimized
+                            className="object-cover"
+                          />
+                          <button
+                            onClick={handleRemoveQuestionImage}
+                            className="absolute top-2 right-2 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                            type="button"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-center w-full">
+                        <label
+                          htmlFor="questionImage"
+                          className="flex flex-col items-center justify-center w-full h-32 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 bg-gray-50"
+                        >
+                          <div className="flex flex-col items-center justify-center pt-5 pb-6">
+                            <Upload className="h-6 w-6 text-gray-400 mb-2" />
+                            <p className="text-sm text-gray-500">
+                              Klik untuk upload (Max 10MB)
+                            </p>
+                          </div>
+                          <Input
+                            id="questionImage"
+                            type="file"
+                            accept="image/*"
+                            onChange={handleQuestionImageChange}
+                            disabled={loading}
+                            className="hidden"
+                          />
+                        </label>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-2">
+                        Format: JPEG, PNG, GIF, WebP
+                      </p>
                     </div>
                   )}
                 </div>
@@ -401,7 +580,7 @@ export default function QuestionDialog({
                 </Button>
               </div>
 
-              <div className="space-y-3 max-h-[400px] overflow-y-auto">
+              <div className="space-y-3 h-full overflow-y-auto">
                 {options.map((option, index) => (
                   <div key={index} className="border rounded-lg p-4 bg-gray-50">
                     <div className="flex items-center justify-between mb-3">
@@ -447,6 +626,52 @@ export default function QuestionDialog({
                           placeholder="0"
                           className="mt-1"
                         />
+                      </div>
+
+                      {/* Image Upload for Option */}
+                      <div>
+                        <Label className="text-sm font-medium mb-2 block">
+                          Gambar Opsi (Opsional)
+                        </Label>
+
+                        {option.imagePreview && (
+                          <div className="relative w-full h-28 bg-gray-100 rounded-lg overflow-hidden mb-2">
+                            <Image
+                              src={option.imagePreview}
+                              alt={`Preview Opsi ${option.optionLetter}`}
+                              fill
+                              unoptimized
+                              className="object-cover"
+                            />
+                            <button
+                              onClick={() => handleRemoveOptionImage(index)}
+                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                              type="button"
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+
+                        <label
+                          htmlFor={`optionImage-${index}`}
+                          className="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 bg-gray-50"
+                        >
+                          <div className="flex flex-col items-center justify-center pt-3 pb-3">
+                            <Upload className="h-5 w-5 text-gray-400 mb-1" />
+                            <p className="text-xs text-gray-500">
+                              Klik untuk upload
+                            </p>
+                          </div>
+                          <Input
+                            id={`optionImage-${index}`}
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleOptionImageChange(e, index)}
+                            disabled={loading}
+                            className="hidden"
+                          />
+                        </label>
                       </div>
                     </div>
                   </div>

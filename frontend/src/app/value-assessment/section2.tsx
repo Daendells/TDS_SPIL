@@ -14,6 +14,7 @@ import { useCountdown } from "@/hooks/use-session-storage";
 import { useStorageCountdown } from "@/hooks/use-local-storage";
 import Image from "next/image";
 import { time } from "console";
+import { BASE_URL } from "../lib/api";
 
 interface Section2Props {
   onNext: () => void;
@@ -131,8 +132,6 @@ export default function Section2({
       role: "va_2",
       answers: filteredAnswers,
     });
-
-    
   }, [assessment?.questions, answers, assessmentData.seafarerCode, mutate]);
 
   // Auto-submit when timer reaches 0
@@ -397,7 +396,17 @@ export default function Section2({
                             <span className="font-bold text-lg text-gray-800 min-w-[24px]">
                               {option.optionLetter}.
                             </span>
-                            <span className="text-lg">{option.optionText}</span>
+                            <div className="flex flex-col gap-2">
+                              {option?.imageUrl && (
+                                <Image
+                                  src={BASE_URL + option?.imageUrl}
+                                  width={300}
+                                  height={200}
+                                  alt={"Gambar " + option.optionId}
+                                />
+                              )}
+                              {option.optionText}
+                            </div>
                           </div>
                         </Label>
                       </div>

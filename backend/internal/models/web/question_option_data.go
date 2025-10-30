@@ -30,5 +30,6 @@ type OptionOperationRequest struct {
 	OptionText   string `json:"optionText" validate:"required"`
 	Score        int    `json:"score"`
 	IsImage      *int   `json:"isImage"`
+	ImageURL     *string `json:"imageUrl"`
 	Action       string `json:"action"` // "create", "update", "delete"
 }

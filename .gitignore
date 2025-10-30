@@ -47,3 +47,4 @@ Thumbs.db
 
 # File Material
 backend/public/materi/*
+backend/storage/*

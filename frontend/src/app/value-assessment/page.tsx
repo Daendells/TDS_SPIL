@@ -77,6 +77,39 @@ export default function ValueAssessmentPage() {
     } catch (error) {
       console.warn("Error loading stored data:", error);
     }
+
+    // Prevent copy, cut, paste, context menu
+    const handleCopy = (e: Event) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const handleCut = (e: Event) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const handlePaste = (e: Event) => {
+      e.preventDefault();
+      return false;
+    };
+
+    const handleContextMenu = (e: Event) => {
+      e.preventDefault();
+      return false;
+    };
+
+    document.addEventListener("copy", handleCopy);
+    document.addEventListener("cut", handleCut);
+    document.addEventListener("paste", handlePaste);
+    document.addEventListener("contextmenu", handleContextMenu);
+
+    return () => {
+      document.removeEventListener("copy", handleCopy);
+      document.removeEventListener("cut", handleCut);
+      document.removeEventListener("paste", handlePaste);
+      document.removeEventListener("contextmenu", handleContextMenu);
+    };
   }, []);
 
   // Save data ke localStorage dengan expiry 24 jam setiap kali assessmentData atau currentStep berubah
@@ -213,6 +246,43 @@ export default function ValueAssessmentPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <style>{`
+        /* Disable copy, cut, paste untuk seluruh assessment page */
+        body, html, * {
+          user-select: none;
+          -webkit-user-select: none;
+          -moz-user-select: none;
+          -ms-user-select: none;
+          -webkit-touch-callout: none;
+        }
+
+        /* Prevent context menu (right click) */
+        body, html {
+          -webkit-user-select: none;
+          user-select: none;
+        }
+
+        /* Ensure input fields dan buttons masih bisa diklik */
+        input, textarea, button, select, a {
+          pointer-events: auto;
+        }
+
+        /* Prevent drag selection */
+        body::selection,
+        html::selection,
+        * ::selection {
+          background: transparent;
+          color: inherit;
+        }
+
+        body::-moz-selection,
+        html::-moz-selection,
+        * ::-moz-selection {
+          background: transparent;
+          color: inherit;
+        }
+      `}</style>
+
       {/* Progress Bar - Show only if assessment has started and on client */}
       {isClient &&
         (assessmentData.email ||

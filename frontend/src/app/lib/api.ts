@@ -5,6 +5,9 @@ import Cookies from "universal-cookie";
 import { getToken } from "./cookies";
 import { UninterceptedApiError } from "../types/api";
 
+export const BASE_URL =
+  process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8080";
+
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
   headers: {

@@ -34,6 +34,8 @@ import AddAssessmentDialog from "./add-assessment-dialog";
 import AssessmentConfigDialog from "@/components/assessment-config-dialog";
 import { useGetAllAssessments } from "./_hooks/useAssessment";
 import { QuestionOptionResponse } from "@/types/assessment";
+import Image from "next/image";
+import { BASE_URL } from "../lib/api";
 
 const VA_1_CATEGORIES = [
   "Integrity",
@@ -376,14 +378,18 @@ export default function QuestionsAdmin() {
                               <Badge variant="outline">Ada Gambar</Badge>
                             )}
                           </div>
+                          {question.imageUrl && (
+                            <Image
+                              src={BASE_URL + question.imageUrl}
+                              alt={`Gambar untuk pertanyaan ${index + 1}`}
+                              width={300}
+                              height={200}
+                              className="mb-2 rounded"
+                            />
+                          )}
                           <p className="text-sm font-medium mb-2">
                             {question.questionText}
                           </p>
-                          {question.imageUrl && (
-                            <p className="text-xs text-muted-foreground mb-2">
-                              Gambar: {question.imageUrl}
-                            </p>
-                          )}
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -423,9 +429,20 @@ export default function QuestionsAdmin() {
                                 <Badge variant="outline" className="text-xs">
                                   {option.optionLetter.toUpperCase()}
                                 </Badge>
-                                <span className="text-sm">
-                                  {option.optionText}
-                                </span>
+                                <div className="flex flex-col gap-2">
+                                  {option.imageUrl && (
+                                    <Image
+                                      src={BASE_URL + option.imageUrl}
+                                      alt={option.optionLetter}
+                                      width={300}
+                                      height={200}
+                                      className="rounded"
+                                    />
+                                  )}
+                                  <span className="text-sm">
+                                    {option.optionText}
+                                  </span>
+                                </div>
                               </div>
                               <Badge variant="secondary" className="text-xs">
                                 Skor: {option.score}

@@ -147,3 +147,47 @@ export function usePostAssessment() {
     },
   });
 }
+
+export function useUploadAssessmentImage() {
+  return useMutation<{ imageUrl: string }, Error, File>({
+    mutationFn: async (file: File) => {
+      // Validate file size (max 10MB)
+      const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB in bytes
+      if (file.size > MAX_FILE_SIZE) {
+        throw new Error("Ukuran file tidak boleh lebih dari 10MB");
+      }
+
+      // Validate file type
+      const allowedTypes = [
+        "image/jpeg",
+        "image/png",
+        "image/gif",
+        "image/webp",
+      ];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error("Tipe file harus berupa gambar (JPEG, PNG, GIF, WebP)");
+      }
+
+      // Create FormData
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload to backend
+      const response = await api.post<ApiReturn<{ imageUrl: string }>>(
+        `/api/assessments/upload-image`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      if (!response.data?.data?.imageUrl) {
+        throw new Error("Gagal mendapatkan URL gambar dari server");
+      }
+
+      return response.data.data;
+    },
+  });
+}

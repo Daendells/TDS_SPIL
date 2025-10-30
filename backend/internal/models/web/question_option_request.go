@@ -19,5 +19,6 @@ type CreateOptionRequest struct {
 	OptionText   string `json:"optionText" binding:"required"`
 	Score        int    `json:"score" binding:"required"`
 	IsImage      int    `json:"isImage"`
+	ImageURL     string `json:"imageUrl"`
 }
 

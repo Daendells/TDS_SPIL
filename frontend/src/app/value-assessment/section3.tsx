@@ -13,6 +13,7 @@ import {
 import { useStorageCountdown } from "@/hooks/use-local-storage";
 import Image from "next/image";
 import { useCountdown } from "@/hooks/use-session-storage";
+import { BASE_URL } from "../lib/api";
 
 interface Section3Props {
   onNext: () => void;
@@ -314,7 +315,15 @@ export default function Section3({
                 </div>
 
                 {/* Question Statement */}
-                <div className="mb-8 p-6 bg-gray-50 rounded-lg border-l-4 border-blue-400">
+                <div className="mb-8 p-6 bg-gray-50 rounded-lg border-l-4 border-blue-400 flex flex-col gap-2">
+                  {currentQuestion?.imageUrl && (
+                    <Image
+                      src={BASE_URL + currentQuestion?.imageUrl}
+                      width={300}
+                      height={200}
+                      alt={"Gambar " + currentQuestionIndex}
+                    />
+                  )}
                   <p className="text-lg text-gray-800 leading-relaxed">
                     {currentQuestion?.questionText}
                   </p>

@@ -156,6 +156,7 @@ func (controller *QuestionOptionController) CreateQuestionWithOptions(ctx *gin.C
 			OptionText:   optionReq.OptionText,
 			Score:        optionReq.Score,
 			IsImage:      optionReq.IsImage,
+			ImageURL:     optionReq.ImageURL,
 		}
 
 		optionData, err := controller.OptionService.Create(tx, &optionRequest)
@@ -344,10 +345,15 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 				OptionText:   optionReq.OptionText,
 				Score:        optionReq.Score,
 				IsImage:      0, // default value
+				ImageURL:     "",
 			}
 
 			if optionReq.IsImage != nil {
 				optionRequest.IsImage = *optionReq.IsImage
+			}
+
+			if optionReq.ImageURL != nil {
+				optionRequest.ImageURL = *optionReq.ImageURL
 			}
 
 			optionData, err := controller.OptionService.Update(tx, &optionRequest)
@@ -371,10 +377,15 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 				OptionText:   optionReq.OptionText,
 				Score:        optionReq.Score,
 				IsImage:      0, // default value
+				ImageURL:     "",
 			}
 
 			if optionReq.IsImage != nil {
 				optionRequest.IsImage = *optionReq.IsImage
+			}
+
+			if optionReq.ImageURL != nil {
+				optionRequest.ImageURL = *optionReq.ImageURL
 			}
 
 			optionData, err := controller.OptionService.Create(tx, &optionRequest)
@@ -401,10 +412,15 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 					OptionText:   optionReq.OptionText,
 					Score:        optionReq.Score,
 					IsImage:      0,
+					ImageURL:     "",
 				}
 
 				if optionReq.IsImage != nil {
 					optionRequest.IsImage = *optionReq.IsImage
+				}
+
+				if optionReq.ImageURL != nil {
+					optionRequest.ImageURL = *optionReq.ImageURL
 				}
 
 				optionData, err := controller.OptionService.Update(tx, &optionRequest)
@@ -427,10 +443,19 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 					OptionText:   optionReq.OptionText,
 					Score:        optionReq.Score,
 					IsImage:      0,
+					ImageURL:     "",
 				}
 
 				if optionReq.IsImage != nil {
 					optionRequest.IsImage = *optionReq.IsImage
+				}
+
+				if optionReq.ImageURL != nil {
+					optionRequest.ImageURL = *optionReq.ImageURL
+				}
+
+				if optionReq.ImageURL != nil {
+					optionRequest.ImageURL = *optionReq.ImageURL
 				}
 
 				optionData, err := controller.OptionService.Create(tx, &optionRequest)

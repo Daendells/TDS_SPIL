@@ -3,7 +3,6 @@ import { ApiReturn } from "@/app/types/api";
 import { QuestionOptionResponse } from "@/types/assessment";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-
 export type QuestionCreatePayload = {
   role: string;
   assessmentId: number;
@@ -16,6 +15,7 @@ export type QuestionCreatePayload = {
     optionText: string;
     score: number;
     isImage?: number;
+    imageUrl?: string | null;
   }[];
 };
 
@@ -32,6 +32,7 @@ export type QuestionUpdatePayload = {
     optionText: string;
     score: number;
     isImage?: number;
+    imageUrl?: string | null;
     action?: string;
   }[];
 };
@@ -53,8 +54,8 @@ export function useDeleteQuestion() {
       return response.data;
     },
     onSuccess: () => {
-      // Invalidate assessment queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["assessment"] });
+      // Invalidate questions queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
     },
   });
 }
@@ -81,8 +82,8 @@ export function useUpdateQuestion() {
       return response.data.data;
     },
     onSuccess: () => {
-      // Invalidate assessment queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["assessment"] });
+      // Invalidate questions queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
     },
   });
 }
@@ -102,8 +103,8 @@ export function useBulkDeleteQuestions() {
       }
     },
     onSuccess: () => {
-      // Invalidate assessment queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["assessment"] });
+      // Invalidate questions queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
     },
   });
 }
@@ -126,8 +127,8 @@ export function useCreateQuestion() {
       return response.data.data;
     },
     onSuccess: () => {
-      // Invalidate assessment queries to refresh data
-      queryClient.invalidateQueries({ queryKey: ["assessment"] });
+      // Invalidate questions queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
     },
   });
 }
@@ -137,14 +138,18 @@ export const useGetQuestionsByAssessmentId = (assessmentId: number) => {
     queryKey: ["questions", "assessment", assessmentId],
     queryFn: async () => {
       if (assessmentId === 0) return null;
-      
-      const baseURL = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8080";
-      const response = await fetch(`${baseURL}/api/questions/assessment/${assessmentId}`, {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
+
+      const baseURL =
+        process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8080";
+      const response = await fetch(
+        `${baseURL}/api/questions/assessment/${assessmentId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error("Failed to fetch questions by assessment ID");

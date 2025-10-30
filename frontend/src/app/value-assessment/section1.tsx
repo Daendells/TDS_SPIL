@@ -13,6 +13,7 @@ import {
   useGetAssessmentByRole,
   usePostAssessmentResults,
 } from "./_hooks/useAssessment";
+import { BASE_URL } from "../lib/api";
 
 interface Section1Props {
   onNext: () => void;
@@ -345,7 +346,15 @@ export default function Section1({
                   </h3>
                 </div>
 
-                <div className="text-gray-700 text-lg leading-relaxed mb-6">
+                <div className="text-gray-700 text-lg leading-relaxed mb-6 flex flex-col gap-2">
+                  {currentQuestion?.imageUrl && (
+                    <Image
+                      src={BASE_URL + currentQuestion?.imageUrl}
+                      width={300}
+                      height={200}
+                      alt={"Gambar " + currentQuestionIndex}
+                    />
+                  )}
                   {currentQuestion?.questionText}
                 </div>
 
@@ -392,7 +401,17 @@ export default function Section1({
                           <span className="font-medium">
                             {option.optionLetter}.
                           </span>{" "}
-                          {option.optionText}
+                          <div className="flex flex-col gap-2">
+                            {option?.imageUrl && (
+                              <Image
+                                src={BASE_URL + option?.imageUrl}
+                                width={300}
+                                height={200}
+                                alt={"Gambar " + option.optionId}
+                              />
+                            )}
+                            {option.optionText}
+                          </div>
                         </Label>
                       </div>
                     ))}

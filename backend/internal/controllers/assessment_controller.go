@@ -4,10 +4,13 @@ import (
 	"backend/internal/helpers"
 	"backend/internal/models/web"
 	"backend/internal/services"
+	"fmt"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
 )
@@ -282,4 +285,51 @@ func (controller *AssessmentController) DeleteAssessment(ctx *gin.Context) {
 		Status: "Delete assessment successfully",
 		Data: nil,
 	})
+}
+
+func (controller *AssessmentController) UploadAssessmentImage(ctx *gin.Context) {
+	file, err := ctx.FormFile("file")
+
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code: http.StatusBadRequest,
+			Status: "Bad Request",
+			Error: err.Error(),
+		})
+		return
+	}
+
+	// Validasi size (10mb)
+	if file.Size > 10*1024*1024 {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code: http.StatusBadRequest,
+			Status: "Bad Request",
+			Error: "File size exceeds 10MB limit",
+		})
+		return
+	}
+	
+	// Generate unique filename dengan UUID
+	filename := uuid.New().String() + filepath.Ext(file.Filename)
+	path := filepath.Join("storage/assessments", filename)
+
+	if err := ctx.SaveUploadedFile(file, path); err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code: http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error: err.Error(),
+		})
+		return
+	}
+
+	imageUrl := fmt.Sprintf("/storage/assessments/%s", filename)
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code: http.StatusOK,
+		Status: "Upload file successfully",
+		Data: gin.H{
+			"imageUrl": imageUrl,
+		},
+	})
+
 }
