@@ -713,7 +713,7 @@ func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
 
 	zipWriter := zip.NewWriter(writer)
 
-	backgroundImagePath := "d:\\Intern\\2-dev.bryan\\backend\\public\\ppt-background.png"
+	backgroundImagePath := "public/ppt-background.png"
 
 	mediaWriter, err := zipWriter.Create("ppt/media/image1.png")
 	if err != nil {
