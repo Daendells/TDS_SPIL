@@ -1,0 +1,131 @@
+Tentu, saya sudah pahami alurnya. Ini adalah masalah prompt engineering klasik di mana instruksi Anda bertentangan dengan implementasi kode Anda, dan model LLM tidak bisa menyelesaikan konflik itu.
+
+Berikut adalah penjelasan lengkap alur Anda, masalahnya, dan prompt yang harus Anda berikan kepada Trae untuk memperbaikinya.
+
+1. Penjelasan Alur Anda (Yang Saya Pahami)
+Tujuan: Anda ingin LLM (Groq) menghasilkan JSON Plan (Struktur Data Go Anda).
+
+Prompt Saat Ini (Bermasalah): Prompt Anda saat ini (yang menggunakan "content_paragraphs") meminta LLM menulis paragraf naratif yang sangat panjang, karena Anda mencoba menghindari bullet points ringkas seperti di PPT kedua.
+
+Hasil (Bermasalah): Hasilnya adalah "dinding teks" yang tidak cocok untuk slide.
+
+Target Ideal (PPT Pertama): PPT FDP_10.4 yang Anda suka bukanlah paragraf panjang. PPT itu padat, menggunakan bullet points ringkas, tetapi bullet points tersebut dikelompokkan di bawah sub-judul (seperti Definisi:, Tujuan:, Langkah Praktis:, Contoh:).
+
+Proses Styling (Kunci Masalah): Setelah unioffice-free membuat PPTX dasar, Anda punya kode Go (enhancePPTXWithBackgroundAndColors dan applyIntelligentTextColors) yang memodifikasi XML mentah untuk memberi warna.
+
+Logika Styling Anda:
+
+Fungsi isTitle(text) mewarnai teks jadi Hijau jika mengandung kata kunci ("KONSEP", "LANGKAH", dll) ATAU jika teksnya pendek dan diakhiri :.
+
+Fungsi isStrongPoint(text) mewarnai teks jadi Merah (misal untuk "Mengapa?").
+
+Sisanya jadi Hitam.
+
+2. Konflik Utama yang Terjadi
+Inilah mengapa hasil Anda tidak sesuai harapan:
+
+Contoh target Anda (Slide 3) memiliki Judul Besar (KONSEP: APA ITU...) yang Anda ingin warnai Hijau.
+
+Slide itu juga punya Sub-Judul (Definisi:, Tujuannya:) yang Anda ingin warnai Hitam (dan bold, tapi kode Anda tidak melakukan bolding).
+
+Masalahnya: Fungsi isTitle Anda akan melihat Definisi: (Sub-Judul), melihat teksnya pendek dan diakhiri :, lalu SALAH mewarnainya menjadi HIJAU, padahal Anda inginnya Hitam.
+
+3. Solusi (Prompt untuk Trae)
+Kita perlu merevisi prompt agar LLM menghasilkan JSON yang "mengakali" fungsi isTitle Anda. Kita harus menginstruksikan LLM untuk:
+
+Kembali menggunakan key "bullets" (bukan "content_paragraphs").
+
+Mengisi heading dengan Judul Besar (yang akan diwarnai Hijau oleh kode Anda, misal: KONSEP: 5 WHY).
+
+Mengisi bullets dengan campuran poin-poin ringkas.
+
+Yang Paling Penting: Meminta LLM menulis Sub-Judul TANPA titik dua (:), misalnya **Definisi** atau (Tujuan). Dengan begini, isTitle Anda akan gagal mencocokkannya, dan teks itu akan kembali ke warna default Hitam (sesuai keinginan Anda).
+
+[Mulai Salin Prompt untuk Trae dari sini]
+
+Halo Trae, saya butuh bantuan ahli prompt engineering Anda untuk merevisi total prompt saya.
+
+Konteks Masalah:
+Saya mencoba membuat prompt untuk LLM (Llama 70B) agar menghasilkan konten JSON untuk slide PPT, tapi hasilnya tidak sesuai.
+
+Target Saya (PPT Bagus): Konten slide yang padat, terstruktur, dan to-the-point. Menggunakan Sub-Judul (seperti Definisi:, Tujuan:) diikuti oleh bullet points ringkas (seperti - Poin 1, - Poin 2). Penjelasan naratif yang panjang harus ada di speaker_notes.
+
+Hasil Saya (Jelek): Saya salah mengira PPT bagus itu "naratif panjang", jadi prompt saya saat ini (lihat di bawah) meminta "content_paragraphs" dengan 150-200 kata. Ini menghasilkan "dinding teks" yang tidak bisa dipakai.
+
+Tantangan Teknis (Styling XML):
+Saya punya kode Go (service.go) yang memproses JSON ini. Kode ini punya fungsi applyIntelligentTextColors yang secara otomatis mewarnai XML PPT:
+
+Teks yang dideteksi isTitle (misal: "KONSEP" atau teks pendek berakhiran ":") diwarnai Hijau.
+
+Teks yang dideteksi isStrongPoint (misal: "Mengapa?") diwarnai Merah.
+
+Sisanya diwarnai Hitam.
+
+Konflik Utama: Saya ingin Judul Besar (misal: KONSEP: 5 WHY) berwarna Hijau. TAPI, saya ingin Sub-Judul (misal: Definisi:) berwarna Hitam. Kode isTitle saya saat ini akan salah mewarnai Definisi: menjadi Hijau (karena diakhiri ":").
+
+Permintaan Spesifik untuk Trae:
+Tolong revisi total prompt saya di bawah ini untuk menghasilkan output yang mirip dengan gaya PPT bagus saya dan mengakali fungsi styling saya.
+
+Instruksi Revisi Prompt:
+
+Kembali ke "bullets": Ganti semua referensi ke "content_paragraphs" kembali menjadi "bullets" (di skema JSON dan di semua instruksi).
+
+Hapus Instruksi Paragraf Panjang: Hapus total instruksi "PERSYARATAN KONTEN NATURAL" dan "DETAIL SLIDE NARATIF". Ganti dengan instruksi baru.
+
+Instruksi Gaya Baru (Krusial): Tambahkan instruksi baru (PERSYARATAN KONTEN TERSTRUKTUR) yang mewajibkan model:
+
+Setiap heading (Judul Besar slide) HARUS menyertakan kata kunci (misal: KONSEP:, LANGKAH 1:) agar diwarnai Hijau oleh kode saya.
+
+Array "bullets" harus berisi campuran dari string-string ringkas (5-10 item per slide).
+
+Untuk Sub-Judul (seperti Definisi, Tujuan, Contoh, Langkah Praktis), LLM WAJIB menuliskannya TANPA TITIK DUA (:) di akhir (misal: Definisi atau **Tujuan**). Ini agar isTitle tidak mewarnainya Hijau, dan warnanya kembali ke Hitam.
+
+Untuk bullet points biasa, LLM harus mengawalinya dengan • atau -.
+
+Untuk teks yang perlu disorot (Merah), LLM harus menggunakan kata kunci seperti PENTING: atau Mengapa?.
+
+Speaker Notes: Pertahankan instruksi agar speaker_notes berisi penjelasan naratif panjang (150-250 kata) yang menjelaskan konteks di balik bullet points ringkas di slide.
+
+Jumlah Slide: Ubah target menjadi 8-12 slide total.
+
+Prompt Saya Saat Ini (Yang Perlu Direvisi Total):
+func (s *Service) buildPrompt(in GenerateInput) string {
+    // ... (Fungsi Sprintf pembuka) ...
+    basePrompt := fmt.Sprintf(`You are a professional instructional designer. Create a high-quality, instructor-led training plan in JSON...
+
+KONTEKS:
+[...Konteks...]
+TIPE TOPIK: %s
+
+PERSYARATAN STRUKTUR SLIDE:
+[...Struktur 1-6...]
+
+%s
+
+PERSYARATAN KONTEN NATURAL:
+[...INI SEMUA SALAH - HAPUS SEMUA INSTRUKSI PARAGRAF PANJANG...]
+
+PERSYARATAN OUTPUT:
+Keluarkan hanya JSON valid (tanpa komentar/teks lain), mengikuti skema persis:
+{
+"title": string,
+"overview": { ... },
+"slides": [
+{"heading": string, "content_paragraphs": string[3..5], "speaker_notes": string, "slide_type": string} // <-- INI HARUS KEMBALI KE "bullets"
+],
+...
+}
+
+CONTOH FORMAT CONTENT_PARAGRAPHS YANG DIHARAPKAN:
+[... INI JUGA SALAH/HAPUS...]
+
+DETAIL SLIDE NARATIF - WAJIB PARAGRAF PANJANG:
+[... INI SEMUA SALAH - HAPUS SEMUA INSTRUKSI PARAGRAF PANJANG...]
+`,
+        // ... (Variabel Sprintf) ...
+    )
+    return basePrompt
+}
+Tolong berikan saya hanya prompt (template fmt.Sprintf) yang sudah final dan siap saya pakai kembali di kode Go saya, yang sudah direvisi total untuk mencerminkan gaya PPT FDP_10.4 dan trik styling (Judul Besar vs Sub-Judul).
+
+[Selesai Salin Prompt untuk Trae]

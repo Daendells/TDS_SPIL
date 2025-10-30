@@ -32,7 +32,7 @@ type Service struct {
 
 func NewTrainingService(log *logrus.Logger, apiKey, model, pubBase string) *Service {
 	if apiKey == "" {
-		log.Warn("GROQ_API_KEY kosong — panggilan LLM akan gagal")
+		log.Warn("GROQ_API_KEY kosong - panggilan LLM akan gagal")
 	}
 	if model == "" {
 		model = "llama-3.3-70b-versatile"
@@ -46,7 +46,7 @@ func NewTrainingService(log *logrus.Logger, apiKey, model, pubBase string) *Serv
 
 	return &Service{
 		log:     log,
-		http:    &http.Client{Timeout: 90 * time.Second},
+		http:    &http.Client{Timeout: 120 * time.Second},
 		apiKey:  apiKey,
 		model:   model,
 		pubBase: strings.TrimRight(pubBase, "/"),
@@ -100,121 +100,176 @@ type QA struct {
 func (s *Service) buildPrompt(in GenerateInput) string {
 	topicType := s.determineTopicType(in.TopikTraining, in.Tools)
 
-	basePrompt := fmt.Sprintf(`You are a professional instructional designer. Create a high-quality, instructor-led training plan in JSON for Indonesian learners following the OBJECTIVE → KONSEP → LANGKAH → STUDI KASUS → PENUTUP structure.
+	basePrompt := fmt.Sprintf(`You are a professional instructional designer creating high-quality training content in Indonesian. Generate a comprehensive training plan following the OBJECTIVE → KONSEP → LANGKAH → STUDI KASUS → PENUTUP structure.
 
-KONTEKS:
+KONTEKS PELATIHAN:
 KODE: %s
 TOPIK: %s
 KOMPETENSI: %s
-LEVEL: %d (1=Beginner, 2=Intermediate, 3=Advanced)
+LEVEL: %d (1=Pemula, 2=Menengah, 3=Mahir)
 TOOLS/MODEL: %s
-REFERENSI TAMBAHAN (opsional): %s
+REFERENSI TAMBAHAN: %s
 TIPE TOPIK: %s
 
-PERSYARATAN STRUKTUR SLIDE:
-Ikuti struktur konsisten berikut untuk setiap materi pelatihan:
+STRUKTUR SLIDE WAJIB:
 
 1. SLIDE PEMBUKA (1 slide):
-	- slide_type: "opening"
-	- Judul materi yang menarik dan deskriptif
-	- Overview singkat yang memotivasi
-	- Tujuan pembelajaran yang spesifik dan terukur
+   - slide_type: "opening"
+   - Judul yang menarik dan menggambarkan inti pelatihan secara spesifik
+   - Overview singkat yang menjelaskan relevansi topik dengan pekerjaan sehari-hari peserta
+   - Tujuan pembelajaran yang jelas dan terukur dengan kata kerja aksi yang konkret
+   - Manfaat langsung yang akan dirasakan peserta setelah mengikuti pelatihan ini
+   - Ekspektasi hasil akhir berupa skill atau pengetahuan yang dapat diterapkan segera
 
 2. OBJECTIVE (1-2 slide):
-	- slide_type: "objective"
-	- Tujuan pembelajaran yang SMART (Specific, Measurable, Achievable, Relevant, Time-bound)
-	- Manfaat konkret yang akan diperoleh peserta
-	- Ekspektasi hasil akhir pelatihan yang jelas
-	- Key performance indicators untuk mengukur keberhasilan
+   - slide_type: "objective"
+   - Tujuan pembelajaran yang menggunakan framework SMART dengan penjelasan mengapa setiap tujuan penting untuk dikuasai
+   - Kompetensi spesifik yang akan dikembangkan beserta contoh penerapannya di lingkungan kerja
+   - Indikator keberhasilan yang dapat diukur dengan metrik atau kriteria yang jelas
+   - Manfaat praktis yang akan diperoleh peserta dalam konteks pekerjaan mereka sehari-hari
+   - Hubungan antara tujuan pembelajaran dengan kebutuhan organisasi atau tim
 
-3. KONSEP (4-6 slide):
-	- slide_type: "concept"
-	- Definisi dan teori dasar yang mudah dipahami dengan contoh detail, ilustrasi praktis, dan analogi yang relevan dengan konteks Indonesia. Berikan minimal 3-4 contoh konkret dari berbagai industri dan situasi nyata yang dapat direlasikan peserta
-	- Prinsip-prinsip fundamental dengan penjelasan mendalam, analogi yang relevan, contoh nyata dari best practices perusahaan Indonesia dan internasional, serta breakdown implementasi step-by-step yang actionable
-	- Framework atau model yang digunakan dengan breakdown komponen detail, cara implementasi praktis, tools pendukung, timeline realistis, dan success metrics yang terukur
-	- Terminologi penting dengan definisi lengkap, konteks penggunaan dalam berbagai situasi, contoh aplikasi real-world, dan common mistakes yang harus dihindari
-	- Hubungan antar konsep yang logis dengan penjelasan sebab-akibat, interdependensi, impact analysis, dan strategic implications untuk organisasi
-	- Background theory dan research findings yang mendukung dengan data terbaru, statistik industri, case studies dari perusahaan ternama, dan trend analysis yang relevan
+3. KONSEP (3-4 slide):
+   - slide_type: "concept"
+   - Definisi konsep utama dengan penjelasan yang mendalam dan mudah dipahami oleh peserta dengan berbagai latar belakang
+   - Prinsip-prinsip fundamental yang menjadi dasar dari topik yang dipelajari beserta rasionalisasi mengapa prinsip tersebut penting
+   - Framework atau model teoretis yang digunakan dengan visualisasi mental yang membantu pemahaman
+   - Terminologi kunci dengan definisi lengkap dan contoh penggunaan dalam konteks nyata
+   - Hubungan logis antar konsep yang menunjukkan bagaimana setiap elemen saling terkait dan mendukung pemahaman holistik
+   - Perbedaan antara konsep yang mirip atau sering disalahpahami untuk menghindari konfusi
+   - Contoh ilustrasi yang relevan dengan pengalaman peserta untuk memperkuat pemahaman konseptual
 
-4. LANGKAH (5-7 slide):
-	- slide_type: "steps"
-	- Prosedur step-by-step yang praktis dan actionable dengan detail implementasi lengkap, timeline realistis, resource requirements, dan checkpoint milestones untuk monitoring progress
-	- Checklist atau panduan operasional yang komprehensif dengan kriteria keberhasilan terukur, quality gates, approval processes, dan escalation procedures
-	- Best practices dan tips implementasi dari praktisi berpengalaman dengan contoh nyata, lessons learned dari project sukses, dan pitfall avoidance strategies
-	- Tools dan teknik yang digunakan dengan tutorial penggunaan lengkap, troubleshooting guide, alternative solutions, dan integration considerations
-	- Common pitfalls dan cara menghindarinya dengan solusi alternatif, contingency planning, risk mitigation strategies, dan recovery procedures
-	- Quality assurance dan monitoring untuk memastikan hasil optimal dengan KPIs, measurement frameworks, reporting mechanisms, dan continuous improvement processes
+4. LANGKAH (3-4 slide):
+   - slide_type: "steps"
+   - Prosedur langkah demi langkah yang sangat detail dan actionable dengan penjelasan tujuan setiap langkah
+   - Panduan operasional lengkap yang mencakup apa yang harus dilakukan, bagaimana melakukannya, dan mengapa langkah tersebut penting
+   - Best practices yang telah terbukti efektif beserta penjelasan mengapa praktik tersebut direkomendasikan
+   - Tips implementasi praktis yang membantu peserta menghindari kesalahan umum dan mengoptimalkan hasil
+   - Tools dan teknik spesifik yang dapat digunakan dengan panduan singkat cara penggunaannya
+   - Checklist verifikasi untuk memastikan setiap langkah telah dilakukan dengan benar dan lengkap
+   - Common pitfalls yang sering terjadi beserta strategi pencegahan dan solusi jika masalah muncul
+   - Troubleshooting guide untuk mengatasi kendala yang mungkin dihadapi selama implementasi
 
-5. STUDI KASUS (3-4 slide):
-	- slide_type: "case_study"
-	- Contoh nyata dari konteks Indonesia atau industri lokal dengan detail lengkap, background perusahaan, situational context, stakeholder analysis, dan business environment yang mempengaruhi keputusan
-	- Analisis situasi praktis dengan problem statement yang jelas dan terstruktur, root cause analysis, stakeholder mapping, constraint identification, dan impact assessment yang komprehensif
-	- Problem solving scenarios dengan multiple solution alternatives, trade-off analysis, decision matrix dengan scoring criteria, implementation roadmap, dan risk-benefit evaluation
-	- Lessons learned dan key insights dengan actionable recommendations, implementation guidelines, success factors identification, dan replication strategies untuk konteks berbeda
-	- ROI atau impact measurement dari implementasi dengan data konkret, financial metrics, operational improvements, success metrics tracking, dan long-term sustainability analysis
-	- Success factors dan critical success criteria dengan risk mitigation strategies, change management considerations, stakeholder buy-in approaches, dan scalability planning
+5. STUDI KASUS (2-3 slide):
+   - slide_type: "case_study"
+   - Contoh kasus nyata dari konteks Indonesia atau industri yang relevan dengan peserta untuk meningkatkan relevansi pembelajaran
+   - Problem statement yang jelas dengan deskripsi situasi yang detail termasuk background, stakeholder yang terlibat, dan tantangan yang dihadapi
+   - Analisis situasi yang mendalam menggunakan framework atau konsep yang telah dipelajari sebelumnya dalam sesi pelatihan
+   - Proses problem solving yang sistematis dengan penjelasan reasoning di balik setiap keputusan yang diambil
+   - Solusi alternatif yang dipertimbangkan beserta evaluasi pro dan kontra dari masing-masing opsi
+   - Implementasi solusi terpilih dengan langkah-langkah detail dan hasil yang dicapai
+   - Lessons learned yang mencakup apa yang berjalan baik, apa yang bisa diperbaiki, dan insight yang dapat diterapkan di situasi lain
+   - Key takeaways yang dapat segera diterapkan oleh peserta dalam pekerjaan mereka
 
 6. PENUTUP (1 slide):
-	- slide_type: "closing"
-	- Ringkasan key takeaways yang memorable dengan action points dan quick wins
-	- Action items konkret untuk peserta dengan timeline, deliverables, dan accountability measures
-	- Next steps atau follow-up yang terstruktur dengan milestone dan progress indicators
-	- Resources tambahan untuk pembelajaran lanjutan dengan prioritas dan learning path
+   - slide_type: "closing"
+   - Ringkasan komprehensif dari semua poin penting yang telah dipelajari dengan penekanan pada key messages
+   - Action items konkret yang dapat segera dilakukan peserta dalam 24-48 jam setelah pelatihan
+   - Next steps yang terstruktur untuk pengembangan kompetensi lebih lanjut termasuk timeline yang disarankan
+   - Resources tambahan berupa buku, artikel, video, atau tools yang dapat digunakan untuk pembelajaran mandiri
+   - Motivasi penutup yang menginspirasi peserta untuk menerapkan ilmu yang telah dipelajari
+   - Call to action yang jelas dan spesifik untuk memastikan transfer pembelajaran ke pekerjaan
 
 %s
 
-PERSYARATAN KONTEN NATURAL:
-- Gunakan Bahasa Indonesia profesional yang natural dan conversational dengan gaya yang engaging dan mudah dipahami
-- JANGAN gunakan format bullet points tradisional - gunakan paragraf dan penjelasan yang mengalir secara naratif
-- Setiap konten slide harus berupa penjelasan naratif yang komprehensif, substantif, dan berbobot tinggi
-- MINIMAL 120-150 kata per poin konten slide, dengan target 200-350 kata total per slide untuk konten yang lebih kaya
-- Berikan penjelasan mendalam dengan minimal 3-4 contoh praktis konkret, ilustrasi detail, dan analogi yang mudah dipahami dari konteks Indonesia
-- Sertakan data terbaru, statistik industri, research findings, case studies perusahaan ternama, dan best practices dari berbagai sektor
-- Gunakan storytelling yang menarik, real-world scenarios yang relatable, dan narrative flow yang engaging untuk meningkatkan retention
-- Integrasikan creative elements seperti analogi unik, metaphor bisnis, dan situational examples yang memorable dan applicable
-- Durasi total 90–120 menit, cantumkan di overview.duration
-- Speaker notes harus sangat detailed dan praktis untuk instructor (minimal 300-400 kata) dengan tips delivery dan interaction cues
-- Sertakan minimal 5-7 activities yang interaktif dan kreatif dengan instruksi lengkap, variasi metode, dan expected outcomes
-- Buat 12-18 assessment questions yang menguji pemahaman praktis dengan scenario real-world dan problem-solving cases
-- Referensi harus credible, up-to-date, dan beragam (buku terbaru, artikel jurnal, research, industry reports, best practices)
-- JANGAN gunakan emoji sama sekali dalam konten
-- Fokus pada substansi tinggi, kedalaman materi yang comprehensive, dan aplikasi praktis yang immediately actionable
-- Setiap slide harus memberikan value yang sangat tinggi dengan informasi yang actionable, implementable, dan transformative untuk peserta
-- Pastikan setiap paragraf konten memiliki hook yang menarik, body yang informatif, dan conclusion yang actionable
+PERSYARATAN KONTEN YANG SANGAT DETAIL:
 
-PERSYARATAN OUTPUT:
-Keluarkan hanya JSON valid (tanpa komentar/teks lain), mengikuti skema persis:
+CRITICAL REQUIREMENTS:
+- Setiap slide WAJIB memiliki 5-8 bullet points yang substansial dan informatif
+- Setiap bullet point HARUS berisi minimal 2-4 kalimat lengkap yang memberikan penjelasan mendalam, bukan hanya satu kalimat pendek
+- Hindari bullet point yang terlalu singkat atau hanya berupa keywords, setiap poin harus self-explanatory
+- Setiap heading slide HARUS menggunakan format seperti "OBJECTIVE:", "KONSEP:", "LANGKAH 1:", "STUDI KASUS:" agar styling hijau dapat diterapkan
+- Konten harus kaya akan detail praktis, contoh konkret, dan penjelasan yang memudahkan pemahaman
+- Gunakan Bahasa Indonesia profesional yang natural dan engaging, hindari bahasa yang terlalu formal atau kaku
+
+FORMAT BULLET POINTS YANG DIHARAPKAN:
+Setiap bullet point harus mengikuti salah satu format berikut:
+
+1. Sub-judul + Penjelasan Detail:
+   "Definisi
+   Problem analysis adalah proses berpikir sistematis untuk memahami akar penyebab dari sebuah masalah, bukan hanya mengidentifikasi gejala yang tampak di permukaan. Metode ini membantu kita untuk tidak terjebak pada solusi quick-fix yang hanya mengatasi symptom sementara, tetapi fokus pada penyelesaian fundamental yang mencegah masalah berulang. Dengan problem analysis yang baik, organisasi dapat menghemat waktu, biaya, dan resources karena masalah ditangani secara tuntas dari akarnya."
+
+2. Poin Utama dengan Elaborasi:
+   "• Fokus pada sistem, bukan individu
+   Pendekatan yang efektif dalam problem analysis adalah melihat masalah sebagai hasil dari kegagalan sistem atau proses, bukan kesalahan personal seseorang. Dengan perspektif ini, kita dapat mengidentifikasi gap dalam prosedur, training, atau tools yang menyebabkan masalah terjadi. Blame culture hanya akan membuat orang defensif dan tidak mendorong perbaikan berkelanjutan, sedangkan system-focused approach menciptakan learning organization yang terus berkembang."
+
+3. Langkah dengan Penjelasan Lengkap:
+   "Langkah 1: Identifikasi Masalah Secara Spesifik
+   Nyatakan masalah dalam satu kalimat yang jelas, objektif, dan berbasis fakta, hindari asumsi atau interpretasi subjektif. Pastikan definisi masalah fokus pada proses atau hasil yang tidak sesuai ekspektasi, bukan pada siapa yang melakukannya. Libatkan semua stakeholder yang relevan untuk memastikan pemahaman yang sama tentang apa yang menjadi masalah sebenarnya. Contoh yang baik: 'Pompa pendingin unit A berhenti beroperasi pada tanggal 15 Januari pukul 14:00, menyebabkan delay produksi selama 3 jam'."
+
+DURASI DAN AKTIVITAS:
+- Total durasi pelatihan: 60-90 menit dengan alokasi waktu yang realistis untuk setiap sesi
+- Speaker notes untuk setiap slide: 250-400 kata dengan detailed guidance untuk fasilitator
+- Sertakan 4-6 aktivitas interaktif yang engaging dengan instruksi yang sangat jelas dan time allocation yang tepat
+- Buat 8-12 assessment questions yang menguji pemahaman aplikatif dengan jawaban yang komprehensif
+- Referensi harus credible, up-to-date, dan relevan dengan konteks Indonesia jika memungkinkan
+
+LARANGAN:
+- JANGAN gunakan emoji dalam konten apapun
+- JANGAN membuat bullet point yang hanya satu kalimat pendek tanpa elaborasi
+- JANGAN gunakan jargon tanpa penjelasan yang memadai
+- JANGAN membuat konten yang terlalu teoretis tanpa aplikasi praktis
+- JANGAN menggunakan bahasa yang ambigu atau tidak jelas
+
+OUTPUT FORMAT - JSON VALID:
+Return ONLY valid JSON without any markdown formatting, comments, or additional text:
 
 {
-"title": string,
-"overview": { "goals": string[], "outcomes": string[], "duration": string, "audience": string },
-"slides": [
-{"heading": string, "bullets": string[3..5], "speaker_notes": string, "slide_type": string}
-],
-"activities": [
-{"title": string, "instructions": string, "time": string}
-],
-"assessment": [
-{"question": string, "answer": string}
-],
-"references": string[]
+  "title": "Judul Pelatihan yang Menarik dan Deskriptif",
+  "overview": {
+    "goals": ["Tujuan 1 yang spesifik", "Tujuan 2 yang terukur"],
+    "outcomes": ["Hasil 1 yang konkret", "Hasil 2 yang aplikatif"],
+    "duration": "75 menit",
+    "audience": "Target peserta dengan level kompetensi"
+  },
+  "slides": [
+    {
+      "heading": "OBJECTIVE: TUJUAN PEMBELAJARAN",
+      "bullets": [
+        "Sub-judul Pertama",
+        "Penjelasan lengkap dalam 2-4 kalimat yang memberikan konteks, detail, dan contoh konkret untuk memudahkan pemahaman peserta. Setiap kalimat harus menambah value dan insight baru yang relevan dengan topik pembahasan.",
+        "• Poin pertama dengan elaborasi",
+        "Penjelasan mendalam tentang poin ini dalam beberapa kalimat yang mencakup why, how, dan what. Berikan contoh praktis yang relatable dengan pengalaman peserta di dunia kerja.",
+        "• Poin kedua dengan detail lengkap",
+        "Elaborasi yang substansial dengan penjelasan step-by-step atau breakdown dari konsep yang kompleks menjadi lebih mudah dipahami. Include tips, best practices, atau common mistakes to avoid."
+      ],
+      "speaker_notes": "Detailed guidance untuk fasilitator dalam 250-400 kata dengan interaction cues dan timing",
+      "slide_type": "objective"
+    }
+  ],
+  "activities": [
+    {
+      "title": "Judul Aktivitas yang Menarik",
+      "instructions": "Instruksi lengkap dan detail dengan langkah-langkah yang clear",
+      "time": "15 menit"
+    }
+  ],
+  "assessment": [
+    {
+      "question": "Pertanyaan yang menguji pemahaman aplikatif",
+      "answer": "Jawaban komprehensif dengan penjelasan reasoning"
+    }
+  ],
+  "references": [
+    "Referensi 1 yang credible dan up-to-date",
+    "Referensi 2 yang relevan dengan konteks Indonesia"
+  ]
 }
 
-DETAIL SLIDE NATURAL:
-- Buat 12–18 slide total mengikuti struktur di atas untuk konten yang lebih komprehensif dan mendalam
-- slide_type: "opening", "objective", "concept", "steps", "case_study", atau "closing"
-- Setiap slide harus memiliki 3-5 konten naratif yang substantif, informatif, dan berbobot tinggi (bukan bullet points)
-- Konten harus berupa paragraf penjelasan yang natural dan engaging, seperti PPT profesional premium pada umumnya
-- Setiap "bullet" sebenarnya adalah paragraf penjelasan lengkap dengan contoh detail, implementasi praktis, dan actionable insights
-- MINIMAL 120-150 kata per paragraf konten, dengan total 200-400 kata per slide untuk konten yang sangat kaya dan comprehensive
-- Prioritaskan kedalaman maksimal, praktikalitas tinggi, dan kemudahan pemahaman dengan multiple learning approaches
-- Gunakan storytelling yang compelling, case examples yang relatable, dan narrative techniques untuk membuat materi sangat engaging dan memorable
-- Sertakan data konkret terbaru, statistik industri yang relevan, research findings yang credible, dan benchmarking data yang valuable
-- Berikan actionable insights yang immediately implementable, practical recommendations yang tested, dan strategic guidance yang proven
-- Gunakan analogi kreatif, metaphor bisnis yang powerful, dan ilustrasi yang mudah dipahami untuk konsep kompleks dengan multiple perspectives
-- Pastikan setiap slide memiliki clear takeaway yang powerful, applicable untuk berbagai konteks, dan transformative untuk peserta dalam daily practice
-- Integrasikan creative elements seperti scenario planning, what-if analysis, dan problem-solving frameworks yang interactive dan engaging
-- Sertakan implementation roadmaps, success metrics, dan monitoring mechanisms untuk setiap konsep yang dibahas dengan practical timelines`,
+CONTOH KONTEN BERKUALITAS TINGGI:
+
+"bullets": [
+  "KONSEP: APA ITU PROBLEM ANALYSIS?",
+  "",
+  "Definisi Problem Analysis",
+  "Problem analysis adalah metodologi sistematis untuk mengidentifikasi, menganalisis, dan memahami akar penyebab dari sebuah masalah atau deviasi yang terjadi dalam proses kerja. Berbeda dengan troubleshooting yang hanya fokus pada memperbaiki gejala, problem analysis menggali lebih dalam untuk menemukan why di balik setiap issue yang muncul. Dengan pendekatan ini, solusi yang dihasilkan bersifat sustainable dan preventive, bukan hanya reaktif terhadap symptom yang tampak di permukaan.",
+  "",
+  "• Perbedaan Symptom dan Problem",
+  "Symptom adalah tanda atau gejala yang tampak di permukaan dan mudah diobservasi, seperti mesin yang berhenti, error message yang muncul, atau delay dalam delivery. Sementara problem adalah akar penyebab yang berada di balik symptom tersebut, yang mungkin berupa prosedur yang tidak diikuti, kurangnya maintenance, atau gap dalam training. Memahami perbedaan ini sangat critical karena mengatasi symptom saja hanya memberikan relief sementara, sedangkan menyelesaikan problem akan mencegah issue yang sama terulang di masa depan.",
+  "",
+  "• Tujuan Utama Problem Analysis",
+  "Tujuan pertama adalah mencegah recurrence dari masalah yang sama dengan memastikan akar penyebab telah dieliminasi secara tuntas. Kedua, menemukan solusi yang efisien dari segi cost, time, dan resources, sehingga organisasi tidak perlu terus-menerus firefighting untuk issue yang seharusnya bisa dicegah. Ketiga, membangun kultur continuous improvement di mana setiap masalah dilihat sebagai opportunity untuk learning dan strengthening system, bukan sebagai blame game yang membuat orang takut untuk melaporkan issue."
+]`,
 		in.Kode,
 		in.TopikTraining,
 		in.Kompetensi,
@@ -266,47 +321,53 @@ func (s *Service) getTopicSpecificGuidelines(topicType string) string {
 	switch topicType {
 	case "technical":
 		return `PANDUAN KHUSUS TOPIK TEKNIS:
-- Sertakan screenshot atau step-by-step visual descriptions
-- Berikan shortcut keyboard dan tips efisiensi
-- Cantumkan system requirements dan compatibility
-- Sediakan troubleshooting common issues
-- Buat hands-on exercises dengan file contoh
-- Referensi harus include official documentation`
+- Sertakan step-by-step instructions yang sangat detail dengan screenshot descriptions atau visual cues
+- Berikan shortcut keyboard, hotkeys, dan efficiency tips yang dapat langsung meningkatkan produktivitas
+- Cantumkan system requirements, compatibility considerations, dan technical prerequisites yang perlu dipenuhi
+- Sediakan comprehensive troubleshooting guide untuk common issues dengan solusi step-by-step
+- Buat hands-on exercises dengan file contoh atau sample data yang representative
+- Include best practices untuk data management, security, dan optimization
+- Referensi harus include official documentation, vendor resources, dan community forums yang terpercaya`
 
 	case "soft_skill":
 		return `PANDUAN KHUSUS SOFT SKILLS:
-- Gunakan storytelling dan real-life scenarios
-- Sertakan self-assessment tools dan reflection questions
-- Berikan role-play activities dan group discussions
-- Cantumkan behavioral indicators dan measurement metrics
-- Fokus pada emotional intelligence dan interpersonal dynamics
-- Referensi dari psychology dan organizational behavior research`
+- Gunakan storytelling dan real-life scenarios yang relatable untuk membuat konten lebih engaging dan memorable
+- Sertakan self-assessment tools, reflection questions, dan personal development frameworks
+- Berikan role-play activities, group discussions, dan collaborative exercises yang mendorong interaction
+- Cantumkan behavioral indicators, competency rubrics, dan measurement metrics yang observable
+- Fokus pada emotional intelligence components, interpersonal dynamics, dan relationship building strategies
+- Include cultural sensitivity considerations dan Indonesian workplace context
+- Referensi dari psychology research, organizational behavior studies, dan leadership literature yang evidence-based`
 
 	case "framework":
 		return `PANDUAN KHUSUS FRAMEWORK/MODEL:
-- Jelaskan origin dan theoretical foundation
-- Berikan comparison dengan framework alternatif
-- Sertakan implementation roadmap yang detail
-- Cantumkan success metrics dan KPIs
-- Buat template dan tools untuk immediate application
-- Referensi dari original authors dan case studies`
+- Jelaskan origin story, theoretical foundation, dan evolution dari framework tersebut untuk memberikan context
+- Berikan detailed comparison dengan framework alternatif termasuk strengths, limitations, dan best use cases
+- Sertakan comprehensive implementation roadmap dengan phases, milestones, dan success criteria
+- Cantumkan KPIs, metrics, dan measurement tools untuk tracking effectiveness dan ROI
+- Buat ready-to-use templates, worksheets, dan tools yang dapat immediate application
+- Include adaptation guidelines untuk menyesuaikan framework dengan konteks organisasi spesifik
+- Referensi dari original authors, case studies, dan research papers yang validate framework effectiveness`
 
 	case "management":
 		return `PANDUAN KHUSUS MANAJEMEN:
-- Fokus pada decision-making processes
-- Sertakan delegation dan accountability structures
-- Berikan performance measurement tools
-- Cantumkan change management considerations
-- Buat action planning templates
-- Referensi dari management literature dan business cases`
+- Fokus pada strategic decision-making processes dengan frameworks dan mental models yang practical
+- Sertakan delegation frameworks, accountability structures, dan authority matrices yang clear
+- Berikan comprehensive performance measurement tools, dashboards, dan reporting templates
+- Cantumkan change management considerations, stakeholder management strategies, dan communication plans
+- Buat detailed action planning templates dengan timeline, resources, dan risk mitigation strategies
+- Include leadership principles, coaching techniques, dan team development approaches
+- Referensi dari management literature, business case studies, dan industry best practices yang proven effective`
 
 	default:
 		return `PANDUAN UMUM:
-- Seimbangkan teori dan praktik
-- Sertakan Indonesian context dan examples
-- Berikan actionable takeaways
-- Cantumkan follow-up resources
-- Buat engaging dan interactive content`
+- Seimbangkan theoretical foundations dengan practical applications yang immediately implementable
+- Sertakan Indonesian context, local examples, dan cultural considerations yang relevant
+- Berikan actionable takeaways dengan clear next steps dan implementation guidelines
+- Cantumkan comprehensive follow-up resources untuk continued learning dan skill development
+- Buat engaging dan interactive content dengan varied delivery methods dan learning modalities
+- Include real-world examples, success stories, dan lessons learned dari praktisi
+- Focus on transfer of learning dengan application exercises dan on-the-job implementation support`
 	}
 }
 
@@ -325,12 +386,12 @@ func (s *Service) callGroq(ctx context.Context, prompt string) (*Plan, error) {
 	body := map[string]any{
 		"model": s.model,
 		"messages": []map[string]string{
-			{"role": "system", "content": "Respond ONLY with valid JSON. No markdown code fences."},
+			{"role": "system", "content": "You are an expert instructional designer. Respond ONLY with valid JSON. No markdown, no code fences, no explanations. Just pure JSON."},
 			{"role": "user", "content": prompt},
 		},
-		"temperature": 0.4,
+		"temperature": 0.5,
 		"top_p":       0.9,
-		"max_tokens":  3500,
+		"max_tokens":  4500,
 	}
 
 	b, _ := json.Marshal(body)
@@ -371,6 +432,7 @@ func (s *Service) callGroq(ctx context.Context, prompt string) (*Plan, error) {
 	content = strings.TrimPrefix(content, "```json")
 	content = strings.TrimPrefix(content, "```")
 	content = strings.TrimSuffix(content, "```")
+	content = strings.TrimSpace(content)
 
 	var plan Plan
 	if err := json.Unmarshal([]byte(content), &plan); err != nil {
@@ -388,7 +450,6 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 
 	pdf.AddUTF8Font("DejaVu", "", "fonts/DejaVuSans.ttf")
 	pdf.AddUTF8Font("DejaVu", "B", "fonts/DejaVuSans-Bold.ttf")
-
 	pdf.AddUTF8Font("DejaVu", "I", "fonts/DejaVuSans.ttf")
 	pdf.AddUTF8Font("DejaVu", "BI", "fonts/DejaVuSans-Bold.ttf")
 
@@ -407,10 +468,14 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 	for i, sl := range plan.Slides {
 		pdf.AddPage()
 		pdf.SetFont("DejaVu", "B", 16)
-		pdf.CellFormat(0, 10, fmt.Sprintf("Slide %d – %s", i+1, sl.Heading), "", 1, "L", false, 0, "")
+		pdf.CellFormat(0, 10, fmt.Sprintf("Slide %d - %s", i+1, sl.Heading), "", 1, "L", false, 0, "")
 		pdf.Ln(2)
 		pdf.SetFont("DejaVu", "", 12)
 		for _, b := range sl.Bullets {
+			if strings.TrimSpace(b) == "" {
+				pdf.Ln(2)
+				continue
+			}
 			pdf.CellFormat(5, 6, "•", "", 0, "L", false, 0, "")
 			pdf.MultiCell(0, 6, b, "", "L", false)
 		}
@@ -426,7 +491,7 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 	if len(plan.Activities) > 0 {
 		pdf.AddPage()
 		pdf.SetFont("DejaVu", "B", 16)
-		pdf.CellFormat(0, 10, "Aktivitas/Latihan", "", 1, "L", false, 0, "")
+		pdf.CellFormat(0, 10, "Aktivitas & Latihan", "", 1, "L", false, 0, "")
 		pdf.SetFont("DejaVu", "", 12)
 		for _, a := range plan.Activities {
 			pdf.SetFont("DejaVu", "B", 12)
@@ -465,49 +530,48 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 }
 
 func (s *Service) buildPPTX(plan *Plan, filename string) error {
-	const margin = 0.5 * measurement.Inch
+	const leftMargin = 0.5 * measurement.Inch
+	const topMargin = 0.5 * measurement.Inch
 	const contentWidth = 9.0 * measurement.Inch
+	const slideWidth = 10.0 * measurement.Inch
+	const slideHeight = 7.5 * measurement.Inch
 
 	ppt := presentation.New()
 	defer ppt.Close()
 
-	// --- Slide Judul ---
 	titleSlide := ppt.AddSlide()
 
-	// Box Judul Utama (Centered)
-	titleTextBox := titleSlide.AddTextBox()
-	titleTextBox.Properties().SetPosition(margin, 1.5*measurement.Inch)
-	titleTextBox.Properties().SetSize(contentWidth, 2.0*measurement.Inch)
+	titleBox := titleSlide.AddTextBox()
+	titleBox.Properties().SetPosition(leftMargin, 2.0*measurement.Inch)
+	titleBox.Properties().SetSize(contentWidth, 1.5*measurement.Inch)
 
-	titleParagraph := titleTextBox.AddParagraph()
-	titleRun := titleParagraph.AddRun()
+	titlePara := titleBox.AddParagraph()
+	titleRun := titlePara.AddRun()
 	titleRun.SetText(plan.Title)
-	titleRun.Properties().SetSize(40)
+	titleRun.Properties().SetSize(44)
 	titleRun.Properties().SetBold(true)
 
-	overviewTextBox := titleSlide.AddTextBox()
-	overviewTextBox.Properties().SetPosition(margin, 3.5*measurement.Inch)
-	overviewTextBox.Properties().SetSize(contentWidth, 3.5*measurement.Inch)
+	overviewBox := titleSlide.AddTextBox()
+	overviewBox.Properties().SetPosition(leftMargin, 3.8*measurement.Inch)
+	overviewBox.Properties().SetSize(contentWidth, 3.0*measurement.Inch)
 
-	infoParagraph := overviewTextBox.AddParagraph()
-	infoRun := infoParagraph.AddRun()
-	infoRun.SetText(fmt.Sprintf("Durasi: %s\nAudiens: %s",
-		plan.Overview.Duration,
-		plan.Overview.Audience))
+	infoPara := overviewBox.AddParagraph()
+	infoRun := infoPara.AddRun()
+	infoRun.SetText(fmt.Sprintf("Durasi: %s | Audiens: %s", plan.Overview.Duration, plan.Overview.Audience))
 	infoRun.Properties().SetSize(18)
 
 	if len(plan.Overview.Goals) > 0 {
-		overviewTextBox.AddParagraph() 
+		overviewBox.AddParagraph()
 
-		goalsTitleParagraph := overviewTextBox.AddParagraph()
-		goalsTitleRun := goalsTitleParagraph.AddRun()
+		goalsTitlePara := overviewBox.AddParagraph()
+		goalsTitleRun := goalsTitlePara.AddRun()
 		goalsTitleRun.SetText("Tujuan Pembelajaran:")
 		goalsTitleRun.Properties().SetSize(18)
 		goalsTitleRun.Properties().SetBold(true)
 
 		for _, goal := range plan.Overview.Goals {
-			goalParagraph := overviewTextBox.AddParagraph()
-			goalRun := goalParagraph.AddRun()
+			goalPara := overviewBox.AddParagraph()
+			goalRun := goalPara.AddRun()
 			goalRun.SetText("• " + goal)
 			goalRun.Properties().SetSize(16)
 		}
@@ -516,118 +580,109 @@ func (s *Service) buildPPTX(plan *Plan, filename string) error {
 	for _, slide := range plan.Slides {
 		contentSlide := ppt.AddSlide()
 
-		titleBox := contentSlide.AddTextBox()
-		titleBox.Properties().SetPosition(margin, 0.25*measurement.Inch)
-		titleBox.Properties().SetSize(contentWidth, 1.0*measurement.Inch)
+		headingBox := contentSlide.AddTextBox()
+		headingBox.Properties().SetPosition(leftMargin, topMargin)
+		headingBox.Properties().SetSize(contentWidth, 0.8*measurement.Inch)
 
-		titleP := titleBox.AddParagraph()
-		titleR := titleP.AddRun()
-		titleR.SetText(slide.Heading)
-		titleR.Properties().SetSize(32)
-		titleR.Properties().SetBold(true)
+		headingPara := headingBox.AddParagraph()
+		headingRun := headingPara.AddRun()
+		headingRun.SetText(slide.Heading)
+		headingRun.Properties().SetSize(28)
+		headingRun.Properties().SetBold(true)
 
 		contentBox := contentSlide.AddTextBox()
-		contentBox.Properties().SetPosition(margin, 1.25*measurement.Inch)
-		contentBox.Properties().SetSize(contentWidth, 5.5*measurement.Inch)
+		contentBox.Properties().SetPosition(leftMargin, 1.4*measurement.Inch)
+		contentBox.Properties().SetSize(contentWidth, 5.8*measurement.Inch)
 
-		for i, content := range slide.Bullets {
-			contentP := contentBox.AddParagraph()
-			contentR := contentP.AddRun()
-
-			contentR.SetText(content)
-			contentR.Properties().SetSize(16) 
-			if i < len(slide.Bullets)-1 {
-				spacingP := contentBox.AddParagraph()
-				spacingR := spacingP.AddRun()
-				spacingR.SetText(" ")
-				spacingR.Properties().SetSize(8) 
+		for _, bullet := range slide.Bullets {
+			bulletText := strings.TrimSpace(bullet)
+			if bulletText == "" {
+				emptyPara := contentBox.AddParagraph()
+				emptyRun := emptyPara.AddRun()
+				emptyRun.SetText(" ")
+				emptyRun.Properties().SetSize(8)
+				continue
 			}
-		}
 
-		if strings.TrimSpace(slide.SpeakerNotes) != "" {
-			notesBox := contentSlide.AddTextBox()
-			notesBox.Properties().SetPosition(margin, 6.5*measurement.Inch)
-			notesBox.Properties().SetSize(contentWidth, 1.0*measurement.Inch)
-
-			notesP := notesBox.AddParagraph()
-			notesR := notesP.AddRun()
-			notesR.SetText("Catatan Fasilitator: " + slide.SpeakerNotes)
-			notesR.Properties().SetSize(12)
+			bulletPara := contentBox.AddParagraph()
+			bulletRun := bulletPara.AddRun()
+			bulletRun.SetText(bulletText)
+			bulletRun.Properties().SetSize(16)
 		}
 	}
 
 	if len(plan.Activities) > 0 {
-		activitiesSlide := ppt.AddSlide()
+		actSlide := ppt.AddSlide()
 
-		titleBox := activitiesSlide.AddTextBox()
-		titleBox.Properties().SetPosition(margin, 0.25*measurement.Inch)
-		titleBox.Properties().SetSize(contentWidth, 1.0*measurement.Inch)
+		actHeadingBox := actSlide.AddTextBox()
+		actHeadingBox.Properties().SetPosition(leftMargin, topMargin)
+		actHeadingBox.Properties().SetSize(contentWidth, 0.8*measurement.Inch)
 
-		titleP := titleBox.AddParagraph()
-		titleR := titleP.AddRun()
-		titleR.SetText("Aktivitas & Latihan")
-		titleR.Properties().SetSize(32)
-		titleR.Properties().SetBold(true)
+		actHeadingPara := actHeadingBox.AddParagraph()
+		actHeadingRun := actHeadingPara.AddRun()
+		actHeadingRun.SetText("Aktivitas & Latihan")
+		actHeadingRun.Properties().SetSize(28)
+		actHeadingRun.Properties().SetBold(true)
 
-		contentBox := activitiesSlide.AddTextBox()
-		contentBox.Properties().SetPosition(margin, 1.25*measurement.Inch)
-		contentBox.Properties().SetSize(contentWidth, 5.5*measurement.Inch)
+		actContentBox := actSlide.AddTextBox()
+		actContentBox.Properties().SetPosition(leftMargin, 1.4*measurement.Inch)
+		actContentBox.Properties().SetSize(contentWidth, 5.8*measurement.Inch)
 
 		for i, activity := range plan.Activities {
-			activityTitleP := contentBox.AddParagraph()
-			activityTitleR := activityTitleP.AddRun()
-			activityTitleR.SetText(fmt.Sprintf("%d. %s (%s)", i+1, activity.Title, activity.Time))
-			activityTitleR.Properties().SetSize(20)
-			activityTitleR.Properties().SetBold(true)
+			actTitlePara := actContentBox.AddParagraph()
+			actTitleRun := actTitlePara.AddRun()
+			actTitleRun.SetText(fmt.Sprintf("%d. %s (%s)", i+1, activity.Title, activity.Time))
+			actTitleRun.Properties().SetSize(18)
+			actTitleRun.Properties().SetBold(true)
 
-			instructionsP := contentBox.AddParagraph()
-			instructionsR := instructionsP.AddRun()
-			instructionsR.SetText("   " + activity.Instructions)
-			instructionsR.Properties().SetSize(16)
+			actInstrPara := actContentBox.AddParagraph()
+			actInstrRun := actInstrPara.AddRun()
+			actInstrRun.SetText("   " + activity.Instructions)
+			actInstrRun.Properties().SetSize(15)
 
 			if i < len(plan.Activities)-1 {
-				spacingP := contentBox.AddParagraph()
-				spacingR := spacingP.AddRun()
-				spacingR.SetText(" ")
-				spacingR.Properties().SetSize(6)
+				spacePara := actContentBox.AddParagraph()
+				spaceRun := spacePara.AddRun()
+				spaceRun.SetText(" ")
+				spaceRun.Properties().SetSize(6)
 			}
 		}
 	}
 
 	if len(plan.Assessment) > 0 {
-		assessmentSlide := ppt.AddSlide()
+		assSlide := ppt.AddSlide()
 
-		titleBox := assessmentSlide.AddTextBox()
-		titleBox.Properties().SetPosition(margin, 0.25*measurement.Inch)
-		titleBox.Properties().SetSize(contentWidth, 1.0*measurement.Inch)
+		assHeadingBox := assSlide.AddTextBox()
+		assHeadingBox.Properties().SetPosition(leftMargin, topMargin)
+		assHeadingBox.Properties().SetSize(contentWidth, 0.8*measurement.Inch)
 
-		titleP := titleBox.AddParagraph()
-		titleR := titleP.AddRun()
-		titleR.SetText("Assessment & Evaluasi")
-		titleR.Properties().SetSize(32)
-		titleR.Properties().SetBold(true)
+		assHeadingPara := assHeadingBox.AddParagraph()
+		assHeadingRun := assHeadingPara.AddRun()
+		assHeadingRun.SetText("Assessment & Evaluasi")
+		assHeadingRun.Properties().SetSize(28)
+		assHeadingRun.Properties().SetBold(true)
 
-		contentBox := assessmentSlide.AddTextBox()
-		contentBox.Properties().SetPosition(margin, 1.25*measurement.Inch)
-		contentBox.Properties().SetSize(contentWidth, 5.5*measurement.Inch)
+		assContentBox := assSlide.AddTextBox()
+		assContentBox.Properties().SetPosition(leftMargin, 1.4*measurement.Inch)
+		assContentBox.Properties().SetSize(contentWidth, 5.8*measurement.Inch)
 
 		for i, qa := range plan.Assessment {
-			questionP := contentBox.AddParagraph()
-			questionR := questionP.AddRun()
-			questionR.SetText(fmt.Sprintf("Q%d: %s", i+1, qa.Question))
-			questionR.Properties().SetSize(16)
-			questionR.Properties().SetBold(true)
+			qPara := assContentBox.AddParagraph()
+			qRun := qPara.AddRun()
+			qRun.SetText(fmt.Sprintf("Q%d: %s", i+1, qa.Question))
+			qRun.Properties().SetSize(15)
+			qRun.Properties().SetBold(true)
 
-			answerP := contentBox.AddParagraph()
-			answerR := answerP.AddRun()
-			answerR.SetText(fmt.Sprintf("A: %s", qa.Answer))
-			answerR.Properties().SetSize(14)
+			aPara := assContentBox.AddParagraph()
+			aRun := aPara.AddRun()
+			aRun.SetText(fmt.Sprintf("A: %s", qa.Answer))
+			aRun.Properties().SetSize(14)
 
 			if i < len(plan.Assessment)-1 {
-				spacingP := contentBox.AddParagraph()
-				spacingR := spacingP.AddRun()
-				spacingR.SetText(" ")
-				spacingR.Properties().SetSize(6)
+				spacePara := assContentBox.AddParagraph()
+				spaceRun := spacePara.AddRun()
+				spaceRun.SetText(" ")
+				spaceRun.Properties().SetSize(6)
 			}
 		}
 	}
@@ -652,7 +707,7 @@ func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
 	tempFile := filename + ".tmp"
 	writer, err := os.Create(tempFile)
 	if err != nil {
-		reader.Close() 
+		reader.Close()
 		return fmt.Errorf("failed to create temp file: %w", err)
 	}
 
@@ -665,7 +720,7 @@ func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
 		zipWriter.Close()
 		writer.Close()
 		reader.Close()
-		os.Remove(tempFile) 
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to create media entry: %w", err)
 	}
 
@@ -674,7 +729,7 @@ func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
 		zipWriter.Close()
 		writer.Close()
 		reader.Close()
-		os.Remove(tempFile) 
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to open background image: %w", err)
 	}
 
@@ -683,7 +738,7 @@ func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
 		zipWriter.Close()
 		writer.Close()
 		reader.Close()
-		os.Remove(tempFile) 
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to copy background image: %w", err)
 	}
 	backgroundFile.Close()
@@ -693,7 +748,7 @@ func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
 			zipWriter.Close()
 			writer.Close()
 			reader.Close()
-			os.Remove(tempFile) 
+			os.Remove(tempFile)
 			return fmt.Errorf("failed to process file %s: %w", file.Name, err)
 		}
 	}
@@ -701,23 +756,23 @@ func (s *Service) enhancePPTXWithBackgroundAndColors(filename string) error {
 	if err := zipWriter.Close(); err != nil {
 		writer.Close()
 		reader.Close()
-		os.Remove(tempFile) 
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to close zip writer: %w", err)
 	}
 
 	if err := writer.Close(); err != nil {
 		reader.Close()
-		os.Remove(tempFile) 
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to close temp file: %w", err)
 	}
 
 	if err := reader.Close(); err != nil {
-		os.Remove(tempFile) 
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to close zip reader: %w", err)
 	}
 
 	if err := os.Remove(filename); err != nil {
-		os.Remove(tempFile) 
+		os.Remove(tempFile)
 		return fmt.Errorf("failed to remove original file: %w", err)
 	}
 
@@ -777,86 +832,244 @@ func (s *Service) enhanceSlideXML(reader io.Reader, writer io.Writer) error {
 
 	xmlStr = strings.Replace(xmlStr, "<p:cSld>", "<p:cSld>"+backgroundXML, 1)
 
-	greenColorXML := `<a:solidFill><a:srgbClr val="2E7D32"/></a:solidFill>`
-	redColorXML := `<a:solidFill><a:srgbClr val="C62828"/></a:solidFill>`
-	blackColorXML := `<a:solidFill><a:srgbClr val="212121"/></a:solidFill>`
-
-	xmlStr = s.applyIntelligentTextColors(xmlStr, greenColorXML, redColorXML, blackColorXML)
+	xmlStr = s.applyTextColorsAndFormatting(xmlStr)
 
 	_, err = writer.Write([]byte(xmlStr))
 	return err
 }
 
-func (s *Service) applyIntelligentTextColors(xmlStr, greenColorXML, redColorXML, blackColorXML string) string {
-	textRunPattern := `(<a:t>)([^<]+)(</a:t>)`
-	re := regexp.MustCompile(textRunPattern)
+func (s *Service) applyTextColorsAndFormatting(xmlStr string) string {
+	runPattern := regexp.MustCompile(`(?s)<a:r>(.*?)</a:r>`)
 
-	return re.ReplaceAllStringFunc(xmlStr, func(match string) string {
-		matches := re.FindStringSubmatch(match)
-		if len(matches) != 4 {
-			return match 
+	result := runPattern.ReplaceAllStringFunc(xmlStr, func(runMatch string) string {
+		textPattern := regexp.MustCompile(`<a:t[^>]*>(.*?)</a:t>`)
+		textMatch := textPattern.FindStringSubmatch(runMatch)
+
+		if len(textMatch) < 2 {
+			return runMatch
 		}
 
-		openTag := matches[1]
-		textContent := strings.TrimSpace(matches[2])
-		closeTag := matches[3]
-
-		var colorXML string
-
-		if s.isTitle(textContent) {
-			colorXML = greenColorXML
-		} else if s.isStrongPoint(textContent) {
-			colorXML = redColorXML
-		} else {
-			colorXML = blackColorXML
+		textContent := textMatch[1]
+		if strings.TrimSpace(textContent) == "" {
+			return runMatch
 		}
 
-		return `<a:rPr>` + colorXML + `</a:rPr>` + openTag + textContent + closeTag
+		styling := s.determineTextStyling(textContent)
+		rPrXML := s.buildRunPropertiesXML(styling)
+
+		rPrPattern := regexp.MustCompile(`(?s)<a:rPr[^>]*>.*?</a:rPr>`)
+		if rPrPattern.MatchString(runMatch) {
+			return rPrPattern.ReplaceAllString(runMatch, rPrXML)
+		}
+
+		return strings.Replace(runMatch, "<a:r>", "<a:r>"+rPrXML, 1)
 	})
+
+	return result
 }
 
-func (s *Service) isTitle(text string) bool {
-	titleIndicators := []string{
-		"OBJECTIVE", "KONSEP", "LANGKAH", "STUDI KASUS", "PENUTUP",
-		"Tujuan", "Definisi", "Prinsip", "Framework", "Prosedur",
-		"Aktivitas", "Assessment", "Evaluasi", "Ringkasan",
+type TextStyling struct {
+	Color    string
+	IsBold   bool
+	FontSize int
+	FontName string
+}
+
+func (s *Service) determineTextStyling(text string) TextStyling {
+	trimmedText := strings.TrimSpace(text)
+
+	if s.isTitlePattern(trimmedText) {
+		return TextStyling{
+			Color:    "4CAF50",
+			IsBold:   true,
+			FontSize: 0,
+			FontName: "Calibri",
+		}
+	}
+
+	if s.isStrongPattern(trimmedText) {
+		return TextStyling{
+			Color:    "D32F2F",
+			IsBold:   true,
+			FontSize: 0,
+			FontName: "Calibri",
+		}
+	}
+
+	if s.isSubHeadingPattern(trimmedText) {
+		return TextStyling{
+			Color:    "212121",
+			IsBold:   true,
+			FontSize: 0,
+			FontName: "Calibri",
+		}
+	}
+
+	return TextStyling{
+		Color:    "212121",
+		IsBold:   false,
+		FontSize: 0,
+		FontName: "Calibri",
+	}
+}
+
+func (s *Service) isTitlePattern(text string) bool {
+	upperText := strings.ToUpper(text)
+
+	titleKeywords := []string{
+		"OBJECTIVE:", "KONSEP:", "LANGKAH", "STUDI KASUS:", "PENUTUP:",
+		"PEMBUKA:", "OPENING:", "CLOSING:", "CASE STUDY:", "AKTIVITAS:",
+		"ASSESSMENT:", "EVALUASI:",
+	}
+
+	for _, keyword := range titleKeywords {
+		if strings.Contains(upperText, keyword) {
+			return true
+		}
+	}
+
+	if (strings.Contains(upperText, "KONSEP") || strings.Contains(upperText, "LANGKAH") ||
+		strings.Contains(upperText, "OBJECTIVE") || strings.Contains(upperText, "TUJUAN")) &&
+		strings.Contains(text, ":") {
+		return true
+	}
+
+	if len(text) < 100 && strings.HasSuffix(text, ":") && upperText == text {
+		return s.hasLetters(text)
+	}
+
+	langkahPattern := regexp.MustCompile(`(?i)LANGKAH\s+\d+\s*:`)
+	if langkahPattern.MatchString(text) {
+		return true
+	}
+
+	return false
+}
+
+func (s *Service) isStrongPattern(text string) bool {
+	if strings.Contains(text, "Mengapa?") || strings.Contains(text, "MENGAPA?") ||
+		strings.Contains(text, "mengapa?") {
+		return true
 	}
 
 	upperText := strings.ToUpper(text)
-	for _, indicator := range titleIndicators {
-		if strings.Contains(upperText, strings.ToUpper(indicator)) {
+
+	strongKeywords := []string{
+		"PENTING:", "CRITICAL:", "WARNING:", "PERHATIAN:", "CATAT:",
+		"INGAT:", "PERLU DIINGAT:", "HARAP DIPERHATIKAN:", "WAJIB:",
+		"HARUS:", "JANGAN:", "HINDARI:", "PASTIKAN:", "AKAR MASALAH:",
+		"ROOT CAUSE:", "KEY POINT:", "KUNCI:", "FUNDAMENTAL:",
+	}
+
+	for _, keyword := range strongKeywords {
+		if strings.Contains(upperText, keyword) {
 			return true
 		}
 	}
 
-	if len(text) < 50 && (strings.HasSuffix(text, ":") || strings.ToUpper(text) == text) {
+	if (strings.Contains(text, "\"") && strings.Count(text, "\"") >= 2) ||
+		(strings.Contains(text, "(") && strings.Contains(text, ")") && len(text) < 100) {
 		return true
+	}
+
+	if strings.Contains(text, "!") && len(text) < 150 {
+		return true
+	}
+
+	conceptKeywords := []string{
+		"AKAR MASALAH", "ROOT CAUSE", "KRITIS", "VITAL", "FUNDAMENTAL",
+		"ESSENTIAL", "KEY", "CORE ISSUE", "UTAMA", "PRIMER",
+	}
+
+	for _, keyword := range conceptKeywords {
+		if strings.Contains(upperText, keyword) {
+			return true
+		}
 	}
 
 	return false
 }
 
-func (s *Service) isStrongPoint(text string) bool {
-	strongIndicators := []string{
-		"penting", "kritis", "utama", "key", "fundamental", "essential",
-		"harus", "wajib", "perlu", "sangat", "critical", "vital",
-		"best practice", "tips", "warning", "perhatian", "ingat",
-		"jangan", "hindari", "pastikan", "ensure", "remember",
+func (s *Service) isSubHeadingPattern(text string) bool {
+	trimmedText := strings.TrimSpace(text)
+
+	subHeadingKeywords := []string{
+		"Definisi", "Tujuan", "Manfaat", "Langkah", "Contoh", "Penjelasan",
+		"Cara", "Metode", "Proses", "Hasil", "Kesimpulan", "Analisis",
+		"Implementasi", "Aplikasi", "Praktik", "Tips", "Catatan", "Overview",
+		"Definition", "Purpose", "Benefits", "Steps", "Example", "Method",
+		"Symptom", "Problem", "Solution", "Analysis", "Background", "Context",
+		"Langkah Praktis", "Best Practices", "Prosedur", "Panduan", "Guidelines",
 	}
 
-	lowerText := strings.ToLower(text)
-	for _, indicator := range strongIndicators {
-		if strings.Contains(lowerText, strings.ToLower(indicator)) {
+	for _, keyword := range subHeadingKeywords {
+		if trimmedText == keyword || strings.HasPrefix(trimmedText, keyword+" ") ||
+			trimmedText == keyword+":" {
 			return true
 		}
 	}
 
-	if strings.Contains(text, "!") || strings.Contains(text, "\"") ||
-		(strings.Contains(text, "(") && strings.Contains(text, ")")) {
-		return true
+	words := strings.Fields(trimmedText)
+	if len(words) == 1 && len(trimmedText) > 3 && len(trimmedText) < 35 {
+		firstChar := rune(trimmedText[0])
+		if firstChar >= 'A' && firstChar <= 'Z' {
+			return true
+		}
+	}
+
+	if strings.Contains(text, "(") && strings.Contains(text, ")") {
+		parenIndex := strings.Index(text, "(")
+		beforeParen := strings.TrimSpace(text[:parenIndex])
+		if len(beforeParen) < 50 && len(beforeParen) > 2 {
+			return true
+		}
+	}
+
+	if strings.HasPrefix(trimmedText, "•") && len(trimmedText) < 100 {
+		afterBullet := strings.TrimSpace(strings.TrimPrefix(trimmedText, "•"))
+		if !strings.Contains(afterBullet, ".") || strings.Count(afterBullet, ".") == 1 {
+			return true
+		}
 	}
 
 	return false
+}
+
+func (s *Service) hasLetters(text string) bool {
+	for _, r := range text {
+		if (r >= 'A' && r <= 'Z') || (r >= 'a' && r <= 'z') {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) buildRunPropertiesXML(styling TextStyling) string {
+	var attributes []string
+
+	attributes = append(attributes, `lang="id-ID"`)
+	attributes = append(attributes, `dirty="0"`)
+
+	if styling.IsBold {
+		attributes = append(attributes, `b="1"`)
+	}
+
+	if styling.FontSize > 0 {
+		attributes = append(attributes, fmt.Sprintf(`sz="%d00"`, styling.FontSize))
+	}
+
+	if styling.FontName != "" {
+		attributes = append(attributes, fmt.Sprintf(`typeface="%s"`, styling.FontName))
+	}
+
+	attrStr := strings.Join(attributes, " ")
+
+	return fmt.Sprintf(
+		`<a:rPr %s><a:solidFill><a:srgbClr val="%s"/></a:solidFill><a:latin typeface="%s"/></a:rPr>`,
+		attrStr,
+		styling.Color,
+		styling.FontName,
+	)
 }
 
 func (s *Service) enhanceContentTypes(reader io.Reader, writer io.Writer) error {
@@ -884,8 +1097,10 @@ func (s *Service) enhanceSlideRels(reader io.Reader, writer io.Writer) error {
 
 	xmlStr := string(content)
 
-	imageRel := `<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image1.png"/>`
-	xmlStr = strings.Replace(xmlStr, "</Relationships>", imageRel+"</Relationships>", 1)
+	if !strings.Contains(xmlStr, `Id="rId2"`) {
+		imageRel := `<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="../media/image1.png"/>`
+		xmlStr = strings.Replace(xmlStr, "</Relationships>", imageRel+"</Relationships>", 1)
+	}
 
 	_, err = writer.Write([]byte(xmlStr))
 	return err
