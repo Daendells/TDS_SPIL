@@ -72,46 +72,22 @@ export function useMasterReports(initialPageSize = 10) {
           console.error("Error parsing reports as array:", err);
           
           // Fallback: Try parsing individual items
-          try {
-            parsedReports = apiData.map((item: any) => ({
-              id: item.id,
-              nama: item.nama || "",
-              seamanCode: item.seamanCode || "",
-              seafarerCode: item.seafarerCode || "",
-              vesselName: item.vesselName || "",
-              jabatan: item.jabatan || "",
-              idpProgram: item.idpProgram || "",
-              age: item.age || "",
-              certificate: item.certificate || "",
-              konditeReview: item.konditeReview || "",
-              kpiVessel: item.kpiVessel || "",
-              performanceScore: item.performanceScore || "",
-              valueAssessment: item.valueAssessment || "",
-              competencyGapAnalysis: item.competencyGapAnalysis || "",
-              totalGap: item.totalGap || "",
-              strength: item.strength || "",
-              havQuadran: item.havQuadran || "",
-              talentClassified: item.talentClassified || "",
-              readiness: item.readiness || "",
-              certificateEligible: item.certificateEligible || "",
-            }));
-            console.log("Parsed reports (manual mapping):", parsedReports);
-          } catch (mapErr) {
-            console.error("Error in manual mapping:", mapErr);
-            parsedReports = [];
-          }
         }
 
         console.log("Number of parsed reports:", parsedReports.length);
 
-        const paginationResult: IPaginationData<IReport> = {
-          data: parsedReports,
-          firstId: parsedReports.length > 0 ? parsedReports[0].id : null,
-          lastId: parsedReports.length > 0 ? parsedReports[parsedReports.length - 1].id : null,
-          pageSize: paginationRequest.pageSize,
-          hasMore: parsedReports.length >= paginationRequest.pageSize,
-          firstPage: paginationRequest.anchorId === 0,
-        };
+        // --- Extract pagination metadata safely ---
+let apiMeta = response.data?.data;
+
+// Build pagination object using backend data
+const paginationResult: IPaginationData<IReport> = {
+  data: parsedReports,
+  firstId: apiMeta?.firstId ?? (parsedReports[0]?.id ?? null),
+  lastId: apiMeta?.lastId ?? (parsedReports.at(-1)?.id ?? null),
+  pageSize: apiMeta?.pageSize ?? paginationRequest.pageSize,
+  hasMore: apiMeta?.hasMore ?? (parsedReports.length >= paginationRequest.pageSize),
+  firstPage: apiMeta?.firstPage ?? false, // ✅ use backend flag
+};
 
         console.log("Final pagination result:", paginationResult);
 

@@ -34,9 +34,8 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 	db := s.DB.Model(&domain.MasterReport{})
 
 	// --- optional search filter ---
-	// search by partial name (case-insensitive) OR seafarer_code exact/partial
 	if req.Query != "" {
-		q := req.Query
+		q := strings.ToLower(req.Query)
 		db = db.Where(
 			s.DB.
 				Where("LOWER(nama) LIKE ?", "%"+q+"%").
@@ -46,37 +45,35 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 
 	// --- cursor pagination logic ---
 	if req.Page == "next" && req.AnchorID > 0 {
-		// get rows with id > anchor_id, ascending
 		db = db.Where("id > ?", req.AnchorID).Order("id ASC")
 	} else if req.Page == "prev" && req.AnchorID > 0 {
-		// get rows with id < anchor_id, DESC first (we'll reverse after fetch)
 		db = db.Where("id < ?", req.AnchorID).Order("id DESC")
 	} else {
-		// first load
 		db = db.Order("id ASC")
 	}
 
-	// enforce limit
+	// --- enforce limit ---
 	limit := req.PageSize
 	if limit <= 0 {
 		limit = 10
 	}
 	db = db.Limit(limit)
 
+	// --- execute query ---
 	var rows []domain.MasterReport
 	if err := db.Find(&rows).Error; err != nil {
 		s.Log.WithError(err).Error("failed to query master reports")
 		return nil, fmt.Errorf("failed to retrieve master reports: %w", err)
 	}
 
-	// If we loaded "prev", rows are in DESC order; reverse so UI is still ascending.
+	// reverse if prev (so UI order stays ascending)
 	if req.Page == "prev" && len(rows) > 1 {
 		for i, j := 0, len(rows)-1; i < j; i, j = i+1, j-1 {
 			rows[i], rows[j] = rows[j], rows[i]
 		}
 	}
 
-	// map domain.MasterReport -> web.MasterReportData
+	// --- map domain → web model ---
 	result := make([]web.MasterReportData, 0, len(rows))
 	for _, r := range rows {
 		result = append(result, web.MasterReportData{
@@ -113,12 +110,27 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 		})
 	}
 
-	// build pagination metadata for frontend
+	// --- detect boundaries for first/last page ---
+	var isFirstPage bool
+	if len(result) == 0 {
+		isFirstPage = true
+	} else {
+		// check if there's any record before the first one we got
+		var count int64
+		if err := s.DB.Model(&domain.MasterReport{}).
+			Where("id < ?", result[0].ID).
+			Count(&count).Error; err != nil {
+			s.Log.WithError(err).Warn("failed to count previous records")
+		}
+		isFirstPage = (count == 0)
+	}
+
+	// build pagination metadata
 	responsePayload := web.MasterReportListResponse{
 		Data:      result,
 		PageSize:  limit,
-		HasMore:   len(result) >= limit, // naive: "we filled the page" => probably more data
-		FirstPage: req.AnchorID == 0,    // first load if anchorId=0 in request
+		HasMore:   len(result) >= limit,
+		FirstPage: isFirstPage,
 	}
 
 	if len(result) > 0 {

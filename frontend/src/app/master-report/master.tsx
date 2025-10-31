@@ -1,21 +1,79 @@
 "use client";
 
 import * as React from "react";
-import { useState } from "react";
-import axios from "axios";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { RadioGroupItem } from "@/components/ui/radio-group";
-
+import {
+  Command,
+  CommandGroup,
+  CommandItem,
+  CommandList,
+} from "@/components/ui/command";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
-import { ChevronLeftIcon, ChevronRightIcon, CheckIcon, ChevronsUpDownIcon, PlusIcon, EditIcon, TrashIcon, XIcon } from "lucide-react";
-import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
-import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import {
+  ChevronLeftIcon,
+  ChevronRightIcon,
+  CheckIcon,
+  ChevronsUpDownIcon,
+  PlusIcon,
+  EditIcon,
+  TrashIcon,
+  XIcon,
+  AlertTriangle,
+} from "lucide-react";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+} from "@/components/ui/pagination";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useMasterReports } from "./_hooks/master";
+
+/* Dynamic sticky offset calculator */
+function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement>, pinnedCount = 2) {
+  const [offsets, setOffsets] = useState<number[]>([]);
+  useEffect(() => {
+    const container = ref.current;
+    if (!container) return;
+    const updateOffsets = () => {
+      const heads = container.querySelectorAll<HTMLTableCellElement>("thead th");
+      const newOffsets: number[] = [];
+      let runningLeft = 0;
+      for (let i = 0; i < pinnedCount; i++) {
+        newOffsets.push(runningLeft);
+        runningLeft += heads[i]?.offsetWidth ?? 0;
+      }
+      setOffsets(newOffsets);
+    };
+    const observer = new ResizeObserver(updateOffsets);
+    observer.observe(container);
+    updateOffsets();
+    return () => observer.disconnect();
+  }, [ref, pinnedCount]);
+  return offsets;
+}
 
 export default function MasterPage() {
   const {
@@ -29,27 +87,20 @@ export default function MasterPage() {
     setSearchName,
     createReport,
     deleteReport,
-    updateReport, // Make sure you have this function in your hook
+    updateReport,
   } = useMasterReports(10);
 
   const [openDialog, setOpenDialog] = useState(false);
-  const [form, setForm] = useState({
-    nama: "",
-    seamanCode: "",
-    seafarerCode: "",
-  });
-
-  // Edit mode state
+  const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false);
+  const [form, setForm] = useState({ nama: "", seamanCode: "", seafarerCode: "" });
   const [isEditMode, setIsEditMode] = useState(false);
-  
-  // Selected rows for deletion (store IDs across all pages)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-
-  // Edit dialog state
   const [editingRow, setEditingRow] = useState<any>(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
-
   const [currentPage, setCurrentPage] = useState(1);
+
+  const tableRef = useRef<HTMLDivElement>(null);
+  const offsets = useDynamicStickyOffsets(tableRef, 2);
 
   const PAGE_SIZES = [10, 20, 30, 50, 100];
   const TABLE_COLUMNS = [
@@ -75,25 +126,15 @@ export default function MasterPage() {
     "Certificate Eligible",
   ];
 
-  const isFormValid = () => {
-    return (
-      form.nama.trim() !== "" &&
-      form.seamanCode.trim() !== "" &&
-      form.seafarerCode.trim() !== "" &&
-      true);
-  };
+  const isFormValid = () =>
+    form.nama.trim() && form.seamanCode.trim() && form.seafarerCode.trim();
 
-  const isEditFormValid = () => {
-    return (
-      editingRow?.nama?.trim() !== "" &&
-      editingRow?.seamanCode?.trim() !== "" &&
-      editingRow?.seafarerCode?.trim() !== ""
-    );
-  };
+  const isEditFormValid = () =>
+    editingRow?.nama?.trim() && editingRow?.seamanCode?.trim() && editingRow?.seafarerCode?.trim();
 
   const navigatePage = (page: "prev" | "next") => {
     if (!paginationData) return;
-    setCurrentPage(prev => page === "next" ? prev + 1 : prev - 1);
+    setCurrentPage((prev) => (page === "next" ? prev + 1 : prev - 1));
     setPaginationRequest({
       ...paginationRequest,
       page,
@@ -102,35 +143,21 @@ export default function MasterPage() {
   };
 
   const handleAdd = async () => {
-    if (!isFormValid()) {
-      toast.error("Please fill in all fields!");
-      return;
-    }
-
+    if (!isFormValid()) return toast.error("Please fill in all fields!");
     try {
       await createReport(form);
+      toast.success("Added successfully!");
+      setForm({ nama: "", seamanCode: "", seafarerCode: "" });
       setOpenDialog(false);
-      setForm({
-        nama: "",
-        seamanCode: "",
-        seafarerCode: "",
-      });
-      setCurrentPage(1);
       setPaginationRequest({ ...paginationRequest, anchorId: 0, page: "next" });
     } catch (err: any) {
-      console.error(err);
       toast.error(err.response?.data?.error || "Failed to add report");
     }
   };
 
   const handleEdit = async () => {
-    if (!isEditFormValid()) {
-      toast.error("Please fill in all fields!");
-      return;
-    }
-
+    if (!isEditFormValid()) return toast.error("Please fill in all fields!");
     try {
-      // You'll need to implement updateReport in your hook
       await updateReport(editingRow.id, {
         nama: editingRow.nama,
         seamanCode: editingRow.seamanCode,
@@ -139,95 +166,75 @@ export default function MasterPage() {
       toast.success("Report updated successfully!");
       setOpenEditDialog(false);
       setEditingRow(null);
-      // Refresh the current page
       setPaginationRequest({ ...paginationRequest });
     } catch (err: any) {
-      console.error(err);
       toast.error(err.response?.data?.error || "Failed to update report");
     }
   };
 
   const toggleEditMode = () => {
-    if (isEditMode) {
-      setSelectedIds(new Set());
-    }
-    setIsEditMode(!isEditMode);
+    if (isEditMode) setSelectedIds(new Set());
+    setIsEditMode((prev) => !prev);
   };
 
-  //  Toggle row selection (acts like checkbox but uses radio styling)
   const toggleRowSelection = (id: number) => {
-    const newSelected = new Set(selectedIds);
-    if (newSelected.has(id)) {
-      newSelected.delete(id);
-    } else {
-      newSelected.add(id);
-    }
-    setSelectedIds(newSelected);
+    const newSet = new Set(selectedIds);
+    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+    setSelectedIds(newSet);
   };
 
-  //  Select all on current page
   const toggleSelectAll = () => {
     if (!paginationData?.data) return;
-    
-    const currentPageIds = paginationData.data.map(row => row.id);
-    const allSelected = currentPageIds.every(id => selectedIds.has(id));
-    
-    const newSelected = new Set(selectedIds);
-    if (allSelected) {
-      currentPageIds.forEach(id => newSelected.delete(id));
-    } else {
-      currentPageIds.forEach(id => newSelected.add(id));
-    }
-    setSelectedIds(newSelected);
+    const ids = paginationData.data.map((r) => r.id);
+    const allSelected = ids.every((id) => selectedIds.has(id));
+    const newSet = new Set(selectedIds);
+    allSelected ? ids.forEach((id) => newSet.delete(id)) : ids.forEach((id) => newSet.add(id));
+    setSelectedIds(newSet);
   };
 
-  //  Delete selected rows
-  const handleDeleteSelected = async () => {
+  const confirmDelete = () => {
     if (selectedIds.size === 0) {
       toast.error("No rows selected!");
       return;
     }
+    setConfirmDeleteDialog(true);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    setConfirmDeleteDialog(false);
     try {
-      for (const id of selectedIds) {
-        await deleteReport(id);
-      }
-      toast.success("Selected reports deleted successfully!");
+      for (const id of selectedIds) await deleteReport(id);
+      toast.success("Selected reports deleted!");
       setSelectedIds(new Set());
-      setCurrentPage(1);
       setPaginationRequest({ ...paginationRequest, anchorId: 0, page: "next" });
     } catch (err: any) {
-      console.error(err);
-      toast.error(err.response?.data?.error || "Failed to delete selected reports");
+      toast.error(err.response?.data?.error || "Delete failed");
     }
-  }
+  };
 
   const handleRowClick = (row: any) => {
-    if (isEditMode) {
-      setEditingRow({ ...row });
-      setOpenEditDialog(true);
-    }
+    if (!isEditMode) return;
+    setEditingRow({ ...row });
+    setOpenEditDialog(true);
   };
 
-  const getRowNumber = (index: number) => {
-    return (currentPage - 1) * paginationRequest.pageSize + index + 1;
-  };
+  const getRowNumber = (i: number) =>
+    (currentPage - 1) * paginationRequest.pageSize + i + 1;
 
-  const isAllCurrentPageSelected = () => {
-    if (!paginationData?.data) return false;
-    return paginationData.data.every(row => selectedIds.has(row.id));
-  };
+  const isAllCurrentPageSelected = () =>
+    paginationData?.data?.every((r) => selectedIds.has(r.id)) ?? false;
 
   return (
     <div className="mt-8 p-4 m-6">
+      {/* Header */}
       <div className="flex justify-between items-center mb-4">
         <h1 className="text-2xl font-bold">Master Table</h1>
-
         <div className="flex gap-2">
           <Button
             size="lg"
             variant={isEditMode ? "destructive" : "outline"}
-            className="flex items-center gap-2"
             onClick={toggleEditMode}
+            className="flex items-center gap-2"
           >
             {isEditMode ? (
               <>
@@ -244,14 +251,15 @@ export default function MasterPage() {
             <Button
               size="lg"
               variant="destructive"
-              className="flex items-center gap-2"
-              onClick={handleDeleteSelected}
+              onClick={confirmDelete}
               disabled={selectedIds.size === 0}
+              className="flex items-center gap-2"
             >
               <TrashIcon className="w-4 h-4" /> Delete ({selectedIds.size})
             </Button>
           )}
 
+          {/* Add Dialog */}
           <Dialog open={openDialog} onOpenChange={setOpenDialog}>
             <DialogTrigger asChild>
               <Button size="lg" className="flex items-center gap-2">
@@ -262,7 +270,6 @@ export default function MasterPage() {
               <DialogHeader>
                 <DialogTitle>Add New Report</DialogTitle>
               </DialogHeader>
-
               <div className="grid gap-4 py-2">
                 <Input
                   placeholder="Name"
@@ -277,10 +284,11 @@ export default function MasterPage() {
                 <Input
                   placeholder="Seafarer Code"
                   value={form.seafarerCode}
-                  onChange={(e) => setForm({ ...form, seafarerCode: e.target.value.toUpperCase() })}
+                  onChange={(e) =>
+                    setForm({ ...form, seafarerCode: e.target.value.toUpperCase() })
+                  }
                 />
               </div>
-
               <DialogFooter>
                 <Button variant="outline" onClick={() => setOpenDialog(false)}>
                   Cancel
@@ -294,36 +302,66 @@ export default function MasterPage() {
         </div>
       </div>
 
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={confirmDeleteDialog} onOpenChange={setConfirmDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" /> Confirm Deletion
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-700">
+            Are you sure you want to delete {selectedIds.size} selected{" "}
+            {selectedIds.size > 1 ? "reports" : "report"}? This action cannot be undone.
+          </p>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmDeleteDialog(false)}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirmed}>
+              Yes, Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Dialog */}
       <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Report</DialogTitle>
           </DialogHeader>
-
           <div className="grid gap-4 py-2">
             <Input
               placeholder="Name"
               value={editingRow?.nama || ""}
-              onChange={(e) => setEditingRow({ ...editingRow, nama: e.target.value.toUpperCase() })}
+              onChange={(e) =>
+                setEditingRow({ ...editingRow, nama: e.target.value.toUpperCase() })
+              }
             />
             <Input
               placeholder="Seaman Code"
               value={editingRow?.seamanCode || ""}
-              onChange={(e) => setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })}
+              onChange={(e) =>
+                setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })
+              }
             />
             <Input
               placeholder="Seafarer Code"
               value={editingRow?.seafarerCode || ""}
-              onChange={(e) => setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })}
+              onChange={(e) =>
+                setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })
+              }
             />
           </div>
-
           <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setOpenEditDialog(false);
-              setEditingRow(null);
-            }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setOpenEditDialog(false);
+                setEditingRow(null);
+              }}
+            >
               Cancel
             </Button>
             <Button onClick={handleEdit} disabled={!isEditFormValid()}>
@@ -333,6 +371,7 @@ export default function MasterPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Search */}
       <div className="flex gap-4 mb-4">
         <Input
           placeholder="Search by Name or Seafarer Code.."
@@ -345,16 +384,21 @@ export default function MasterPage() {
         />
       </div>
 
-      <div className={`transition-opacity duration-300 ${onCallApi ? "opacity-70" : "opacity-100"}`}>
-        <Table>
-          <TableHeader>
+      {/* Table */}
+      <div
+        ref={tableRef}
+        className={`overflow-auto max-h-[70vh] border rounded-lg transition-opacity ${
+          onCallApi ? "opacity-70" : "opacity-100"
+        }`}
+      >
+        <Table className="min-w-[2000px] border-collapse">
+          <TableHeader className="sticky top-0 bg-background z-50">
             <TableRow>
               {isEditMode && (
-                <TableHead className="text-center w-[50px]">
-                  {/* Select All button styled as radio */}
+                <TableHead className="text-center sticky left-0 z-40 bg-background w-[50px]">
                   <button
                     onClick={toggleSelectAll}
-                    className="aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 inline-flex items-center justify-center"
+                    className="aspect-square h-4 w-4 rounded-full border border-primary inline-flex items-center justify-center"
                   >
                     {isAllCurrentPageSelected() && (
                       <div className="h-2.5 w-2.5 rounded-full bg-current" />
@@ -362,8 +406,12 @@ export default function MasterPage() {
                   </button>
                 </TableHead>
               )}
-              {TABLE_COLUMNS.map((col, index) => (
-                <TableHead key={index} className="text-center">
+              {TABLE_COLUMNS.map((col, i) => (
+                <TableHead
+                  key={col}
+                  className={cn("text-center bg-background border", i < 2 ? "sticky z-40" : "")}
+                  style={i < 2 ? { left: `${offsets[i] || 0}px` } : {}}
+                >
                   {col}
                 </TableHead>
               ))}
@@ -373,37 +421,49 @@ export default function MasterPage() {
           <TableBody>
             {onCallApi ? (
               <TableRow>
-                <TableCell colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)} className="text-center text-gray-400">
+                <TableCell
+                  colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)}
+                  className="text-center text-gray-400"
+                >
                   Loading...
                 </TableCell>
               </TableRow>
             ) : paginationData?.data?.length ? (
               paginationData.data.map((row, i) => (
-                <TableRow 
-                  key={row.id} 
-                  className={`${selectedIds.has(row.id) ? "bg-blue-50" : ""} ${isEditMode ? "cursor-pointer hover:bg-gray-50" : ""}`}
+                <TableRow
+                  key={row.id}
+                  className={`${selectedIds.has(row.id) ? "bg-blue-50" : ""} ${
+                    isEditMode ? "cursor-pointer hover:bg-gray-50" : ""
+                  }`}
                   onClick={() => handleRowClick(row)}
                 >
                   {isEditMode && (
-                    <TableCell 
-                      className="text-center"
+                    <TableCell
+                      className="text-center sticky left-0 z-40 bg-background border-r"
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleRowSelection(row.id);
                       }}
                     >
-                      {/* Radio button that acts like checkbox */}
-                      <button
-                        className="aspect-square h-4 w-4 rounded-full border border-primary text-primary ring-offset-background focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 inline-flex items-center justify-center"
-                      >
+                      <button className="aspect-square h-4 w-4 rounded-full border border-primary inline-flex items-center justify-center">
                         {selectedIds.has(row.id) && (
                           <div className="h-2.5 w-2.5 rounded-full bg-current" />
                         )}
                       </button>
                     </TableCell>
                   )}
-                  <TableCell className="text-center">{getRowNumber(i)}</TableCell>
-                  <TableCell className="text-center">{row.nama}</TableCell>
+                  <TableCell
+                    className="text-center bg-background border sticky z-30"
+                    style={{ left: `${offsets[0] || 0}px`, width: "60px", pointerEvents: "none" }}
+                  >
+                    <span className="pointer-events-auto">{getRowNumber(i)}</span>
+                  </TableCell>
+                  <TableCell
+                    className="text-center bg-background border sticky z-30"
+                    style={{ left: `${offsets[1] || 0}px`, width: "200px", pointerEvents: "none" }}
+                  >
+                    <span className="pointer-events-auto">{row.nama}</span>
+                  </TableCell>
                   <TableCell className="text-center">{row.seamanCode}</TableCell>
                   <TableCell className="text-center">{row.seafarerCode}</TableCell>
                   <TableCell className="text-center">{row.vesselName}</TableCell>
@@ -426,7 +486,10 @@ export default function MasterPage() {
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)} className="text-center text-gray-400">
+                <TableCell
+                  colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)}
+                  className="text-center text-gray-400"
+                >
                   No Data
                 </TableCell>
               </TableRow>
@@ -435,15 +498,21 @@ export default function MasterPage() {
         </Table>
       </div>
 
-      <div className="flex items-center justify-between mb-4 p-4">
+
+
+      {/* Pagination + page size */}
+      <div className="flex items-center justify-between mt-4">
         <Popover>
           <PopoverTrigger asChild>
-            <Button variant="outline" role="combobox" className="w-[120px] justify-between">
+            <Button
+              variant="outline"
+              role="combobox"
+              className="w-[120px] justify-between"
+            >
               {paginationRequest.pageSize}
               <ChevronsUpDownIcon className="ml-2 h-4 w-4 opacity-50" />
             </Button>
           </PopoverTrigger>
-
           <PopoverContent className="w-[120px] p-0">
             <Command>
               <CommandList>
@@ -466,7 +535,9 @@ export default function MasterPage() {
                       <CheckIcon
                         className={cn(
                           "mr-2 h-4 w-4",
-                          paginationRequest.pageSize === size ? "opacity-100" : "opacity-0"
+                          paginationRequest.pageSize === size
+                            ? "opacity-100"
+                            : "opacity-0"
                         )}
                       />
                       {size}
@@ -478,34 +549,31 @@ export default function MasterPage() {
           </PopoverContent>
         </Popover>
 
+        <Pagination className="mx-auto">
+          <PaginationContent className="flex justify-center">
+            <PaginationItem>
+              <Button
+                disabled={!paginationData || paginationData.firstPage || onCallApi}
+                onClick={() => navigatePage("prev")}
+              >
+                <ChevronLeftIcon /> Previous
+              </Button>
+            </PaginationItem>
+            <PaginationItem>
+              <Button
+                disabled={!paginationData?.hasMore || onCallApi}
+                onClick={() => navigatePage("next")}
+              >
+                Next <ChevronRightIcon />
+              </Button>
+            </PaginationItem>
+          </PaginationContent>
+        </Pagination>
+
         <span className="text-sm text-gray-600">
-          Showing {paginationRequest.pageSize} rows per page | Page {currentPage}
-          {isEditMode && selectedIds.size > 0 && ` | ${selectedIds.size} selected`}
+          Page {currentPage} | Showing {paginationRequest.pageSize} rows
         </span>
       </div>
-
-      <Pagination className="m-4">
-        <PaginationContent className="flex justify-items-center w-full">
-          <PaginationItem>
-            <Button
-              disabled={!paginationData || paginationData.firstPage || onCallApi}
-              onClick={() => navigatePage("prev")}
-              className="cursor-pointer transition duration-300 active:scale-95 disabled:cursor-not-allowed"
-            >
-              <ChevronLeftIcon /> Previous
-            </Button>
-          </PaginationItem>
-          <PaginationItem>
-            <Button
-              disabled={!paginationData?.hasMore || onCallApi}
-              onClick={() => navigatePage("next")}
-              className="cursor-pointer transition duration-300 active:scale-95 disabled:cursor-not-allowed"
-            >
-              Next <ChevronRightIcon />
-            </Button>
-          </PaginationItem>
-        </PaginationContent>
-      </Pagination>
     </div>
   );
 }
