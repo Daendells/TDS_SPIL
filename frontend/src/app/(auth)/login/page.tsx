@@ -18,16 +18,13 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { toast } from "sonner";
-import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
 
 // Form validation GOES HERE
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useApi } from "@/hooks/use-api";
-import { useAuth } from "@/context/AuthContext";
+import { useLogin } from "../_hooks/useLogin";
 const FormSchema = z.object({
   username: z.string().min(1, {
     message: "Username is required",
@@ -39,10 +36,7 @@ const FormSchema = z.object({
 // Form validation END HERE
 
 export default function Page() {
-  const router = useRouter();
-  const api = useApi();
-  const { setUser } = useAuth();
-  const [onLogin, setOnLogin] = useState(false);
+  const loginMutation = useLogin();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -52,36 +46,12 @@ export default function Page() {
     },
   });
 
-  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-    if (onLogin) return;
-
-    setOnLogin(true);
-    //TODO: LOGIN LOGIC GOES HERE (call API)
-    try {
-      const response = await api.post(
-        "/auth/login",
-        {
-          username: data.username,
-          password: data.password,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const userData = response.data.data;
-      console.log(userData);
-      setUser(userData);
-
-      router.replace("/dashboard");
-      setOnLogin(false);
-    } catch (err) {
-      // toast.error((err as Error).message);
-      toast.error((err as any).response?.data.error);
-      setOnLogin(false);
-    }
+  const onSubmit = (data: z.infer<typeof FormSchema>) => {
+    // Use React Query mutation for login
+    loginMutation.mutate({
+      username: data.username,
+      password: data.password,
+    });
   };
 
   return (
@@ -137,8 +107,12 @@ export default function Page() {
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-2 mt-4">
-              <Button type="submit" className="w-full" disabled={onLogin}>
-                Login
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={loginMutation.isPending}
+              >
+                {loginMutation.isPending ? "Loading..." : "Login"}
               </Button>
             </CardFooter>
           </form>

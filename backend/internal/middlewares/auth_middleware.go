@@ -22,21 +22,38 @@ func DeleteToken(ctx *gin.Context) {
 }
 
 func AuthMiddleware(secret string) gin.HandlerFunc {
-	fmt.Println(secret)
+	fmt.Println("AuthMiddleware initialized with secret:", secret)
 	return func(ctx *gin.Context) {
-		// TODO: Get the Token from request's cookie
-		tokenString, err := ctx.Cookie(TOKEN_COOKIE)
-		fmt.Println(tokenString)
-		//! If there is no token
+		fmt.Printf("[AUTH] Method: %s, Path: %s\n", ctx.Request.Method, ctx.Request.URL.Path)
+		
+		var tokenString string
+		var err error
+		
+		// First try to get token from cookie
+		tokenString, err = ctx.Cookie(TOKEN_COOKIE)
+		fmt.Printf("[AUTH] Cookie attempt - Error: %v, Token: %s\n", err, tokenString)
+		
+		// If no cookie, try Authorization header
 		if err != nil {
-			ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
-				Code:   http.StatusUnauthorized,
-				Status: "Unauthorized",
-				Error:  "Missing Token",
-			})
-			ctx.Abort()
-			return
+			authHeader := ctx.GetHeader("Authorization")
+			fmt.Printf("[AUTH] Authorization header: '%s'\n", authHeader)
+			
+			if authHeader != "" && len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+				tokenString = authHeader[7:] // Remove "Bearer " prefix
+				fmt.Printf("[AUTH] Token extracted from header: %s\n", tokenString)
+			} else {
+				fmt.Printf("[AUTH] No valid authorization header found\n")
+				ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
+					Code:   http.StatusUnauthorized,
+					Status: "Unauthorized",
+					Error:  "Missing Token",
+				})
+				ctx.Abort()
+				return
+			}
 		}
+		
+		fmt.Println("[AUTH] Final token to validate:", tokenString)
 
 		// TODO: Decode and Validate it
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {

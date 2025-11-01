@@ -12,6 +12,7 @@ export interface IReport {
   age: string;
   tanggalLahir: string;
   startDate: string;
+   user?: string;
 
   // Catatan Indisipliner
   warningLetter: string;
@@ -75,3 +76,14 @@ export interface IPaginationRequest {
   pageSize: number;
   filter: FilterType;
 }
+
+// Re-export report types from specific types module
+export type {
+  ReportData,
+  ApiResponse,
+  ReportSection,
+  SectionAnswer,
+  PersonalInfo,
+  ApiError,
+  AssessmentAnswer,
+} from "./report-types";

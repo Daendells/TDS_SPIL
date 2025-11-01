@@ -8,7 +8,7 @@ import (
 func AssessmentResultToAssessmentResultData(assessmentResult *domain.AssessmentResult) web.AssessmentResultData {
 	return web.AssessmentResultData{
 		ID:                  assessmentResult.ID,
-		SeamanCode:          assessmentResult.SeamanCode,
+		SeafarerCode:          assessmentResult.SeafarerCode,
 		VA1RawScore:         assessmentResult.VA1RawScore,
 		VA2RawScore:         assessmentResult.VA2RawScore,
 		VA3RawScore:         assessmentResult.VA3RawScore,

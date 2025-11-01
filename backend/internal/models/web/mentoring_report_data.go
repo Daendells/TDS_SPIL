@@ -7,6 +7,7 @@ type MentoringReportData struct {
 	MenteeNames     []string `json:"menteeNames"` // Array of mentee names
 	Department      string   `json:"department"`
 	Program         string   `json:"program"`
+	ProgramTitle    string   `json:"programTitle"`
 	SessionNumber   string   `json:"sessionNumber"`
 	Date            string   `json:"date"`
 	Duration        string   `json:"duration"`

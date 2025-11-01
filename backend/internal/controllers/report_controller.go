@@ -137,3 +137,35 @@ func (controller *ReportController) FindBySeamanCode(ctx *gin.Context) {
 
 	ctx.JSON(response.Code, response)
 }
+
+func (controller *ReportController) FindBySeafarerCode(ctx *gin.Context) {
+	seafarerCode := ctx.Param("seafarerCode")
+	if seafarerCode == "" {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  "Seafarer code is required",
+		})
+		return
+	}
+
+	response, err := controller.Service.FindBySeafarerCode(ctx, seafarerCode)
+	if err != nil {
+		if err.Error() == "seafarer code not found" {
+			ctx.JSON(http.StatusNotFound, web.ErrorResponse{
+				Code:   http.StatusNotFound,
+				Status: "Not Found",
+				Error:  "Seafarer code not found",
+			})
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(response.Code, response)
+}

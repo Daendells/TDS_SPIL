@@ -1,6 +1,13 @@
 "use client";
 
-import { LaptopMinimal, ChevronUp, Inbox, User2, FileText, Settings } from "lucide-react";
+import {
+  LaptopMinimal,
+  ChevronUp,
+  Inbox,
+  User2,
+  FileText,
+  Settings,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -25,10 +32,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "./ui/button";
-import { useState } from "react";
-import { toast } from "sonner";
-import { useApi } from "@/hooks/use-api";
-import { useRouter } from "next/navigation";
+import { useLogout } from "@/app/(auth)/_hooks/useLogin";
 
 // Menu items.
 const items = [
@@ -36,6 +40,11 @@ const items = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LaptopMinimal,
+  },
+   {
+    title: "Reports",
+    url: "/master-report",
+    icon: FileText,
   },
   {
     title: "Upload Excel",
@@ -56,23 +65,8 @@ const items = [
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const router = useRouter();
-  const { user, setUser } = useAuth();
-  const api = useApi();
-
-  const [onLogout, setOnLogout] = useState(false);
-
-  const logout = async () => {
-    try {
-      const response = await api.post("/auth/logout");
-      setUser(null); 
-      router.replace("/login");
-    } catch (err) {
-      toast.error((err as Error).message);
-    } finally {
-      setOnLogout(false);
-    }
-  };
+  const { user } = useAuth();
+  const logoutMutation = useLogout();
 
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -137,10 +131,10 @@ export function AppSidebar() {
                   <Button
                     className="w-full"
                     variant="destructive"
-                    disabled={onLogout}
-                    onClick={() => logout()}
+                    disabled={logoutMutation.isPending}
+                    onClick={() => logoutMutation.mutate()}
                   >
-                    Sign out
+                    {logoutMutation.isPending ? "Signing out..." : "Sign out"}
                   </Button>
                   {/* <span>Sign out</span> */}
                 </DropdownMenuItem>

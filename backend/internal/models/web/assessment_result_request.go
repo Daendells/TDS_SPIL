@@ -1,9 +1,9 @@
 package web
 
 type AssessmentSubmitRequest struct {
-	SeamanCode string                 `json:"seamanCode" validate:"required"`
-	Role       string                 `json:"role" validate:"required,oneof=va_1 va_2 va_3"`
-	Answers    map[int]int           `json:"answers" validate:"required"`
+	SeafarerCode string      `json:"seafarerCode" validate:"required"`
+	Role         string      `json:"role" validate:"required,oneof=va_1 va_2 va_3"`
+	Answers      map[int]int `json:"answers" validate:"required"`
 }
 
 type AssessmentAnswer struct {

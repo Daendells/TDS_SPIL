@@ -34,7 +34,7 @@ export async function middleware(request: NextRequest) {
   }
 
   // TODO: Handle Protected Routes
-  if (url.pathname.startsWith("/dashboard")) {
+  if (url.pathname.startsWith("/dashboard")||url.pathname.startsWith("/master-report")) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -54,5 +54,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/dashboard", "/dashboard/excel"],
+  matcher: ["/", "/login", "/dashboard", "/dashboard/excel", "/master-report"],
 };

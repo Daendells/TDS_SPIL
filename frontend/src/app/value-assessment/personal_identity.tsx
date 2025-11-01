@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useGetReportBySeafarerCode } from "./_hooks/useReportData";
 import {
   Form,
   FormControl,
@@ -11,7 +12,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -21,7 +21,7 @@ const FormSchema = z.object({
   fullName: z.string().min(1, { message: "Nama lengkap harus diisi" }),
   rank: z.string().min(1, { message: "Rank harus dipilih" }),
   vesselName: z.string().min(1, { message: "Nama vessel/akademi harus diisi" }),
-  seamanCode: z.string().min(1, { message: "Seaman code harus diisi" }),
+  seafarerCode: z.string().min(1, { message: "Seafarer code harus diisi" }),
 });
 
 interface PersonalIdentityProps {
@@ -31,21 +31,12 @@ interface PersonalIdentityProps {
   updateAssessmentData: (data: Partial<ValueAssessmentData>) => void;
 }
 
-const rankOptions = [
-  { value: "nakhoda", label: "Nakhoda" },
-  { value: "mualim_1", label: "Mualim I" },
-  { value: "mualim_2", label: "Mualim II" },
-  { value: "mualim_3", label: "Mualim III" },
-  { value: "kkm", label: "KKM" },
-  { value: "masinis_2", label: "Masinis II" },
-  { value: "masinis_3", label: "Masinis III" },
-  { value: "masinis_4", label: "Masinis IV" },
-  { value: "rating", label: "Rating" },
-  { value: "kadet_deck", label: "Kadet Deck" },
-  { value: "kadet_engine", label: "Kadet Engine" },
-];
-
-export default function PersonalIdentity({ onNext, onBack, assessmentData, updateAssessmentData }: PersonalIdentityProps) {
+export default function PersonalIdentity({
+  onNext,
+  onBack,
+  assessmentData,
+  updateAssessmentData,
+}: PersonalIdentityProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [verificationError, setVerificationError] = useState("");
@@ -56,59 +47,72 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
       fullName: assessmentData.fullName,
       rank: assessmentData.rank,
       vesselName: assessmentData.vesselName,
-      seamanCode: assessmentData.seamanCode,
+      seafarerCode: assessmentData.seafarerCode,
     },
   });
 
-  const verifySeamanCode = async (seamanCode: string) => {
-    if (!seamanCode.trim()) {
-      setVerificationError("Seaman code harus diisi");
+  // Use React Query hook at component level
+  const [querySeafarerCode, setQuerySeafarerCode] = useState<string>("");
+  const reportQuery = useGetReportBySeafarerCode(querySeafarerCode);
+
+  const verifySeafarerCode = async (seafarerCode: string) => {
+    if (!seafarerCode.trim()) {
+      setVerificationError("Seafarer code harus diisi");
       return;
     }
 
     setIsVerifying(true);
     setVerificationError("");
-    
-    try {
-      const response = await fetch(`http://localhost:8080/reports/seaman-code/${seamanCode}`);
-      
-      if (response.ok) {
-        const result = await response.json();
-        const reportData = result.data;
-        
-        // Auto-populate the fields with data from the report
-        form.setValue("fullName", reportData.nama || "");
-        form.setValue("rank", reportData.jabatan || "");
-        form.setValue("vesselName", reportData.vesselName || "");
-        
-        setIsVerified(true);
-        setVerificationError("");
-      } else if (response.status === 404) {
-        setVerificationError("Seaman code tidak ditemukan dalam database");
-        setIsVerified(false);
+
+    // Trigger the query by setting the seafarer code
+    setQuerySeafarerCode(seafarerCode);
+  };
+
+  // Effect to handle query results
+  useEffect(() => {
+    if (reportQuery.data) {
+      const reportData = reportQuery.data;
+
+      // Auto-populate the fields with data from the report
+      form.setValue("fullName", reportData.nama || "");
+      form.setValue("rank", reportData.jabatan || "");
+      form.setValue("vesselName", reportData.vesselName || "");
+
+      setIsVerified(true);
+      setVerificationError("");
+      setIsVerifying(false);
+    } else if (reportQuery.error) {
+      const errorMessage =
+        reportQuery.error instanceof Error
+          ? reportQuery.error.message
+          : "Terjadi kesalahan koneksi";
+
+      if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+        setVerificationError("Seafarer code tidak ditemukan dalam database");
         // Clear the auto-populated fields
         form.setValue("fullName", "");
         form.setValue("rank", "");
         form.setValue("vesselName", "");
       } else {
-        setVerificationError("Terjadi kesalahan saat memverifikasi seaman code");
-        setIsVerified(false);
+        setVerificationError(errorMessage);
       }
-    } catch (error) {
-      setVerificationError("Terjadi kesalahan koneksi");
+
       setIsVerified(false);
-    } finally {
       setIsVerifying(false);
     }
-  };
 
-  const handleSeamanCodeChange = (value: string) => {
-    form.setValue("seamanCode", value);
+    if (reportQuery.isLoading) {
+      setIsVerifying(true);
+    }
+  }, [reportQuery.data, reportQuery.error, reportQuery.isLoading, form]);
+
+  const handleSeafarerCodeChange = (value: string) => {
+    form.setValue("seafarerCode", value);
     setIsVerified(false);
     setVerificationError("");
-    
-    // Clear auto-populated fields when seaman code changes
-    if (value !== assessmentData.seamanCode) {
+
+    // Clear auto-populated fields when seafarer code changes
+    if (value !== assessmentData.seafarerCode) {
       form.setValue("fullName", "");
       form.setValue("rank", "");
       form.setValue("vesselName", "");
@@ -117,7 +121,7 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
 
   const onSubmit = (data: z.infer<typeof FormSchema>) => {
     if (!isVerified) {
-      setVerificationError("Silakan verifikasi seaman code terlebih dahulu");
+      setVerificationError("Silakan verifikasi seafarer code terlebih dahulu");
       return;
     }
     updateAssessmentData(data);
@@ -147,28 +151,30 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
               <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
                 Identitas Diri
               </h2>
-              
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
                   control={form.control}
-                  name="seamanCode"
+                  name="seafarerCode"
                   render={({ field }) => (
                     <FormItem className="md:col-span-2">
                       <FormLabel className="font-medium text-gray-700">
-                        Seaman Code <span className="text-red-500">*</span>
+                        Seafarer Code <span className="text-red-500">*</span>
                       </FormLabel>
                       <div className="flex gap-2">
                         <FormControl>
-                          <Input 
-                            placeholder="Masukkan seaman code" 
+                          <Input
+                            placeholder="Masukkan seafarer code"
                             {...field}
-                            onChange={(e) => handleSeamanCodeChange(e.target.value)}
-                            className="border-gray-300 focus:border-gray-500 focus:ring-gray-500" 
+                            onChange={(e) =>
+                              handleSeafarerCodeChange(e.target.value)
+                            }
+                            className="border-gray-300 focus:border-gray-500 focus:ring-gray-500"
                           />
                         </FormControl>
                         <Button
                           type="button"
-                          onClick={() => verifySeamanCode(field.value)}
+                          onClick={() => verifySeafarerCode(field.value)}
                           disabled={isVerifying || !field.value.trim()}
                           className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white font-medium disabled:bg-gray-400"
                         >
@@ -176,10 +182,14 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                         </Button>
                       </div>
                       {verificationError && (
-                        <p className="text-sm text-red-600 mt-1">{verificationError}</p>
+                        <p className="text-sm text-red-600 mt-1">
+                          {verificationError}
+                        </p>
                       )}
                       {isVerified && (
-                        <p className="text-sm text-green-600 mt-1">✓ Seaman code berhasil diverifikasi</p>
+                        <p className="text-sm text-green-600 mt-1">
+                          ✓ Seaman code berhasil diverifikasi
+                        </p>
                       )}
                       <FormMessage />
                     </FormItem>
@@ -195,11 +205,11 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                         Nama Lengkap <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Nama akan terisi otomatis setelah verifikasi seaman code" 
-                          {...field} 
+                        <Input
+                          placeholder="Nama akan terisi otomatis setelah verifikasi seaman code"
+                          {...field}
                           readOnly={true}
-                          className="border-gray-300 bg-gray-50 text-gray-700" 
+                          className="border-gray-300 bg-gray-50 text-gray-700"
                         />
                       </FormControl>
                       <FormMessage />
@@ -216,11 +226,11 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                         Rank <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Rank akan terisi otomatis setelah verifikasi seaman code" 
-                          {...field} 
+                        <Input
+                          placeholder="Rank akan terisi otomatis setelah verifikasi seaman code"
+                          {...field}
                           readOnly={true}
-                          className="border-gray-300 bg-gray-50 text-gray-700" 
+                          className="border-gray-300 bg-gray-50 text-gray-700"
                         />
                       </FormControl>
                       <FormMessage />
@@ -234,14 +244,15 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="font-medium text-gray-700">
-                        Nama Vessel / Nama Akademi Pelayaran <span className="text-red-500">*</span>
+                        Nama Vessel / Nama Akademi Pelayaran{" "}
+                        <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
-                        <Input 
-                          placeholder="Nama vessel akan terisi otomatis setelah verifikasi seaman code" 
-                          {...field} 
+                        <Input
+                          placeholder="Nama vessel akan terisi otomatis setelah verifikasi seaman code"
+                          {...field}
                           readOnly={true}
-                          className="border-gray-300 bg-gray-50 text-gray-700" 
+                          className="border-gray-300 bg-gray-50 text-gray-700"
                         />
                       </FormControl>
                       <FormMessage />
@@ -251,7 +262,7 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
               </div>
 
               <div className="flex justify-between pt-8">
-                <Button 
+                <Button
                   type="button"
                   onClick={onBack}
                   variant="outline"
@@ -259,7 +270,7 @@ export default function PersonalIdentity({ onNext, onBack, assessmentData, updat
                 >
                   Kembali
                 </Button>
-                <Button 
+                <Button
                   type="submit"
                   className="px-8 py-2 bg-green-600 hover:bg-green-700 text-white font-medium"
                 >

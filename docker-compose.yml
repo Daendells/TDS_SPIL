@@ -4,17 +4,19 @@ networks:
 
 services:
   tds_frontend:
-    container_name: tds_frontend
-    build:
-      context: .
-      dockerfile: docker/nextjs.dockerfile
-    restart: always
-    environment:
-      - NODE_ENV=production
-    ports:
-      - "3000:3000"
-    networks:
-      - spil_tds
+      container_name: tds_frontend
+      build:
+        context: .
+        dockerfile: docker/nextjs.dockerfile
+      restart: always
+      environment:
+        - NODE_ENV=production
+        - NEXT_PUBLIC_API_ENDPOINT=http://localhost:8080       # dipakai di browser
+        - INTERNAL_API_ENDPOINT=http://tds_backend:8090        # dipakai di SSR
+      ports:
+        - "3000:3000"
+      networks:
+        - spil_tds
 
   tds_backend:
     container_name: tds_backend
@@ -22,12 +24,12 @@ services:
       context: .
       dockerfile: docker/golang.dockerfile
     restart: always
+    env_file:
+      - ./backend/.env              
     environment:
       - GIN_MODE=release
     extra_hosts:
       - "host.docker.internal:host-gateway"
-    # volumes:
-    #   - ./backend:/app
     networks:
       - spil_tds
     ports:

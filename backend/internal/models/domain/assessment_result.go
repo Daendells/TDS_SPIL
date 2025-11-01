@@ -6,7 +6,7 @@ import (
 
 type AssessmentResult struct {
 	ID                int        `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
-	SeamanCode        string     `json:"seamanCode" gorm:"column:seaman_code;not null"`
+	SeafarerCode string   `json:"seafarerCode" gorm:"column:seafarer_code;not null"`
 	VA1RawScore       int        `json:"va1RawScore" gorm:"column:va_1_raw_score;default:0"`
 	VA2RawScore       int        `json:"va2RawScore" gorm:"column:va_2_raw_score;default:0"`
 	VA3RawScore       int        `json:"va3RawScore" gorm:"column:va_3_raw_score;default:0"`

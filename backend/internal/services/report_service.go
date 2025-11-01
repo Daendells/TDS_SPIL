@@ -286,3 +286,33 @@ func (service *ReportService) FindBySeamanCode(ctx context.Context, seamanCode s
 		Data:   reportData,
 	}, nil
 }
+
+func (service *ReportService) FindBySeafarerCode(ctx context.Context, seafarerCode string) (*web.SuccessResponse, error) {
+	// TODO: Create Transaction
+	tx := service.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	var report domain.Report
+	_, err := service.ReportRepository.FindBySeafarerCode(tx, seafarerCode, &report)
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return nil, fmt.Errorf("seafarer code not found")
+		}
+		return nil, err
+	}
+
+	// TODO: Commit Transaction
+	if err = tx.Commit().Error; err != nil {
+		service.Log.Warnf("Failed commit transaction: %+v", err)
+		return nil, fmt.Errorf("failed commit transaction: %w", err)
+	}
+
+	reportData := converter.ToReportData(&report)
+
+	return &web.SuccessResponse{
+		Status: "Ok",
+		Code:   http.StatusOK,
+		Data:   reportData,
+	}, nil
+}
+

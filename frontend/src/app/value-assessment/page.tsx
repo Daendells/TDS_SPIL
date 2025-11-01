@@ -1,13 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Greetings from "./greetings";
 import PersonalIdentity from "./personal_identity";
 import Section1 from "./section1";
 import Section2 from "./section2";
 import Section3 from "./section3";
 import Completion from "./completion";
-
+import AssessmentProgress from "@/components/assessment-progress";
 export interface ValueAssessmentData {
   email: string;
   consent: boolean;
@@ -15,13 +15,21 @@ export interface ValueAssessmentData {
   identityNumber: string;
   rank: string;
   vesselName: string;
-  seamanCode: string;
+  seafarerCode: string;
   section1Answers: { [questionId: number]: number };
-  section2Answers: { [questionId: number]: string };
+  section2Answers: { [questionId: number]: number };
   section3Answers: { [questionId: number]: number };
+  startTime?: string;
+  currentStep?: number;
+  section1StartTime?: string;
+  section2StartTime?: string;
+  section3StartTime?: string;
+  seamanCode?: string;
 }
 
 export default function ValueAssessmentPage() {
+  const [isClient, setIsClient] = useState(false);
+
   const [currentStep, setCurrentStep] = useState(1);
   const [assessmentData, setAssessmentData] = useState<ValueAssessmentData>({
     email: "",
@@ -30,22 +38,120 @@ export default function ValueAssessmentPage() {
     identityNumber: "",
     rank: "",
     vesselName: "",
-    seamanCode: "",
+    seafarerCode: "",
     section1Answers: {},
     section2Answers: {},
     section3Answers: {},
+    startTime: undefined,
   });
 
+  // localStorage key untuk menyimpan assessment data dengan expiry 24 jam
+  const STORAGE_KEY = "valueAssessmentFormData";
+  const EXPIRY_MINUTES = 24 * 60; // 24 jam
+
+  // Set client-side flag dan load data dari localStorage setelah mount
+  useEffect(() => {
+    setIsClient(true);
+    try {
+      const item = window.localStorage.getItem(STORAGE_KEY);
+      if (item) {
+        const parsed = JSON.parse(item);
+
+        // Check if data has expiry field dan belum expired
+        if (parsed.expiresAt) {
+          const now = new Date().getTime();
+          if (now <= parsed.expiresAt) {
+            const data = parsed.value;
+            if (
+              data.assessmentData &&
+              (data.assessmentData.email || data.currentStep > 1)
+            ) {
+              setAssessmentData(data.assessmentData);
+              setCurrentStep(data.currentStep);
+            }
+          } else {
+            // Data expired, hapus dari localStorage
+            window.localStorage.removeItem(STORAGE_KEY);
+          }
+        }
+      }
+    } catch (error) {
+      console.warn("Error loading stored data:", error);
+    }
+  }, []);
+
+  // Save data ke localStorage dengan expiry 24 jam setiap kali assessmentData atau currentStep berubah
+  useEffect(() => {
+    if (
+      isClient &&
+      (assessmentData.email || assessmentData.fullName || currentStep > 1)
+    ) {
+      try {
+        const now = new Date().getTime();
+        const expiryTime = now + EXPIRY_MINUTES * 60 * 1000; // Convert minutes to ms
+
+        const dataToSave = {
+          assessmentData,
+          currentStep,
+          timestamp: new Date().toISOString(),
+        };
+
+        const storageData = {
+          value: dataToSave,
+          expiresAt: expiryTime,
+        };
+
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(storageData));
+      } catch (error) {
+        console.warn("Error saving data:", error);
+      }
+    }
+  }, [isClient, assessmentData, currentStep, EXPIRY_MINUTES, STORAGE_KEY]);
+
   const handleNext = () => {
-    setCurrentStep(prev => prev + 1);
+    const nextStep = currentStep + 1;
+    setCurrentStep(nextStep);
+
+    // Set start time for sections
+    const now = new Date().toISOString();
+    if (nextStep === 3 && !assessmentData.section1StartTime) {
+      updateAssessmentData({ section1StartTime: now });
+    } else if (nextStep === 4 && !assessmentData.section2StartTime) {
+      updateAssessmentData({ section2StartTime: now });
+    } else if (nextStep === 5 && !assessmentData.section3StartTime) {
+      updateAssessmentData({ section3StartTime: now });
+    }
   };
 
   const handleBack = () => {
-    setCurrentStep(prev => prev - 1);
+    setCurrentStep((prev) => prev - 1);
   };
 
   const updateAssessmentData = (data: Partial<ValueAssessmentData>) => {
-    setAssessmentData(prev => ({ ...prev, ...data }));
+    setAssessmentData((prev) => {
+      const updated = { ...prev, ...data };
+
+      // Set overall start time when user first provides consent
+      if (data.consent && !prev.startTime) {
+        updated.startTime = new Date().toISOString();
+      }
+
+      return updated;
+    });
+  };
+
+  const handleDataRestore = (data: ValueAssessmentData) => {
+    setAssessmentData(data);
+    setCurrentStep(data.currentStep || 1);
+  };
+
+  // Function to clear all stored data (useful when assessment is completed)
+  const handleClearStoredData = () => {
+    try {
+      window.localStorage.removeItem(STORAGE_KEY);
+    } catch (error) {
+      console.warn("Error clearing stored data:", error);
+    }
   };
 
   const renderCurrentStep = () => {
@@ -98,6 +204,7 @@ export default function ValueAssessmentPage() {
         return (
           <Completion
             assessmentData={assessmentData}
+            clearStoredData={handleClearStoredData}
           />
         );
       default:
@@ -107,6 +214,19 @@ export default function ValueAssessmentPage() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Progress Bar - Show only if assessment has started and on client */}
+      {isClient &&
+        (assessmentData.email ||
+          assessmentData.fullName ||
+          currentStep > 1) && (
+          <div className="max-w-4xl mx-auto px-6 pt-4">
+            <AssessmentProgress
+              assessmentData={assessmentData}
+              currentStep={currentStep}
+              onDataRestore={handleDataRestore}
+            />
+          </div>
+        )}
       {renderCurrentStep()}
     </div>
   );

@@ -276,7 +276,7 @@ export default function MentoringListDialog({
 
           {!loading && !error && mentoringData.length === 0 && (
             <div className="flex justify-center items-center h-full">
-              <p className="text-gray-500">Belum ada data mentoring untuk Report ID: {reportId}</p>
+              <p className="text-gray-500">Belum ada data mentoring</p>
             </div>
           )}
 
