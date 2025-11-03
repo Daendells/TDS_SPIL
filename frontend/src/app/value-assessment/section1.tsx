@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useCountdown } from "@/hooks/use-session-storage";
 import { useStorageCountdown } from "@/hooks/use-local-storage";
+import { useTimerPauseResume } from "@/hooks/useTimerPauseResume";
 import { ValueAssessmentData } from "./page";
 import Image from "next/image";
 import {
@@ -34,6 +35,15 @@ export default function Section1({
   );
   const storageTimeOutRef = useRef(false);
 
+  // Debug: Log currentStep from assessmentData
+  useEffect(() => {
+    console.log(
+      `[Section1] Mounted - currentStep: ${
+        assessmentData.currentStep
+      }, isActive: ${assessmentData.currentStep === 3}`
+    );
+  }, [assessmentData.currentStep]);
+
   // Fetch assessment data using the hook
   const { data: assessment, isLoading, error } = useGetAssessmentByRole("va_1");
 
@@ -42,17 +52,70 @@ export default function Section1({
 
   // Use countdown hook with timer from fetched assessment data (section timer)
   const timerMinutes = assessment?.timerLimitMinutes ?? 30;
-  const { timeLeft, formatTime } = useCountdown(
+  const { timeLeft } = useCountdown(
     assessmentData.section1StartTime,
-    timerMinutes
+    timerMinutes,
+    assessmentData.section1PauseTimestamp
   );
 
+  // Store timer minutes in assessmentData for progress bar to use
+  useEffect(() => {
+    if (timerMinutes && assessmentData.section1TimerMinutes !== timerMinutes) {
+      updateAssessmentData({ section1TimerMinutes: timerMinutes });
+    }
+  }, [timerMinutes, assessmentData.section1TimerMinutes, updateAssessmentData]);
+
+  // Stable pause/resume callbacks to prevent hook re-setup
+  const handlePause = useCallback(() => {
+    const now = new Date().toISOString();
+    console.log(
+      `%c⏸️ [Section1] PAUSED at: ${now}`,
+      "color: red; font-weight: bold; font-size: 14px;"
+    );
+    console.log(
+      `%c⏸️ [Section1] Current timeLeft before pause: ${timeLeft}s`,
+      "color: red; font-size: 12px;"
+    );
+    console.log(
+      `%c⏸️ [Section1] Setting section1PauseTimestamp...`,
+      "color: red; font-size: 12px;"
+    );
+    updateAssessmentData({ section1PauseTimestamp: now });
+  }, [updateAssessmentData, timeLeft]);
+
+  const handleResume = useCallback(() => {
+    const resumeTime = new Date().toISOString();
+    console.log(
+      `%c▶️ [Section1] RESUMED at: ${resumeTime}`,
+      "color: green; font-weight: bold; font-size: 14px;"
+    );
+    console.log(
+      `%c▶️ [Section1] Clearing section1PauseTimestamp...`,
+      "color: green; font-size: 12px;"
+    );
+    updateAssessmentData({ section1PauseTimestamp: undefined });
+  }, [updateAssessmentData]);
+
+  // Setup pause/resume detection
+  useTimerPauseResume(
+    assessmentData.currentStep === 3, // isActive - true when user is on section 1
+    handlePause,
+    handleResume
+  );
+
+  // Debug: Log whenever pauseTimestamp changes
+  useEffect(() => {
+    console.log(
+      `[Section1] pauseTimestamp changed:`,
+      assessmentData.section1PauseTimestamp
+    );
+    console.log();
+  }, [assessmentData.section1PauseTimestamp]);
+
   // Overall assessment timer (24 hours)
-  const {
-    timeLeft: overallTimeLeft,
-    isExpired: isOverallExpired,
-    formatTime: formatOverallTime,
-  } = useStorageCountdown("valueAssessmentFormData");
+  const { isExpired: isOverallExpired } = useStorageCountdown(
+    "valueAssessmentFormData"
+  );
 
   const handleSubmit = useCallback(() => {
     if (!assessment?.questions) {
@@ -89,7 +152,13 @@ export default function Section1({
       role: "va_1",
       answers: filteredAnswers,
     });
-  }, [assessment?.questions, answers, assessmentData.seafarerCode, mutate]);
+  }, [
+    assessment?.questions,
+    answers,
+    assessmentData.seafarerCode,
+    mutate,
+    timeLeft,
+  ]);
 
   // Auto submit when time runs out - use ref to avoid infinite loop
   const timeOutRef = useRef(false);
@@ -263,14 +332,29 @@ export default function Section1({
               5. <strong>Waktu pengerjaan: 30 Menit</strong>
             </p>
           </div>
+        </div>
 
-          {/* Timer */}
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center justify-center">
-              <span className="text-red-600 font-bold text-xl">
-                Waktu tersisa: {formatTime(timeLeft)}
-              </span>
-            </div>
+        {/* 🚨 DEBUG: Manual Pause/Resume Testing */}
+        <div className="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-3">
+          <h3 className="font-bold text-yellow-800 mb-2">🔧 DEBUG MODE</h3>
+          <div className="flex gap-2">
+            <button
+              onClick={handlePause}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
+            >
+              ⏸️ Manual Pause
+            </button>
+            <button
+              onClick={handleResume}
+              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
+            >
+              ▶️ Manual Resume
+            </button>
+          </div>
+          <div className="mt-2 text-sm text-yellow-800">
+            <strong>Current isActive:</strong> {String(assessmentData.currentStep === 3)}<br/>
+            <strong>PauseTimestamp:</strong> {assessmentData.section1PauseTimestamp || 'null'}<br/>
+            <strong>TimeLeft:</strong> {timeLeft}s
           </div>
         </div>
 

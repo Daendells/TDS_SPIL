@@ -12,6 +12,7 @@ export interface IReport {
   age: string;
   tanggalLahir: string;
   startDate: string;
+   user?: string;
 
   // Catatan Indisipliner
   warningLetter: string;

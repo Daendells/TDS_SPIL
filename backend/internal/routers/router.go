@@ -19,6 +19,7 @@ type RouterConfig struct {
 	AssessmentResultController *controllers.AssessmentResultController
 	QuestionOptionController   *controllers.QuestionOptionController
 	AssessmentController       *controllers.AssessmentController
+	MasterController           *controllers.MasterController
 	AuthMiddleware             gin.HandlerFunc
 }
 
@@ -27,6 +28,8 @@ func (c *RouterConfig) Setup() {
 	c.App.Static("/storage", "./storage")
 	c.SetupGuestRouter()
 	c.SetupAuthRouter()
+	c.SetupMasterRouter()
+
 }
 
 func (c *RouterConfig) SetupGuestRouter() {
@@ -100,6 +103,19 @@ func (c *RouterConfig) SetupGuestRouter() {
 	// Register Question and Option routes
 	QuestionRouter(c.App, c.QuestionController)
 	OptionRouter(c.App, c.OptionController)
+}
+func (r *RouterConfig) SetupMasterRouter() {
+
+	group := r.App.Group("/api/master-reports")
+
+	{
+		group.GET("", r.MasterController.FindAll)
+		group.GET("/:id", r.MasterController.FindById)
+		group.POST("", r.MasterController.Create)
+		group.PUT("/:id", r.MasterController.Update)
+		group.DELETE("/:id", r.MasterController.Delete)
+
+	}
 }
 
 func (c *RouterConfig) SetupAuthRouter() {

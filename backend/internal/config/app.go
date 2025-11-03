@@ -65,6 +65,7 @@ func Bootstrap(config *BootstrapConfig) {
 	questionRepository := repositories.NewQuestionRepository()
 	optionRepository := repositories.NewOptionRepository()
 	assessmentResultRepository := repositories.NewAssessmentResultRepository()
+	masterRepository := repositories.NewMasterRepository(config.Log)
 	trainingRepository := repositories.NewTrainingRepository(config.Log)
 
 	// --- Services (DB-based)
@@ -75,6 +76,7 @@ func Bootstrap(config *BootstrapConfig) {
 	optionService := services.NewOptionService(optionRepository, config.Validate)
 	assessmentResultService := services.NewAssessmentResultService(assessmentResultRepository, questionRepository, optionRepository, reportRepository, config.Log, config.Validate)
 	assessmentService := services.NewAssessmentService(repositories.NewAssessmentRepository(), config.Validate)
+	masterService := services.NewMasterService(config.DB, config.Log, config.Validate, masterRepository)
 	trainingServiceDB := services.NewTrainingService(config.DB, config.Log, config.Validate, trainingRepository)
 
 	// --- Controllers (DB-based)
@@ -86,6 +88,7 @@ func Bootstrap(config *BootstrapConfig) {
 	assessmentResultController := controllers.NewAssessmentResultController(assessmentResultService, config.Log, config.DB)
 	questionOptionController := controllers.NewQuestionOptionController(config.DB, questionService, optionService, config.Log)
 	assessmentController := controllers.NewAssessmentController(config.Log, config.DB, assessmentService, questionService, optionService)
+	masterController := controllers.NewMasterController(masterService, config.Log)
 	trainingControllerDB := controllers.NewTrainingController(trainingServiceDB, config.Log)
 
 	// --- Generator Service & Controller (LLM/PDF)
@@ -105,15 +108,15 @@ func Bootstrap(config *BootstrapConfig) {
 		ReportController:           reportController,
 		UserController:             userController,
 		MentoringReportController:  mentoringReportController,
-		TrainingController:        trainingControllerDB,   // DB
-		TrainingGenController:     trainingGenController,   // LLM Generator
+		TrainingController:         trainingControllerDB,  // DB
+		TrainingGenController:      trainingGenController, // LLM Generator
 		QuestionController:         questionController,
 		OptionController:           optionController,
 		AssessmentResultController: assessmentResultController,
 		QuestionOptionController:   questionOptionController,
 		AssessmentController:       assessmentController,
+		MasterController:           masterController,
 		AuthMiddleware:             authMiddleware,
 	}
-
 	routerConfig.Setup()
 }

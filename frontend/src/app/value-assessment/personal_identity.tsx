@@ -16,6 +16,7 @@ import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { ValueAssessmentData } from "./page";
+import Image from "next/image";
 
 const FormSchema = z.object({
   fullName: z.string().min(1, { message: "Nama lengkap harus diisi" }),
@@ -134,13 +135,25 @@ export default function PersonalIdentity({
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-3">
           <div className="flex justify-between items-center mb-6">
-            <img src="/images/logo1.png" alt="Logo Kiri" className="h-16" />
+            <Image
+              width={64}
+              height={64}
+              src="/images/logo1.png"
+              alt="Logo Kiri"
+              className="h-10 w-auto md:h-16"
+            />
             <div className="text-center">
-              <h1 className="text-3xl font-bold uppercase text-gray-800 mb-2">
-                Value Assessment
+              <h1 className="text-lg md:text-3xl font-bold uppercase text-gray-800 mb-2">
+                Value Assessment Section 1
               </h1>
             </div>
-            <img src="/images/logo2.png" alt="Logo Kanan" className="h-16" />
+            <Image
+              width={64}
+              height={64}
+              src="/images/logo2.png"
+              alt="Logo Kanan"
+              className="h-10 w-auto md:h-16"
+            />
           </div>
         </div>
 

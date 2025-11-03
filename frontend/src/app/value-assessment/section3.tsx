@@ -10,9 +10,10 @@ import {
   useGetAssessmentByRole,
   usePostAssessmentResults,
 } from "./_hooks/useAssessment";
-import { useStorageCountdown } from "@/hooks/use-local-storage";
 import Image from "next/image";
 import { useCountdown } from "@/hooks/use-session-storage";
+import { useTimerPauseResume } from "@/hooks/useTimerPauseResume";
+import { useStorageCountdown } from "@/hooks/use-local-storage";
 import { BASE_URL } from "../lib/api";
 
 interface Section3Props {
@@ -47,15 +48,44 @@ export default function Section3({
   // POST mutation hook
   const { mutate, isPending, isSuccess } = usePostAssessmentResults(onNext);
 
-  // Use storage-based countdown for auto-submit when assessment expires (24 hours)
-  // const { timeLeft, isExpired, formatTime } = useStorageCountdown(
-  //   "valueAssessmentFormData"
-  // );
+  // Timer dari assessment data
   const timerMinutes = assessment?.timerLimitMinutes ?? 30;
 
-  const { timeLeft, formatTime } = useCountdown(
+  const { timeLeft } = useCountdown(
     assessmentData.section3StartTime,
-    timerMinutes
+    timerMinutes,
+    assessmentData.section3PauseTimestamp
+  );
+
+  // Store timer minutes in assessmentData for progress bar to use
+  useEffect(() => {
+    if (timerMinutes && assessmentData.section3TimerMinutes !== timerMinutes) {
+      updateAssessmentData({ section3TimerMinutes: timerMinutes });
+    }
+  }, [timerMinutes, assessmentData.section3TimerMinutes, updateAssessmentData]);
+
+  // Stable pause/resume callbacks to prevent hook re-setup
+  const handlePause = useCallback(() => {
+    const now = new Date().toISOString();
+    console.log(`⏸️ Section 3 paused`);
+    updateAssessmentData({ section3PauseTimestamp: now });
+  }, [updateAssessmentData]);
+
+  const handleResume = useCallback(() => {
+    console.log(`▶️ Section 3 resumed`);
+    updateAssessmentData({ section3PauseTimestamp: undefined });
+  }, [updateAssessmentData]);
+
+  // Handle pause/resume when tab loses focus or visibility changes
+  useTimerPauseResume(
+    assessmentData.currentStep === 5, // isActive - true when user is on section 3
+    handlePause,
+    handleResume
+  );
+
+  // Overall assessment timer (24 hours)
+  const { isExpired: isOverallExpired } = useStorageCountdown(
+    "valueAssessmentFormData"
   );
 
   const currentQuestion = assessment?.questions?.[currentQuestionIndex];
@@ -125,18 +155,39 @@ export default function Section3({
       // Remove localStorage when assessment submission is successful
       localStorage.removeItem("valueAssessmentFormData");
     }
-  }, [assessment?.questions, answers, assessmentData.seafarerCode, mutate]);
+  }, [
+    assessment?.questions,
+    answers,
+    assessmentData.seafarerCode,
+    mutate,
+    timeLeft,
+    isSuccess,
+  ]);
+
+  // Auto-submit ketika waktu section habis (timeLeft === 0)
+  useEffect(() => {
+    if (
+      timeLeft === 0 &&
+      !timeOutRef.current &&
+      assessment?.questions &&
+      assessment.questions.length > 0
+    ) {
+      timeOutRef.current = true;
+      console.log("Section 3 timer habis, auto-submit...");
+      handleSubmit();
+    }
+  }, [timeLeft, handleSubmit, assessment?.questions]);
 
   // Auto-submit ketika assessment expires (24 jam)
   useEffect(() => {
-    if (!timeOutRef.current && assessment?.questions) {
+    if (isOverallExpired && !timeOutRef.current && assessment?.questions) {
       timeOutRef.current = true;
       toast.warning(
         "Waktu assessment telah habis. Form akan di-submit otomatis."
       );
       handleSubmit();
     }
-  }, [handleSubmit, assessment?.questions]);
+  }, [isOverallExpired, handleSubmit, assessment?.questions]);
 
   if (isLoading) {
     return (
@@ -230,14 +281,6 @@ export default function Section3({
                   <strong>{scale.label}</strong>
                 </p>
               ))}
-            </div>
-          </div>
-          {/* Timer */}
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center justify-center">
-              <span className="text-red-600 font-bold text-xl">
-                Waktu tersisa: {formatTime(timeLeft)}
-              </span>
             </div>
           </div>
         </div>

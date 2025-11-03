@@ -153,13 +153,16 @@ export class ValueAssessmentStorage {
    */
   static getTimeRemaining(
     startTime: string | undefined,
-    totalMinutes: number = 30
+    totalMinutes: number = 30,
+    pausedTime: number = 0
   ): number {
     if (!startTime) return totalMinutes * 60;
 
     const start = new Date(startTime).getTime();
     const now = new Date().getTime();
-    const elapsedSeconds = Math.floor((now - start) / 1000);
+    // Subtract pausedTime (convert from ms to seconds) from elapsed time
+    const elapsedSeconds =
+      Math.floor((now - start) / 1000) - Math.floor(pausedTime / 1000);
     const totalSeconds = totalMinutes * 60;
 
     return Math.max(0, totalSeconds - elapsedSeconds);

@@ -1,0 +1,38 @@
+/* Anti copy-paste styles untuk Value Assessment */
+.assessmentContainer {
+  user-select: none;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  -webkit-touch-callout: none;
+}
+
+/* Allow text selection dan paste untuk input fields */
+.assessmentContainer input,
+.assessmentContainer textarea {
+  user-select: text;
+  -webkit-user-select: text;
+  -moz-user-select: text;
+  -ms-user-select: text;
+  pointer-events: auto;
+}
+
+/* Allow buttons dan links to be clickable */
+.assessmentContainer button,
+.assessmentContainer select,
+.assessmentContainer a {
+  pointer-events: auto;
+}
+
+/* Prevent selection highlight on other elements */
+.assessmentContainer::selection,
+.assessmentContainer *::selection {
+  background: transparent;
+  color: inherit;
+}
+
+.assessmentContainer::-moz-selection,
+.assessmentContainer *::-moz-selection {
+  background: transparent;
+  color: inherit;
+}

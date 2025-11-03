@@ -11,9 +11,9 @@ import {
   usePostAssessmentResults,
 } from "./_hooks/useAssessment";
 import { useCountdown } from "@/hooks/use-session-storage";
+import { useTimerPauseResume } from "@/hooks/useTimerPauseResume";
 import { useStorageCountdown } from "@/hooks/use-local-storage";
 import Image from "next/image";
-import { time } from "console";
 import { BASE_URL } from "../lib/api";
 
 interface Section2Props {
@@ -42,11 +42,43 @@ export default function Section2({
   // POST mutation hook
   const { mutate, isPending } = usePostAssessmentResults(onNext);
 
-  // Timer setup untuk section (60 menit)
+  // Timer setup untuk section
   const timerMinutes = assessment?.timerLimitMinutes ?? 60;
-  const { timeLeft, formatTime } = useCountdown(
+  const { timeLeft } = useCountdown(
     assessmentData.section2StartTime,
-    timerMinutes
+    timerMinutes,
+    assessmentData.section2PauseTimestamp
+  );
+
+  // Store timer minutes in assessmentData for progress bar to use
+  useEffect(() => {
+    if (timerMinutes && assessmentData.section2TimerMinutes !== timerMinutes) {
+      updateAssessmentData({ section2TimerMinutes: timerMinutes });
+    }
+  }, [timerMinutes, assessmentData.section2TimerMinutes, updateAssessmentData]);
+
+  // Stable pause/resume callbacks to prevent hook re-setup
+  const handlePause = useCallback(() => {
+    const now = new Date().toISOString();
+    console.log(`⏸️ Section 2 paused`);
+    updateAssessmentData({ section2PauseTimestamp: now });
+  }, [updateAssessmentData]);
+
+  const handleResume = useCallback(() => {
+    console.log(`▶️ Section 2 resumed`);
+    updateAssessmentData({ section2PauseTimestamp: undefined });
+  }, [updateAssessmentData]);
+
+  // Handle pause/resume when tab loses focus or visibility changes
+  useTimerPauseResume(
+    assessmentData.currentStep === 4, // isActive - true when user is on section 2
+    handlePause,
+    handleResume
+  );
+
+  // Overall assessment timer (24 hours)
+  const { isExpired: isOverallExpired } = useStorageCountdown(
+    "valueAssessmentFormData"
   );
 
   const currentQuestion = assessment?.questions
@@ -132,7 +164,13 @@ export default function Section2({
       role: "va_2",
       answers: filteredAnswers,
     });
-  }, [assessment?.questions, answers, assessmentData.seafarerCode, mutate]);
+  }, [
+    assessment?.questions,
+    answers,
+    assessmentData.seafarerCode,
+    mutate,
+    timeLeft,
+  ]);
 
   // Auto-submit when timer reaches 0
   useEffect(() => {
@@ -150,6 +188,7 @@ export default function Section2({
   // Auto-submit when overall assessment expires (24 hours)
   useEffect(() => {
     if (
+      isOverallExpired &&
       !storageTimeOutRef.current &&
       assessment?.questions &&
       assessment.questions.length > 0
@@ -160,7 +199,7 @@ export default function Section2({
       );
       handleSubmit();
     }
-  }, [handleSubmit, assessment?.questions]);
+  }, [isOverallExpired, handleSubmit, assessment?.questions]);
 
   if (isLoading) {
     return (
@@ -268,15 +307,6 @@ export default function Section2({
               Dalam hal ini apabila pernyataan &quot;a&quot; merupakan diri Anda
               maka pilihlah jawaban &quot;a&quot;, begitu pun sebaliknya.
             </p>
-          </div>
-
-          {/* Timer */}
-          <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-            <div className="flex items-center justify-center">
-              <span className="text-red-600 font-bold text-xl">
-                Waktu tersisa: {formatTime(timeLeft)}
-              </span>
-            </div>
           </div>
         </div>
 

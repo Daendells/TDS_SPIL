@@ -59,7 +59,8 @@ export function useSessionStorage<T>(key: string, initialValue: T) {
 
 export function useCountdown(
   startTime: string | undefined,
-  totalMinutes: number = 30
+  totalMinutes: number = 30,
+  pauseTimestamp: string | undefined = undefined
 ) {
   const [timeLeft, setTimeLeft] = useState(totalMinutes * 60);
   const [isClient, setIsClient] = useState(false);
@@ -74,23 +75,74 @@ export function useCountdown(
     if (isClient && startTime) {
       const start = new Date(startTime).getTime();
       const now = new Date().getTime();
-      const elapsedSeconds = Math.floor((now - start) / 1000);
+
+      // Formula:
+      // If paused: elapsed = pauseTime - startTime (stop counting at pause)
+      // If not paused: elapsed = now - startTime (keep counting)
+      let elapsedMs: number;
+
+      console.log(
+        `%c[TIMER] 📊 Timer Calculation at ${new Date().toISOString()}`,
+        "color: blue; font-weight: bold;"
+      );
+      console.log(`%c[TIMER] Start time: ${startTime}`, "color: blue;");
+      console.log(
+        `%c[TIMER] Pause timestamp: ${pauseTimestamp || "NOT PAUSED"}`,
+        "color: blue;"
+      );
+      console.log(
+        `%c[TIMER] Current time: ${new Date().toISOString()}`,
+        "color: blue;"
+      );
+
+      if (pauseTimestamp) {
+        // Sudah dipause: gunakan waktu pause sebagai reference point
+        const pauseStart = new Date(pauseTimestamp).getTime();
+        elapsedMs = pauseStart - start;
+        console.log(
+          `%c[TIMER] ⏸️ PAUSED MODE: elapsed = ${elapsedMs}ms (pauseTime - startTime)`,
+          "color: red; font-weight: bold;"
+        );
+      } else {
+        // Belum dipause: gunakan waktu sekarang
+        elapsedMs = now - start;
+        console.log(
+          `%c[TIMER] ▶️ RUNNING MODE: elapsed = ${elapsedMs}ms (now - startTime)`,
+          "color: green; font-weight: bold;"
+        );
+      }
+
+      const elapsedSeconds = Math.floor(elapsedMs / 1000);
       const totalSeconds = totalMinutes * 60;
       const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+
+      console.log(
+        `%c[TIMER] ⏱️ Elapsed: ${elapsedSeconds}s | Remaining: ${remainingSeconds}s | Total: ${totalSeconds}s`,
+        "color: blue;"
+      );
       setTimeLeft(remainingSeconds);
     }
-  }, [isClient, startTime, totalMinutes]);
+  }, [isClient, startTime, totalMinutes, pauseTimestamp]);
 
-  // Timer effect
+  // Timer effect - HANYA terus countdown jika TIDAK pause
   useEffect(() => {
-    if (isClient && timeLeft > 0) {
+    if (isClient && timeLeft > 0 && !pauseTimestamp) {
+      console.log(
+        `%c[COUNTDOWN] ⏳ Timer running: ${timeLeft}s remaining`,
+        "color: green; font-size: 10px;"
+      );
       const timer = setTimeout(
         () => setTimeLeft((prev) => Math.max(0, prev - 1)),
         1000
       );
       return () => clearTimeout(timer);
+    } else if (pauseTimestamp) {
+      console.log(
+        `%c[COUNTDOWN] ⏸️ Timer PAUSED at: ${timeLeft}s remaining`,
+        "color: red; font-size: 10px;"
+      );
     }
-  }, [isClient, timeLeft]);
+  }, [isClient, timeLeft, pauseTimestamp]);
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);

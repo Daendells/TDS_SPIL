@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import Greetings from "./greetings";
 import PersonalIdentity from "./personal_identity";
 import Section1 from "./section1";
@@ -8,6 +8,7 @@ import Section2 from "./section2";
 import Section3 from "./section3";
 import Completion from "./completion";
 import AssessmentProgress from "@/components/assessment-progress";
+import styles from "./assessment.module.css";
 export interface ValueAssessmentData {
   email: string;
   consent: boolean;
@@ -89,11 +90,6 @@ export default function ValueAssessmentPage() {
       return false;
     };
 
-    const handlePaste = (e: Event) => {
-      e.preventDefault();
-      return false;
-    };
-
     const handleContextMenu = (e: Event) => {
       e.preventDefault();
       return false;
@@ -101,13 +97,11 @@ export default function ValueAssessmentPage() {
 
     document.addEventListener("copy", handleCopy);
     document.addEventListener("cut", handleCut);
-    document.addEventListener("paste", handlePaste);
     document.addEventListener("contextmenu", handleContextMenu);
 
     return () => {
       document.removeEventListener("copy", handleCopy);
       document.removeEventListener("cut", handleCut);
-      document.removeEventListener("paste", handlePaste);
       document.removeEventListener("contextmenu", handleContextMenu);
     };
   }, []);
@@ -159,23 +153,23 @@ export default function ValueAssessmentPage() {
     setCurrentStep((prev) => prev - 1);
   };
 
-  const updateAssessmentData = (data: Partial<ValueAssessmentData>) => {
-    setAssessmentData((prev) => {
-      const updated = { ...prev, ...data };
+  const updateAssessmentData = useCallback(
+    (data: Partial<ValueAssessmentData>) => {
+      console.log(`[updateAssessmentData] Called with:`, data);
+      setAssessmentData((prev) => {
+        const updated = { ...prev, ...data };
 
-      // Set overall start time when user first provides consent
-      if (data.consent && !prev.startTime) {
-        updated.startTime = new Date().toISOString();
-      }
+        // Set overall start time when user first provides consent
+        if (data.consent && !prev.startTime) {
+          updated.startTime = new Date().toISOString();
+        }
 
-      return updated;
-    });
-  };
-
-  const handleDataRestore = (data: ValueAssessmentData) => {
-    setAssessmentData(data);
-    setCurrentStep(data.currentStep || 1);
-  };
+        console.log(`[updateAssessmentData] State updated:`, updated);
+        return updated;
+      });
+    },
+    []
+  );
 
   // Function to clear all stored data (useful when assessment is completed)
   const handleClearStoredData = () => {
@@ -245,44 +239,7 @@ export default function ValueAssessmentPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <style>{`
-        /* Disable copy, cut, paste untuk seluruh assessment page */
-        body, html, * {
-          user-select: none;
-          -webkit-user-select: none;
-          -moz-user-select: none;
-          -ms-user-select: none;
-          -webkit-touch-callout: none;
-        }
-
-        /* Prevent context menu (right click) */
-        body, html {
-          -webkit-user-select: none;
-          user-select: none;
-        }
-
-        /* Ensure input fields dan buttons masih bisa diklik */
-        input, textarea, button, select, a {
-          pointer-events: auto;
-        }
-
-        /* Prevent drag selection */
-        body::selection,
-        html::selection,
-        * ::selection {
-          background: transparent;
-          color: inherit;
-        }
-
-        body::-moz-selection,
-        html::-moz-selection,
-        * ::-moz-selection {
-          background: transparent;
-          color: inherit;
-        }
-      `}</style>
-
+    <div className={`min-h-screen bg-gray-50 ${styles.assessmentContainer}`}>
       {/* Progress Bar - Show only if assessment has started and on client */}
       {isClient &&
         (assessmentData.email ||
@@ -292,7 +249,6 @@ export default function ValueAssessmentPage() {
             <AssessmentProgress
               assessmentData={assessmentData}
               currentStep={currentStep}
-              onDataRestore={handleDataRestore}
             />
           </div>
         )}
