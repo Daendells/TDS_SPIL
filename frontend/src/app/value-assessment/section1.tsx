@@ -58,6 +58,9 @@ export default function Section1({
     assessmentData.section1PauseTimestamp
   );
 
+  // Timer sync is now handled by the main page component
+  // This section only needs to store its timer duration
+
   // Store timer minutes in assessmentData for progress bar to use
   useEffect(() => {
     if (timerMinutes && assessmentData.section1TimerMinutes !== timerMinutes) {
@@ -331,30 +334,6 @@ export default function Section1({
             <p>
               5. <strong>Waktu pengerjaan: 30 Menit</strong>
             </p>
-          </div>
-        </div>
-
-        {/* 🚨 DEBUG: Manual Pause/Resume Testing */}
-        <div className="bg-yellow-100 border border-yellow-400 rounded-lg p-4 mb-3">
-          <h3 className="font-bold text-yellow-800 mb-2">🔧 DEBUG MODE</h3>
-          <div className="flex gap-2">
-            <button
-              onClick={handlePause}
-              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600"
-            >
-              ⏸️ Manual Pause
-            </button>
-            <button
-              onClick={handleResume}
-              className="px-4 py-2 bg-green-500 text-white rounded hover:bg-green-600"
-            >
-              ▶️ Manual Resume
-            </button>
-          </div>
-          <div className="mt-2 text-sm text-yellow-800">
-            <strong>Current isActive:</strong> {String(assessmentData.currentStep === 3)}<br/>
-            <strong>PauseTimestamp:</strong> {assessmentData.section1PauseTimestamp || 'null'}<br/>
-            <strong>TimeLeft:</strong> {timeLeft}s
           </div>
         </div>
 

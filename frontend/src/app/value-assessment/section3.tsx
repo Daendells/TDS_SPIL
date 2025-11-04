@@ -57,6 +57,9 @@ export default function Section3({
     assessmentData.section3PauseTimestamp
   );
 
+  // Timer sync is now handled by the main page component
+  // This section only needs to store its timer duration
+
   // Store timer minutes in assessmentData for progress bar to use
   useEffect(() => {
     if (timerMinutes && assessmentData.section3TimerMinutes !== timerMinutes) {
