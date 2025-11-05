@@ -67,6 +67,8 @@ func Bootstrap(config *BootstrapConfig) {
 	assessmentResultRepository := repositories.NewAssessmentResultRepository()
 	masterRepository := repositories.NewMasterRepository(config.Log)
 	trainingRepository := repositories.NewTrainingRepository(config.Log)
+	gapCompetencyRepository := repositories.NewGapCompetencyRepository(config.DB, config.Log)
+	trainingScheduleRepository := repositories.NewTrainingScheduleRepository(config.DB, config.Log)
 
 	// --- Services (DB-based)
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository)
@@ -78,6 +80,7 @@ func Bootstrap(config *BootstrapConfig) {
 	assessmentService := services.NewAssessmentService(repositories.NewAssessmentRepository(), config.Validate)
 	masterService := services.NewMasterService(config.DB, config.Log, config.Validate, masterRepository)
 	trainingServiceDB := services.NewTrainingService(config.DB, config.Log, config.Validate, trainingRepository)
+	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, config.Log)
 
 	// --- Controllers (DB-based)
 	reportController := controllers.NewReportController(reportService, config.Log)
@@ -90,6 +93,7 @@ func Bootstrap(config *BootstrapConfig) {
 	assessmentController := controllers.NewAssessmentController(config.Log, config.DB, assessmentService, questionService, optionService)
 	masterController := controllers.NewMasterController(masterService, config.Log)
 	trainingControllerDB := controllers.NewTrainingController(trainingServiceDB, config.Log)
+	trainingPlanController := controllers.NewTrainingPlanController(trainingPlanService, config.Log)
 
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(
@@ -110,6 +114,7 @@ func Bootstrap(config *BootstrapConfig) {
 		MentoringReportController:  mentoringReportController,
 		TrainingController:         trainingControllerDB,  // DB
 		TrainingGenController:      trainingGenController, // LLM Generator
+		TrainingPlanController:     trainingPlanController,
 		QuestionController:         questionController,
 		OptionController:           optionController,
 		AssessmentResultController: assessmentResultController,

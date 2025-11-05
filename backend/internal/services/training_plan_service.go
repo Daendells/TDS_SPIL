@@ -1,0 +1,645 @@
+package services
+
+import (
+	"backend/internal/models/domain"
+	"backend/internal/repositories"
+	"fmt"
+	"sort"
+	"time"
+
+	"github.com/sirupsen/logrus"
+)
+
+type TrainingPlanService interface {
+	GetTrainingPlan(program string) (*domain.TrainingPlanResponse, error)
+	GenerateSchedules(program string) error
+	GetCompetencyMapping(program string) map[string]domain.CompetencyMappingItem
+}
+
+type trainingPlanService struct {
+	gapCompetencyRepo    repositories.GapCompetencyRepository
+	trainingScheduleRepo repositories.TrainingScheduleRepository
+	log                  *logrus.Logger
+}
+
+func NewTrainingPlanService(
+	gapCompetencyRepo repositories.GapCompetencyRepository,
+	trainingScheduleRepo repositories.TrainingScheduleRepository,
+	log *logrus.Logger,
+) TrainingPlanService {
+	return &trainingPlanService{
+		gapCompetencyRepo:    gapCompetencyRepo,
+		trainingScheduleRepo: trainingScheduleRepo,
+		log:                  log,
+	}
+}
+
+// GetCompetencyMapping returns the mapping of competency codes to training topics for each program
+func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]domain.CompetencyMappingItem {
+	mappings := map[string]map[string]domain.CompetencyMappingItem{
+		"SDP": {
+			"LDC": {Name: "Change Leadership", TrainingTopics: []string{"Change Leadership"}},
+			"DCM": {Name: "Effective Decision Making", TrainingTopics: []string{"Effective Decision Making"}},
+			"CSO": {Name: "Building Service Excellence", TrainingTopics: []string{"Building Service Excellence"}},
+			"SIO": {Name: "Learning Agility for Leaders", TrainingTopics: []string{"Learning Agility for Leaders"}},
+			"EMP": {Name: "Workplace Social Intelligence", TrainingTopics: []string{"Workplace Social Intelligence"}},
+			"FLX": {Name: "Situational Leadership", TrainingTopics: []string{"Situational Leadership"}},
+			"COM": {Name: "Clear Leadership Communication", TrainingTopics: []string{"Clear Leadership Communication"}},
+			"CIO": {Name: "Innovation Leadership", TrainingTopics: []string{"Innovation Leadership"}},
+			"TOR": {Name: "Creating Effective Teamwork", TrainingTopics: []string{"Creating Effective Teamwork"}},
+			"PNO": {Name: "PDCA for Problem Solving", TrainingTopics: []string{"PDCA for Problem Solving"}},
+		},
+		"MDP": {
+			"LAG": {Name: "Advanced Growth Mindset", TrainingTopics: []string{"Advanced Growth Mindset"}},
+			"ACH": {Name: "Drive High Performance", TrainingTopics: []string{"Drive High Performance"}},
+			"SIO": {Name: "Learning Agility for Leaders", TrainingTopics: []string{"Learning Agility for Leaders"}},
+			"DIR": {Name: "Problem Solving Culture", TrainingTopics: []string{"Problem Solving Culture"}},
+			"EMP": {Name: "Workplace Social Intelligence", TrainingTopics: []string{"Workplace Social Intelligence"}},
+			"RBG": {Name: "Effective Delegation and Empowerment", TrainingTopics: []string{"Effective Delegation and Empowerment"}},
+			"DCM": {Name: "Root Cause in Minutes", TrainingTopics: []string{"Root Cause in Minutes"}},
+			"CIO": {Name: "Proactive Mindset", TrainingTopics: []string{"Proactive Mindset"}},
+			"FLX": {Name: "Situational Leadership", TrainingTopics: []string{"Situational Leadership"}},
+			"RSF": {Name: "Visual Project Management Tools", TrainingTopics: []string{"Visual Project Management Tools"}},
+		},
+		"FDP": {
+			"DCM": {Name: "Risk & Problem Analysis", TrainingTopics: []string{"Risk & Problem Analysis"}},
+			"RSC": {Name: "ABC Model for Stress", TrainingTopics: []string{"ABC Model for Stress"}},
+			"FLX": {Name: "Cognitive Flexibility in Work", TrainingTopics: []string{"Cognitive Flexibility in Work"}},
+			"EMP": {Name: "Empathy in Communication", TrainingTopics: []string{"Empathy in Communication"}},
+			"SIO": {Name: "Finding Purpose and Passion in Work", TrainingTopics: []string{"Finding Purpose and Passion in Work"}},
+			"TOR": {Name: "Komunikasi Etis dalam Tim", TrainingTopics: []string{"Komunikasi Etis dalam Tim"}},
+			"CIO": {Name: "Proactive Mindset", TrainingTopics: []string{"Proactive Mindset"}},
+			"LAG": {Name: "Learning from Action", TrainingTopics: []string{"Learning from Action"}},
+			"RBG": {Name: "Ethical Communication", TrainingTopics: []string{"Ethical Communication"}},
+		},
+	}
+
+	if mapping, exists := mappings[program]; exists {
+		return mapping
+	}
+	return make(map[string]domain.CompetencyMappingItem)
+}
+
+// GetTrainingPlan retrieves the complete training plan data for a program
+func (s *trainingPlanService) GetTrainingPlan(program string) (*domain.TrainingPlanResponse, error) {
+	// Get gap competencies with reports and competency types
+	gapCompetencies, err := s.gapCompetencyRepo.GetWithReportsAndCompetencyTypes(program)
+	if err != nil {
+		s.log.WithError(err).WithField("program", program).Error("Failed to get gap competencies with reports and competency types")
+		return nil, err
+	}
+
+	// Get training schedules for the program
+	schedules, err := s.trainingScheduleRepo.GetByProgram(program)
+	if err != nil {
+		s.log.WithError(err).WithField("program", program).Error("Failed to get training schedules")
+		return nil, err
+	}
+
+	// Group gap competencies by report ID
+	reportGaps := make(map[int][]domain.GapCompetency)
+	for _, gc := range gapCompetencies {
+		reportGaps[gc.ReportID] = append(reportGaps[gc.ReportID], gc)
+	}
+
+	// Build participants data
+	participants := make([]domain.TrainingPlanParticipant, 0)
+	participantIndex := 1
+	
+	for _, gaps := range reportGaps {
+		if len(gaps) == 0 || gaps[0].Report == nil {
+			continue
+		}
+
+		report := gaps[0].Report
+		gapsMap := s.buildGapsMapFromMultiple(gaps)
+		totalGaps := len(gaps)
+
+		participant := domain.TrainingPlanParticipant{
+			No:         participantIndex,
+			VesselName: report.VesselName,
+			SeamanCode: report.SeamanCode,
+			Name:       report.Nama,
+			Position:   report.Jabatan,
+			Gaps:       gapsMap,
+			Total:      totalGaps,
+			Readiness:  "18", // Fixed value as per requirements
+		}
+		participants = append(participants, participant)
+		participantIndex++
+	}
+
+	// Build summary data
+	summary := s.buildSummary(gapCompetencies, schedules, program)
+
+	response := &domain.TrainingPlanResponse{
+		Participants: participants,
+		Summary:      summary,
+		Program:      program,
+		TotalCount:   len(participants),
+	}
+
+	return response, nil
+}
+
+// buildGapsMap converts gap competency boolean values to display format
+func (s *trainingPlanService) buildGapsMap(gc *domain.GapCompetency) map[string]interface{} {
+	result := make(map[string]interface{})
+	
+	if gc.CompetencyType != nil {
+		result[gc.CompetencyType.Code] = "1"
+	}
+
+	return result
+}
+
+func (s *trainingPlanService) buildGapsMapFromMultiple(gaps []domain.GapCompetency) map[string]interface{} {
+	result := make(map[string]interface{})
+	
+	// Get all competency codes for the program
+	competencyMapping := s.GetCompetencyMapping(gaps[0].Program)
+	
+	// Initialize all competency codes as empty
+	for code := range competencyMapping {
+		result[code] = ""
+	}
+	
+	// Mark gaps that exist
+	for _, gap := range gaps {
+		if gap.CompetencyType != nil {
+			result[gap.CompetencyType.Code] = "1"
+		}
+	}
+
+	return result
+}
+
+// buildSummary calculates aggregated data for the summary section
+func (s *trainingPlanService) buildSummary(gapCompetencies []domain.GapCompetency, schedules []domain.TrainingSchedule, program string) domain.TrainingPlanSummary {
+	// Group gaps by report ID to get unique participants
+	reportGaps := make(map[int][]domain.GapCompetency)
+	for _, gc := range gapCompetencies {
+		reportGaps[gc.ReportID] = append(reportGaps[gc.ReportID], gc)
+	}
+	
+	totalParticipants := len(reportGaps)
+	if totalParticipants == 0 {
+		return domain.TrainingPlanSummary{}
+	}
+
+	// Count gaps per competency
+	gapCounts := make(map[string]int)
+	competencyCodes := []string{"LDC", "DCM", "CIO", "SIO", "FLX", "LAG", "RSC", "CSO", "COM", "EMP", "TOR", "LDP", "PNO", "DIR", "ACH", "ACT", "IDS", "CFO", "RBG", "ING", "RSF", "BAC"}
+
+	for _, code := range competencyCodes {
+		gapCounts[code] = 0
+	}
+
+	// Count gaps for each participant
+	for _, gaps := range reportGaps {
+		participantGaps := make(map[string]bool)
+		
+		// Mark which competencies this participant has gaps in
+		for _, gap := range gaps {
+			if gap.CompetencyType != nil {
+				participantGaps[gap.CompetencyType.Code] = true
+			}
+		}
+		
+		// Count each competency gap once per participant
+		for code := range participantGaps {
+			gapCounts[code]++
+		}
+	}
+
+	// Calculate percentages and categories
+	percentageGap := make(map[string]float64)
+	category := make(map[string]string)
+
+	for code, count := range gapCounts {
+		percentage := float64(count) / float64(totalParticipants) * 100
+		percentageGap[code] = percentage
+
+		if percentage > 60 {
+			category[code] = "M" // Mandatory
+		} else {
+			category[code] = "NM" // Non-Mandatory
+		}
+	}
+
+	// Build schedule maps
+	trainingMateri1 := make(map[string]string)
+	trainingMateri2 := make(map[string]string)
+
+	for _, schedule := range schedules {
+		dateStr := schedule.GetFormattedDate()
+		if schedule.MaterialType == 1 {
+			trainingMateri1[schedule.CompetencyCode] = dateStr
+		} else if schedule.MaterialType == 2 {
+			trainingMateri2[schedule.CompetencyCode] = dateStr
+		}
+	}
+
+	return domain.TrainingPlanSummary{
+		Total:           gapCounts,
+		PercentageGap:   percentageGap,
+		Category:        category,
+		TrainingMateri1: trainingMateri1,
+		TrainingMateri2: trainingMateri2,
+	}
+}
+
+// GenerateSchedules creates training schedules based on the complex scheduling logic
+func (s *trainingPlanService) GenerateSchedules(program string) error {
+	// Get gap competencies to analyze
+	gapCompetencies, err := s.gapCompetencyRepo.GetByProgram(program)
+	if err != nil {
+		return fmt.Errorf("failed to get gap competencies: %w", err)
+	}
+
+	if len(gapCompetencies) == 0 {
+		return fmt.Errorf("no gap competencies found for program %s", program)
+	}
+
+	// Clear existing schedules for this program
+	if err := s.trainingScheduleRepo.DeleteByProgram(program); err != nil {
+		return fmt.Errorf("failed to clear existing schedules: %w", err)
+	}
+
+	// Calculate gap statistics and categories
+	gapStats := s.calculateGapStatistics(gapCompetencies)
+
+	// Generate schedules using the complex scheduling algorithm
+	schedules, err := s.generateOptimalSchedule(program, gapStats)
+	if err != nil {
+		return fmt.Errorf("failed to generate optimal schedule: %w", err)
+	}
+
+	// Save schedules to database
+	if err := s.trainingScheduleRepo.CreateBatch(schedules); err != nil {
+		return fmt.Errorf("failed to save schedules: %w", err)
+	}
+
+	s.log.WithFields(logrus.Fields{
+		"program":         program,
+		"schedules_count": len(schedules),
+	}).Info("Successfully generated training schedules")
+
+	return nil
+}
+
+// calculateGapStatistics analyzes gap data to determine categories and participant overlaps
+func (s *trainingPlanService) calculateGapStatistics(gapCompetencies []domain.GapCompetency) map[string]interface{} {
+	// Group gaps by report ID to get unique participants
+	reportGaps := make(map[int][]domain.GapCompetency)
+	for _, gc := range gapCompetencies {
+		reportGaps[gc.ReportID] = append(reportGaps[gc.ReportID], gc)
+	}
+	
+	totalParticipants := len(reportGaps)
+	competencyCodes := []string{"LDC", "DCM", "CIO", "SIO", "FLX", "LAG", "RSC", "CSO", "COM", "EMP", "TOR", "LDP", "PNO", "DIR", "ACH", "ACT", "IDS", "CFO", "RBG", "ING", "RSF", "BAC"}
+
+	gapCounts := make(map[string]int)
+	categories := make(map[string]string)
+	participantGaps := make(map[int][]string) // participant index -> list of gaps
+
+	// Initialize counts
+	for _, code := range competencyCodes {
+		gapCounts[code] = 0
+	}
+
+	// Count gaps and track participant gaps
+	participantIndex := 0
+	for _, gaps := range reportGaps {
+		var participantGapList []string
+
+		// Count each competency type for this participant
+		for _, gap := range gaps {
+			if gap.CompetencyType != nil {
+				code := gap.CompetencyType.Code
+				gapCounts[code]++
+				participantGapList = append(participantGapList, code)
+			}
+		}
+		participantGaps[participantIndex] = participantGapList
+		participantIndex++
+	}
+
+	// Determine categories
+	for code, count := range gapCounts {
+		percentage := float64(count) / float64(totalParticipants) * 100
+		if percentage > 60 {
+			categories[code] = "M"
+		} else {
+			categories[code] = "NM"
+		}
+	}
+
+	return map[string]interface{}{
+		"gapCounts":         gapCounts,
+		"categories":        categories,
+		"participantGaps":   participantGaps,
+		"totalParticipants": totalParticipants,
+	}
+}
+
+// generateOptimalSchedule implements the complex scheduling algorithm
+func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats map[string]interface{}) ([]domain.TrainingSchedule, error) {
+	categories := gapStats["categories"].(map[string]string)
+	participantGaps := gapStats["participantGaps"].(map[int][]string)
+	competencyMapping := s.GetCompetencyMapping(program)
+
+	var schedules []domain.TrainingSchedule
+
+    // Start date: October 1, 2025 (minggu I bulan Oktober)
+    startDate := time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC)
+
+	// Separate mandatory and non-mandatory competencies
+	var mandatoryCompetencies []string
+	var nonMandatoryCompetencies []string
+
+	for code, category := range categories {
+		if _, exists := competencyMapping[code]; exists {
+			if category == "M" {
+				mandatoryCompetencies = append(mandatoryCompetencies, code)
+			} else {
+				nonMandatoryCompetencies = append(nonMandatoryCompetencies, code)
+			}
+		}
+	}
+
+	// Sort for consistent ordering
+	sort.Strings(mandatoryCompetencies)
+	sort.Strings(nonMandatoryCompetencies)
+
+	// Generate Materi 1 schedules
+	currentDate := startDate
+	usedDates := make(map[string]bool) // Track used dates to avoid conflicts
+
+	// Schedule Mandatory Materi 1 first (must complete within 11 months)
+	for _, code := range mandatoryCompetencies {
+		scheduleDate := s.findNextAvailableDate(currentDate, usedDates, participantGaps, code, categories)
+
+		schedule := domain.TrainingSchedule{
+			Program:        program,
+			CompetencyCode: code,
+			TrainingTopic:  competencyMapping[code].Name,
+			Category:       "M",
+			MaterialType:   1,
+			ScheduledDate:  scheduleDate,
+		}
+		schedules = append(schedules, schedule)
+
+		dateKey := scheduleDate.Format("2006-01-02")
+		usedDates[dateKey] = true
+
+        // Pindah ke slot minggu berikutnya
+        currentDate = nextWeekSlotStart(scheduleDate)
+	}
+
+	// Schedule Non-Mandatory Materi 1
+	for _, code := range nonMandatoryCompetencies {
+		scheduleDate := s.findNextAvailableDate(currentDate, usedDates, participantGaps, code, categories)
+
+		schedule := domain.TrainingSchedule{
+			Program:        program,
+			CompetencyCode: code,
+			TrainingTopic:  competencyMapping[code].Name,
+			Category:       "NM",
+			MaterialType:   1,
+			ScheduledDate:  scheduleDate,
+		}
+		schedules = append(schedules, schedule)
+
+		dateKey := scheduleDate.Format("2006-01-02")
+		usedDates[dateKey] = true
+
+        // Pindah ke slot minggu berikutnya
+        currentDate = nextWeekSlotStart(scheduleDate)
+	}
+
+	// Generate Materi 2 schedules (after all Materi 1 of same category are done + 60 days minimum gap)
+	s.generateMateri2Schedules(&schedules, mandatoryCompetencies, nonMandatoryCompetencies, competencyMapping, program, usedDates, participantGaps, categories)
+
+	return schedules, nil
+}
+
+// findNextAvailableDate finds the next available date that meets all constraints
+func (s *trainingPlanService) findNextAvailableDate(startDate time.Time, usedDates map[string]bool, participantGaps map[int][]string, competencyCode string, categories map[string]string) time.Time {
+    currentDate := alignToWeekSlotStart(startDate)
+
+    maxIterations := 52 * 3 // Batas 3 tahun dalam unit minggu
+    iterations := 0
+
+    for iterations < maxIterations {
+        // Hanya izinkan tanggal pada awal slot minggu (1, 8, 15, 22)
+        if isWeekSlotStart(currentDate.Day()) {
+            dateKey := currentDate.Format("2006-01-02")
+
+            if !usedDates[dateKey] {
+                if !s.hasParticipantConflict(currentDate, competencyCode, categories, participantGaps, usedDates) {
+                    return currentDate
+                }
+            }
+        }
+
+        // Loncat ke slot minggu berikutnya
+        currentDate = nextWeekSlotStart(currentDate)
+        iterations++
+    }
+
+    // Fallback jika tidak ditemukan
+    s.log.Warn("Could not find optimal weekly slot, using fallback")
+    return alignToWeekSlotStart(startDate)
+}
+
+// Helper untuk penjadwalan berbasis slot minggu per bulan
+func isWeekSlotStart(day int) bool {
+    return day == 1 || day == 8 || day == 15 || day == 22
+}
+
+func alignToWeekSlotStart(date time.Time) time.Time {
+    day := date.Day()
+    switch {
+    case day <= 1:
+        return time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, time.UTC)
+    case day <= 8:
+        return time.Date(date.Year(), date.Month(), 8, 0, 0, 0, 0, time.UTC)
+    case day <= 15:
+        return time.Date(date.Year(), date.Month(), 15, 0, 0, 0, 0, time.UTC)
+    case day <= 22:
+        return time.Date(date.Year(), date.Month(), 22, 0, 0, 0, 0, time.UTC)
+    default:
+        // ke minggu I bulan berikutnya
+        nextMonth := date.Month() + 1
+        year := date.Year()
+        if nextMonth > 12 {
+            nextMonth = 1
+            year++
+        }
+        return time.Date(year, nextMonth, 1, 0, 0, 0, 0, time.UTC)
+    }
+}
+
+func nextWeekSlotStart(date time.Time) time.Time {
+    day := date.Day()
+    switch {
+    case day < 8:
+        return time.Date(date.Year(), date.Month(), 8, 0, 0, 0, 0, time.UTC)
+    case day < 15:
+        return time.Date(date.Year(), date.Month(), 15, 0, 0, 0, 0, time.UTC)
+    case day < 22:
+        return time.Date(date.Year(), date.Month(), 22, 0, 0, 0, 0, time.UTC)
+    default:
+        // minggu I bulan berikutnya
+        nextMonth := date.Month() + 1
+        year := date.Year()
+        if nextMonth > 12 {
+            nextMonth = 1
+            year++
+        }
+        return time.Date(year, nextMonth, 1, 0, 0, 0, 0, time.UTC)
+    }
+}
+
+// hasParticipantConflict checks if scheduling this competency on this date would cause participant conflicts
+func (s *trainingPlanService) hasParticipantConflict(date time.Time, competencyCode string, categories map[string]string, participantGaps map[int][]string, usedDates map[string]bool) bool {
+	dateKey := date.Format("2006-01-02")
+	category := categories[competencyCode]
+
+	// Check if this date is already used
+	if usedDates[dateKey] {
+		// Get participants who need this competency
+		currentParticipants := make(map[int]bool)
+
+		if category == "M" {
+			// Mandatory: ALL participants must attend
+			for participantID := range participantGaps {
+				currentParticipants[participantID] = true
+			}
+		} else {
+			// Non-Mandatory: Only participants with this gap attend
+			for participantID, gaps := range participantGaps {
+				for _, gap := range gaps {
+					if gap == competencyCode {
+						currentParticipants[participantID] = true
+						break
+					}
+				}
+			}
+		}
+
+		// Check if any participant would have a conflict
+		// This is a simplified check - in a real implementation, you would need to:
+		// 1. Track which specific competencies are scheduled on which dates
+		// 2. Check for participant overlaps between different competencies on the same date
+		// 3. Ensure mandatory trainings don't conflict with non-mandatory ones
+
+		// For now, we prevent scheduling multiple competencies on the same date
+		// if they would have overlapping participants
+		if len(currentParticipants) > 0 {
+			return true // Conflict detected
+		}
+	}
+
+	return false // No conflict
+}
+
+// generateMateri2Schedules generates Materi 2 schedules with proper sequencing and gaps
+func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.TrainingSchedule, mandatoryCompetencies, nonMandatoryCompetencies []string, competencyMapping map[string]domain.CompetencyMappingItem, program string, usedDates map[string]bool, participantGaps map[int][]string, categories map[string]string) {
+	// Find the latest Mandatory Materi 1 date
+	var latestMandatoryMateri1 time.Time
+	for _, schedule := range *schedules {
+		if schedule.Category == "M" && schedule.MaterialType == 1 {
+			if schedule.ScheduledDate.After(latestMandatoryMateri1) {
+				latestMandatoryMateri1 = schedule.ScheduledDate
+			}
+		}
+	}
+
+	// Find the latest Non-Mandatory Materi 1 date
+	var latestNonMandatoryMateri1 time.Time
+	for _, schedule := range *schedules {
+		if schedule.Category == "NM" && schedule.MaterialType == 1 {
+			if schedule.ScheduledDate.After(latestNonMandatoryMateri1) {
+				latestNonMandatoryMateri1 = schedule.ScheduledDate
+			}
+		}
+	}
+
+    // Schedule Mandatory Materi 2 (can start after all Mandatory Materi 1 are done)
+    materi2StartDate := nextWeekSlotStart(latestMandatoryMateri1) // mulai dari slot minggu berikutnya
+
+	for _, code := range mandatoryCompetencies {
+		// Find the Materi 1 date for this competency to ensure 60-day gap
+		var materi1Date time.Time
+		for _, schedule := range *schedules {
+			if schedule.CompetencyCode == code && schedule.MaterialType == 1 {
+				materi1Date = schedule.ScheduledDate
+				break
+			}
+		}
+
+		// Ensure 60-day minimum gap
+		minMateri2Date := materi1Date.AddDate(0, 0, 60)
+		if materi2StartDate.Before(minMateri2Date) {
+			materi2StartDate = minMateri2Date
+		}
+
+		scheduleDate := s.findNextAvailableDate(materi2StartDate, usedDates, participantGaps, code, categories)
+
+		schedule := domain.TrainingSchedule{
+			Program:        program,
+			CompetencyCode: code,
+			TrainingTopic:  competencyMapping[code].Name,
+			Category:       "M",
+			MaterialType:   2,
+			ScheduledDate:  scheduleDate,
+		}
+		*schedules = append(*schedules, schedule)
+
+		dateKey := scheduleDate.Format("2006-01-02")
+		usedDates[dateKey] = true
+
+        // Pindah ke slot minggu berikutnya
+        materi2StartDate = nextWeekSlotStart(scheduleDate)
+	}
+
+    // Schedule Non-Mandatory Materi 2
+    materi2StartDate = nextWeekSlotStart(latestNonMandatoryMateri1)
+
+	for _, code := range nonMandatoryCompetencies {
+		// Find the Materi 1 date for this competency to ensure 60-day gap
+		var materi1Date time.Time
+		for _, schedule := range *schedules {
+			if schedule.CompetencyCode == code && schedule.MaterialType == 1 {
+				materi1Date = schedule.ScheduledDate
+				break
+			}
+		}
+
+		// Ensure 60-day minimum gap
+		minMateri2Date := materi1Date.AddDate(0, 0, 60)
+		if materi2StartDate.Before(minMateri2Date) {
+			materi2StartDate = minMateri2Date
+		}
+
+		scheduleDate := s.findNextAvailableDate(materi2StartDate, usedDates, participantGaps, code, categories)
+
+		schedule := domain.TrainingSchedule{
+			Program:        program,
+			CompetencyCode: code,
+			TrainingTopic:  competencyMapping[code].Name,
+			Category:       "NM",
+			MaterialType:   2,
+			ScheduledDate:  scheduleDate,
+		}
+		*schedules = append(*schedules, schedule)
+
+		dateKey := scheduleDate.Format("2006-01-02")
+		usedDates[dateKey] = true
+
+        // Pindah ke slot minggu berikutnya
+        materi2StartDate = nextWeekSlotStart(scheduleDate)
+	}
+}

@@ -14,6 +14,7 @@ type RouterConfig struct {
 	MentoringReportController  *controllers.MentoringReportController
 	TrainingController         *controllers.TrainingController // DB
 	TrainingGenController      *traininggen.TrainingController // LLM Generator
+	TrainingPlanController     *controllers.TrainingPlanController
 	QuestionController         *controllers.QuestionController
 	OptionController           *controllers.OptionController
 	AssessmentResultController *controllers.AssessmentResultController
@@ -54,6 +55,14 @@ func (c *RouterConfig) SetupGuestRouter() {
 	{
 		trainings.GET("", c.TrainingGenController.FindAll)            // dari DB
 		trainings.POST("/generate", c.TrainingGenController.Generate) // dari LLM
+	}
+
+	trainingPlan := c.App.Group("api/training-plan")
+	{
+		trainingPlan.GET("", c.TrainingPlanController.GetTrainingPlan)
+		trainingPlan.POST("/generate-schedules", c.TrainingPlanController.GenerateSchedules)
+		trainingPlan.GET("/competency-mapping", c.TrainingPlanController.GetCompetencyMapping)
+		trainingPlan.GET("/programs", c.TrainingPlanController.GetAvailablePrograms)
 	}
 	mentoringReports := c.App.Group("mentoring-reports")
 	{

@@ -7,6 +7,7 @@ import {
   User2,
   FileText,
   Settings,
+  Calendar,
 } from "lucide-react";
 
 import {
@@ -41,11 +42,6 @@ const items = [
     url: "/dashboard",
     icon: LaptopMinimal,
   },
-   {
-    title: "Reports",
-    url: "/master-report",
-    icon: FileText,
-  },
   {
     title: "Upload Excel",
     url: "/dashboard/excel",
@@ -55,6 +51,11 @@ const items = [
     title: "Training",
     url: "/dashboard/training",
     icon: FileText,
+  },
+  {
+    title: "Training Plan",
+    url: "/dashboard/training-plan",
+    icon: Calendar,
   },
   {
     title: "Assessment Manager",
