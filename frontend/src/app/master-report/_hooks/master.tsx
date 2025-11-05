@@ -81,12 +81,12 @@ let apiMeta = response.data?.data;
 
 // Build pagination object using backend data
 const paginationResult: IPaginationData<IReport> = {
-  data: parsedReports,
-  firstId: apiMeta?.firstId ?? (parsedReports[0]?.id ?? null),
-  lastId: apiMeta?.lastId ?? (parsedReports.at(-1)?.id ?? null),
-  pageSize: apiMeta?.pageSize ?? paginationRequest.pageSize,
-  hasMore: apiMeta?.hasMore ?? (parsedReports.length >= paginationRequest.pageSize),
-  firstPage: apiMeta?.firstPage ?? false, // ✅ use backend flag
+  results: parsedReports,
+  first_id: apiMeta?.first_id ?? parsedReports[0]?.id ?? null,
+  last_id: apiMeta?.last_id ?? parsedReports.at(-1)?.id ?? null,
+  page_size: apiMeta?.page_size ?? paginationRequest.pageSize,
+  has_more: apiMeta?.has_more ?? (parsedReports.length >= paginationRequest.pageSize),
+  first_page: apiMeta?.first_page ?? false,
 };
 
         console.log("Final pagination result:", paginationResult);

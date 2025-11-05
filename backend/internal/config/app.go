@@ -67,6 +67,7 @@ func Bootstrap(config *BootstrapConfig) {
 	assessmentResultRepository := repositories.NewAssessmentResultRepository()
 	masterRepository := repositories.NewMasterRepository(config.Log)
 	trainingRepository := repositories.NewTrainingRepository(config.Log)
+	assignmentRepository := repositories.NewAssignmentRepository()
 	gapCompetencyRepository := repositories.NewGapCompetencyRepository(config.DB, config.Log)
 	trainingScheduleRepository := repositories.NewTrainingScheduleRepository(config.DB, config.Log)
 	competencyProgramMappingRepository := repositories.NewCompetencyProgramMappingRepository(config.DB)
@@ -86,6 +87,7 @@ func Bootstrap(config *BootstrapConfig) {
 	seafarerAssessmentService := services.NewSeafarerAssessmentService(seafarerAssessmentRepository, reportRepository, config.Validate)
 	masterService := services.NewMasterService(config.DB, config.Log, config.Validate, masterRepository)
 	trainingServiceDB := services.NewTrainingService(config.DB, config.Log, config.Validate, trainingRepository)
+	assignmentService := services.NewAssignmentService(config.DB, config.Log, config.Validate, assignmentRepository, masterRepository)
 	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, competencyProgramMappingRepository, competencyTypeRepository, config.Log)
 
 	// --- Controllers (DB-based)
@@ -101,6 +103,7 @@ func Bootstrap(config *BootstrapConfig) {
 	seafarerAssessmentController := controllers.NewSeafarerAssessmentController(config.Log, config.DB, seafarerAssessmentService)
 	masterController := controllers.NewMasterController(masterService, config.Log)
 	trainingControllerDB := controllers.NewTrainingController(trainingServiceDB, config.Log)
+	assignmentController := controllers.NewAssignmentController(assignmentService)
 	trainingPlanController := controllers.NewTrainingPlanController(trainingPlanService, config.Log)
 	competencyMappingController := controllers.NewCompetencyMappingController(config.DB, config.Log, competencyProgramMappingRepository, trainingRepository)
 
@@ -117,23 +120,24 @@ func Bootstrap(config *BootstrapConfig) {
 
 	// --- Router setup
 	routerConfig := &routers.RouterConfig{
-		App:                         config.App,
-		ReportController:            reportController,
-		UserController:              userController,
-		MentoringReportController:   mentoringReportController,
-		TrainingController:          trainingControllerDB,  // DB
-		TrainingGenController:       trainingGenController, // LLM Generator
-		TrainingPlanController:      trainingPlanController,
-		CompetencyMappingController: competencyMappingController,
-		QuestionController:          questionController,
-		OptionController:            optionController,
-		AssessmentResultController:  assessmentResultController,
-		QuestionOptionController:    questionOptionController,
-		AssessmentController:        assessmentController,
-		AssessmentTypeController:    assessmentTypeController,
+		App:                          config.App,
+		ReportController:             reportController,
+		UserController:               userController,
+		MentoringReportController:    mentoringReportController,
+		TrainingController:           trainingControllerDB,  // DB
+		TrainingGenController:        trainingGenController, // LLM Generator
+		TrainingPlanController:       trainingPlanController,
+		CompetencyMappingController:  competencyMappingController,
+		QuestionController:           questionController,
+		OptionController:             optionController,
+		AssessmentResultController:   assessmentResultController,
+		QuestionOptionController:     questionOptionController,
+		AssessmentController:         assessmentController,
+		AssessmentTypeController:     assessmentTypeController,
 		SeafarerAssessmentController: seafarerAssessmentController,
-		MasterController:            masterController,
-		AuthMiddleware:              authMiddleware,
+		MasterController:             masterController,
+		AssignmentController:         assignmentController,
+		AuthMiddleware:               authMiddleware,
 	}
 	routerConfig.Setup()
 }

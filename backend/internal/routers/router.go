@@ -8,23 +8,23 @@ import (
 )
 
 type RouterConfig struct {
-	App                         *gin.Engine
-	ReportController            *controllers.ReportController
-	UserController              *controllers.UserController
-	MentoringReportController   *controllers.MentoringReportController
-	TrainingController          *controllers.TrainingController // DB
-	TrainingGenController       *traininggen.TrainingController // LLM Generator
-	TrainingPlanController      *controllers.TrainingPlanController
-	CompetencyMappingController *controllers.CompetencyMappingController
-	QuestionController          *controllers.QuestionController
-	OptionController            *controllers.OptionController
-	AssessmentResultController  *controllers.AssessmentResultController
-	QuestionOptionController    *controllers.QuestionOptionController
-	AssessmentController        *controllers.AssessmentController
-	AssessmentTypeController    *controllers.AssessmentTypeController
+	App                          *gin.Engine
+	ReportController             *controllers.ReportController
+	UserController               *controllers.UserController
+	MentoringReportController    *controllers.MentoringReportController
+	TrainingController           *controllers.TrainingController // DB
+	TrainingGenController        *traininggen.TrainingController // LLM Generator
+	TrainingPlanController       *controllers.TrainingPlanController
+	CompetencyMappingController  *controllers.CompetencyMappingController
+	QuestionController           *controllers.QuestionController
+	OptionController             *controllers.OptionController
+	AssessmentResultController   *controllers.AssessmentResultController
+	QuestionOptionController     *controllers.QuestionOptionController
+	AssessmentController         *controllers.AssessmentController
+	AssessmentTypeController     *controllers.AssessmentTypeController
 	SeafarerAssessmentController *controllers.SeafarerAssessmentController
-	MasterController            *controllers.MasterController
-	AuthMiddleware              gin.HandlerFunc
+	MasterController             *controllers.MasterController
+	AuthMiddleware               gin.HandlerFunc
 }
 
 func (c *RouterConfig) Setup() {
@@ -33,7 +33,6 @@ func (c *RouterConfig) Setup() {
 	c.SetupGuestRouter()
 	c.SetupAuthRouter()
 	c.SetupMasterRouter()
-
 }
 
 func (c *RouterConfig) SetupGuestRouter() {

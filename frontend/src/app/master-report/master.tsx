@@ -138,7 +138,7 @@ export default function MasterPage() {
     setPaginationRequest({
       ...paginationRequest,
       page,
-      anchorId: page === "next" ? paginationData.lastId : paginationData.firstId,
+      anchorId: page === "next" ? paginationData.last_id : paginationData.first_id,
     });
   };
 
@@ -184,8 +184,8 @@ export default function MasterPage() {
   };
 
   const toggleSelectAll = () => {
-    if (!paginationData?.data) return;
-    const ids = paginationData.data.map((r) => r.id);
+    if (!paginationData?.results) return;
+    const ids = paginationData.results.map((r) => r.id);
     const allSelected = ids.every((id) => selectedIds.has(id));
     const newSet = new Set(selectedIds);
     allSelected ? ids.forEach((id) => newSet.delete(id)) : ids.forEach((id) => newSet.add(id));
@@ -222,7 +222,7 @@ export default function MasterPage() {
     (currentPage - 1) * paginationRequest.pageSize + i + 1;
 
   const isAllCurrentPageSelected = () =>
-    paginationData?.data?.every((r) => selectedIds.has(r.id)) ?? false;
+    paginationData?.results?.every((r) => selectedIds.has(r.id)) ?? false;
 
   return (
     <div className="mt-8 p-4 m-6">
@@ -428,8 +428,8 @@ export default function MasterPage() {
                   Loading...
                 </TableCell>
               </TableRow>
-            ) : paginationData?.data?.length ? (
-              paginationData.data.map((row, i) => (
+            ) : paginationData?.results?.length ? (
+              paginationData.results.map((row, i) => (
                 <TableRow
                   key={row.id}
                   className={`${selectedIds.has(row.id) ? "bg-blue-50" : ""} ${
@@ -553,7 +553,7 @@ export default function MasterPage() {
           <PaginationContent className="flex justify-center">
             <PaginationItem>
               <Button
-                disabled={!paginationData || paginationData.firstPage || onCallApi}
+                disabled={!paginationData || paginationData.first_page || onCallApi}
                 onClick={() => navigatePage("prev")}
               >
                 <ChevronLeftIcon /> Previous
@@ -561,7 +561,7 @@ export default function MasterPage() {
             </PaginationItem>
             <PaginationItem>
               <Button
-                disabled={!paginationData?.hasMore || onCallApi}
+                disabled={!paginationData?.has_more || onCallApi}
                 onClick={() => navigatePage("next")}
               >
                 Next <ChevronRightIcon />
