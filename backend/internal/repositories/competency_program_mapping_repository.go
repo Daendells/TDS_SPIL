@@ -26,19 +26,19 @@ func NewCompetencyProgramMappingRepository(db *gorm.DB) CompetencyProgramMapping
 
 func (r *competencyProgramMappingRepository) GetAll() ([]domain.CompetencyProgramMapping, error) {
 	var mappings []domain.CompetencyProgramMapping
-	err := r.db.Find(&mappings).Error
+	err := r.db.Preload("TrainingMaterial1").Preload("TrainingMaterial2").Find(&mappings).Error
 	return mappings, err
 }
 
 func (r *competencyProgramMappingRepository) GetByProgram(program string) ([]domain.CompetencyProgramMapping, error) {
 	var mappings []domain.CompetencyProgramMapping
-	err := r.db.Where("program = ?", program).Find(&mappings).Error
+	err := r.db.Preload("TrainingMaterial1").Preload("TrainingMaterial2").Where("program = ?", program).Find(&mappings).Error
 	return mappings, err
 }
 
 func (r *competencyProgramMappingRepository) GetByCompetencyCodeAndProgram(competencyCode, program string) (*domain.CompetencyProgramMapping, error) {
 	var mapping domain.CompetencyProgramMapping
-	err := r.db.Where("competency_code = ? AND program = ?", competencyCode, program).First(&mapping).Error
+	err := r.db.Preload("TrainingMaterial1").Preload("TrainingMaterial2").Where("competency_code = ? AND program = ?", competencyCode, program).First(&mapping).Error
 	if err != nil {
 		return nil, err
 	}
@@ -50,7 +50,17 @@ func (r *competencyProgramMappingRepository) Create(mapping *domain.CompetencyPr
 }
 
 func (r *competencyProgramMappingRepository) Update(mapping *domain.CompetencyProgramMapping) error {
-	return r.db.Save(mapping).Error
+	// Use Updates instead of Save to avoid updating created_at
+	// Also use Select to explicitly specify which fields to update
+	return r.db.Model(&domain.CompetencyProgramMapping{}).
+		Where("id = ?", mapping.ID).
+		Updates(map[string]interface{}{
+			"competency_code":         mapping.CompetencyCode,
+			"program":                 mapping.Program,
+			"training_material_1_id":  mapping.TrainingMaterial1ID,
+			"training_material_2_id":  mapping.TrainingMaterial2ID,
+			"category":                mapping.Category,
+		}).Error
 }
 
 func (r *competencyProgramMappingRepository) Delete(id int) error {

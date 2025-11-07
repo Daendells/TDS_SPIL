@@ -58,12 +58,18 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 			competencyName = competencyType.Name // use full name from competency_types
 		}
 
+		// Get training material names from relations
+		trainingTopics := []string{}
+		if mapping.TrainingMaterial1 != nil {
+			trainingTopics = append(trainingTopics, mapping.TrainingMaterial1.TopikTraining)
+		}
+		if mapping.TrainingMaterial2 != nil {
+			trainingTopics = append(trainingTopics, mapping.TrainingMaterial2.TopikTraining)
+		}
+
 		result[mapping.CompetencyCode] = domain.CompetencyMappingItem{
-			Name: competencyName,
-			TrainingTopics: []string{
-				mapping.TrainingMaterial1,
-				mapping.TrainingMaterial2,
-			},
+			Name:           competencyName,
+			TrainingTopics: trainingTopics,
 		}
 	}
 

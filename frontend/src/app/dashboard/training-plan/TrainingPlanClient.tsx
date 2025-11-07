@@ -47,6 +47,7 @@ import {
   type TrainingPlanSummary,
 } from "./_hooks/useTrainingPlan";
 import TrainingScheduleTimeline from "./TrainingScheduleTimeline";
+import CompetencyMappingCMS from "./CompetencyMappingCMS";
 
 export default function TrainingPlanClient() {
   const [selectedProgram, setSelectedProgram] = useState("SDP");
@@ -447,39 +448,9 @@ export default function TrainingPlanClient() {
 
         {/* Competency Mapping Tab */}
         <TabsContent value="mapping" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Competency Mapping</CardTitle>
-              <CardDescription>
-                Training topics mapped to competency areas
-              </CardDescription>
-            </CardHeader>
+          <Card>         
             <CardContent>
-              {mappingLoading ? (
-                <div className="space-y-4">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <div key={i} className="space-y-2">
-                      <div className="h-6 w-48 bg-gray-200 rounded animate-pulse" />
-                      <div className="h-4 w-full bg-gray-200 rounded animate-pulse" />
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  {competencyMapping && Object.entries(competencyMapping).map(([code, mapping]) => (
-                    <div key={code} className="space-y-2">
-                      <h4 className="font-medium">{mapping.name}</h4>
-                      <div className="flex flex-wrap gap-2">
-                        {mapping.training_topics?.map((topic, index) => (
-                          <Badge key={index} variant="outline">
-                            {topic}
-                          </Badge>
-                        )) || null}
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
+              <CompetencyMappingCMS program={selectedProgram} />
             </CardContent>
           </Card>
         </TabsContent>

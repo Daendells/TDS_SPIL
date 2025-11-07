@@ -8,20 +8,21 @@ import (
 )
 
 type RouterConfig struct {
-	App                        *gin.Engine
-	ReportController           *controllers.ReportController
-	UserController             *controllers.UserController
-	MentoringReportController  *controllers.MentoringReportController
-	TrainingController         *controllers.TrainingController // DB
-	TrainingGenController      *traininggen.TrainingController // LLM Generator
-	TrainingPlanController     *controllers.TrainingPlanController
-	QuestionController         *controllers.QuestionController
-	OptionController           *controllers.OptionController
-	AssessmentResultController *controllers.AssessmentResultController
-	QuestionOptionController   *controllers.QuestionOptionController
-	AssessmentController       *controllers.AssessmentController
-	MasterController           *controllers.MasterController
-	AuthMiddleware             gin.HandlerFunc
+	App                         *gin.Engine
+	ReportController            *controllers.ReportController
+	UserController              *controllers.UserController
+	MentoringReportController   *controllers.MentoringReportController
+	TrainingController          *controllers.TrainingController // DB
+	TrainingGenController       *traininggen.TrainingController // LLM Generator
+	TrainingPlanController      *controllers.TrainingPlanController
+	CompetencyMappingController *controllers.CompetencyMappingController
+	QuestionController          *controllers.QuestionController
+	OptionController            *controllers.OptionController
+	AssessmentResultController  *controllers.AssessmentResultController
+	QuestionOptionController    *controllers.QuestionOptionController
+	AssessmentController        *controllers.AssessmentController
+	MasterController            *controllers.MasterController
+	AuthMiddleware              gin.HandlerFunc
 }
 
 func (c *RouterConfig) Setup() {
@@ -64,6 +65,20 @@ func (c *RouterConfig) SetupGuestRouter() {
 		trainingPlan.GET("/competency-mapping", c.TrainingPlanController.GetCompetencyMapping)
 		trainingPlan.GET("/programs", c.TrainingPlanController.GetAvailablePrograms)
 	}
+
+	// Competency Mapping CMS endpoints
+	competencyMapping := c.App.Group("api/competency-mappings")
+	{
+		competencyMapping.GET("", c.CompetencyMappingController.GetMappingsByProgram)
+		competencyMapping.GET("/all", c.CompetencyMappingController.GetAllMappings)
+		competencyMapping.POST("", c.CompetencyMappingController.CreateMapping)
+		competencyMapping.PUT("/:id", c.CompetencyMappingController.UpdateMapping)
+		competencyMapping.DELETE("/:id", c.CompetencyMappingController.DeleteMapping)
+	}
+
+	// All trainings endpoint for dropdowns
+	c.App.GET("api/trainings", c.CompetencyMappingController.GetAllTrainings)
+
 	mentoringReports := c.App.Group("mentoring-reports")
 	{
 		mentoringReports.POST("", c.MentoringReportController.Create)
