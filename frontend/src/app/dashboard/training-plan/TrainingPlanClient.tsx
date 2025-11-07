@@ -184,10 +184,14 @@ export default function TrainingPlanClient() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {trainingPlan?.summary?.category ? Object.values(trainingPlan.summary.category).filter(cat => cat === "M").length : 0}
+                {trainingPlan?.summary?.category && competencyMapping
+                  ? Object.entries(trainingPlan.summary.category)
+                      .filter(([code, cat]) => cat === "M" && competencyMapping[code]) // Filter hanya competencies di program ini
+                      .length
+                  : 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                Critical competencies
+                Critical competencies in {selectedProgram}
               </p>
             </CardContent>
           </Card>
@@ -199,10 +203,14 @@ export default function TrainingPlanClient() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {trainingPlan?.summary?.category ? Object.values(trainingPlan.summary.category).filter(cat => cat === "NM").length : 0}
+                {trainingPlan?.summary?.category && competencyMapping
+                  ? Object.entries(trainingPlan.summary.category)
+                      .filter(([code, cat]) => cat === "NM" && competencyMapping[code]) // Filter hanya competencies di program ini
+                      .length
+                  : 0}
               </div>
               <p className="text-xs text-muted-foreground">
-                Non-critical competencies
+                Non-critical competencies in {selectedProgram}
               </p>
             </CardContent>
           </Card>
@@ -344,39 +352,94 @@ export default function TrainingPlanClient() {
 
         {/* Summary Tab */}
         <TabsContent value="summary" className="space-y-4">
+          
+
           <Card>
             <CardHeader>
               <CardTitle>Competency Gap Summary</CardTitle>
               <CardDescription>
-                Overview of competency gaps across all participants
+                Overview of competency gaps for {selectedProgram} program competencies
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {trainingPlan?.summary?.total && Object.entries(trainingPlan.summary.total).map(([competencyCode, totalParticipants]) => (
-                  <div key={competencyCode} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium">{competencyCode}</span>
-                        <Badge
-                          variant={getCompetencyBadgeColor(trainingPlan.summary.category?.[competencyCode] || "")}
-                          className={trainingPlan.summary.category?.[competencyCode] === "NM" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
-                        >
-                          {trainingPlan.summary.category?.[competencyCode] === "M" ? "Mandatory" : "Non-Mandatory"}
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-muted-foreground">
-                          {totalParticipants} participants
-                        </span>
-                        <span className="text-sm font-medium">
-                          {trainingPlan.summary.percentageGap?.[competencyCode]?.toFixed(1) || 0}%
-                        </span>
-                      </div>
-                    </div>
-                    <Progress value={trainingPlan.summary.percentageGap?.[competencyCode] || 0} className="h-2" />
-                  </div>
-                ))}
+                {trainingPlan?.summary?.total && competencyMapping && 
+                  Object.entries(trainingPlan.summary.total)
+                    .filter(([competencyCode]) => competencyMapping[competencyCode]) // Filter hanya competencies di program ini
+                    .sort((a, b) => {
+                      // Sort by percentage (descending)
+                      const percentA = trainingPlan.summary.percentageGap?.[a[0]] || 0;
+                      const percentB = trainingPlan.summary.percentageGap?.[b[0]] || 0;
+                      return percentB - percentA;
+                    })
+                    .map(([competencyCode, totalParticipants]) => {
+                      // Get participants with this gap
+                      const participantsWithGap = trainingPlan.participants.filter(p => 
+                        p.gaps[competencyCode] === "1" || p.gaps[competencyCode] === "X" || p.gaps[competencyCode] === 1
+                      );
+
+                      return (
+                        <div key={competencyCode} className="space-y-2">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="font-medium">{competencyCode}</span>
+                              <span className="text-sm text-muted-foreground">- {competencyMapping[competencyCode]?.name || competencyCode}</span>
+                              <Badge
+                                variant={getCompetencyBadgeColor(trainingPlan.summary.category?.[competencyCode] || "")}
+                                className={trainingPlan.summary.category?.[competencyCode] === "NM" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+                              >
+                                {trainingPlan.summary.category?.[competencyCode] === "M" ? "Mandatory" : "Non-Mandatory"}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Dialog>
+                                <DialogTrigger asChild>
+                                  <Button variant="link" className="text-sm text-muted-foreground hover:text-primary p-0">
+                                    {totalParticipants} participants
+                                  </Button>
+                                </DialogTrigger>
+                                <DialogContent className="max-w-3xl">
+                                  <DialogHeader>
+                                    <DialogTitle>
+                                      {competencyCode} - {competencyMapping[competencyCode]?.name || competencyCode}
+                                    </DialogTitle>
+                                    <DialogDescription>
+                                      Participants with this competency gap
+                                    </DialogDescription>
+                                  </DialogHeader>
+                                  <div className="max-h-[400px] overflow-y-auto">
+                                    <Table>
+                                      <TableHeader>
+                                        <TableRow>
+                                          <TableHead>Seaman Code</TableHead>
+                                          <TableHead>Name</TableHead>
+                                          <TableHead>Position</TableHead>
+                                          <TableHead>Vessel</TableHead>
+                                        </TableRow>
+                                      </TableHeader>
+                                      <TableBody>
+                                        {participantsWithGap.map((participant) => (
+                                          <TableRow key={participant.no}>
+                                            <TableCell className="font-medium">{participant.seamanCode}</TableCell>
+                                            <TableCell>{participant.name}</TableCell>
+                                            <TableCell>{participant.position || '-'}</TableCell>
+                                            <TableCell>{participant.vesselName}</TableCell>
+                                          </TableRow>
+                                        ))}
+                                      </TableBody>
+                                    </Table>
+                                  </div>
+                                </DialogContent>
+                              </Dialog>
+                              <span className="text-sm font-medium">
+                                {trainingPlan.summary.percentageGap?.[competencyCode]?.toFixed(1) || 0}%
+                              </span>
+                            </div>
+                          </div>
+                          <Progress value={trainingPlan.summary.percentageGap?.[competencyCode] || 0} className="h-2" />
+                        </div>
+                      );
+                    })}
               </div>
             </CardContent>
           </Card>
@@ -433,6 +496,7 @@ export default function TrainingPlanClient() {
                 <TrainingScheduleTimeline 
                   summary={trainingPlan.summary}
                   program={selectedProgram}
+                  competencyMapping={competencyMapping}
                 />
               ) : (
                 <div className="text-center py-8">

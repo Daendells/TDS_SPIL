@@ -7,17 +7,24 @@ import type { TrainingPlanSummary } from "./_hooks/useTrainingPlan";
 interface TrainingScheduleTimelineProps {
   summary: TrainingPlanSummary;
   program: string;
+  competencyMapping?: {
+    [key: string]: {
+      name: string;
+      training_topics: string[];
+    };
+  };
 }
 
 interface ScheduleItem {
   competencyCode: string;
-  trainingTopic: string;
+  competencyName: string;
+  trainingMaterial: string;
   category: string;
   materialType: 1 | 2;
   scheduledDate: Date;
 }
 
-export default function TrainingScheduleTimeline({ summary, program }: TrainingScheduleTimelineProps) {
+export default function TrainingScheduleTimeline({ summary, program, competencyMapping }: TrainingScheduleTimelineProps) {
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
 
   const toggleMonth = (monthKey: string) => {
@@ -54,6 +61,20 @@ export default function TrainingScheduleTimeline({ summary, program }: TrainingS
     return "IV";
   };
 
+  // Get competency name from mapping
+  const getCompetencyName = (competencyCode: string): string => {
+    return competencyMapping?.[competencyCode]?.name || competencyCode;
+  };
+
+  // Get training material from mapping based on material type
+  const getTrainingMaterial = (competencyCode: string, materialType: 1 | 2): string => {
+    const topics = competencyMapping?.[competencyCode]?.training_topics;
+    if (!topics || topics.length === 0) return "Training Material";
+    
+    // materialType 1 = index 0, materialType 2 = index 1
+    return topics[materialType - 1] || topics[0] || "Training Material";
+  };
+
   // Parse and combine schedule data dari trainingMateri1 dan trainingMateri2 (format "I-10")
   const parseSchedules = (): ScheduleItem[] => {
     const schedules: ScheduleItem[] = [];
@@ -71,7 +92,8 @@ export default function TrainingScheduleTimeline({ summary, program }: TrainingS
         
         schedules.push({
           competencyCode,
-          trainingTopic: getTrainingTopicName(competencyCode),
+          competencyName: getCompetencyName(competencyCode),
+          trainingMaterial: getTrainingMaterial(competencyCode, 1),
           category: summary.category[competencyCode] || "NM",
           materialType: 1,
           scheduledDate: date,
@@ -92,7 +114,8 @@ export default function TrainingScheduleTimeline({ summary, program }: TrainingS
         
         schedules.push({
           competencyCode,
-          trainingTopic: getTrainingTopicName(competencyCode),
+          competencyName: getCompetencyName(competencyCode),
+          trainingMaterial: getTrainingMaterial(competencyCode, 2),
           category: summary.category[competencyCode] || "NM",
           materialType: 2,
           scheduledDate: date,
@@ -102,49 +125,6 @@ export default function TrainingScheduleTimeline({ summary, program }: TrainingS
 
     // Sort by date
     return schedules.sort((a, b) => a.scheduledDate.getTime() - b.scheduledDate.getTime());
-  };
-
-  // Get training topic name based on competency code and program
-  const getTrainingTopicName = (competencyCode: string): string => {
-    const topicMaps: { [program: string]: { [key: string]: string } } = {
-      SDP: {
-        LDC: "Change Leadership",
-        DCM: "Effective Decision Making",
-        CSO: "Building Service Excellence",
-        SIO: "Learning Agility for Leaders",
-        EMP: "Workplace Social Intelligence",
-        FLX: "Situational Leadership",
-        COM: "Clear Leadership Communication",
-        CIO: "Innovation Leadership",
-        TOR: "Creating Effective Teamwork",
-        PNO: "PDCA for Problem Solving",
-      },
-      MDP: {
-        LAG: "Advanced Growth Mindset",
-        ACH: "Drive High Performance",
-        SIO: "Learning Agility for Leaders",
-        DIR: "Problem Solving Culture",
-        EMP: "Workplace Social Intelligence",
-        RBG: "Effective Delegation and Empowerment",
-        DCM: "Root Cause in Minutes",
-        CIO: "Proactive Mindset",
-        FLX: "Situational Leadership",
-        RSF: "Visual Project Management Tools",
-      },
-      FDP: {
-        DCM: "Risk & Problem Analysis",
-        RSC: "ABC Model for Stress",
-        FLX: "Cognitive Flexibility in Work",
-        EMP: "Empathy in Communication",
-        SIO: "Finding Purpose and Passion in Work",
-        TOR: "Komunikasi Etis dalam Tim",
-        CIO: "Proactive Mindset",
-        LAG: "Learning from Action",
-        RBG: "Ethical Communication",
-      },
-    };
-    
-    return topicMaps[program]?.[competencyCode] || competencyCode;
   };
 
   // Generate months to display based on schedules
@@ -252,10 +232,10 @@ export default function TrainingScheduleTimeline({ summary, program }: TrainingS
                                   </Badge>
                                   <div>
                                     <div className="font-medium text-sm">
-                                      {schedule.competencyCode} - {schedule.trainingTopic}
+                                      {schedule.competencyCode} - {schedule.competencyName}
                                     </div>
                                     <div className="text-xs text-muted-foreground">
-                                      Material {schedule.materialType}
+                                      {schedule.trainingMaterial}
                                     </div>
                                   </div>
                                 </div>

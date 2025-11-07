@@ -69,6 +69,8 @@ func Bootstrap(config *BootstrapConfig) {
 	trainingRepository := repositories.NewTrainingRepository(config.Log)
 	gapCompetencyRepository := repositories.NewGapCompetencyRepository(config.DB, config.Log)
 	trainingScheduleRepository := repositories.NewTrainingScheduleRepository(config.DB, config.Log)
+	competencyProgramMappingRepository := repositories.NewCompetencyProgramMappingRepository(config.DB)
+	competencyTypeRepository := repositories.NewCompetencyTypeRepository(config.DB)
 
 	// --- Services (DB-based)
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository)
@@ -80,7 +82,7 @@ func Bootstrap(config *BootstrapConfig) {
 	assessmentService := services.NewAssessmentService(repositories.NewAssessmentRepository(), config.Validate)
 	masterService := services.NewMasterService(config.DB, config.Log, config.Validate, masterRepository)
 	trainingServiceDB := services.NewTrainingService(config.DB, config.Log, config.Validate, trainingRepository)
-	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, config.Log)
+	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, competencyProgramMappingRepository, competencyTypeRepository, config.Log)
 
 	// --- Controllers (DB-based)
 	reportController := controllers.NewReportController(reportService, config.Log)

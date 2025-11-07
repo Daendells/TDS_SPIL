@@ -17,67 +17,57 @@ type TrainingPlanService interface {
 }
 
 type trainingPlanService struct {
-	gapCompetencyRepo    repositories.GapCompetencyRepository
-	trainingScheduleRepo repositories.TrainingScheduleRepository
-	log                  *logrus.Logger
+	gapCompetencyRepo        repositories.GapCompetencyRepository
+	trainingScheduleRepo     repositories.TrainingScheduleRepository
+	competencyProgramMapRepo repositories.CompetencyProgramMappingRepository
+	competencyTypeRepo       repositories.CompetencyTypeRepository
+	log                      *logrus.Logger
 }
 
 func NewTrainingPlanService(
 	gapCompetencyRepo repositories.GapCompetencyRepository,
 	trainingScheduleRepo repositories.TrainingScheduleRepository,
+	competencyProgramMapRepo repositories.CompetencyProgramMappingRepository,
+	competencyTypeRepo repositories.CompetencyTypeRepository,
 	log *logrus.Logger,
 ) TrainingPlanService {
 	return &trainingPlanService{
-		gapCompetencyRepo:    gapCompetencyRepo,
-		trainingScheduleRepo: trainingScheduleRepo,
-		log:                  log,
+		gapCompetencyRepo:        gapCompetencyRepo,
+		trainingScheduleRepo:     trainingScheduleRepo,
+		competencyProgramMapRepo: competencyProgramMapRepo,
+		competencyTypeRepo:       competencyTypeRepo,
+		log:                      log,
 	}
 }
 
 // GetCompetencyMapping returns the mapping of competency codes to training topics for each program
 func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]domain.CompetencyMappingItem {
-	mappings := map[string]map[string]domain.CompetencyMappingItem{
-		"SDP": {
-			"LDC": {Name: "Change Leadership", TrainingTopics: []string{"Change Leadership"}},
-			"DCM": {Name: "Effective Decision Making", TrainingTopics: []string{"Effective Decision Making"}},
-			"CSO": {Name: "Building Service Excellence", TrainingTopics: []string{"Building Service Excellence"}},
-			"SIO": {Name: "Learning Agility for Leaders", TrainingTopics: []string{"Learning Agility for Leaders"}},
-			"EMP": {Name: "Workplace Social Intelligence", TrainingTopics: []string{"Workplace Social Intelligence"}},
-			"FLX": {Name: "Situational Leadership", TrainingTopics: []string{"Situational Leadership"}},
-			"COM": {Name: "Clear Leadership Communication", TrainingTopics: []string{"Clear Leadership Communication"}},
-			"CIO": {Name: "Innovation Leadership", TrainingTopics: []string{"Innovation Leadership"}},
-			"TOR": {Name: "Creating Effective Teamwork", TrainingTopics: []string{"Creating Effective Teamwork"}},
-			"PNO": {Name: "PDCA for Problem Solving", TrainingTopics: []string{"PDCA for Problem Solving"}},
-		},
-		"MDP": {
-			"LAG": {Name: "Advanced Growth Mindset", TrainingTopics: []string{"Advanced Growth Mindset"}},
-			"ACH": {Name: "Drive High Performance", TrainingTopics: []string{"Drive High Performance"}},
-			"SIO": {Name: "Learning Agility for Leaders", TrainingTopics: []string{"Learning Agility for Leaders"}},
-			"DIR": {Name: "Problem Solving Culture", TrainingTopics: []string{"Problem Solving Culture"}},
-			"EMP": {Name: "Workplace Social Intelligence", TrainingTopics: []string{"Workplace Social Intelligence"}},
-			"RBG": {Name: "Effective Delegation and Empowerment", TrainingTopics: []string{"Effective Delegation and Empowerment"}},
-			"DCM": {Name: "Root Cause in Minutes", TrainingTopics: []string{"Root Cause in Minutes"}},
-			"CIO": {Name: "Proactive Mindset", TrainingTopics: []string{"Proactive Mindset"}},
-			"FLX": {Name: "Situational Leadership", TrainingTopics: []string{"Situational Leadership"}},
-			"RSF": {Name: "Visual Project Management Tools", TrainingTopics: []string{"Visual Project Management Tools"}},
-		},
-		"FDP": {
-			"DCM": {Name: "Risk & Problem Analysis", TrainingTopics: []string{"Risk & Problem Analysis"}},
-			"RSC": {Name: "ABC Model for Stress", TrainingTopics: []string{"ABC Model for Stress"}},
-			"FLX": {Name: "Cognitive Flexibility in Work", TrainingTopics: []string{"Cognitive Flexibility in Work"}},
-			"EMP": {Name: "Empathy in Communication", TrainingTopics: []string{"Empathy in Communication"}},
-			"SIO": {Name: "Finding Purpose and Passion in Work", TrainingTopics: []string{"Finding Purpose and Passion in Work"}},
-			"TOR": {Name: "Komunikasi Etis dalam Tim", TrainingTopics: []string{"Komunikasi Etis dalam Tim"}},
-			"CIO": {Name: "Proactive Mindset", TrainingTopics: []string{"Proactive Mindset"}},
-			"LAG": {Name: "Learning from Action", TrainingTopics: []string{"Learning from Action"}},
-			"RBG": {Name: "Ethical Communication", TrainingTopics: []string{"Ethical Communication"}},
-		},
+	// Get mappings from database
+	programMappings, err := s.competencyProgramMapRepo.GetByProgram(program)
+	if err != nil {
+		s.log.WithError(err).WithField("program", program).Error("Failed to get competency program mappings")
+		return make(map[string]domain.CompetencyMappingItem)
 	}
 
-	if mapping, exists := mappings[program]; exists {
-		return mapping
+	result := make(map[string]domain.CompetencyMappingItem)
+	for _, mapping := range programMappings {
+		// Get competency type to retrieve the full name
+		competencyType, err := s.competencyTypeRepo.GetByCode(mapping.CompetencyCode)
+		competencyName := mapping.CompetencyCode // fallback to code
+		if err == nil && competencyType != nil {
+			competencyName = competencyType.Name // use full name from competency_types
+		}
+
+		result[mapping.CompetencyCode] = domain.CompetencyMappingItem{
+			Name: competencyName,
+			TrainingTopics: []string{
+				mapping.TrainingMaterial1,
+				mapping.TrainingMaterial2,
+			},
+		}
 	}
-	return make(map[string]domain.CompetencyMappingItem)
+
+	return result
 }
 
 // GetTrainingPlan retrieves the complete training plan data for a program
@@ -380,10 +370,16 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 	for _, code := range mandatoryCompetencies {
 		scheduleDate := s.findNextAvailableDate(currentDate, usedDates, participantGaps, code, categories)
 
+		// Get training material 1 for this competency and program
+		trainingTopic := ""
+		if mapping, exists := competencyMapping[code]; exists && len(mapping.TrainingTopics) > 0 {
+			trainingTopic = mapping.TrainingTopics[0] // Material 1
+		}
+
 		schedule := domain.TrainingSchedule{
 			Program:        program,
 			CompetencyCode: code,
-			TrainingTopic:  competencyMapping[code].Name,
+			TrainingTopic:  trainingTopic,
 			Category:       "M",
 			MaterialType:   1,
 			ScheduledDate:  scheduleDate,
@@ -401,10 +397,16 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 	for _, code := range nonMandatoryCompetencies {
 		scheduleDate := s.findNextAvailableDate(currentDate, usedDates, participantGaps, code, categories)
 
+		// Get training material 1 for this competency and program
+		trainingTopic := ""
+		if mapping, exists := competencyMapping[code]; exists && len(mapping.TrainingTopics) > 0 {
+			trainingTopic = mapping.TrainingTopics[0] // Material 1
+		}
+
 		schedule := domain.TrainingSchedule{
 			Program:        program,
 			CompetencyCode: code,
-			TrainingTopic:  competencyMapping[code].Name,
+			TrainingTopic:  trainingTopic,
 			Category:       "NM",
 			MaterialType:   1,
 			ScheduledDate:  scheduleDate,
@@ -588,10 +590,16 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 
 		scheduleDate := s.findNextAvailableDate(materi2StartDate, usedDates, participantGaps, code, categories)
 
+		// Get training material 2 for this competency and program
+		trainingTopic := ""
+		if mapping, exists := competencyMapping[code]; exists && len(mapping.TrainingTopics) > 1 {
+			trainingTopic = mapping.TrainingTopics[1] // Material 2
+		}
+
 		schedule := domain.TrainingSchedule{
 			Program:        program,
 			CompetencyCode: code,
-			TrainingTopic:  competencyMapping[code].Name,
+			TrainingTopic:  trainingTopic,
 			Category:       "M",
 			MaterialType:   2,
 			ScheduledDate:  scheduleDate,
@@ -626,10 +634,16 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 
 		scheduleDate := s.findNextAvailableDate(materi2StartDate, usedDates, participantGaps, code, categories)
 
+		// Get training material 2 for this competency and program
+		trainingTopic := ""
+		if mapping, exists := competencyMapping[code]; exists && len(mapping.TrainingTopics) > 1 {
+			trainingTopic = mapping.TrainingTopics[1] // Material 2
+		}
+
 		schedule := domain.TrainingSchedule{
 			Program:        program,
 			CompetencyCode: code,
-			TrainingTopic:  competencyMapping[code].Name,
+			TrainingTopic:  trainingTopic,
 			Category:       "NM",
 			MaterialType:   2,
 			ScheduledDate:  scheduleDate,

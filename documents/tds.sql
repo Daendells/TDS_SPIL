@@ -2723,7 +2723,11 @@ USE tds;
 
 START TRANSACTION;
 
+-- Drop tables in correct order (reverse of creation, respecting foreign keys)
+DROP TABLE IF EXISTS `training_schedules`;
 DROP TABLE IF EXISTS `gap_competencies`;
+DROP TABLE IF EXISTS `competency_program_mappings`;
+DROP TABLE IF EXISTS `competency_types`;
 
 CREATE TABLE `competency_types` (
   `id` bigint(20) NOT NULL AUTO_INCREMENT,
@@ -2731,6 +2735,8 @@ CREATE TABLE `competency_types` (
   `name` varchar(255) NOT NULL,
   `description` text,
   `category` enum('M','NM') NOT NULL DEFAULT 'M',
+  `training_material_1` varchar(255) DEFAULT NULL COMMENT 'Material for Training Schedule 1',
+  `training_material_2` varchar(255) DEFAULT NULL COMMENT 'Material for Training Schedule 2',
   `is_active` tinyint(1) NOT NULL DEFAULT 1,
   `created_at` timestamp NULL DEFAULT current_timestamp(),
   `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
@@ -2761,30 +2767,112 @@ CREATE TABLE `gap_competencies` (
   CONSTRAINT `fk_gap_competencies_competency_type` FOREIGN KEY (`competency_type_id`) REFERENCES `competency_types` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
-INSERT INTO `competency_types` (`code`, `name`, `description`, `category`) VALUES
-('LDC', 'Leadership Development Capability', 'Kemampuan mengembangkan kepemimpinan dan memimpin tim secara efektif', 'M'),
-('DCM', 'Decision Making Competency', 'Kemampuan mengambil keputusan yang tepat dalam berbagai situasi', 'M'),
-('ACT', 'Action Oriented Thinking', 'Kemampuan berpikir dan bertindak secara proaktif dan berorientasi hasil', 'M'),
-('CSO', 'Customer Service Orientation', 'Orientasi pelayanan pelanggan yang excellent dan berkelanjutan', 'NM'),
-('SIO', 'Strategic Innovation Orientation', 'Kemampuan berinovasi secara strategis untuk kemajuan organisasi', 'M'),
-('CFO', 'Change and Flexibility Orientation', 'Kemampuan beradaptasi dengan perubahan dan fleksibilitas tinggi', 'NM'),
-('TOR', 'Team Oriented Results', 'Kemampuan bekerja dalam tim untuk mencapai hasil yang optimal', 'NM'),
-('IDS', 'Individual Development Skills', 'Kemampuan mengembangkan diri secara berkelanjutan dan mandiri', 'NM'),
-('CIO', 'Communication and Interpersonal Orientation', 'Kemampuan komunikasi dan hubungan interpersonal yang efektif', 'NM'),
-('PNO', 'Problem Solving and Analytical Orientation', 'Kemampuan memecahkan masalah dan berpikir analitis', 'NM'),
-('ACH', 'Achievement Orientation', 'Orientasi pencapaian dan motivasi untuk meraih prestasi tinggi', 'M'),
-('RSC', 'Resource Management Capability', 'Kemampuan mengelola sumber daya secara efisien dan efektif', 'M'),
-('FLX', 'Flexibility and Adaptability', 'Fleksibilitas dan kemampuan adaptasi dalam lingkungan dinamis', 'NM'),
-('LDP', 'Leadership Development Program', 'Program pengembangan kepemimpinan yang terstruktur dan berkelanjutan', 'M'),
-('LAG', 'Learning Agility', 'Kemampuan belajar dengan cepat dan menerapkan pengetahuan baru', 'NM'),
-('EMP', 'Employee Engagement Management', 'Kemampuan mengelola dan meningkatkan engagement karyawan', 'NM'),
-('COM', 'Communication Excellence', 'Keunggulan dalam komunikasi verbal dan non-verbal', 'NM'),
-('DIR', 'Directional Leadership', 'Kepemimpinan yang memberikan arah dan visi yang jelas', 'M'),
-('RBG', 'Results-Based Goal Setting', 'Kemampuan menetapkan tujuan berbasis hasil yang terukur', 'M'),
-('ING', 'Innovation and Growth Mindset', 'Pola pikir inovasi dan pertumbuhan yang berkelanjutan', 'M'),
-('RSF', 'Risk Management and Safety Focus', 'Fokus pada manajemen risiko dan keselamatan kerja', 'M'),
-('BAC', 'Business Acumen and Commercial Awareness', 'Kecerdasan bisnis dan kesadaran komersial yang tinggi', 'M');
+-- Insert all competency types with training materials
+INSERT INTO `competency_types` (`code`, `name`, `training_material_1`, `training_material_2`, `category`) VALUES
+-- Core competencies used across programs
+('LDC', 'Leading Change', 'Change Force Analysis', 'Decision Making during Crisis', 'M'),
+('DCM', 'Decision Making', 'Quick Risk Decision', 'Fast Command', 'M'),
+('CIO', 'Continous Improvement', 'Innovation Leadership', 'Kaizen Leadership', 'M'),
+('SIO', 'Self Improvement Orientation', 'Learning Agility for Leaders', 'RACI Model for Teams', 'M'),
+('FLX', 'Flexibility', 'Situational Leadership', 'Adaptive Decision Making', 'NM'),
+('LAG', 'Learning Agility', 'Knowledge Transformation', 'Building Collective Learning', 'NM'),
+('RSC', 'Resilience', 'Effective Delegation Skills', 'Building Trust in Teams', 'M'),
+('CSO', 'Customer Orientation', 'Building Service Culture', 'Service Decision Making', 'NM'),
+('COM', 'Communication', 'Clear Leadership Communication', 'Cross-Department Clarity', 'NM'),
+('EMP', 'Empathy', 'Workplace Social Intelligence', 'GROW Technique for Coaching', 'NM'),
+('TOR', 'Team Orientation', 'Creating Effective Teamwork', 'Optimizing Project Roles', 'NM'),
+('LDP', 'Leadership', 'Leading in Dynamic Contexts', 'Inspiring Crew', 'M'),
+('PNO', 'Planning & Organizing', 'PDCA for Problem Solving', 'Strategic Thinking for Managers', 'NM'),
+('DIR', 'Directiveness', 'Advanced Responsible Culture', 'Performance Coaching', 'M'),
+('ACH', 'Achivement Orientation', 'Drive High Performance', 'Cultivate Excellence', 'M'),
+('ACT', 'Accountability', 'Building Trust', 'Role Model Practice', 'M'),
+('IDS', 'Instructional Discipline', 'Operational Discipline', 'Advanced Coaching for Leaders', 'NM'),
+('CFO', 'Concern for Order', 'Ensure Compliance', 'PDCA ringkas', 'NM'),
+('RBG', 'Relationship Building', 'Building a Solid Teamwork', 'RACI Model for Manager', 'M'),
+('ING', 'Integrity', 'Leading with Fairness', 'Role Model Leadership', 'M'),
+('RSF', 'Resourcesfulness', 'Coaching for High Performance Team', 'After Action Review (AAR)', 'M'),
+('BAC', 'Business Acumen', 'Strategic Risk Awareness', 'SWOT Ringkas', 'M');
 
+-- Create competency_program_mappings table for program-specific training materials
+CREATE TABLE `competency_program_mappings` (
+  `id` bigint(20) NOT NULL AUTO_INCREMENT,
+  `competency_code` varchar(10) NOT NULL,
+  `program` varchar(10) NOT NULL,
+  `training_material_1` varchar(255) NOT NULL,
+  `training_material_2` varchar(255) NOT NULL,
+  `category` enum('M','NM') NOT NULL DEFAULT 'M',
+  `created_at` timestamp NULL DEFAULT current_timestamp(),
+  `updated_at` timestamp NULL DEFAULT current_timestamp() ON UPDATE current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `unique_competency_program` (`competency_code`, `program`),
+  KEY `idx_program` (`program`),
+  KEY `idx_competency_code` (`competency_code`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+-- Insert PROGRAM SDP mappings
+INSERT INTO `competency_program_mappings` (`competency_code`, `program`, `training_material_1`, `training_material_2`, `category`) VALUES
+('LDC', 'SDP', 'Change Force Analysis', 'Decision Making during Crisis', 'M'),
+('DCM', 'SDP', 'Quick Risk Decision', 'Fast Command', 'M'),
+('CIO', 'SDP', 'Innovation Leadership', 'Kaizen Leadership', 'M'),
+('SIO', 'SDP', 'Learning Agility for Leaders', 'RACI Model for Teams', 'M'),
+('FLX', 'SDP', 'Situational Leadership', 'Adaptive Decision Making', 'NM'),
+('LAG', 'SDP', 'Knowledge Transformation', 'Building Collective Learning', 'NM'),
+('RSC', 'SDP', 'Effective Delegation Skills', 'Building Trust in Teams', 'M'),
+('CSO', 'SDP', 'Building Service Culture', 'Service Decision Making', 'NM'),
+('COM', 'SDP', 'Clear Leadership Communication', 'Cross-Department Clarity', 'NM'),
+('EMP', 'SDP', 'Workplace Social Intelligence', 'GROW Technique for Coaching', 'NM'),
+('TOR', 'SDP', 'Creating Effective Teamwork', 'Optimizing Project Roles', 'NM'),
+('LDP', 'SDP', 'Leading in Dynamic Contexts', 'Inspiring Crew', 'M'),
+('PNO', 'SDP', 'PDCA for Problem Solving', 'Strategic Thinking for Managers', 'NM'),
+('DIR', 'SDP', 'Advanced Responsible Culture', 'Performance Coaching', 'M'),
+('ACH', 'SDP', 'Drive High Performance', 'Cultivate Excellence', 'M'),
+('ACT', 'SDP', 'Building Trust', 'Role Model Practice', 'M'),
+('IDS', 'SDP', 'Operational Discipline', 'Advanced Coaching for Leaders', 'NM'),
+('CFO', 'SDP', 'Ensure Compliance', 'PDCA ringkas', 'NM'),
+('RBG', 'SDP', 'Building a Solid Teamwork', 'RACI Model for Manager', 'M'),
+('ING', 'SDP', 'Leading with Fairness', 'Role Model Leadership', 'M'),
+('RSF', 'SDP', 'Coaching for High Performance Team', 'After Action Review (AAR)', 'M'),
+('BAC', 'SDP', 'Strategic Risk Awareness', 'SWOT Ringkas', 'M');
+
+-- Insert PROGRAM MDP mappings
+INSERT INTO `competency_program_mappings` (`competency_code`, `program`, `training_material_1`, `training_material_2`, `category`) VALUES
+('LAG', 'MDP', 'Knowledge Transformation', 'Building Collective Learning', 'NM'),
+('SIO', 'MDP', 'Learning Agility for Leaders', 'RACI Model for Teams', 'M'),
+('DCM', 'MDP', 'Root Cause in Minutes', 'Fast Track Decision', 'M'),
+('EMP', 'MDP', 'Workplace Social Intelligence', 'GROW Technique for Coaching', 'NM'),
+('FLX', 'MDP', 'Situational Leadership', 'Adaptive Decision Making', 'NM'),
+('CSO', 'MDP', 'Building Service Culture', 'Service Decision Making', 'NM'),
+('TOR', 'MDP', 'Creating Effective Teamwork', 'Optimizing Project Roles', 'NM'),
+('LDC', 'MDP', 'RACI for Managers', 'Managing Organizational Change', 'M'),
+('RSC', 'MDP', 'Effective Delegation Skills', 'Building Trust in Teams', 'M'),
+('ACH', 'MDP', 'Drive High Performance', 'Cultivate Excellence', 'M'),
+('CIO', 'MDP', 'Proactive Mindset', 'Action Review for Task', 'M'),
+('RBG', 'MDP', 'Effective Delegation and Empowerment', 'Task Management for Supervisor', 'M'),
+('RSF', 'MDP', 'Visual Project Management Tools', '5 Whys Identifications', 'M'),
+('LDP', 'MDP', 'Leading Small Teams', 'Giving Constructive Feedback', 'M'),
+('DIR', 'MDP', 'Problem Solving Culture', 'Constructive Feedback', 'M'),
+('COM', 'MDP', 'Feedback for Supervisors', 'Positive Feedback for Supervisor', 'NM'),
+('BAC', 'MDP', 'Balanced Decision', 'Effective Goal Planning', 'M'),
+('CFO', 'MDP', 'Corrective Action Essentials', 'Supervise with Tools', 'NM');
+
+-- Insert PROGRAM FDP mappings
+INSERT INTO `competency_program_mappings` (`competency_code`, `program`, `training_material_1`, `training_material_2`, `category`) VALUES
+('EMP', 'FDP', 'Empathy in Communication', 'Types of Empathy', 'NM'),
+('LAG', 'FDP', 'Learning from Action', 'Continuous Improvement at Work', 'NM'),
+('DCM', 'FDP', 'Simple Comparison', 'Decision Under Pressure', 'M'),
+('RSC', 'FDP', 'Strategic Decision Making for Manager', 'Innovation Idea for Growth', 'M'),
+('FLX', 'FDP', 'Proactive supervisory', 'ADKAR Change Management', 'NM'),
+('SIO', 'FDP', 'Career Development Strategies', 'Effective Change Management', 'M'),
+('TOR', 'FDP', 'Feedback Technique for Supervisor', 'Maximizing Team Synergy', 'NM'),
+('CIO', 'FDP', 'Proactive Mindset', 'Action Review for Task', 'M'),
+('RBG', 'FDP', 'Effective Delegation and Empowerment', 'Task Management for Supervisor', 'M'),
+('CSO', 'FDP', 'Handling Service Issues', 'Guiding Crew in Service', 'NM'),
+('ACH', 'FDP', 'Learning from Mistakes', 'Impactful Execution (Focus on Vital Few)', 'M'),
+('ACT', 'FDP', 'Setting Achievable Goals', 'Rapid Execution Mindset', 'M'),
+('IDS', 'FDP', 'Error-Proofing Techniques', 'Effective Job Instruction', 'NM'),
+('COM', 'FDP', 'Assertive Daily Communication', 'Clear Cross-Dept Messages', 'NM');
+
+-- Migrate existing gap_competencies data
 INSERT INTO `gap_competencies` (`report_id`, `competency_type_id`, `program`, `gap_level`, `priority`)
 SELECT 
     r.id AS report_id,
