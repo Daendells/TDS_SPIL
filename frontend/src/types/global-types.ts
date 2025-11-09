@@ -77,6 +77,144 @@ export interface IPaginationRequest {
   filter: FilterType;
 }
 
+export interface IUser {
+  id?: number;
+  nama?: string;
+  jabatan?: string;
+}
+
+export interface IAssessment {
+  // PascalCase (from backend)
+  assessmentId?: number;
+  role?: string;
+  assessmentName?: string;
+  usingTimer?: boolean;
+  timerLimitMinutes?: number | null;
+  
+  // camelCase (for compatibility)
+  id?: number;
+  name?: string;
+  using_timer?: boolean;
+  timer_limit_minutes?: number | null;
+}
+
+export interface IUser {
+  // PascalCase (from backend)
+  ID?: number;
+  Nama?: string;
+  Jabatan?: string;
+  SeamanCode?: string;
+  SeafarerCode?: string;
+  VesselName?: string;
+  Certificate?: string;
+  Age?: string;
+  TanggalLahir?: string;
+  StartDate?: string;
+  WarningLetter?: string;
+  CaseHistory?: string;
+  YearOfCase?: string;
+  VesselHistory?: string;
+  KonditeReview?: number;
+  KpiVessel?: number;
+  PerformanceScore?: number;
+  ValueAssessment?: number;
+  AssessmentCenter?: number;
+  PotentialScore?: number;
+  HavQuadran?: number;
+  HavMapping?: string;
+  CompetencyGapAnalysis?: string;
+  TotalGap?: number;
+  Strength?: number;
+  TalentClassified?: string;
+  IDPProgram?: string;
+  HavQuadran2?: number;
+  TalentClassified2?: string;
+  Readiness?: string;
+  CertificateEligible?: string;
+  TrainingCompleted?: string;
+  TrainingPlanned?: string;
+  MentoringCompleted?: string;
+  MentoringPlanned?: string;
+  CoachingCompleted?: string;
+  CoachingPlanned?: string;
+  DataIncumbent?: string;
+  SuccessionVessel?: string;
+  SuccessionRank?: string;
+  IDPStart?: string;
+  IDPMentor?: string;
+  IDPCoach?: string;
+  ReadinessMonth?: number | null;
+  EducationFulfillmentMonths?: number | null;
+  TotalReadinessUpdateMonths?: number | null;
+  Keterangan?: string | null;
+  TmNm?: string | null;
+  CreatedAt?: string;
+  UpdatedAt?: string;
+  
+  // camelCase (for compatibility)
+  id?: number;
+  nama?: string;
+  jabatan?: string;
+  seamanCode?: string;
+  seafarerCode?: string;
+  vesselName?: string;
+  certificate?: string;
+  age?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface IAssignment {
+  // PascalCase (from backend)
+  ID?: number;
+  UserID?: number;
+  AssessmentID?: number;
+  Attempt?: number;
+  StartDate?: string;
+  EndDate?: string;
+  Status?: string;
+  Note?: string | null;
+  CreatedAt?: string;
+  UpdatedAt?: string;
+  User?: IUser;
+  Assessment?: IAssessment;
+  
+  // camelCase (for compatibility)
+  id?: number;
+  user_id?: number;
+  assessment_id?: number;
+  attempt?: number;
+  start_date?: string;
+  end_date?: string;
+  status?: string;
+  note?: string | null;
+  created_at?: string;
+  updated_at?: string;
+  user?: IUser;
+  assessment?: IAssessment;
+}
+
+// Helper type for creating new assignments (request payload)
+export interface IAssignmentCreate {
+  user_id: number;
+  assessment_id: number;
+  start_date: string;
+  end_date: string;
+  status?: string;
+  note?: string;
+}
+
+// Helper type for updating assignments
+export interface IAssignmentUpdate {
+  user_id?: number;
+  assessment_id?: number;
+  start_date?: string;
+  end_date?: string;
+  status?: string;
+  note?: string;
+}
+
+
 // Re-export report types from specific types module
 export type {
   ReportData,
@@ -86,4 +224,5 @@ export type {
   PersonalInfo,
   ApiError,
   AssessmentAnswer,
+  
 } from "./report-types";

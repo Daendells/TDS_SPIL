@@ -160,6 +160,21 @@ func (r *RouterConfig) SetupMasterRouter() {
 
 	}
 }
+<<<<<<< HEAD
+=======
+func (r *RouterConfig) SetupAssignmentRouter() {
+	group := r.App.Group("/api/assignments")
+	{
+		group.POST("", r.AssignmentController.Create)
+		group.POST("/bulk", r.AssignmentController.CreateBulk)
+		group.GET("", r.AssignmentController.GetAll)
+		group.GET("/user/:user_id", r.AssignmentController.GetByUser)
+		group.PUT("/:id", r.AssignmentController.Update)
+		group.DELETE("/:id", r.AssignmentController.Delete)
+
+	}
+}
+>>>>>>> c82c5a1 (feat : add bulk assign)
 
 func (c *RouterConfig) SetupAuthRouter() {
 	// Protected Auth Routes

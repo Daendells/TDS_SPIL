@@ -13,6 +13,7 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { formatSegmet } from "@/lib/utils";
+import AssignmentTable from "../assignments/assignmentTable";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -66,6 +67,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
             <section className="bg-background rounded-xl shadow-sm border p-6 min-h-[calc(100vh-180px)] overflow-auto">
               {children}
             </section>
+            <AssignmentTable />
           </main>
         </div>
       </div>
