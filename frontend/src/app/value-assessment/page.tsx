@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import Greetings from "./greetings";
 import PersonalIdentity from "./personal_identity";
 import Section1 from "./section1";
@@ -9,6 +10,8 @@ import Section3 from "./section3";
 import Completion from "./completion";
 import AssessmentProgress from "@/components/assessment-progress";
 import TimerDisplay from "@/components/timer-display";
+import { useCheckAssessmentTypeStatus } from "./_hooks/useAssessmentTypeStatus";
+import { useCheckSeafarerAssignment } from "./_hooks/useCheckSeafarerAssignment";
 import styles from "./assessment.module.css";
 export interface ValueAssessmentData {
   email: string;
@@ -66,10 +69,62 @@ export default function ValueAssessmentPage() {
   const [timeLeft, setTimeLeft] = useState<number>(0);
   const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [lastWarningTime, setLastWarningTime] = useState<number>(0);
+  const [assessmentStatus, setAssessmentStatus] = useState<{
+    isOpen: boolean;
+    message: string;
+    startTimeFormatted?: string;
+    endTimeFormatted?: string;
+    loaded: boolean;
+  }>({
+    isOpen: true,
+    message: "",
+    loaded: false,
+  });
 
-  // localStorage key untuk menyimpan assessment data dengan expiry 24 jam
+  const [assignmentStatus, setAssignmentStatus] = useState<{
+    isAssigned: boolean;
+    checked: boolean;
+    message?: string;
+  }>({
+    isAssigned: false,
+    checked: false,
+  });
+
+  // Check assessment type status
+  const { data: statusData, isLoading: statusLoading } =
+    useCheckAssessmentTypeStatus(1);
+
+  // Check seafarer assignment - only check when we have seafarer code
+  const { data: assignmentData, isLoading: assignmentLoading } =
+    useCheckSeafarerAssignment(assessmentData.seafarerCode || "", 1);
+
+  // localStorage key untuk menyimpan assessment data dengan expiry 3 hari
   const STORAGE_KEY = "valueAssessmentFormData";
-  const EXPIRY_MINUTES = 24 * 60; // 24 jam
+  const EXPIRY_MINUTES = 3 * 24 * 60; // 3 hari (4320 menit)
+
+  // Update assessment status when statusData changes
+  useEffect(() => {
+    if (statusData) {
+      setAssessmentStatus({
+        isOpen: statusData.isOpen,
+        message: statusData.openMessage,
+        startTimeFormatted: statusData.startTimeFormatted,
+        endTimeFormatted: statusData.endTimeFormatted,
+        loaded: true,
+      });
+    }
+  }, [statusData]);
+
+  // Update assignment status when assignment data changes
+  useEffect(() => {
+    if (assignmentData) {
+      setAssignmentStatus({
+        isAssigned: assignmentData.isAssigned,
+        checked: true,
+        message: assignmentData.message,
+      });
+    }
+  }, [assignmentData]);
 
   // Set client-side flag dan load data dari localStorage setelah mount
   useEffect(() => {
@@ -134,7 +189,7 @@ export default function ValueAssessmentPage() {
     };
   }, []);
 
-  // Save data ke localStorage dengan expiry 24 jam setiap kali assessmentData atau currentStep berubah
+  // Save data ke localStorage dengan expiry 3 hari setiap kali assessmentData atau currentStep berubah
   useEffect(() => {
     if (
       isClient &&
@@ -558,6 +613,34 @@ export default function ValueAssessmentPage() {
     assessmentData.section3SisaWaktu,
   ]);
 
+  // Check seafarer assignment when reaching completion step
+  useEffect(() => {
+    if (
+      currentStep === 6 &&
+      assessmentData.seafarerCode &&
+      assignmentStatus.checked
+    ) {
+      // Only show error if checked and not assigned
+      if (!assignmentStatus.isAssigned) {
+        toast.error(
+          assignmentStatus.message ||
+            "User tidak terassign pada assessment ini. Silakan hubungi administrator.",
+          {
+            duration: 5000,
+          }
+        );
+        // Go back to previous step
+        setCurrentStep(5);
+      }
+    }
+  }, [
+    currentStep,
+    assessmentData.seafarerCode,
+    assignmentStatus.checked,
+    assignmentStatus.isAssigned,
+    assignmentStatus.message,
+  ]);
+
   // Function to clear all stored data (useful when assessment is completed)
   const handleClearStoredData = () => {
     try {
@@ -577,6 +660,12 @@ export default function ValueAssessmentPage() {
             onNext={handleNext}
             assessmentData={assessmentData}
             updateAssessmentData={updateAssessmentData}
+            isAssessmentClosed={
+              assessmentStatus.loaded && !assessmentStatus.isOpen
+            }
+            closedMessage={assessmentStatus.message}
+            startTime={assessmentStatus.startTimeFormatted}
+            endTime={assessmentStatus.endTimeFormatted}
           />
         );
       case 2:
@@ -629,71 +718,75 @@ export default function ValueAssessmentPage() {
 
   return (
     <div className={`min-h-screen bg-gray-50 ${styles.assessmentContainer}`}>
-      {/* Timer Display - Show only during assessment sections */}
-      {isClient && currentStep >= 3 && currentStep <= 5 && (
-        <TimerDisplay
-          sectionName={
-            currentStep === 3
-              ? "Section 1 - Assessment"
-              : currentStep === 4
-              ? "Section 2 - Assessment"
-              : currentStep === 5
-              ? "Section 3 - Assessment"
-              : undefined
-          }
-          startTime={
-            currentStep === 3
-              ? assessmentData.section1StartTime
-              : currentStep === 4
-              ? assessmentData.section2StartTime
-              : currentStep === 5
-              ? assessmentData.section3StartTime
-              : undefined
-          }
-          timerMinutes={
-            currentStep === 3
-              ? assessmentData.section1TimerMinutes
-              : currentStep === 4
-              ? assessmentData.section2TimerMinutes
-              : currentStep === 5
-              ? assessmentData.section3TimerMinutes
-              : undefined
-          }
-          pauseTimestamp={
-            currentStep === 3
-              ? assessmentData.section1PauseTimestamp
-              : currentStep === 4
-              ? assessmentData.section2PauseTimestamp
-              : currentStep === 5
-              ? assessmentData.section3PauseTimestamp
-              : undefined
-          }
-          sisaWaktu={
-            currentStep === 3
-              ? assessmentData.section1SisaWaktu
-              : currentStep === 4
-              ? assessmentData.section2SisaWaktu
-              : currentStep === 5
-              ? assessmentData.section3SisaWaktu
-              : undefined
-          }
-          isActive={currentStep >= 3 && currentStep <= 5}
-        />
-      )}
-
-      {/* Progress Bar - Show only if assessment has started and on client */}
-      {isClient &&
-        (assessmentData.email ||
-          assessmentData.fullName ||
-          currentStep > 1) && (
-          <div className="max-w-4xl mx-auto px-6 pt-4">
-            <AssessmentProgress
-              assessmentData={assessmentData}
-              currentStep={currentStep}
+      {isClient && (
+        <>
+          {/* Timer Display - Show only during assessment sections */}
+          {currentStep >= 3 && currentStep <= 5 && (
+            <TimerDisplay
+              sectionName={
+                currentStep === 3
+                  ? "Section 1 - Assessment"
+                  : currentStep === 4
+                  ? "Section 2 - Assessment"
+                  : currentStep === 5
+                  ? "Section 3 - Assessment"
+                  : undefined
+              }
+              startTime={
+                currentStep === 3
+                  ? assessmentData.section1StartTime
+                  : currentStep === 4
+                  ? assessmentData.section2StartTime
+                  : currentStep === 5
+                  ? assessmentData.section3StartTime
+                  : undefined
+              }
+              timerMinutes={
+                currentStep === 3
+                  ? assessmentData.section1TimerMinutes
+                  : currentStep === 4
+                  ? assessmentData.section2TimerMinutes
+                  : currentStep === 5
+                  ? assessmentData.section3TimerMinutes
+                  : undefined
+              }
+              pauseTimestamp={
+                currentStep === 3
+                  ? assessmentData.section1PauseTimestamp
+                  : currentStep === 4
+                  ? assessmentData.section2PauseTimestamp
+                  : currentStep === 5
+                  ? assessmentData.section3PauseTimestamp
+                  : undefined
+              }
+              sisaWaktu={
+                currentStep === 3
+                  ? assessmentData.section1SisaWaktu
+                  : currentStep === 4
+                  ? assessmentData.section2SisaWaktu
+                  : currentStep === 5
+                  ? assessmentData.section3SisaWaktu
+                  : undefined
+              }
+              isActive={currentStep >= 3 && currentStep <= 5}
             />
-          </div>
-        )}
-      {renderCurrentStep()}
+          )}
+
+          {/* Progress Bar - Show only if assessment has started and on client */}
+          {isClient &&
+            (assessmentData.email ||
+              assessmentData.fullName ||
+              currentStep > 1) && (
+              <div className="max-w-4xl mx-auto px-6 pt-4">
+                <AssessmentProgress
+                  assessmentData={assessmentData}
+                  currentStep={currentStep}
+                />
+              </div>
+            )}
+          {renderCurrentStep()}
+        </>
+      )}
     </div>
   );
 }

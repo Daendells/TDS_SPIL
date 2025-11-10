@@ -62,6 +62,11 @@ const items = [
     url: "/assessment-manager",
     icon: Settings,
   },
+  {
+    title: "Assessment Type Manager",
+    url: "/assessment-type-manager",
+    icon: Settings,
+  },
 ];
 
 export function AppSidebar() {

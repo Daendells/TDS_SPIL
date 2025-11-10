@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useGetReportBySeafarerCode } from "./_hooks/useReportData";
+import { useCheckSeafarerAssignment } from "./_hooks/useCheckSeafarerAssignment";
+import { useIncrementAttempts } from "./_hooks/useIncrementAttempts";
 import {
   Form,
   FormControl,
@@ -41,6 +42,11 @@ export default function PersonalIdentity({
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [verificationError, setVerificationError] = useState("");
+  const [lastVerifiedSeafarerCode, setLastVerifiedSeafarerCode] =
+    useState<string>("");
+
+  // Mutation for incrementing attempts
+  const incrementAttemptsMutation = useIncrementAttempts();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -52,9 +58,14 @@ export default function PersonalIdentity({
     },
   });
 
-  // Use React Query hook at component level
+  // State for checking assignment
   const [querySeafarerCode, setQuerySeafarerCode] = useState<string>("");
-  const reportQuery = useGetReportBySeafarerCode(querySeafarerCode);
+  const [queryAssessmentTypeId, setQueryAssessmentTypeId] = useState<number>(0);
+
+  const assignmentQuery = useCheckSeafarerAssignment(
+    querySeafarerCode,
+    queryAssessmentTypeId
+  );
 
   const verifySeafarerCode = async (seafarerCode: string) => {
     if (!seafarerCode.trim()) {
@@ -65,68 +76,125 @@ export default function PersonalIdentity({
     setIsVerifying(true);
     setVerificationError("");
 
-    // Trigger the query by setting the seafarer code
+    // Trigger the query by setting the seafarer code and assessment type (hardcoded to 1)
     setQuerySeafarerCode(seafarerCode);
+    setQueryAssessmentTypeId(1);
   };
 
   // Effect to handle query results
   useEffect(() => {
-    if (reportQuery.data) {
-      const reportData = reportQuery.data;
+    if (assignmentQuery.data) {
+      const data = assignmentQuery.data;
 
-      // Auto-populate the fields with data from the report
-      form.setValue("fullName", reportData.nama || "");
-      form.setValue("rank", reportData.jabatan || "");
-      form.setValue("vesselName", reportData.vesselName || "");
-
-      setIsVerified(true);
-      setVerificationError("");
-      setIsVerifying(false);
-    } else if (reportQuery.error) {
-      const errorMessage =
-        reportQuery.error instanceof Error
-          ? reportQuery.error.message
-          : "Terjadi kesalahan koneksi";
-
-      if (errorMessage.includes("404") || errorMessage.includes("not found")) {
-        setVerificationError("Seafarer code tidak ditemukan dalam database");
+      if (!data.isAssigned) {
+        setVerificationError(
+          data.message ||
+            "Anda tidak diassign untuk assessment ini. Silakan hubungi administrator."
+        );
         // Clear the auto-populated fields
         form.setValue("fullName", "");
         form.setValue("rank", "");
         form.setValue("vesselName", "");
-      } else {
-        setVerificationError(errorMessage);
+        setIsVerified(false);
+        setIsVerifying(false);
+        return;
       }
 
+      // If assigned but no personal data found
+      if (!data.personalData) {
+        setVerificationError(
+          "Data pribadi tidak ditemukan. Silakan hubungi administrator untuk memperbarui data Anda."
+        );
+        // Clear the auto-populated fields
+        form.setValue("fullName", "");
+        form.setValue("rank", "");
+        form.setValue("vesselName", "");
+        setIsVerified(false);
+        setIsVerifying(false);
+        return;
+      }
+
+      // Check if attempts have been exceeded
+      if (data.maxAttempts !== null && data.attemptsCount >= data.maxAttempts) {
+        setVerificationError(
+          `Anda sudah melebihi batas maksimal attempts (${data.attemptsCount}/${data.maxAttempts}). Hubungi administrator untuk bantuan lebih lanjut.`
+        );
+        // Clear the auto-populated fields
+        form.setValue("fullName", "");
+        form.setValue("rank", "");
+        form.setValue("vesselName", "");
+        setIsVerified(false);
+        setIsVerifying(false);
+        return;
+      }
+
+      // If assigned and personal data exists, populate fields
+      form.setValue("fullName", data.personalData.nama || "");
+      form.setValue("rank", data.personalData.jabatan || "");
+      form.setValue("vesselName", data.personalData.vesselName || "");
+
+      setIsVerified(true);
+      setLastVerifiedSeafarerCode(querySeafarerCode);
+      setVerificationError("");
+      setIsVerifying(false);
+    } else if (assignmentQuery.error) {
+      const errorMessage =
+        assignmentQuery.error instanceof Error
+          ? assignmentQuery.error.message
+          : "Terjadi kesalahan koneksi";
+
+      setVerificationError(errorMessage);
       setIsVerified(false);
       setIsVerifying(false);
     }
 
-    if (reportQuery.isLoading) {
+    if (assignmentQuery.isLoading) {
       setIsVerifying(true);
     }
-  }, [reportQuery.data, reportQuery.error, reportQuery.isLoading, form]);
+  }, [
+    assignmentQuery.data,
+    assignmentQuery.error,
+    assignmentQuery.isLoading,
+    form,
+    querySeafarerCode,
+  ]);
 
   const handleSeafarerCodeChange = (value: string) => {
     form.setValue("seafarerCode", value);
-    setIsVerified(false);
-    setVerificationError("");
 
-    // Clear auto-populated fields when seafarer code changes
-    if (value !== assessmentData.seafarerCode) {
+    // If seafarer code changed from the last verified one, reset verification
+    if (value !== lastVerifiedSeafarerCode) {
+      setIsVerified(false);
+      setVerificationError("");
+      // Clear auto-populated fields when seafarer code changes
       form.setValue("fullName", "");
       form.setValue("rank", "");
       form.setValue("vesselName", "");
     }
   };
 
-  const onSubmit = (data: z.infer<typeof FormSchema>) => {
+  const onSubmit = async (data: z.infer<typeof FormSchema>) => {
     if (!isVerified) {
       setVerificationError("Silakan verifikasi seafarer code terlebih dahulu");
       return;
     }
-    updateAssessmentData(data);
-    onNext();
+
+    try {
+      // Increment attempts count
+      await incrementAttemptsMutation.mutateAsync({
+        seafarerCode: data.seafarerCode,
+        assessmentTypeId: 1,
+      });
+
+      // Update assessment data and move to next step
+      updateAssessmentData(data);
+      onNext();
+    } catch (error) {
+      console.error("Error incrementing attempts:", error);
+      setVerificationError(
+        "Terjadi kesalahan saat memulai test. Silakan coba lagi."
+      );
+    }
   };
 
   return (
@@ -196,12 +264,12 @@ export default function PersonalIdentity({
                       </div>
                       {verificationError && (
                         <p className="text-sm text-red-600 mt-1">
-                          {verificationError}
+                          User tidak ditemukan atau tidak diassign
                         </p>
                       )}
                       {isVerified && (
                         <p className="text-sm text-green-600 mt-1">
-                          ✓ Seaman code berhasil diverifikasi
+                          ✓ Seafarer code berhasil diverifikasi
                         </p>
                       )}
                       <FormMessage />
@@ -285,7 +353,12 @@ export default function PersonalIdentity({
                 </Button>
                 <Button
                   type="submit"
-                  className="px-8 py-2 bg-green-600 hover:bg-green-700 text-white font-medium"
+                  disabled={!isVerified}
+                  className={`px-8 py-2 text-white font-medium ${
+                    isVerified
+                      ? "bg-green-600 hover:bg-green-700"
+                      : "bg-gray-400 cursor-not-allowed"
+                  }`}
                 >
                   Mulai Test
                 </Button>
