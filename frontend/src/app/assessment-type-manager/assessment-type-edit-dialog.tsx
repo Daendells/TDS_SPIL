@@ -136,8 +136,7 @@ export default function AssessmentTypeEditDialog({
                     <Input
                       placeholder="Contoh: VA 1, VA 2, etc"
                       {...field}
-                      disabled
-                      className="bg-gray-50 text-gray-700 cursor-not-allowed"
+                      className="border-gray-300 focus:border-gray-500 focus:ring-gray-500"
                     />
                   </FormControl>
                   <FormMessage />
