@@ -4,6 +4,9 @@ import * as React from "react";
 import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import Image from "next/image";
+import { Separator } from "@radix-ui/react-separator";
+
 import {
   Command,
   CommandGroup,
@@ -49,10 +52,10 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { useMasterReports } from "./_hooks/master";
+import { useMasterReports } from "./_hooks/master-report";
 
 /* Dynamic sticky offset calculator */
-function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement>, pinnedCount = 2) {
+function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pinnedCount = 2) {
   const [offsets, setOffsets] = useState<number[]>([]);
   useEffect(() => {
     const container = ref.current;
@@ -134,7 +137,11 @@ export default function MasterPage() {
 
   const navigatePage = (page: "prev" | "next") => {
     if (!paginationData) return;
-    setCurrentPage((prev) => (page === "next" ? prev + 1 : prev - 1));
+setCurrentPage((prev) => {
+  if (page === "prev" && prev <= 1) return 1; // prevent going below 1
+  return page === "next" ? prev + 1 : prev - 1;
+});
+
     setPaginationRequest({
       ...paginationRequest,
       page,
@@ -225,164 +232,215 @@ export default function MasterPage() {
     paginationData?.results?.every((r) => selectedIds.has(r.id)) ?? false;
 
   return (
-    <div className="mt-8 p-4 m-6">
-      {/* Header */}
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Master Table</h1>
-        <div className="flex gap-2">
-          <Button
-            size="lg"
-            variant={isEditMode ? "destructive" : "outline"}
-            onClick={toggleEditMode}
-            className="flex items-center gap-2"
-          >
-            {isEditMode ? (
-              <>
-                <XIcon className="w-4 h-4" /> Cancel
-              </>
-            ) : (
-              <>
-                <EditIcon className="w-4 h-4" /> Edit
-              </>
-            )}
-          </Button>
+  
+      <div className="mt-8 p-4 m-6">
+  {/* Header Section */}
+  <div className="space-y-6 mb-6">
+    <div>
+      <div className="flex items-center gap-4 mb-6">
+        {/* Left Logo */}
+        <Image
+          width={64}
+          height={64}
+          src="/images/logo1.png"
+          alt="Company Logo"
+          className="h-12 w-auto"
+        />
 
-          {isEditMode && (
-            <Button
-              size="lg"
-              variant="destructive"
-              onClick={confirmDelete}
-              disabled={selectedIds.size === 0}
-              className="flex items-center gap-2"
-            >
-              <TrashIcon className="w-4 h-4" /> Delete ({selectedIds.size})
-            </Button>
-          )}
-
-          {/* Add Dialog */}
-          <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-            <DialogTrigger asChild>
-              <Button size="lg" className="flex items-center gap-2">
-                <PlusIcon className="w-4 h-4" /> Add Report
-              </Button>
-            </DialogTrigger>
-            <DialogContent>
-              <DialogHeader>
-                <DialogTitle>Add New Report</DialogTitle>
-              </DialogHeader>
-              <div className="grid gap-4 py-2">
-                <Input
-                  placeholder="Name"
-                  value={form.nama}
-                  onChange={(e) => setForm({ ...form, nama: e.target.value.toUpperCase() })}
-                />
-                <Input
-                  placeholder="Seaman Code"
-                  value={form.seamanCode}
-                  onChange={(e) => setForm({ ...form, seamanCode: e.target.value.toUpperCase() })}
-                />
-                <Input
-                  placeholder="Seafarer Code"
-                  value={form.seafarerCode}
-                  onChange={(e) =>
-                    setForm({ ...form, seafarerCode: e.target.value.toUpperCase() })
-                  }
-                />
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setOpenDialog(false)}>
-                  Cancel
-                </Button>
-                <Button onClick={handleAdd} disabled={!isFormValid()}>
-                  Save
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-        </div>
-      </div>
-
-      {/* Delete Confirmation Dialog */}
-      <Dialog open={confirmDeleteDialog} onOpenChange={setConfirmDeleteDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-red-600">
-              <AlertTriangle className="w-5 h-5" /> Confirm Deletion
-            </DialogTitle>
-          </DialogHeader>
-          <p className="text-gray-700">
-            Are you sure you want to delete {selectedIds.size} selected{" "}
-            {selectedIds.size > 1 ? "reports" : "report"}? This action cannot be undone.
+        {/* Title & Description */}
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Master Table
+          </h1>
+          <p className="text-gray-500 mt-1">
+            Kelola data induk pelaut, performa, dan rencana pengembangan individu.
           </p>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setConfirmDeleteDialog(false)}>
-              Cancel
-            </Button>
-            <Button variant="destructive" onClick={handleDeleteConfirmed}>
-              Yes, Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        </div>
 
-      {/* Edit Dialog */}
-      <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Report</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-2">
-            <Input
-              placeholder="Name"
-              value={editingRow?.nama || ""}
-              onChange={(e) =>
-                setEditingRow({ ...editingRow, nama: e.target.value.toUpperCase() })
-              }
-            />
-            <Input
-              placeholder="Seaman Code"
-              value={editingRow?.seamanCode || ""}
-              onChange={(e) =>
-                setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })
-              }
-            />
-            <Input
-              placeholder="Seafarer Code"
-              value={editingRow?.seafarerCode || ""}
-              onChange={(e) =>
-                setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })
-              }
-            />
-          </div>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => {
-                setOpenEditDialog(false);
-                setEditingRow(null);
-              }}
-            >
-              Cancel
-            </Button>
-            <Button onClick={handleEdit} disabled={!isEditFormValid()}>
-              Update
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Search */}
-      <div className="flex gap-4 mb-4">
-        <Input
-          placeholder="Search by Name or Seafarer Code.."
-          value={searchName}
-          onChange={(e) => {
-            setSearchName(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="w-[250px]"
+        {/* Right Logo */}
+        <Image
+          width={64}
+          height={64}
+          src="/images/logo2.png"
+          alt="Partner Logo"
+          className="h-12 w-auto ml-auto"
         />
       </div>
+
+      {/* Line Separator */}
+      <Separator />
+    </div>
+
+    {/* Toolbar: Search + Action Buttons */}
+    <div className="flex items-center justify-between">
+      {/* Search Input */}
+      <Input
+        placeholder="Search by Name or Seafarer Code..."
+        value={searchName}
+        onChange={(e) => {
+          setSearchName(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="w-[300px]"
+      />
+
+      {/* Action Buttons */}
+      <div className="flex items-center gap-2">
+        {/* Edit / Cancel toggle */}
+        <Button
+          size="lg"
+          variant={isEditMode ? "destructive" : "outline"}
+          onClick={toggleEditMode}
+          className="flex items-center gap-2"
+        >
+          {isEditMode ? (
+            <>
+              <XIcon className="w-4 h-4" /> Cancel
+            </>
+          ) : (
+            <>
+              <EditIcon className="w-4 h-4" /> Edit
+            </>
+          )}
+        </Button>
+
+        {/* Delete button (only visible in edit mode) */}
+        {isEditMode && (
+          <Button
+            size="lg"
+            variant="destructive"
+            onClick={confirmDelete}
+            disabled={selectedIds.size === 0}
+            className="flex items-center gap-2"
+          >
+            <TrashIcon className="w-4 h-4" /> Delete ({selectedIds.size})
+          </Button>
+        )}
+
+        {/* Add Report Dialog */}
+        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+          <DialogTrigger asChild>
+            <Button size="lg" className="flex items-center gap-2">
+              <PlusIcon className="w-4 h-4" /> Add Report
+            </Button>
+          </DialogTrigger>
+
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Add New Report</DialogTitle>
+            </DialogHeader>
+
+            <div className="grid gap-4 py-2">
+              <Input
+                placeholder="Name"
+                value={form.nama}
+                onChange={(e) =>
+                  setForm({ ...form, nama: e.target.value.toUpperCase() })
+                }
+              />
+              <Input
+                placeholder="Seaman Code"
+                value={form.seamanCode}
+                onChange={(e) =>
+                  setForm({ ...form, seamanCode: e.target.value.toUpperCase() })
+                }
+              />
+              <Input
+                placeholder="Seafarer Code"
+                value={form.seafarerCode}
+                onChange={(e) =>
+                  setForm({ ...form, seafarerCode: e.target.value.toUpperCase() })
+                }
+              />
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setOpenDialog(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleAdd} disabled={!isFormValid()}>
+                Save
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
+
+    {/* Line separator below toolbar */}
+    <Separator />
+  </div>
+
+  {/* Delete Confirmation Dialog */}
+  <Dialog open={confirmDeleteDialog} onOpenChange={setConfirmDeleteDialog}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle className="flex items-center gap-2 text-red-600">
+          <AlertTriangle className="w-5 h-5" /> Confirm Deletion
+        </DialogTitle>
+      </DialogHeader>
+      <p className="text-gray-700">
+        Are you sure you want to delete {selectedIds.size} selected{" "}
+        {selectedIds.size > 1 ? "reports" : "report"}? This action cannot be undone.
+      </p>
+      <DialogFooter>
+        <Button variant="outline" onClick={() => setConfirmDeleteDialog(false)}>
+          Cancel
+        </Button>
+        <Button variant="destructive" onClick={handleDeleteConfirmed}>
+          Yes, Delete
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+  {/* Edit Dialog */}
+  <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Edit Report</DialogTitle>
+      </DialogHeader>
+      <div className="grid gap-4 py-2">
+        <Input
+          placeholder="Name"
+          value={editingRow?.nama || ""}
+          onChange={(e) =>
+            setEditingRow({ ...editingRow, nama: e.target.value.toUpperCase() })
+          }
+        />
+        <Input
+          placeholder="Seaman Code"
+          value={editingRow?.seamanCode || ""}
+          onChange={(e) =>
+            setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })
+          }
+        />
+        <Input
+          placeholder="Seafarer Code"
+          value={editingRow?.seafarerCode || ""}
+          onChange={(e) =>
+            setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })
+          }
+        />
+      </div>
+      <DialogFooter>
+        <Button
+          variant="outline"
+          onClick={() => {
+            setOpenEditDialog(false);
+            setEditingRow(null);
+          }}
+        >
+          Cancel
+        </Button>
+        <Button onClick={handleEdit} disabled={!isEditFormValid()}>
+          Update
+        </Button>
+      </DialogFooter>
+    </DialogContent>
+  </Dialog>
+
+
 
       {/* Table */}
       <div
@@ -552,10 +610,11 @@ export default function MasterPage() {
         <Pagination className="mx-auto">
           <PaginationContent className="flex justify-center">
             <PaginationItem>
-              <Button
-                disabled={!paginationData || paginationData.first_page || onCallApi}
-                onClick={() => navigatePage("prev")}
-              >
+<Button
+  disabled={!paginationData || paginationData.first_page || currentPage <= 1 || onCallApi}
+  onClick={() => navigatePage("prev")}
+>
+
                 <ChevronLeftIcon /> Previous
               </Button>
             </PaginationItem>

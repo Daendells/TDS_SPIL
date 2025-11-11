@@ -43,6 +43,11 @@ const items = [
     icon: LaptopMinimal,
   },
   {
+    title: "Master Report",
+    url: "/master-report",
+    icon: LaptopMinimal,
+  },
+  {
     title: "Upload Excel",
     url: "/dashboard/excel",
     icon: Inbox,

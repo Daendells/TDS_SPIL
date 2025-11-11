@@ -25,19 +25,19 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 	fmt.Println("AuthMiddleware initialized with secret:", secret)
 	return func(ctx *gin.Context) {
 		fmt.Printf("[AUTH] Method: %s, Path: %s\n", ctx.Request.Method, ctx.Request.URL.Path)
-		
+
 		var tokenString string
 		var err error
-		
+
 		// First try to get token from cookie
 		tokenString, err = ctx.Cookie(TOKEN_COOKIE)
 		fmt.Printf("[AUTH] Cookie attempt - Error: %v, Token: %s\n", err, tokenString)
-		
+
 		// If no cookie, try Authorization header
 		if err != nil {
 			authHeader := ctx.GetHeader("Authorization")
 			fmt.Printf("[AUTH] Authorization header: '%s'\n", authHeader)
-			
+
 			if authHeader != "" && len(authHeader) > 7 && authHeader[:7] == "Bearer " {
 				tokenString = authHeader[7:] // Remove "Bearer " prefix
 				fmt.Printf("[AUTH] Token extracted from header: %s\n", tokenString)
@@ -52,7 +52,7 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 				return
 			}
 		}
-		
+
 		fmt.Println("[AUTH] Final token to validate:", tokenString)
 
 		// TODO: Decode and Validate it

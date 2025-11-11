@@ -113,7 +113,7 @@ export default function ReportMentoring() {
             response.data.data,
             parseReports
           );
-          const fetchedReports = paginationData.data;
+          const fetchedReports = paginationData.results;
           setReports(fetchedReports);
 
           // Extract unique mentee names from fetched reports

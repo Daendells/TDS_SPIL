@@ -30,10 +30,16 @@ export function useMasterReports(initialPageSize = 10) {
     const fetchData = async () => {
       setOnCallApi(true);
       const params = new URLSearchParams({
-        anchor_id: paginationRequest.anchorId!.toString(),
-        page: paginationRequest.page,
-        page_size: paginationRequest.pageSize.toString(),
-      });
+  page: paginationRequest.page,
+  page_size: paginationRequest.pageSize.toString(),
+});
+
+if (paginationRequest.anchorId !== null && paginationRequest.anchorId !== undefined) {
+  params.set("anchor_id", paginationRequest.anchorId.toString());
+} else {
+  params.set("anchor_id", "0"); // default when null
+}
+
       if (debouncedName) params.set("query", debouncedName);
       const queryKey = params.toString();
       lastQueryRef.current = queryKey;
