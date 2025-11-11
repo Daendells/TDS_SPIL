@@ -8,6 +8,7 @@ export interface Training {
   kode_ai: string;
   kompetensi: string;
   lvl: number;
+  deskripsi_perilaku?: string;
   tools_training: string;
   kode: string;
   topik_training: string;

@@ -1112,6 +1112,38 @@ type GenerateMeta struct {
 	Duration   string `json:"duration"`
 }
 
+// DeleteOldFile menghapus file lama jika ada
+func (s *Service) DeleteOldFile(fileURL string) error {
+	if fileURL == "" {
+		return nil
+	}
+
+	// Extract filename from URL
+	// URL format: http://localhost:8080/files/materi/filename.pptx
+	parts := strings.Split(fileURL, "/")
+	if len(parts) == 0 {
+		return fmt.Errorf("invalid file URL: %s", fileURL)
+	}
+	filename := parts[len(parts)-1]
+	
+	filepath := filepath.Join(s.outDir, filename)
+	
+	// Check if file exists
+	if _, err := os.Stat(filepath); os.IsNotExist(err) {
+		s.log.Warnf("File tidak ditemukan untuk dihapus: %s", filepath)
+		return nil
+	}
+	
+	// Delete file
+	if err := os.Remove(filepath); err != nil {
+		s.log.WithError(err).Errorf("Gagal menghapus file: %s", filepath)
+		return err
+	}
+	
+	s.log.Infof("Berhasil menghapus file lama: %s", filepath)
+	return nil
+}
+
 func (s *Service) GenerateAndBuildPDF(ctx context.Context, in GenerateInput) (link string, meta GenerateMeta, err error) {
 	s.log.Infof("[GenerateAndBuildPDF] Input: %+v", in)
 
@@ -1139,8 +1171,15 @@ func (s *Service) GenerateAndBuildPDF(ctx context.Context, in GenerateInput) (li
 	return link, meta, nil
 }
 
-func (s *Service) GenerateAndBuildPPTX(ctx context.Context, in GenerateInput) (link string, meta GenerateMeta, err error) {
+func (s *Service) GenerateAndBuildPPTX(ctx context.Context, in GenerateInput, oldFileURL string) (link string, meta GenerateMeta, err error) {
 	s.log.Infof("[GenerateAndBuildPPTX] Input: %+v", in)
+
+	// Delete old file if exists
+	if oldFileURL != "" {
+		if err := s.DeleteOldFile(oldFileURL); err != nil {
+			s.log.WithError(err).Warn("Gagal menghapus file lama, tapi proses generate tetap dilanjutkan")
+		}
+	}
 
 	prompt := s.buildPrompt(in)
 	plan, err := s.callGroq(ctx, prompt)

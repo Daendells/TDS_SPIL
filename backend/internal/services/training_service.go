@@ -2,6 +2,7 @@ package services
 
 import (
 	"net/http"
+	"time"
 
 	"backend/internal/models/domain"
 	"backend/internal/models/web"
@@ -45,4 +46,14 @@ func (s *TrainingService) FindAll() (*web.SuccessResponse, error) {
 		Status: "OK",
 		Data:   rows,
 	}, nil
+}
+
+func (s *TrainingService) UpdateGeneratedFileURL(kode string, fileURL string) error {
+	now := time.Now()
+	return s.DB.Model(&domain.Training{}).
+		Where("kode = ?", kode).
+		Updates(map[string]interface{}{
+			"generated_file_url": fileURL,
+			"generated_at":       now,
+		}).Error
 }

@@ -57,6 +57,7 @@ func (h *TrainingController) Generate(c *gin.Context) {
 		Referensi     string `json:"referensi"`
 		Level         int    `json:"lvl"`
 		Tools         string `json:"tools_training"`
+		OldFileURL    string `json:"old_file_url"` // untuk regenerate
 	}
 
 	if err := c.ShouldBindJSON(&req); err != nil {
@@ -66,6 +67,7 @@ func (h *TrainingController) Generate(c *gin.Context) {
 		return
 	}
 
+	// Generate materi dengan pass oldFileURL untuk delete file lama
 	link, meta, err := h.aiSvc.GenerateAndBuildPPTX(c.Request.Context(), training.GenerateInput{
 		Kode:          req.Kode,
 		TopikTraining: req.TopikTraining,
@@ -73,7 +75,7 @@ func (h *TrainingController) Generate(c *gin.Context) {
 		Referensi:     req.Referensi,
 		Level:         req.Level,
 		Tools:         req.Tools,
-	})
+	}, req.OldFileURL)
 
 	if err != nil {
 		h.log.WithError(err).Error("Gagal generate materi training")
@@ -81,6 +83,12 @@ func (h *TrainingController) Generate(c *gin.Context) {
 			"error": "Gagal membuat materi training: " + err.Error(),
 		})
 		return
+	}
+
+	// Save link to database
+	if err := h.dbSvc.UpdateGeneratedFileURL(req.Kode, link); err != nil {
+		h.log.WithError(err).Warn("Gagal menyimpan link file ke database, tapi file sudah digenerate")
+		// Not returning error, karena file sudah berhasil digenerate
 	}
 
 	c.JSON(http.StatusOK, gin.H{
