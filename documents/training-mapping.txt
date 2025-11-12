@@ -1,0 +1,63 @@
+// PROGRAM SDP
+GAP KOMPETENSI	Keterangan	ID_Material_1	ID_Material_2
+LDC	Leading Change	113	114
+DCM	Decision Making	58	58
+CIO	Continous Improvement	41	42
+SIO	Self Improvement Orientation	169	170
+FLX	Flexibility	81	82
+LAG	Learning Agility	121	122
+RSC	Resilience	153	154
+CSO	Customer Orientation	49	50
+COM	Communication	25	26
+EMP	Empathy	73	74
+TOR	Team Orientation	177	178
+LDP	Leadership	105	106
+PNO	Planning & Organizing	129	130
+DIR	Directiveness	65	66
+ACH	Achivement Orientation	9	10
+ACT	Accountability	1	2
+IDS	Instructional Discipline	89	90
+CFO	Concern for Order	33	34
+RBG	Relationship Building	145	146
+ING	Integrity	97	98
+RSF	Resourcesfulness	161	162
+BAC	Business Acumen	17	18
+
+
+// PROGRAM MDP
+GAP KOMPETENSI	Keterangan	ID_Material_1	ID_Material_2
+LAG	Learning Agility	121	122
+SIO	Self Improvement Orientation	169	170
+DCM	Decision Making	59	60
+EMP	Empathy	73	74
+FLX	Flexibility	81	82
+CSO	Customer Orientation	49	50
+TOR	Team Orientation	177	178
+LDC	Leading Change	115	116
+RSC	Resilience	153	154
+ACH	Achivement Orientation	9	10
+CIO	Continous Improvement	43	44
+RBG	Relationship Building	147	148
+RSF	Resourcesfulness	163	164
+LDP	Leadership	107	108
+DIR	Directiveness	67	68
+COM	Communication	27	28
+BAC	Business Acumen	19	20
+CFO	Concern for Order	35	36
+
+// PROGRAM FDP
+GAP KOMPETENSI	Keterangan	ID_Material_1	ID_Material_2
+EMP	Empathy	75	76
+LAG	Learning Agility	124	123
+DCM	Decision Making	61	62
+RSC	Resilience	155	156
+FLX	Flexibility	83	84
+SIO	Self Improvement Orientation	171	172
+TOR	Team Orientation	179	180
+CIO	Continous Improvement	43	44
+RBG	Relationship Building	147	148
+CSO	Customer Orientation	51	52
+ACH	Achivement Orientation	11	12
+ACT	Accountability	3	4
+IDS	Instructional Discipline	91	92
+COM	Communication	29	30
