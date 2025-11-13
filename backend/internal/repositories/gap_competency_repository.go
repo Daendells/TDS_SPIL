@@ -75,7 +75,11 @@ func (r *gapCompetencyRepository) GetByReportID(reportID int) ([]domain.GapCompe
 func (r *gapCompetencyRepository) GetByReportIDAndProgram(reportID int, program string) ([]domain.GapCompetency, error) {
 	var gapCompetencies []domain.GapCompetency
 
-	if err := r.db.Preload("CompetencyType").Where("report_id = ? AND program = ?", reportID, program).Find(&gapCompetencies).Error; err != nil {
+	// Join with reports table to filter by idp_program
+	if err := r.db.Preload("CompetencyType").Preload("Report").
+		Joins("JOIN reports ON reports.id = gap_competencies.report_id").
+		Where("gap_competencies.report_id = ? AND reports.idp_program = ?", reportID, program).
+		Find(&gapCompetencies).Error; err != nil {
 		r.log.WithError(err).WithFields(logrus.Fields{
 			"reportID": reportID,
 			"program":  program,
@@ -100,7 +104,11 @@ func (r *gapCompetencyRepository) GetByCompetencyTypeID(competencyTypeID int) ([
 func (r *gapCompetencyRepository) GetByProgram(program string) ([]domain.GapCompetency, error) {
 	var gapCompetencies []domain.GapCompetency
 
-	if err := r.db.Where("program = ?", program).Find(&gapCompetencies).Error; err != nil {
+	// Join with reports table to filter by idp_program
+	if err := r.db.Preload("Report").Preload("CompetencyType").
+		Joins("JOIN reports ON reports.id = gap_competencies.report_id").
+		Where("reports.idp_program = ?", program).
+		Find(&gapCompetencies).Error; err != nil {
 		r.log.WithError(err).WithField("program", program).Error("Failed to get gap competencies by program")
 		return nil, err
 	}
@@ -113,7 +121,9 @@ func (r *gapCompetencyRepository) GetWithReports(program string) ([]domain.GapCo
 
 	query := r.db.Preload("Report").Preload("CompetencyType")
 	if program != "" {
-		query = query.Where("program = ?", program)
+		// Join with reports table to filter by idp_program
+		query = query.Joins("JOIN reports ON reports.id = gap_competencies.report_id").
+			Where("reports.idp_program = ?", program)
 	}
 
 	if err := query.Find(&gapCompetencies).Error; err != nil {
@@ -129,7 +139,9 @@ func (r *gapCompetencyRepository) GetWithReportsAndCompetencyTypes(program strin
 
 	query := r.db.Preload("Report").Preload("CompetencyType")
 	if program != "" {
-		query = query.Where("program = ?", program)
+		// Join with reports table to filter by idp_program
+		query = query.Joins("JOIN reports ON reports.id = gap_competencies.report_id").
+			Where("reports.idp_program = ?", program)
 	}
 
 	if err := query.Find(&gapCompetencies).Error; err != nil {
@@ -166,16 +178,18 @@ func (r *gapCompetencyRepository) GetGapCountByReportID(reportID int) (int64, er
 func (r *gapCompetencyRepository) GetGapsByReportIDGrouped(reportID int) (map[string][]domain.GapCompetency, error) {
 	var gapCompetencies []domain.GapCompetency
 
-	if err := r.db.Preload("CompetencyType").Where("report_id = ?", reportID).Find(&gapCompetencies).Error; err != nil {
+	// Preload Report to get IDPProgram
+	if err := r.db.Preload("CompetencyType").Preload("Report").Where("report_id = ?", reportID).Find(&gapCompetencies).Error; err != nil {
 		r.log.WithError(err).WithField("reportID", reportID).Error("Failed to get gaps by report ID grouped")
 		return nil, err
 	}
 
 	grouped := make(map[string][]domain.GapCompetency)
 	for _, gap := range gapCompetencies {
-		program := gap.Program
-		if program == "" {
-			program = "Unknown"
+		// Get program from Report.IDPProgram instead of gap.Program
+		program := "Unknown"
+		if gap.Report != nil {
+			program = gap.Report.IDPProgram
 		}
 		grouped[program] = append(grouped[program], gap)
 	}

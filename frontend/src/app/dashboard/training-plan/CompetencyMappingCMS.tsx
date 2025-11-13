@@ -55,7 +55,7 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
 
   // Form state
   const [formData, setFormData] = useState<CompetencyMappingFormData>({
-    competencyCode: "",
+    competencyTypeId: 0,
     program: program,
     trainingMaterial1Id: null,
     trainingMaterial2Id: null,
@@ -73,7 +73,7 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
   const handleEdit = (mapping: CompetencyMappingItem) => {
     setEditingMapping(mapping);
     setFormData({
-      competencyCode: mapping.competencyCode,
+      competencyTypeId: mapping.competencyTypeId,
       program: mapping.program,
       trainingMaterial1Id: mapping.trainingMaterial1Id,
       trainingMaterial2Id: mapping.trainingMaterial2Id,
@@ -85,7 +85,7 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
   // Handle create new mapping
   const handleCreateNew = () => {
     setFormData({
-      competencyCode: "",
+      competencyTypeId: 0,
       program: program,
       trainingMaterial1Id: null,
       trainingMaterial2Id: null,
@@ -177,7 +177,7 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
               mappings.map((mapping) => (
                 <TableRow key={mapping.id}>
                   <TableCell className="font-medium">
-                    {mapping.competencyCode}
+                    {mapping.competencyType?.code || "N/A"} - {mapping.competencyType?.name || "Unknown"}
                   </TableCell>
                   <TableCell>
                     <Badge variant={mapping.category === "M" ? "destructive" : "secondary"}>
@@ -231,15 +231,15 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
           <DialogHeader>
             <DialogTitle>Edit Competency Mapping</DialogTitle>
             <DialogDescription>
-              Update training materials for {formData.competencyCode}
+              Update training materials for {editingMapping?.competencyType?.code || "competency"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Competency Code</Label>
+              <Label>Competency</Label>
               <Input
-                value={formData.competencyCode}
+                value={`${editingMapping?.competencyType?.code || "N/A"} - ${editingMapping?.competencyType?.name || "Unknown"}`}
                 disabled
                 className="bg-muted"
               />
@@ -328,14 +328,38 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Competency Code</Label>
-              <Input
-                placeholder="e.g. LDC, ACH, COM"
-                value={formData.competencyCode}
-                onChange={(e) =>
-                  setFormData({ ...formData, competencyCode: e.target.value.toUpperCase() })
+              <Label>Competency Type</Label>
+              <Select
+                value={formData.competencyTypeId > 0 ? formData.competencyTypeId.toString() : ""}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, competencyTypeId: parseInt(value) })
                 }
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select competency type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {(() => {
+                    // Extract unique competency types from trainings
+                    const uniqueCompetencies = trainings
+                      ?.filter(t => t.competencyType)
+                      .reduce((acc, training) => {
+                        const ct = training.competencyType!;
+                        if (!acc.find(c => c.id === ct.id)) {
+                          acc.push(ct);
+                        }
+                        return acc;
+                      }, [] as Array<{ id: number; code: string; name: string }>)
+                      .sort((a, b) => a.code.localeCompare(b.code));
+
+                    return uniqueCompetencies?.map((ct) => (
+                      <SelectItem key={ct.id} value={ct.id.toString()}>
+                        {ct.code} - {ct.name}
+                      </SelectItem>
+                    ));
+                  })()}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
                 Category (Mandatory/Non-Mandatory) is automatically calculated based on gap percentage (&gt;60% = Mandatory)
               </p>
@@ -401,7 +425,7 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
             </Button>
             <Button
               onClick={handleCreateSubmit}
-              disabled={createMutation.isPending || !formData.competencyCode}
+              disabled={createMutation.isPending || formData.competencyTypeId === 0}
             >
               {createMutation.isPending && (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />

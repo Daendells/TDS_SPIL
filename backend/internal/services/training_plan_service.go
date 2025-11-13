@@ -51,12 +51,13 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 
 	result := make(map[string]domain.CompetencyMappingItem)
 	for _, mapping := range programMappings {
-		// Get competency type to retrieve the full name
-		competencyType, err := s.competencyTypeRepo.GetByCode(mapping.CompetencyCode)
-		competencyName := mapping.CompetencyCode // fallback to code
-		if err == nil && competencyType != nil {
-			competencyName = competencyType.Name // use full name from competency_types
+		// Preload CompetencyType relation to get code and name
+		if mapping.CompetencyType == nil {
+			continue
 		}
+		
+		competencyCode := mapping.CompetencyType.Code
+		competencyName := mapping.CompetencyType.Name
 
 		// Get training material names from relations
 		trainingTopics := []string{}
@@ -67,7 +68,7 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 			trainingTopics = append(trainingTopics, mapping.TrainingMaterial2.TopikTraining)
 		}
 
-		result[mapping.CompetencyCode] = domain.CompetencyMappingItem{
+		result[competencyCode] = domain.CompetencyMappingItem{
 			Name:           competencyName,
 			TrainingTopics: trainingTopics,
 		}
@@ -152,8 +153,14 @@ func (s *trainingPlanService) buildGapsMap(gc *domain.GapCompetency) map[string]
 func (s *trainingPlanService) buildGapsMapFromMultiple(gaps []domain.GapCompetency) map[string]interface{} {
 	result := make(map[string]interface{})
 	
+	// Get program from first gap's Report
+	program := ""
+	if len(gaps) > 0 && gaps[0].Report != nil {
+		program = gaps[0].Report.IDPProgram
+	}
+	
 	// Get all competency codes for the program
-	competencyMapping := s.GetCompetencyMapping(gaps[0].Program)
+	competencyMapping := s.GetCompetencyMapping(program)
 	
 	// Initialize all competency codes as empty
 	for code := range competencyMapping {

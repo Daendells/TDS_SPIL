@@ -31,8 +31,7 @@ import { FileText, RefreshCw } from "lucide-react";
 
 interface ITraining {
   no: number;
-  kode_ai: string;
-  kompetensi: string;
+  competencyTypeId: number;
   lvl: number;
   deskripsi_perilaku?: string;
   tools_training: string;
@@ -41,11 +40,18 @@ interface ITraining {
   referensi?: string;
   generated_file_url?: string | null;
   generated_at?: string | null;
+  competencyType?: {
+    id: number;
+    code: string;
+    name: string;
+    description?: string;
+    category: string;
+  };
 }
 
 interface GroupedTraining {
-  kode_ai: string;
-  kompetensi: string;
+  competencyCode: string;
+  competencyName: string;
   deskripsi_perilaku?: string;
   trainings: ITraining[];
 }
@@ -88,20 +94,22 @@ export default function TrainingPage() {
     const grouped: { [key: string]: GroupedTraining } = {};
 
     trainings.forEach((training) => {
-      if (!grouped[training.kode_ai]) {
-        grouped[training.kode_ai] = {
-          kode_ai: training.kode_ai,
-          kompetensi: training.kompetensi,
+      const competencyCode = training.competencyType?.code || 'UNKNOWN';
+      
+      if (!grouped[competencyCode]) {
+        grouped[competencyCode] = {
+          competencyCode: competencyCode,
+          competencyName: training.competencyType?.name || 'Unknown Competency',
           deskripsi_perilaku: training.deskripsi_perilaku,
           trainings: [],
         };
       }
-      grouped[training.kode_ai].trainings.push(training);
+      grouped[competencyCode].trainings.push(training);
     });
 
-    // Sort by kode_ai
+    // Sort by competencyCode
     const sortedGroups = Object.values(grouped).sort((a, b) =>
-      a.kode_ai.localeCompare(b.kode_ai)
+      a.competencyCode.localeCompare(b.competencyCode)
     );
 
     setGroupedData(sortedGroups);
@@ -118,7 +126,7 @@ export default function TrainingPage() {
         body: JSON.stringify({
           kode: item.kode,
           topik_training: item.topik_training,
-          kompetensi: item.kompetensi,
+          kompetensi: item.competencyType?.name || '',
           referensi: item.referensi || "",
           lvl: item.lvl,
           tools_training: item.tools_training,
@@ -188,19 +196,19 @@ export default function TrainingPage() {
         <Accordion type="multiple" className="space-y-4">
           {groupedData.map((group) => (
             <AccordionItem
-              key={group.kode_ai}
-              value={group.kode_ai}
+              key={group.competencyCode}
+              value={group.competencyCode}
               className="border rounded-lg bg-white shadow-sm"
             >
               <AccordionTrigger className="px-6 py-4 hover:no-underline hover:bg-gray-50">
                 <div className="flex items-center justify-between w-full pr-4">
                   <div className="flex items-center gap-4">
                     <div className="bg-gray-100 text-gray-700 px-3 py-1 rounded-md font-bold text-sm">
-                      {group.kode_ai}
+                      {group.competencyCode}
                     </div>
                     <div className="text-left">
                       <h3 className="font-semibold text-lg">
-                        {group.kompetensi}
+                        {group.competencyName}
                       </h3>                      
                     </div>
                   </div>

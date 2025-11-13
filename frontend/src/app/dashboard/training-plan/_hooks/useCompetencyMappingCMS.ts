@@ -5,29 +5,43 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8080";
 
 export interface Training {
   no: number;
-  kode_ai: string;
-  kompetensi: string;
+  competencyTypeId: number;
   lvl: number;
+  deskripsi_perilaku: string;
   tools_training: string;
   kode: string;
   topik_training: string;
+  competencyType?: {
+    id: number;
+    code: string;
+    name: string;
+    description?: string;
+    category: string;
+  };
 }
 
 export interface CompetencyMappingItem {
   id: number;
-  competencyCode: string;
+  competencyTypeId: number;
   program: string;
   trainingMaterial1Id: number | null;
   trainingMaterial2Id: number | null;
   category: "M" | "NM";
   createdAt: string;
   updatedAt: string;
+  competencyType?: {
+    id: number;
+    code: string;
+    name: string;
+    description?: string;
+    category: string;
+  };
   trainingMaterial1?: Training;
   trainingMaterial2?: Training;
 }
 
 export interface CompetencyMappingFormData {
-  competencyCode: string;
+  competencyTypeId: number;
   program: string;
   trainingMaterial1Id: number | null;
   trainingMaterial2Id: number | null;
