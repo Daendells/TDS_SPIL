@@ -108,8 +108,14 @@ TOPIK: %s
 KOMPETENSI: %s
 LEVEL: %d (1=Pemula, 2=Menengah, 3=Mahir)
 TOOLS/MODEL: %s
-REFERENSI TAMBAHAN: %s
+KEYWORD UTAMA (dari Deskripsi Perilaku): %s
+REFERENSI TAMBAHAN (Opsional): %s
 TIPE TOPIK: %s
+
+PANDUAN REFERENSI:
+- KEYWORD UTAMA adalah fondasi utama dari training ini. Pastikan keyword ini tercermin dalam setiap slide, terutama di learning objectives, key concepts, dan case studies.
+- Jika ada REFERENSI TAMBAHAN, integrasikan dengan harmonis bersama keyword utama untuk memperkaya konten.
+- Gunakan keyword dan referensi untuk memberikan konteks dan contoh yang relevan dengan kebutuhan peserta.
 
 STRUKTUR SLIDE WAJIB:
 
@@ -275,7 +281,8 @@ CONTOH KONTEN BERKUALITAS TINGGI:
 		in.Kompetensi,
 		in.Level,
 		in.Tools,
-		valueOrDash(in.Referensi),
+		extractKeyword(in.Referensi),
+		extractOptionalReferensi(in.Referensi),
 		topicType,
 		s.getTopicSpecificGuidelines(topicType),
 	)
@@ -376,6 +383,43 @@ func valueOrDash(s string) string {
 		return "-"
 	}
 	return s
+}
+
+// extractKeyword mengekstrak keyword utama (sebelum "Referensi Tambahan:")
+func extractKeyword(referensi string) string {
+	if strings.TrimSpace(referensi) == "" {
+		return "-"
+	}
+	
+	// Cari posisi "Referensi Tambahan:"
+	parts := strings.Split(referensi, "Referensi Tambahan:")
+	keyword := strings.TrimSpace(parts[0])
+	
+	if keyword == "" {
+		return "-"
+	}
+	return keyword
+}
+
+// extractOptionalReferensi mengekstrak referensi tambahan (setelah "Referensi Tambahan:")
+func extractOptionalReferensi(referensi string) string {
+	if strings.TrimSpace(referensi) == "" {
+		return "-"
+	}
+	
+	// Cari posisi "Referensi Tambahan:"
+	parts := strings.Split(referensi, "Referensi Tambahan:")
+	
+	if len(parts) < 2 {
+		// Tidak ada separator, berarti ini hanya keyword
+		return "-"
+	}
+	
+	optional := strings.TrimSpace(parts[1])
+	if optional == "" {
+		return "-"
+	}
+	return optional
 }
 
 func (s *Service) callGroq(ctx context.Context, prompt string) (*Plan, error) {

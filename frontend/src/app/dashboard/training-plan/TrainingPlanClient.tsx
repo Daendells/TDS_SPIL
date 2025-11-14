@@ -48,6 +48,7 @@ import {
 } from "./_hooks/useTrainingPlan";
 import TrainingScheduleTimeline from "./TrainingScheduleTimeline";
 import CompetencyMappingCMS from "./CompetencyMappingCMS";
+import TrainingMaterialTab from "./TrainingMaterialTab";
 
 export default function TrainingPlanClient() {
   const [selectedProgram, setSelectedProgram] = useState("SDP");
@@ -244,7 +245,8 @@ export default function TrainingPlanClient() {
       <Tabs defaultValue="participants" className="space-y-4">
         <TabsList>
           <TabsTrigger value="participants">Participants</TabsTrigger>
-          <TabsTrigger value="summary">Gap Summary</TabsTrigger>
+          <TabsTrigger value="summary">Gap Summary</TabsTrigger>          
+          <TabsTrigger value="materials">Training Materials</TabsTrigger>
           <TabsTrigger value="mapping">Competency Mapping</TabsTrigger>
           <TabsTrigger value="schedules">Schedules</TabsTrigger>
         </TabsList>
@@ -451,6 +453,21 @@ export default function TrainingPlanClient() {
           <Card>         
             <CardContent>
               <CompetencyMappingCMS program={selectedProgram} />
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Training Materials Tab */}
+        <TabsContent value="materials" className="space-y-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Training Materials</CardTitle>
+              <CardDescription>
+                Generate dan kelola materi training berdasarkan kompetensi
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <TrainingMaterialTab />
             </CardContent>
           </Card>
         </TabsContent>

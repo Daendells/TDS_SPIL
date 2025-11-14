@@ -57,3 +57,46 @@ func (s *TrainingService) UpdateGeneratedFileURL(kode string, fileURL string) er
 			"generated_at":       now,
 		}).Error
 }
+
+func (s *TrainingService) Update(no string, req *web.TrainingUpdateRequest) (*web.SuccessResponse, error) {
+	if err := s.Validate.Struct(req); err != nil {
+		s.Log.Errorf("Validasi gagal: %v", err)
+		return nil, err
+	}
+
+	training := domain.Training{
+		Level:             req.Lvl,
+		Kode:              req.Kode,
+		TopikTraining:     req.TopikTraining,
+		DeskripsiPerilaku: req.DeskripsiPerilaku,
+		ToolsTraining:     req.ToolsTraining,
+	}
+
+	if err := s.DB.Model(&domain.Training{}).Where("no = ?", no).Updates(training).Error; err != nil {
+		s.Log.Errorf("Gagal update training: %v", err)
+		return nil, err
+	}
+
+	return &web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data: map[string]string{
+			"message": "Training berhasil diupdate",
+		},
+	}, nil
+}
+
+func (s *TrainingService) Delete(no string) (*web.SuccessResponse, error) {
+	if err := s.DB.Where("no = ?", no).Delete(&domain.Training{}).Error; err != nil {
+		s.Log.Errorf("Gagal delete training: %v", err)
+		return nil, err
+	}
+
+	return &web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data: map[string]string{
+			"message": "Training berhasil dihapus",
+		},
+	}, nil
+}

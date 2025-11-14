@@ -34,3 +34,43 @@ func (c *TrainingController) FindAll(ctx *gin.Context) {
 	}
 	ctx.JSON(resp.Code, resp)
 }
+
+func (c *TrainingController) Update(ctx *gin.Context) {
+	no := ctx.Param("no")
+	
+	var request web.TrainingUpdateRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	resp, err := c.Service.Update(no, &request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+	ctx.JSON(resp.Code, resp)
+}
+
+func (c *TrainingController) Delete(ctx *gin.Context) {
+	no := ctx.Param("no")
+	
+	resp, err := c.Service.Delete(no)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+	ctx.JSON(resp.Code, resp)
+}

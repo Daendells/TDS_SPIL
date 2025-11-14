@@ -57,6 +57,8 @@ func (c *RouterConfig) SetupGuestRouter() {
 	{
 		trainings.GET("", c.TrainingGenController.FindAll)            // dari DB
 		trainings.POST("/generate", c.TrainingGenController.Generate) // dari LLM
+		trainings.PUT("/:no", c.TrainingController.Update)            // Edit training (no auth required)
+		trainings.DELETE("/:no", c.TrainingController.Delete)         // Delete training (no auth required)
 	}
 
 	trainingPlan := c.App.Group("api/training-plan")
@@ -167,6 +169,8 @@ func (c *RouterConfig) SetupAuthRouter() {
 	{
 		auth.POST("/logout", c.UserController.Logout)
 	}
+
+
 
 	assessmentAuth := c.App.Group("api/assessments").Use(c.AuthMiddleware)
 	{
