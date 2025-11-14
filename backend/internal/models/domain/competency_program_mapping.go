@@ -8,7 +8,6 @@ type CompetencyProgramMapping struct {
 	Program              string `json:"program" gorm:"column:program;not null"` // SDP, MDP, FDP
 	TrainingMaterial1ID  *int   `json:"trainingMaterial1Id" gorm:"column:training_material_1_id"`
 	TrainingMaterial2ID  *int   `json:"trainingMaterial2Id" gorm:"column:training_material_2_id"`
-	Category             string `json:"category" gorm:"column:category;type:enum('M','NM');default:'M'"`
 
 	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`
@@ -23,10 +22,7 @@ func (CompetencyProgramMapping) TableName() string {
 	return "competency_program_mappings"
 }
 
-// Helper method to check if competency is mandatory for this program
-func (cpm *CompetencyProgramMapping) IsMandatory() bool {
-	return cpm.Category == "M"
-}
+// Note: Category (M/NM) is now dynamically calculated in training_plan_service.go based on >60% participant gaps
 
 // Helper method to get training material name by type (1 or 2)
 func (cpm *CompetencyProgramMapping) GetTrainingMaterialName(materialType int) string {

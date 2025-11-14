@@ -138,70 +138,69 @@ CREATE TABLE `competency_program_mappings` (
   `program` varchar(10) COLLATE utf8mb4_general_ci NOT NULL,
   `training_material_1_id` int DEFAULT NULL,
   `training_material_2_id` int DEFAULT NULL,
-  `category` enum('M','NM') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'M',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='competency_type_id adalah FK ke competency_types.id';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='competency_type_id adalah FK ke competency_types.id - category ditentukan dinamis berdasarkan gap percentage';
 
 --
 -- Dumping data for table `competency_program_mappings`
 --
 
-INSERT INTO `competency_program_mappings` (`id`, `competency_type_id`, `program`, `training_material_1_id`, `training_material_2_id`, `category`) VALUES
-(1, 1, 'SDP', 113, 114, 'M'),
-(2, 2, 'SDP', 57, 58, 'M'),
-(3, 3, 'SDP', 41, 42, 'M'),
-(4, 4, 'SDP', 169, 170, 'M'),
-(5, 5, 'SDP', 81, 82, 'NM'),
-(6, 6, 'SDP', 121, 122, 'NM'),
-(7, 7, 'SDP', 153, 154, 'M'),
-(8, 8, 'SDP', 49, 50, 'NM'),
-(9, 9, 'SDP', 25, 26, 'NM'),
-(10, 10, 'SDP', 73, 74, 'NM'),
-(11, 11, 'SDP', 177, 178, 'NM'),
-(12, 12, 'SDP', 105, 106, 'M'),
-(13, 13, 'SDP', 129, 130, 'NM'),
-(14, 14, 'SDP', 65, 66, 'M'),
-(15, 15, 'SDP', 9, 10, 'M'),
-(16, 16, 'SDP', 1, 2, 'M'),
-(17, 17, 'SDP', 89, 90, 'NM'),
-(18, 18, 'SDP', 33, 34, 'NM'),
-(19, 19, 'SDP', 145, 146, 'M'),
-(20, 20, 'SDP', 97, 98, 'M'),
-(21, 21, 'SDP', 161, 162, 'M'),
-(22, 22, 'SDP', 17, 18, 'M'),
-(23, 6, 'MDP', 121, 122, 'NM'),
-(24, 4, 'MDP', 169, 170, 'M'),
-(25, 2, 'MDP', 59, 60, 'M'),
-(26, 10, 'MDP', 73, 74, 'NM'),
-(27, 5, 'MDP', 81, 82, 'NM'),
-(28, 8, 'MDP', 49, 50, 'NM'),
-(29, 11, 'MDP', 177, 178, 'NM'),
-(30, 1, 'MDP', 115, 116, 'M'),
-(31, 7, 'MDP', 153, 154, 'M'),
-(32, 15, 'MDP', 9, 10, 'M'),
-(33, 3, 'MDP', 43, 44, 'M'),
-(34, 19, 'MDP', 147, 148, 'M'),
-(35, 21, 'MDP', 163, 164, 'M'),
-(36, 12, 'MDP', 107, 108, 'M'),
-(37, 14, 'MDP', 67, 68, 'M'),
-(38, 9, 'MDP', 27, 28, 'NM'),
-(39, 22, 'MDP', 19, 20, 'M'),
-(40, 18, 'MDP', 35, 36, 'NM'),
-(41, 10, 'FDP', 75, 76, 'NM'),
-(42, 6, 'FDP', 124, 123, 'NM'),
-(43, 2, 'FDP', 61, 62, 'M'),
-(44, 7, 'FDP', 155, 156, 'M'),
-(45, 5, 'FDP', 83, 84, 'NM'),
-(46, 4, 'FDP', 171, 172, 'M'),
-(47, 11, 'FDP', 179, 180, 'NM'),
-(48, 3, 'FDP', 43, 44, 'M'),
-(49, 19, 'FDP', 147, 148, 'M'),
-(50, 8, 'FDP', 51, 52, 'NM'),
-(51, 15, 'FDP', 11, 12, 'M'),
-(52, 16, 'FDP', 3, 4, 'M'),
-(53, 17, 'FDP', 91, 92, 'NM'),
-(54, 9, 'FDP', 29, 30, 'NM');
+INSERT INTO `competency_program_mappings` (`id`, `competency_type_id`, `program`, `training_material_1_id`, `training_material_2_id`) VALUES
+(1, 1, 'SDP', 113, 114),
+(2, 2, 'SDP', 57, 58),
+(3, 3, 'SDP', 41, 42),
+(4, 4, 'SDP', 169, 170),
+(5, 5, 'SDP', 81, 82),
+(6, 6, 'SDP', 121, 122),
+(7, 7, 'SDP', 153, 154),
+(8, 8, 'SDP', 49, 50),
+(9, 9, 'SDP', 25, 26),
+(10, 10, 'SDP', 73, 74),
+(11, 11, 'SDP', 177, 178),
+(12, 12, 'SDP', 105, 106),
+(13, 13, 'SDP', 129, 130),
+(14, 14, 'SDP', 65, 66),
+(15, 15, 'SDP', 9, 10),
+(16, 16, 'SDP', 1, 2),
+(17, 17, 'SDP', 89, 90),
+(18, 18, 'SDP', 33, 34),
+(19, 19, 'SDP', 145, 146),
+(20, 20, 'SDP', 97, 98),
+(21, 21, 'SDP', 161, 162),
+(22, 22, 'SDP', 17, 18),
+(23, 6, 'MDP', 121, 122),
+(24, 4, 'MDP', 169, 170),
+(25, 2, 'MDP', 59, 60),
+(26, 10, 'MDP', 73, 74),
+(27, 5, 'MDP', 81, 82),
+(28, 8, 'MDP', 49, 50),
+(29, 11, 'MDP', 177, 178),
+(30, 1, 'MDP', 115, 116),
+(31, 7, 'MDP', 153, 154),
+(32, 15, 'MDP', 9, 10),
+(33, 3, 'MDP', 43, 44),
+(34, 19, 'MDP', 147, 148),
+(35, 21, 'MDP', 163, 164),
+(36, 12, 'MDP', 107, 108),
+(37, 14, 'MDP', 67, 68),
+(38, 9, 'MDP', 27, 28),
+(39, 22, 'MDP', 19, 20),
+(40, 18, 'MDP', 35, 36),
+(41, 10, 'FDP', 75, 76),
+(42, 6, 'FDP', 124, 123),
+(43, 2, 'FDP', 61, 62),
+(44, 7, 'FDP', 155, 156),
+(45, 5, 'FDP', 83, 84),
+(46, 4, 'FDP', 171, 172),
+(47, 11, 'FDP', 179, 180),
+(48, 3, 'FDP', 43, 44),
+(49, 19, 'FDP', 147, 148),
+(50, 8, 'FDP', 51, 52),
+(51, 15, 'FDP', 11, 12),
+(52, 16, 'FDP', 3, 4),
+(53, 17, 'FDP', 91, 92),
+(54, 9, 'FDP', 29, 30);
 
 -- --------------------------------------------------------
 
@@ -214,40 +213,39 @@ CREATE TABLE `competency_types` (
   `code` varchar(10) COLLATE utf8mb4_general_ci NOT NULL,
   `name` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
   `description` text COLLATE utf8mb4_general_ci,
-  `category` enum('M','NM') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'M',
   `is_active` tinyint(1) NOT NULL DEFAULT '1',
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Master data kompetensi - tidak menyimpan training material (sudah di competency_program_mappings)';
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='Master data kompetensi - category ditentukan dinamis berdasarkan >60% participant gaps';
 
 --
 -- Dumping data for table `competency_types`
 --
 
-INSERT INTO `competency_types` (`id`, `code`, `name`, `description`, `category`, `is_active`) VALUES
-(1, 'LDC', 'Leading Change', NULL, 'M', 1),
-(2, 'DCM', 'Decision Making', NULL, 'M', 1),
-(3, 'CIO', 'Continous Improvement', NULL, 'M', 1),
-(4, 'SIO', 'Self Improvement Orientation', NULL, 'M', 1),
-(5, 'FLX', 'Flexibility', NULL, 'NM', 1),
-(6, 'LAG', 'Learning Agility', NULL, 'NM', 1),
-(7, 'RSC', 'Resilience', NULL, 'M', 1),
-(8, 'CSO', 'Customer Orientation', NULL, 'NM', 1),
-(9, 'COM', 'Communication', NULL, 'NM', 1),
-(10, 'EMP', 'Empathy', NULL, 'NM', 1),
-(11, 'TOR', 'Team Orientation', NULL, 'NM', 1),
-(12, 'LDP', 'Leadership', NULL, 'M', 1),
-(13, 'PNO', 'Planning & Organizing', NULL, 'NM', 1),
-(14, 'DIR', 'Directiveness', NULL, 'M', 1),
-(15, 'ACH', 'Achivement Orientation', NULL, 'M', 1),
-(16, 'ACT', 'Accountability', NULL, 'M', 1),
-(17, 'IDS', 'Instructional Discipline', NULL, 'NM', 1),
-(18, 'CFO', 'Concern for Order', NULL, 'NM', 1),
-(19, 'RBG', 'Relationship Building', NULL, 'M', 1),
-(20, 'ING', 'Integrity', NULL, 'M', 1),
-(21, 'RSF', 'Resourcesfulness', NULL, 'M', 1),
-(22, 'BAC', 'Business Acumen', NULL, 'M', 1),
-(23, 'PSG', 'Problem Solving', NULL, 'M', 1);
+INSERT INTO `competency_types` (`id`, `code`, `name`, `description`, `is_active`) VALUES
+(1, 'LDC', 'Leading Change', NULL, 1),
+(2, 'DCM', 'Decision Making', NULL, 1),
+(3, 'CIO', 'Continous Improvement', NULL, 1),
+(4, 'SIO', 'Self Improvement Orientation', NULL, 1),
+(5, 'FLX', 'Flexibility', NULL, 1),
+(6, 'LAG', 'Learning Agility', NULL, 1),
+(7, 'RSC', 'Resilience', NULL, 1),
+(8, 'CSO', 'Customer Orientation', NULL, 1),
+(9, 'COM', 'Communication', NULL, 1),
+(10, 'EMP', 'Empathy', NULL, 1),
+(11, 'TOR', 'Team Orientation', NULL, 1),
+(12, 'LDP', 'Leadership', NULL, 1),
+(13, 'PNO', 'Planning & Organizing', NULL, 1),
+(14, 'DIR', 'Directiveness', NULL, 1),
+(15, 'ACH', 'Achivement Orientation', NULL, 1),
+(16, 'ACT', 'Accountability', NULL, 1),
+(17, 'IDS', 'Instructional Discipline', NULL, 1),
+(18, 'CFO', 'Concern for Order', NULL, 1),
+(19, 'RBG', 'Relationship Building', NULL, 1),
+(20, 'ING', 'Integrity', NULL, 1),
+(21, 'RSF', 'Resourcesfulness', NULL, 1),
+(22, 'BAC', 'Business Acumen', NULL, 1),
+(23, 'PSG', 'Problem Solving', NULL, 1);
 
 -- --------------------------------------------------------
 
@@ -3063,12 +3061,11 @@ CREATE TABLE `training_schedules` (
   `competency_code` varchar(10) COLLATE utf8mb4_general_ci NOT NULL,
   `competency_type_id` bigint DEFAULT NULL,
   `training_topic` varchar(255) COLLATE utf8mb4_general_ci NOT NULL,
-  `category` enum('M','NM') COLLATE utf8mb4_general_ci NOT NULL DEFAULT 'M',
   `material_type` enum('1','2') COLLATE utf8mb4_general_ci NOT NULL DEFAULT '1',
   `scheduled_date` date NOT NULL,
   `created_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='category ditentukan dinamis dari training_plan_service berdasarkan gap percentage >60%';
 
 -- --------------------------------------------------------
 
@@ -3147,7 +3144,6 @@ ALTER TABLE `competency_types`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `code` (`code`),
   ADD UNIQUE KEY `unique_code` (`code`),
-  ADD KEY `idx_category` (`category`),
   ADD KEY `idx_is_active` (`is_active`);
 
 --
@@ -3229,7 +3225,6 @@ ALTER TABLE `training_schedules`
   ADD KEY `idx_program` (`program`),
   ADD KEY `idx_competency_code` (`competency_code`),
   ADD KEY `idx_scheduled_date` (`scheduled_date`),
-  ADD KEY `idx_category` (`category`),
   ADD KEY `idx_material_type` (`material_type`),
   ADD KEY `idx_competency_type_id` (`competency_type_id`);
 

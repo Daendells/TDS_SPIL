@@ -57,6 +57,7 @@ import {
   type CompetencyMappingItem,
   type Training,
 } from "./_hooks/useCompetencyMappingCMS";
+import { useGetTrainingPlan } from "./_hooks/useTrainingPlan";
 
 interface CompetencyMappingCMSProps {
   program: string;
@@ -75,15 +76,29 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
     program: program,
     trainingMaterial1Id: null,
     trainingMaterial2Id: null,
-    category: "M",
   });
 
   // React Query hooks
   const { data: mappings, isLoading: mappingsLoading } = useGetCompetencyMappings(program);
   const { data: trainings, isLoading: trainingsLoading } = useGetAllTrainings();
+  const { data: trainingPlan, isLoading: planLoading } = useGetTrainingPlan(program);
   const updateMutation = useUpdateCompetencyMapping();
   const createMutation = useCreateCompetencyMapping();
   const deleteMutation = useDeleteCompetencyMapping();
+
+  // Sort mappings by gap summary order and add category info
+  const sortedMappings = mappings?.map((mapping) => {
+    const competencyCode = mapping.competencyType?.code;
+    const category = competencyCode && trainingPlan?.summary?.category ? trainingPlan.summary.category[competencyCode] || "NM" : "NM";
+    const percentageGap = competencyCode && trainingPlan?.summary?.percentageGap ? trainingPlan.summary.percentageGap[competencyCode] || 0 : 0;
+    return {
+      ...mapping,
+      category,
+      percentageGap,
+    };
+  }).sort((a, b) => {
+    return (b.percentageGap || 0) - (a.percentageGap || 0);
+  }) || [];
 
   // Handle edit click
   const handleEdit = (mapping: CompetencyMappingItem) => {
@@ -93,7 +108,6 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
       program: mapping.program,
       trainingMaterial1Id: mapping.trainingMaterial1Id,
       trainingMaterial2Id: mapping.trainingMaterial2Id,
-      category: mapping.category,
     });
     setIsEditDialogOpen(true);
   };
@@ -105,7 +119,6 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
       program: program,
       trainingMaterial1Id: null,
       trainingMaterial2Id: null,
-      category: "M",
     });
     setIsCreateDialogOpen(true);
   };
@@ -154,7 +167,7 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
     }
   };
 
-  if (mappingsLoading || trainingsLoading) {
+  if (mappingsLoading || trainingsLoading || planLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -189,14 +202,17 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mappings && mappings.length > 0 ? (
-              mappings.map((mapping) => (
+            {sortedMappings && sortedMappings.length > 0 ? (
+              sortedMappings.map((mapping) => (
                 <TableRow key={mapping.id}>
                   <TableCell className="font-medium">
                     {mapping.competencyType?.code || "N/A"} - {mapping.competencyType?.name || "Unknown"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={mapping.category === "M" ? "destructive" : "secondary"}>
+                    <Badge
+                      variant={mapping.category === "M" ? "destructive" : "secondary"}
+                      className={mapping.category === "NM" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+                    >
                       {mapping.category === "M" ? "Mandatory" : "Non-Mandatory"}
                     </Badge>
                   </TableCell>

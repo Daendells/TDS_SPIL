@@ -63,7 +63,6 @@ func (r *competencyProgramMappingRepository) Update(mapping *domain.CompetencyPr
 			"program":                 mapping.Program,
 			"training_material_1_id":  mapping.TrainingMaterial1ID,
 			"training_material_2_id":  mapping.TrainingMaterial2ID,
-			"category":                mapping.Category,
 		}).Error
 }
 

@@ -16,7 +16,6 @@ export interface Training {
     code: string;
     name: string;
     description?: string;
-    category: string;
   };
 }
 
@@ -26,7 +25,6 @@ export interface CompetencyMappingItem {
   program: string;
   trainingMaterial1Id: number | null;
   trainingMaterial2Id: number | null;
-  category: "M" | "NM";
   createdAt: string;
   updatedAt: string;
   competencyType?: {
@@ -34,7 +32,6 @@ export interface CompetencyMappingItem {
     code: string;
     name: string;
     description?: string;
-    category: string;
   };
   trainingMaterial1?: Training;
   trainingMaterial2?: Training;
@@ -45,7 +42,6 @@ export interface CompetencyMappingFormData {
   program: string;
   trainingMaterial1Id: number | null;
   trainingMaterial2Id: number | null;
-  category: "M" | "NM";
 }
 
 // Get all trainings for dropdowns

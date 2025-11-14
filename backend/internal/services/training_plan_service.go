@@ -49,6 +49,13 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 		return make(map[string]domain.CompetencyMappingItem)
 	}
 
+	// Get training plan to extract category information
+	trainingPlan, err := s.GetTrainingPlan(program)
+	if err != nil {
+		s.log.WithError(err).WithField("program", program).Error("Failed to get training plan for categories")
+		// Continue without categories rather than failing
+	}
+
 	result := make(map[string]domain.CompetencyMappingItem)
 	for _, mapping := range programMappings {
 		// Preload CompetencyType relation to get code and name
@@ -68,8 +75,17 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 			trainingTopics = append(trainingTopics, mapping.TrainingMaterial2.TopikTraining)
 		}
 
+		// Get category from training plan summary
+		category := "NM"
+		if trainingPlan != nil && trainingPlan.Summary.Category != nil {
+			if cat, exists := trainingPlan.Summary.Category[competencyCode]; exists {
+				category = cat
+			}
+		}
+
 		result[competencyCode] = domain.CompetencyMappingItem{
 			Name:           competencyName,
+			Category:       category,
 			TrainingTopics: trainingTopics,
 		}
 	}
@@ -393,7 +409,6 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 			Program:        program,
 			CompetencyCode: code,
 			TrainingTopic:  trainingTopic,
-			Category:       "M",
 			MaterialType:   1,
 			ScheduledDate:  scheduleDate,
 		}
@@ -420,7 +435,6 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 			Program:        program,
 			CompetencyCode: code,
 			TrainingTopic:  trainingTopic,
-			Category:       "NM",
 			MaterialType:   1,
 			ScheduledDate:  scheduleDate,
 		}
@@ -565,7 +579,9 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 	// Find the latest Mandatory Materi 1 date
 	var latestMandatoryMateri1 time.Time
 	for _, schedule := range *schedules {
-		if schedule.Category == "M" && schedule.MaterialType == 1 {
+		// Use dynamic category calculation instead of schedule.Category
+		competencyCategory := categories[schedule.CompetencyCode]
+		if competencyCategory == "M" && schedule.MaterialType == 1 {
 			if schedule.ScheduledDate.After(latestMandatoryMateri1) {
 				latestMandatoryMateri1 = schedule.ScheduledDate
 			}
@@ -575,7 +591,9 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 	// Find the latest Non-Mandatory Materi 1 date
 	var latestNonMandatoryMateri1 time.Time
 	for _, schedule := range *schedules {
-		if schedule.Category == "NM" && schedule.MaterialType == 1 {
+		// Use dynamic category calculation instead of schedule.Category
+		competencyCategory := categories[schedule.CompetencyCode]
+		if competencyCategory == "NM" && schedule.MaterialType == 1 {
 			if schedule.ScheduledDate.After(latestNonMandatoryMateri1) {
 				latestNonMandatoryMateri1 = schedule.ScheduledDate
 			}
@@ -613,7 +631,6 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 			Program:        program,
 			CompetencyCode: code,
 			TrainingTopic:  trainingTopic,
-			Category:       "M",
 			MaterialType:   2,
 			ScheduledDate:  scheduleDate,
 		}
@@ -657,7 +674,6 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 			Program:        program,
 			CompetencyCode: code,
 			TrainingTopic:  trainingTopic,
-			Category:       "NM",
 			MaterialType:   2,
 			ScheduledDate:  scheduleDate,
 		}
