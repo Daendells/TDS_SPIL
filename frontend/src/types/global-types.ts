@@ -183,6 +183,7 @@ export interface IAssignmentCreate {
 }
 
 export interface IAssignmentUpdate {
+    id: number;
   assessmentTypeId?: number;
   status?: string;
 }
