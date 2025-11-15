@@ -1,6 +1,6 @@
 "use client";
-import { useState } from "react";
-import { useAssignments } from "./_hooks/useAssignments";
+import { useState, useMemo } from "react";
+import { useAssignments } from "./_hooks/useAssigments";
 import { useCatalogs } from "./_hooks/useCatalogs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,315 +21,359 @@ import {
 } from "@/components/ui/table";
 import { PlusIcon, EditIcon, TrashIcon, Search } from "lucide-react";
 import { toast } from "sonner";
-import { IAssignment } from "@/types/global-types";
+import { IAssignmentFlat } from "@/types/global-types";
 
 export default function AssignmentTable() {
   const {
     loading,
     assignments,
-    allAssignments,
     fetchAll,
     createAssignment,
     updateAssignment,
     deleteAssignment,
     searchQuery,
     setSearchQuery,
+    pageSize,
+    setPageSize,
+    filterAssessment,
+    setFilterAssessment,
+    filterStatus,
+    setFilterStatus,
   } = useAssignments();
 
   const { assessments, users } = useCatalogs();
 
   const [openDialog, setOpenDialog] = useState(false);
-  const [editing, setEditing] = useState<IAssignment | null>(null);
-
+  const [editing, setEditing] = useState<IAssignmentFlat | null>(null);
   const [form, setForm] = useState({
-    user_ids: [] as string[],
-    assessment_id: "",
-    start_date: "",
-    end_date: "",
-    note: "",
+    seafarer_codes: [] as string[],
+    assessment_type_id: "",
     status: "ASSIGNED",
+    userSearch: "",
   });
 
-  // 🟢 buka modal edit
-  const handleEdit = (a: IAssignment) => {
+  // Filter user di dialog berdasarkan search
+  const filteredUsers = useMemo(() => {
+    const q = form.userSearch.toLowerCase();
+    return users.filter(
+      (u) =>
+        u.nama?.toLowerCase().includes(q) ||
+        u.seafarerCode?.toLowerCase().includes(q)
+    );
+  }, [form.userSearch, users]);
+
+  const handleEdit = (a: IAssignmentFlat) => {
     setEditing(a);
     setForm({
-      user_ids: [(a.user_id || a.UserID || "").toString()],
-      assessment_id: (a.assessment_id || a.AssessmentID || "").toString(),
-      start_date: (a.start_date || a.StartDate || "").split("T")[0] || "",
-      end_date: (a.end_date || a.EndDate || "").split("T")[0] || "",
-      note: a.note || a.Note || "",
-      status: a.status || a.Status || "ASSIGNED",
+      seafarer_codes: [a.seafarerCode],
+      assessment_type_id: a.assessmentTypeId.toString(),
+      status: a.status || "ASSIGNED",
+      userSearch: "",
     });
     setOpenDialog(true);
   };
 
-  // 🟢 simpan (create/update)
   const handleSubmit = async () => {
-    if (!form.assessment_id || !form.start_date || !form.end_date) {
-      toast.error("Lengkapi assessment, start date, dan end date!");
+    if (!form.assessment_type_id || form.seafarer_codes.length === 0) {
+      toast.error("Pilih minimal satu seafarer dan assessment!");
       return;
     }
 
-    const payload = {
-      assessment_id: Number(form.assessment_id),
-      start_date: new Date(form.start_date).toISOString(),
-      end_date: new Date(form.end_date).toISOString(),
-      note: form.note || undefined,
-      status: form.status || "ASSIGNED",
-    };
-
     try {
       if (editing) {
-        const id = editing.id || editing.ID || 0;
-        await updateAssignment(id, {
-          ...payload,
-          user_id: Number(form.user_ids[0]),
-        });
+await updateAssignment(editing.id || 0, {
+  id: editing.id || 0, //  add this line
+  assessmentTypeId: Number(form.assessment_type_id),
+  status: form.status,
+});
         toast.success("Assignment berhasil diperbarui!");
       } else {
-        if (form.user_ids.length === 0) {
-          toast.error("Pilih minimal satu user!");
-          return;
-        }
-
-        // bisa langsung call bulk API atau looping
-        for (const uid of form.user_ids) {
+        // bulk add
+        for (const code of form.seafarer_codes) {
           await createAssignment({
-            ...payload,
-            user_id: Number(uid),
+            seafarerCode: code,
+            assessmentTypeId: Number(form.assessment_type_id),
+            status: form.status,
+            createdBy: "SYSTEM",
           });
         }
-
-        toast.success("Assignments berhasil dibuat!");
+        toast.success(`${form.seafarer_codes.length} assignment berhasil dibuat!`);
       }
 
       await fetchAll();
       setEditing(null);
       setOpenDialog(false);
+      setForm({
+        seafarer_codes: [],
+        assessment_type_id: "",
+        status: "ASSIGNED",
+        userSearch: "",
+      });
     } catch (err) {
       console.error(err);
       toast.error("Gagal menyimpan assignment");
     }
   };
 
-  // 🟢 hapus
   const handleDelete = async (id: number) => {
     if (window.confirm("Yakin ingin menghapus assignment ini?")) {
       await deleteAssignment(id);
-      toast.success("Assignment berhasil dihapus!");
-      await fetchAll();
     }
   };
+  
 
   return (
-    <div className="p-6 space-y-4">
+    <div className="mt-8 p-4 m-6 space-y-6 ">
       {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Assignments</h2>
-        <Button
-          onClick={() => {
-            setEditing(null);
-            setForm({
-              user_ids: [],
-              assessment_id: "",
-              start_date: "",
-              end_date: "",
-              note: "",
-              status: "ASSIGNED",
-            });
-            setOpenDialog(true);
-          }}
-        >
-          <PlusIcon className="w-4 h-4 mr-2" /> New Assignment
-        </Button>
       </div>
 
-      {/* Search */}
-      <div className="flex gap-4 items-center">
-        <div className="relative w-[350px]">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-          <Input
-            placeholder="Cari nama, seaman code, assessment, note..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
-        </div>
-        {searchQuery && (
-          <span className="text-sm text-gray-500">
-            Ditemukan {assignments.length} dari {allAssignments.length}
-          </span>
-        )}
-      </div>
+      {/* Search bar */}
+{/* Search + Filters */}
+<div className="flex justify-between items-center mb-6">
+  {/* Search */}
+  <div className="flex gap-4 items-center">
+    <div className="relative w-[350px]">
+      <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+      <Input
+        placeholder="Cari nama, seafarer code, assessment..."
+        value={searchQuery}
+        onChange={(e) => setSearchQuery(e.target.value)}
+        className="pl-10"
+      />
+    </div>
+  </div>
+
+  {/* FILTERS */}
+  <div className="flex items-center gap-3">
+
+    {/* Filter Assessment */}
+    <select
+      className="border px-3 py-2 rounded-md"
+      value={filterAssessment}
+      onChange={(e) => setFilterAssessment(e.target.value)}
+    >
+      <option value="ALL">All Assessments</option>
+      {assessments.map((a) => (
+        <option key={a.assessmentId} value={a.assessmentId}>
+          {a.assessmentName}
+        </option>
+      ))}
+    </select>
+
+    {/* Filter Status */}
+    <select
+      className="border px-3 py-2 rounded-md"
+      value={filterStatus}
+      onChange={(e) => setFilterStatus(e.target.value)}
+    >
+      <option value="ALL">All Status</option>
+      <option value="ASSIGNED">Assigned</option>
+      <option value="IN_PROGRESS">In Progress</option>
+      <option value="COMPLETED">Completed</option>
+    </select>
+
+    {/* Page Size Popover */}
+    <select
+      className="border px-3 py-2 rounded-md"
+      value={pageSize}
+      onChange={(e) => setPageSize(Number(e.target.value))}
+    >
+      <option value="10">10 rows</option>
+      <option value="20">20 rows</option>
+      <option value="50">50 rows</option>
+      <option value="100">100 rows</option>
+      <option value="-1">Show All</option>
+    </select>
+
+    {/* New Assignment */}
+    <Button
+      onClick={() => {
+        setEditing(null);
+        setForm({
+          seafarer_codes: [],
+          assessment_type_id: "",
+          status: "ASSIGNED",
+          userSearch: "",
+        });
+        setOpenDialog(true);
+      }}
+    >
+      <PlusIcon className="w-4 h-4 mr-2" /> New Assignment
+    </Button>
+
+  </div>
+</div>
+
+
 
       {/* Table */}
-      <div
-        className={`overflow-auto border rounded-lg ${
-          loading ? "opacity-70" : "opacity-100"
-        }`}
-      >
+      <div className="overflow-auto border rounded-lg ">
         <Table>
           <TableHeader className="sticky top-0 bg-background z-10">
-            <TableRow>
-              <TableHead>ID</TableHead>
-              <TableHead>Nama</TableHead>
-              <TableHead>Seaman Code</TableHead>
-              <TableHead>Assessment</TableHead>
-              <TableHead>Start</TableHead>
-              <TableHead>End</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Note</TableHead>
-              <TableHead>Actions</TableHead>
-            </TableRow>
+        <TableRow>
+          <TableHead className="text-center">No</TableHead>
+          <TableHead className="text-center">Nama</TableHead>
+          <TableHead className="text-center">Seafarer Code</TableHead>
+          <TableHead className="text-center">Assessment</TableHead>
+          <TableHead className="text-center">Status</TableHead>
+          <TableHead className="text-center">Attempts</TableHead>
+          <TableHead className="text-center">Action</TableHead>
+        </TableRow>
           </TableHeader>
           <TableBody>
-            {loading ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center">
-                  Loading...
-                </TableCell>
-              </TableRow>
-            ) : assignments.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={9} className="text-center text-gray-400">
-                  Tidak ada data assignment.
-                </TableCell>
-              </TableRow>
-            ) : (
-              assignments.map((a) => (
-                <TableRow key={a.id || a.ID}>
-                  <TableCell>{a.id || a.ID}</TableCell>
-                  <TableCell>{a.User?.Nama || "-"}</TableCell>
-                  <TableCell>{a.User?.SeamanCode || "-"}</TableCell>
-                  <TableCell>
-                    {a.assessment?.name ||
-                      a.assessment?.assessmentName ||
-                      a.Assessment?.assessmentName ||
-                      "-"}
-                  </TableCell>
-                  <TableCell>
-                    {a.start_date?.split("T")[0] || a.StartDate?.split("T")[0] || "-"}
-                  </TableCell>
-                  <TableCell>
-                    {a.end_date?.split("T")[0] || a.EndDate?.split("T")[0] || "-"}
-                  </TableCell>
-                  <TableCell>{a.status || a.Status}</TableCell>
-                  <TableCell>{a.note || a.Note || "-"}</TableCell>
-                  <TableCell>
-                    <div className="flex gap-2 justify-center">
-                      <Button size="sm" variant="outline" onClick={() => handleEdit(a)}>
-                        <EditIcon className="w-4 h-4" />
-                      </Button>
-                      <Button
-                        size="sm"
-                        variant="destructive"
-                        onClick={() => handleDelete(a.id || a.ID || 0)}
-                      >
-                        <TrashIcon className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
+        {loading ? (
+          <TableRow>
+            <TableCell colSpan={7} className="text-center">
+          Loading...
+            </TableCell>
+          </TableRow>
+        ) : assignments.length === 0 ? (
+          <TableRow>
+            <TableCell colSpan={7} className="text-center text-gray-400">
+          Tidak ada data assignment.
+            </TableCell>
+          </TableRow>
+        ) : (
+          assignments.map((a, no) => (
+            <TableRow key={a.id}>
+          <TableCell className="text-center">{no + 1}</TableCell>
+          <TableCell className="text-center">{a.nama}</TableCell>
+          <TableCell className="text-center">{a.seafarerCode}</TableCell>
+          <TableCell className="text-center">{a.assessmentType}</TableCell>
+          <TableCell className="text-center">
+            <span
+              className={`px-2 py-1 rounded text-xs font-medium ${
+                a.status === "ASSIGNED"
+                  ? "bg-blue-200 text-blue-800"
+                  : a.status === "COMPLETED"
+                  ? "bg-green-100 text-green-800"
+                  : "bg-gray-100 text-gray-800"
+              }`}
+            >
+              {a.status}
+            </span>
+          </TableCell>
+          <TableCell className="text-center">{a.attempts}</TableCell>
+          <TableCell className="text-center">
+            <div className="flex justify-center gap-2">
+              <Button size="sm" variant="outline" onClick={() => handleEdit(a)}>
+            <EditIcon className="w-4 h-4" />
+              </Button>
+              <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => handleDelete(a.id)}
+              >
+            <TrashIcon className="w-4 h-4" />
+              </Button>
+            </div>
+          </TableCell>
+            </TableRow>
+          ))
+        )}
           </TableBody>
         </Table>
       </div>
 
       {/* Dialog */}
       <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-lg">
           <DialogHeader>
-            <DialogTitle>{editing ? "Edit Assignment" : "Create Assignment"}</DialogTitle>
+            <DialogTitle>
+              {editing ? "Edit Assignment" : "Tambah Assignment"}
+            </DialogTitle>
           </DialogHeader>
 
-          <div className="grid gap-3 py-2">
-            {/* Assessment by name */}
+          <div className="space-y-4">
+            {/* Assessment */}
             <div>
-              <label className="text-sm font-medium mb-1 block">Assessment *</label>
+              <label className="text-sm font-medium mb-1 block">
+                Assessment Type *
+              </label>
               <select
-                className="w-full px-3 py-2 border rounded-md"
-                value={form.assessment_id}
-                onChange={(e) => setForm({ ...form, assessment_id: e.target.value })}
+                className="w-full border px-2 py-2 rounded-md"
+                value={form.assessment_type_id}
+                onChange={(e) =>
+                  setForm({ ...form, assessment_type_id: e.target.value })
+                }
               >
                 <option value="">Pilih Assessment</option>
                 {assessments.map((a) => (
-                  <option key={a.assessmentId || a.id} value={a.assessmentId || a.id}>
-                    {a.assessmentName || a.name}
+                  <option key={a.assessmentId} value={a.assessmentId}>
+                    {a.assessmentName}
                   </option>
                 ))}
               </select>
             </div>
 
-            {/* Multi-user (only create mode) */}
+            {/* Seafarers (multi-select) */}
             {!editing && (
               <div>
-                <label className="text-sm font-medium mb-1 block">Users *</label>
-                <select
-                  multiple
-                  className="w-full px-3 py-2 border rounded-md h-40"
-                  value={form.user_ids}
+                <label className="text-sm font-medium mb-1 block">
+                  Pilih Seafarers *
+                </label>
+                <Input
+                  placeholder="Cari seafarer..."
+                  value={form.userSearch}
                   onChange={(e) =>
-                    setForm({
-                      ...form,
-                      user_ids: Array.from(e.target.selectedOptions, (opt) => opt.value),
-                    })
+                    setForm({ ...form, userSearch: e.target.value })
                   }
-                >
-                  {users.map((u) => (
-                    <option key={u.id} value={u.id.toString()}>
-                      {u.nama} ({u.seamanCode})
-                    </option>
+                  className="mb-2"
+                />
+                <div className="max-h-48 overflow-auto border rounded-md">
+                  {filteredUsers.map((u) => (
+                    <label
+                      key={u.seafarerCode}
+                      className="flex items-center gap-2 px-3 py-1.5 hover:bg-accent cursor-pointer"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={form.seafarer_codes.includes(u.seafarerCode!)}
+                        onChange={(e) => {
+                          const selected = form.seafarer_codes.includes(
+                            u.seafarerCode!
+                          );
+                          setForm({
+                            ...form,
+                            seafarer_codes: selected
+                              ? form.seafarer_codes.filter(
+                                  (c) => c !== u.seafarerCode
+                                )
+                              : [...form.seafarer_codes, u.seafarerCode!],
+                          });
+                        }}
+                      />
+                      <span>
+                        {u.nama}{" "}
+                        <span className="text-gray-500 text-xs">
+                          ({u.seafarerCode})
+                        </span>
+                      </span>
+                    </label>
                   ))}
-                </select>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Gunakan Ctrl / Cmd untuk memilih beberapa user.
-                </p>
+                  {filteredUsers.length === 0 && (
+                    <p className="text-center text-gray-400 py-3">
+                      Tidak ada seafarer ditemukan
+                    </p>
+                  )}
+                </div>
               </div>
             )}
-
-            {/* Start & End Date */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Start Date *</label>
-              <Input
-                type="date"
-                value={form.start_date}
-                onChange={(e) => setForm({ ...form, start_date: e.target.value })}
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium mb-1 block">End Date *</label>
-              <Input
-                type="date"
-                value={form.end_date}
-                onChange={(e) => setForm({ ...form, end_date: e.target.value })}
-              />
-            </div>
 
             {/* Status */}
             <div>
               <label className="text-sm font-medium mb-1 block">Status</label>
               <select
-                className="w-full px-3 py-2 border rounded-md"
+                className="w-full border px-2 py-2 rounded-md"
                 value={form.status}
                 onChange={(e) => setForm({ ...form, status: e.target.value })}
               >
                 <option value="ASSIGNED">ASSIGNED</option>
                 <option value="IN_PROGRESS">IN_PROGRESS</option>
                 <option value="COMPLETED">COMPLETED</option>
-                <option value="CANCELLED">CANCELLED</option>
               </select>
-            </div>
-
-            {/* Note */}
-            <div>
-              <label className="text-sm font-medium mb-1 block">Note</label>
-              <Input
-                placeholder="Tambahkan catatan..."
-                value={form.note}
-                onChange={(e) => setForm({ ...form, note: e.target.value })}
-              />
             </div>
           </div>
 

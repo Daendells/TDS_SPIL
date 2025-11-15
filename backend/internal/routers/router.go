@@ -24,6 +24,7 @@ type RouterConfig struct {
 	AssessmentTypeController     *controllers.AssessmentTypeController
 	SeafarerAssessmentController *controllers.SeafarerAssessmentController
 	MasterController             *controllers.MasterController
+	AssignmentController         *controllers.AssignmentController
 	AuthMiddleware               gin.HandlerFunc
 }
 
@@ -32,6 +33,7 @@ func (c *RouterConfig) Setup() {
 	c.App.Static("/storage", "./storage")
 	c.SetupGuestRouter()
 	c.SetupAuthRouter()
+	c.SetupAssignmentRouter()
 	c.SetupMasterRouter()
 }
 
@@ -158,6 +160,18 @@ func (r *RouterConfig) SetupMasterRouter() {
 		group.PUT("/:id", r.MasterController.Update)
 		group.DELETE("/:id", r.MasterController.Delete)
 
+	}
+}
+
+// --- Router assignment baru
+func (r *RouterConfig) SetupAssignmentRouter() {
+	group := r.App.Group("/api/assignments")
+	{
+		group.GET("", r.AssignmentController.ListPaged)
+		group.POST("", r.AssignmentController.Create)
+		group.POST("/bulk", r.AssignmentController.BulkCreate)
+		group.PUT("/:id", r.AssignmentController.Update)
+		group.DELETE("/:id", r.AssignmentController.Delete)
 	}
 }
 

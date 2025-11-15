@@ -17,6 +17,7 @@ import (
 	"gorm.io/gorm"
 )
 
+// MasterService provides business logic for master report operations
 type MasterService struct {
 	DB               *gorm.DB
 	Log              *logrus.Logger
@@ -24,12 +25,18 @@ type MasterService struct {
 	MasterRepository *repositories.MasterRepository
 }
 
+// Constructor
 func NewMasterService(db *gorm.DB, log *logrus.Logger, validate *validator.Validate, repo *repositories.MasterRepository) *MasterService {
 	return &MasterService{
 		DB: db, Log: log, Validate: validate, MasterRepository: repo,
 	}
 }
 
+//
+// ---------------------- READ OPERATIONS ----------------------
+//
+
+// FindAll returns paginated master reports
 func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse, error) {
 	db := s.DB.Model(&domain.MasterReport{})
 
@@ -66,7 +73,7 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 		return nil, fmt.Errorf("failed to retrieve master reports: %w", err)
 	}
 
-	// reverse if prev (so UI order stays ascending)
+	// --- reverse if prev (so UI order stays ascending) ---
 	if req.Page == "prev" && len(rows) > 1 {
 		for i, j := 0, len(rows)-1; i < j; i, j = i+1, j-1 {
 			rows[i], rows[j] = rows[j], rows[i]
@@ -115,7 +122,6 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 	if len(result) == 0 {
 		isFirstPage = true
 	} else {
-		// check if there's any record before the first one we got
 		var count int64
 		if err := s.DB.Model(&domain.MasterReport{}).
 			Where("id < ?", result[0].ID).
@@ -125,7 +131,6 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 		isFirstPage = (count == 0)
 	}
 
-	// build pagination metadata
 	responsePayload := web.MasterReportListResponse{
 		Data:      result,
 		PageSize:  limit,
@@ -145,10 +150,9 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 	}, nil
 }
 
-// FindById
+// FindById retrieves one master report
 func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 	var master domain.FullReport
-
 	if err := s.MasterRepository.FindById(s.DB, &master, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("master report not found")
@@ -156,7 +160,6 @@ func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 		s.Log.WithError(err).Error("failed to find master report by ID")
 		return nil, fmt.Errorf("failed to retrieve master report: %w", err)
 	}
-
 	return &web.SuccessResponse{
 		Code:   http.StatusOK,
 		Status: "OK",
@@ -164,13 +167,36 @@ func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 	}, nil
 }
 
-// Create
+//
+// ---------------------- CREATE ----------------------
+//
+
+// Ensure required defaults before create
+func fillReportDefaults(r *domain.FullReport) error {
+	if r.Readiness == nil || *r.Readiness == "" {
+		def := "Pending"
+		r.Readiness = &def
+	}
+	if r.SeamanCode == nil || *r.SeamanCode == "" {
+		return fmt.Errorf("seamanCode is required")
+	}
+	if r.SeafarerCode == nil || *r.SeafarerCode == "" {
+		return fmt.Errorf("seafarerCode is required")
+	}
+	return nil
+}
+
+// Create adds a new master report
 func (s *MasterService) Create(request *web.ReportData) (*web.SuccessResponse, error) {
 	if err := s.Validate.Struct(request); err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
 	master := converter.MasterReportRequestToDomain(request)
+
+	if err := fillReportDefaults(master); err != nil {
+		return nil, err
+	}
 
 	if err := s.MasterRepository.Create(s.DB, master); err != nil {
 		s.Log.WithError(err).Error("failed to create master report")
@@ -184,7 +210,10 @@ func (s *MasterService) Create(request *web.ReportData) (*web.SuccessResponse, e
 	}, nil
 }
 
-// Update
+//
+// ---------------------- UPDATE ----------------------
+//
+
 func nullifyStringPtr(p *string) *string {
 	if p == nil {
 		return nil
@@ -195,7 +224,6 @@ func nullifyStringPtr(p *string) *string {
 	return p
 }
 
-// helper: parse "YYYY-MM-DD" atau kosong -> nil
 func parseDateOrNil(p *string) (*time.Time, error) {
 	if p == nil {
 		return nil, nil
@@ -211,12 +239,10 @@ func parseDateOrNil(p *string) (*time.Time, error) {
 }
 
 func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.SuccessResponse, error) {
-	// Validasi basic request struct (opsional/berguna untuk field required tertentu)
 	if err := s.Validate.Struct(request); err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
-	// 1. Ambil data existing
 	var existing domain.FullReport
 	if err := s.MasterRepository.FindById(s.DB, &existing, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -225,9 +251,17 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 		return nil, err
 	}
 
-	// 2. Terapkan perubahan PARSIAL
+	// 🔒 Prevent FK-breaking updates
+	if request.SeafarerCode != nil && existing.SeafarerCode != nil &&
+		*request.SeafarerCode != *existing.SeafarerCode {
+		return nil, fmt.Errorf("cannot update seafarerCode; it is referenced by other tables")
+	}
+	if request.SeamanCode != nil && existing.SeamanCode != nil &&
+		*request.SeamanCode != *existing.SeamanCode {
+		return nil, fmt.Errorf("cannot update seamanCode")
+	}
 
-	// String fields (dengan sanitasi "")
+	// --- Apply partial updates ---
 	if request.Nama != nil {
 		existing.Nama = nullifyStringPtr(request.Nama)
 	}
@@ -243,19 +277,15 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 	if request.VesselName != nil {
 		existing.VesselName = nullifyStringPtr(request.VesselName)
 	}
-
-	// Date field (string -> *time.Time)
 	if request.StartDate != nil {
 		t, err := parseDateOrNil(request.StartDate)
 		if err != nil {
-			return nil, err // invalid format dari frontend
+			return nil, err
 		}
 		existing.StartDate = t
 	}
 
-	// 3. (opsional tapi direkomendasikan)
-	// Pastikan beberapa kolom inti tidak jadi nil setelah update.
-	// Misal: Nama tidak boleh hilang.
+	// --- Required fields must remain non-empty ---
 	if existing.Nama == nil || strings.TrimSpace(*existing.Nama) == "" {
 		return nil, fmt.Errorf("field 'nama' is required and cannot be empty")
 	}
@@ -265,16 +295,12 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 	if existing.SeafarerCode == nil || strings.TrimSpace(*existing.SeafarerCode) == "" {
 		return nil, fmt.Errorf("field 'seafarerCode' is required and cannot be empty")
 	}
-	// tambahkan aturan lain sesuai kebutuhan bisnis kamu:
-	// jabatan wajib? vesselName wajib? dll.
 
-	// 4. Simpan
 	if err := s.MasterRepository.Update(s.DB, &existing); err != nil {
 		s.Log.WithError(err).Error("failed to update master report")
 		return nil, fmt.Errorf("failed to update master report: %w", err)
 	}
 
-	// 5. Response balik
 	return &web.SuccessResponse{
 		Code:   http.StatusOK,
 		Status: "Updated",
@@ -282,10 +308,12 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 	}, nil
 }
 
-// Delete
+//
+// ---------------------- DELETE ----------------------
+//
+
 func (s *MasterService) Delete(id uint) (*web.SuccessResponse, error) {
 	var master domain.FullReport
-
 	if err := s.MasterRepository.FindById(s.DB, &master, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("master report not found")
