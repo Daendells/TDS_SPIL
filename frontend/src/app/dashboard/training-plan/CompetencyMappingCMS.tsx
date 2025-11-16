@@ -57,13 +57,14 @@ import {
   type CompetencyMappingItem,
   type Training,
 } from "./_hooks/useCompetencyMappingCMS";
-import { useGetTrainingPlan } from "./_hooks/useTrainingPlan";
+import type { TrainingPlanResponse } from "./_hooks/useTrainingPlan";
 
 interface CompetencyMappingCMSProps {
   program: string;
+  trainingPlan?: TrainingPlanResponse;
 }
 
-export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSProps) {
+export default function CompetencyMappingCMS({ program, trainingPlan }: CompetencyMappingCMSProps) {
   const [editingMapping, setEditingMapping] = useState<CompetencyMappingItem | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -81,7 +82,6 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
   // React Query hooks
   const { data: mappings, isLoading: mappingsLoading } = useGetCompetencyMappings(program);
   const { data: trainings, isLoading: trainingsLoading } = useGetAllTrainings();
-  const { data: trainingPlan, isLoading: planLoading } = useGetTrainingPlan(program);
   const updateMutation = useUpdateCompetencyMapping();
   const createMutation = useCreateCompetencyMapping();
   const deleteMutation = useDeleteCompetencyMapping();
@@ -167,7 +167,7 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
     }
   };
 
-  if (mappingsLoading || trainingsLoading || planLoading) {
+  if (mappingsLoading || trainingsLoading) {
     return (
       <div className="flex items-center justify-center py-12">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />

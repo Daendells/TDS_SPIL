@@ -452,7 +452,7 @@ export default function TrainingPlanClient() {
         <TabsContent value="mapping" className="space-y-4">
           <Card>         
             <CardContent>
-              <CompetencyMappingCMS program={selectedProgram} />
+              <CompetencyMappingCMS program={selectedProgram} trainingPlan={trainingPlan} />
             </CardContent>
           </Card>
         </TabsContent>

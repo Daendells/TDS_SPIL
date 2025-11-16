@@ -49,11 +49,35 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 		return make(map[string]domain.CompetencyMappingItem)
 	}
 
-	// Get training plan to extract category information
-	trainingPlan, err := s.GetTrainingPlan(program)
+	// Get gap competencies to calculate category directly
+	gapCompetencies, err := s.gapCompetencyRepo.GetWithReportsAndCompetencyTypes(program)
 	if err != nil {
-		s.log.WithError(err).WithField("program", program).Error("Failed to get training plan for categories")
+		s.log.WithError(err).WithField("program", program).Error("Failed to get gap competencies for categories")
 		// Continue without categories rather than failing
+	}
+
+	// Calculate categories directly using same logic as buildSummary
+	reportGaps := make(map[int][]domain.GapCompetency)
+	for _, gc := range gapCompetencies {
+		reportGaps[gc.ReportID] = append(reportGaps[gc.ReportID], gc)
+	}
+	totalParticipants := len(reportGaps)
+	gapCounts := make(map[string]int)
+	for _, gc := range gapCompetencies {
+		if gc.CompetencyType != nil {
+			gapCounts[gc.CompetencyType.Code]++
+		}
+	}
+	category := make(map[string]string)
+	if totalParticipants > 0 {
+		for code, count := range gapCounts {
+			percentage := (float64(count) / float64(totalParticipants)) * 100
+			if percentage > 60 {
+				category[code] = "M"
+			} else {
+				category[code] = "NM"
+			}
+		}
 	}
 
 	result := make(map[string]domain.CompetencyMappingItem)
@@ -75,17 +99,15 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 			trainingTopics = append(trainingTopics, mapping.TrainingMaterial2.TopikTraining)
 		}
 
-		// Get category from training plan summary
-		category := "NM"
-		if trainingPlan != nil && trainingPlan.Summary.Category != nil {
-			if cat, exists := trainingPlan.Summary.Category[competencyCode]; exists {
-				category = cat
-			}
+		// Get category from calculated map
+		cat := "NM"
+		if c, exists := category[competencyCode]; exists {
+			cat = c
 		}
 
 		result[competencyCode] = domain.CompetencyMappingItem{
 			Name:           competencyName,
-			Category:       category,
+			Category:       cat,
 			TrainingTopics: trainingTopics,
 		}
 	}
@@ -175,12 +197,17 @@ func (s *trainingPlanService) buildGapsMapFromMultiple(gaps []domain.GapCompeten
 		program = gaps[0].Report.IDPProgram
 	}
 	
-	// Get all competency codes for the program
-	competencyMapping := s.GetCompetencyMapping(program)
+	// Get all competency codes for the program directly from database
+	programMappings, err := s.competencyProgramMapRepo.GetByProgram(program)
+	if err != nil {
+		s.log.WithError(err).WithField("program", program).Error("Failed to get competency program mappings")
+	}
 	
 	// Initialize all competency codes as empty
-	for code := range competencyMapping {
-		result[code] = ""
+	for _, mapping := range programMappings {
+		if mapping.CompetencyType != nil {
+			result[mapping.CompetencyType.Code] = ""
+		}
 	}
 	
 	// Mark gaps that exist
