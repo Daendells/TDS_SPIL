@@ -55,12 +55,13 @@ func NewTrainingService(log *logrus.Logger, apiKey, model, pubBase string) *Serv
 }
 
 type GenerateInput struct {
-	Kode          string
-	TopikTraining string
-	Kompetensi    string
-	Referensi     string
-	Level         int
-	Tools         string
+	Kode              string
+	TopikTraining     string
+	Kompetensi        string
+	Referensi         string
+	Level             int
+	Tools             string
+	DeskripsiPerilaku string
 }
 
 type Plan struct {
@@ -97,125 +98,85 @@ type QA struct {
 	Answer   string `json:"answer"`
 }
 
+// DetailedContent represents the comprehensive learning guide structure
+type DetailedContent struct {
+	Title           string                `json:"title"`
+	Introduction    string                `json:"introduction"`
+	Sections        []DetailedSection     `json:"sections"`
+	PracticalGuide  PracticalGuide        `json:"practical_guide"`
+	CaseStudies     []DetailedCaseStudy   `json:"case_studies"`
+	FAQ             []DetailedFAQ         `json:"faq"`
+	Resources       ResourceSection       `json:"resources"`
+	Conclusion      string                `json:"conclusion"`
+}
+
+type DetailedSection struct {
+	Title       string   `json:"title"`
+	Content     string   `json:"content"`      // Super lengkap, 500-1000 kata per section
+	KeyPoints   []string `json:"key_points"`
+	Examples    []string `json:"examples"`
+	Exercises   string   `json:"exercises"`
+}
+
+type PracticalGuide struct {
+	StepByStep  []PracticalStep `json:"step_by_step"`
+	Tips        []string        `json:"tips"`
+	CommonPitfalls []string     `json:"common_pitfalls"`
+}
+
+type PracticalStep struct {
+	StepNumber  int      `json:"step_number"`
+	Title       string   `json:"title"`
+	Description string   `json:"description"`   // Detail lengkap
+	Examples    []string `json:"examples"`
+}
+
+type DetailedCaseStudy struct {
+	Title       string   `json:"title"`
+	Context     string   `json:"context"`
+	Challenge   string   `json:"challenge"`
+	Solution    string   `json:"solution"`
+	Outcome     string   `json:"outcome"`
+	Lessons     []string `json:"lessons"`
+}
+
+type DetailedFAQ struct {
+	Question string `json:"question"`
+	Answer   string `json:"answer"`  // Jawaban super detail dan lengkap
+}
+
+type ResourceSection struct {
+	Books       []string `json:"books"`
+	Articles    []string `json:"articles"`
+	Videos      []string `json:"videos"`
+	Tools       []string `json:"tools"`
+	Additional  []string `json:"additional"`
+}
+
 func (s *Service) buildPrompt(in GenerateInput) string {
 	topicType := s.determineTopicType(in.TopikTraining, in.Tools)
 
+	// Build structured context sections
+	contextSection := s.buildContextSection(in, topicType)
+	focusSection := s.buildFocusSection(in)
+	structureSection := s.buildStructureSection()
+	contentRequirements := s.buildContentRequirements()
+	
 	basePrompt := fmt.Sprintf(`You are a professional instructional designer creating high-quality training content in Indonesian. Generate a comprehensive training plan following the OBJECTIVE → KONSEP → LANGKAH → STUDI KASUS → PENUTUP structure.
-
-KONTEKS PELATIHAN:
-KODE: %s
-TOPIK: %s
-KOMPETENSI: %s
-LEVEL: %d (1=Pemula, 2=Menengah, 3=Mahir)
-TOOLS/MODEL: %s
-KEYWORD UTAMA (dari Deskripsi Perilaku): %s
-REFERENSI TAMBAHAN (Opsional): %s
-TIPE TOPIK: %s
-
-PANDUAN REFERENSI:
-- KEYWORD UTAMA adalah fondasi utama dari training ini. Pastikan keyword ini tercermin dalam setiap slide, terutama di learning objectives, key concepts, dan case studies.
-- Jika ada REFERENSI TAMBAHAN, integrasikan dengan harmonis bersama keyword utama untuk memperkaya konten.
-- Gunakan keyword dan referensi untuk memberikan konteks dan contoh yang relevan dengan kebutuhan peserta.
-
-STRUKTUR SLIDE WAJIB:
-
-1. SLIDE PEMBUKA (1 slide):
-   - slide_type: "opening"
-   - Judul yang menarik dan menggambarkan inti pelatihan secara spesifik
-   - Overview singkat yang menjelaskan relevansi topik dengan pekerjaan sehari-hari peserta
-   - Tujuan pembelajaran yang jelas dan terukur dengan kata kerja aksi yang konkret
-   - Manfaat langsung yang akan dirasakan peserta setelah mengikuti pelatihan ini
-   - Ekspektasi hasil akhir berupa skill atau pengetahuan yang dapat diterapkan segera
-
-2. OBJECTIVE (1-2 slide):
-   - slide_type: "objective"
-   - Tujuan pembelajaran yang menggunakan framework SMART dengan penjelasan mengapa setiap tujuan penting untuk dikuasai
-   - Kompetensi spesifik yang akan dikembangkan beserta contoh penerapannya di lingkungan kerja
-   - Indikator keberhasilan yang dapat diukur dengan metrik atau kriteria yang jelas
-   - Manfaat praktis yang akan diperoleh peserta dalam konteks pekerjaan mereka sehari-hari
-   - Hubungan antara tujuan pembelajaran dengan kebutuhan organisasi atau tim
-
-3. KONSEP (3-4 slide):
-   - slide_type: "concept"
-   - Definisi konsep utama dengan penjelasan yang mendalam dan mudah dipahami oleh peserta dengan berbagai latar belakang
-   - Prinsip-prinsip fundamental yang menjadi dasar dari topik yang dipelajari beserta rasionalisasi mengapa prinsip tersebut penting
-   - Framework atau model teoretis yang digunakan dengan visualisasi mental yang membantu pemahaman
-   - Terminologi kunci dengan definisi lengkap dan contoh penggunaan dalam konteks nyata
-   - Hubungan logis antar konsep yang menunjukkan bagaimana setiap elemen saling terkait dan mendukung pemahaman holistik
-   - Perbedaan antara konsep yang mirip atau sering disalahpahami untuk menghindari konfusi
-   - Contoh ilustrasi yang relevan dengan pengalaman peserta untuk memperkuat pemahaman konseptual
-
-4. LANGKAH (3-4 slide):
-   - slide_type: "steps"
-   - Prosedur langkah demi langkah yang sangat detail dan actionable dengan penjelasan tujuan setiap langkah
-   - Panduan operasional lengkap yang mencakup apa yang harus dilakukan, bagaimana melakukannya, dan mengapa langkah tersebut penting
-   - Best practices yang telah terbukti efektif beserta penjelasan mengapa praktik tersebut direkomendasikan
-   - Tips implementasi praktis yang membantu peserta menghindari kesalahan umum dan mengoptimalkan hasil
-   - Tools dan teknik spesifik yang dapat digunakan dengan panduan singkat cara penggunaannya
-   - Checklist verifikasi untuk memastikan setiap langkah telah dilakukan dengan benar dan lengkap
-   - Common pitfalls yang sering terjadi beserta strategi pencegahan dan solusi jika masalah muncul
-   - Troubleshooting guide untuk mengatasi kendala yang mungkin dihadapi selama implementasi
-
-5. STUDI KASUS (2-3 slide):
-   - slide_type: "case_study"
-   - Contoh kasus nyata dari konteks Indonesia atau industri yang relevan dengan peserta untuk meningkatkan relevansi pembelajaran
-   - Problem statement yang jelas dengan deskripsi situasi yang detail termasuk background, stakeholder yang terlibat, dan tantangan yang dihadapi
-   - Analisis situasi yang mendalam menggunakan framework atau konsep yang telah dipelajari sebelumnya dalam sesi pelatihan
-   - Proses problem solving yang sistematis dengan penjelasan reasoning di balik setiap keputusan yang diambil
-   - Solusi alternatif yang dipertimbangkan beserta evaluasi pro dan kontra dari masing-masing opsi
-   - Implementasi solusi terpilih dengan langkah-langkah detail dan hasil yang dicapai
-   - Lessons learned yang mencakup apa yang berjalan baik, apa yang bisa diperbaiki, dan insight yang dapat diterapkan di situasi lain
-   - Key takeaways yang dapat segera diterapkan oleh peserta dalam pekerjaan mereka
-
-6. PENUTUP (1 slide):
-   - slide_type: "closing"
-   - Ringkasan komprehensif dari semua poin penting yang telah dipelajari dengan penekanan pada key messages
-   - Action items konkret yang dapat segera dilakukan peserta dalam 24-48 jam setelah pelatihan
-   - Next steps yang terstruktur untuk pengembangan kompetensi lebih lanjut termasuk timeline yang disarankan
-   - Resources tambahan berupa buku, artikel, video, atau tools yang dapat digunakan untuk pembelajaran mandiri
-   - Motivasi penutup yang menginspirasi peserta untuk menerapkan ilmu yang telah dipelajari
-   - Call to action yang jelas dan spesifik untuk memastikan transfer pembelajaran ke pekerjaan
 
 %s
 
-PERSYARATAN KONTEN YANG SANGAT DETAIL:
+%s
 
-CRITICAL REQUIREMENTS:
-- Setiap slide WAJIB memiliki 5-8 bullet points yang substansial dan informatif
-- Setiap bullet point HARUS berisi minimal 2-4 kalimat lengkap yang memberikan penjelasan mendalam, bukan hanya satu kalimat pendek
-- Hindari bullet point yang terlalu singkat atau hanya berupa keywords, setiap poin harus self-explanatory
-- Setiap heading slide HARUS menggunakan format seperti "OBJECTIVE:", "KONSEP:", "LANGKAH 1:", "STUDI KASUS:" agar styling hijau dapat diterapkan
-- Konten harus kaya akan detail praktis, contoh konkret, dan penjelasan yang memudahkan pemahaman
-- Gunakan Bahasa Indonesia profesional yang natural dan engaging, hindari bahasa yang terlalu formal atau kaku
+%s
 
-FORMAT BULLET POINTS YANG DIHARAPKAN:
-Setiap bullet point harus mengikuti salah satu format berikut:
+%s
 
-1. Sub-judul + Penjelasan Detail:
-   "Definisi
-   Problem analysis adalah proses berpikir sistematis untuk memahami akar penyebab dari sebuah masalah, bukan hanya mengidentifikasi gejala yang tampak di permukaan. Metode ini membantu kita untuk tidak terjebak pada solusi quick-fix yang hanya mengatasi symptom sementara, tetapi fokus pada penyelesaian fundamental yang mencegah masalah berulang. Dengan problem analysis yang baik, organisasi dapat menghemat waktu, biaya, dan resources karena masalah ditangani secara tuntas dari akarnya."
+%s
 
-2. Poin Utama dengan Elaborasi:
-   "• Fokus pada sistem, bukan individu
-   Pendekatan yang efektif dalam problem analysis adalah melihat masalah sebagai hasil dari kegagalan sistem atau proses, bukan kesalahan personal seseorang. Dengan perspektif ini, kita dapat mengidentifikasi gap dalam prosedur, training, atau tools yang menyebabkan masalah terjadi. Blame culture hanya akan membuat orang defensif dan tidak mendorong perbaikan berkelanjutan, sedangkan system-focused approach menciptakan learning organization yang terus berkembang."
+%s
 
-3. Langkah dengan Penjelasan Lengkap:
-   "Langkah 1: Identifikasi Masalah Secara Spesifik
-   Nyatakan masalah dalam satu kalimat yang jelas, objektif, dan berbasis fakta, hindari asumsi atau interpretasi subjektif. Pastikan definisi masalah fokus pada proses atau hasil yang tidak sesuai ekspektasi, bukan pada siapa yang melakukannya. Libatkan semua stakeholder yang relevan untuk memastikan pemahaman yang sama tentang apa yang menjadi masalah sebenarnya. Contoh yang baik: 'Pompa pendingin unit A berhenti beroperasi pada tanggal 15 Januari pukul 14:00, menyebabkan delay produksi selama 3 jam'."
-
-DURASI DAN AKTIVITAS:
-- Total durasi pelatihan: 60-90 menit dengan alokasi waktu yang realistis untuk setiap sesi
-- Speaker notes untuk setiap slide: 250-400 kata dengan detailed guidance untuk fasilitator
-- Sertakan 4-6 aktivitas interaktif yang engaging dengan instruksi yang sangat jelas dan time allocation yang tepat
-- Buat 8-12 assessment questions yang menguji pemahaman aplikatif dengan jawaban yang komprehensif
-- Referensi harus credible, up-to-date, dan relevan dengan konteks Indonesia jika memungkinkan
-
-LARANGAN:
-- JANGAN gunakan emoji dalam konten apapun
-- JANGAN membuat bullet point yang hanya satu kalimat pendek tanpa elaborasi
-- JANGAN gunakan jargon tanpa penjelasan yang memadai
-- JANGAN membuat konten yang terlalu teoretis tanpa aplikasi praktis
-- JANGAN menggunakan bahasa yang ambigu atau tidak jelas
+%s
 
 OUTPUT FORMAT - JSON VALID:
 Return ONLY valid JSON without any markdown formatting, comments, or additional text:
@@ -262,32 +223,241 @@ Return ONLY valid JSON without any markdown formatting, comments, or additional 
   ]
 }
 
-CONTOH KONTEN BERKUALITAS TINGGI:
+%s`,
+		contextSection,
+		focusSection,
+		structureSection,
+		contentRequirements,
+		s.getTopicSpecificGuidelines(topicType),
+		s.getExampleSection(),
+	)
 
-"bullets": [
-  "KONSEP: APA ITU PROBLEM ANALYSIS?",
-  "",
-  "Definisi Problem Analysis",
-  "Problem analysis adalah metodologi sistematis untuk mengidentifikasi, menganalisis, dan memahami akar penyebab dari sebuah masalah atau deviasi yang terjadi dalam proses kerja. Berbeda dengan troubleshooting yang hanya fokus pada memperbaiki gejala, problem analysis menggali lebih dalam untuk menemukan why di balik setiap issue yang muncul. Dengan pendekatan ini, solusi yang dihasilkan bersifat sustainable dan preventive, bukan hanya reaktif terhadap symptom yang tampak di permukaan.",
-  "",
-  "• Perbedaan Symptom dan Problem",
-  "Symptom adalah tanda atau gejala yang tampak di permukaan dan mudah diobservasi, seperti mesin yang berhenti, error message yang muncul, atau delay dalam delivery. Sementara problem adalah akar penyebab yang berada di balik symptom tersebut, yang mungkin berupa prosedur yang tidak diikuti, kurangnya maintenance, atau gap dalam training. Memahami perbedaan ini sangat critical karena mengatasi symptom saja hanya memberikan relief sementara, sedangkan menyelesaikan problem akan mencegah issue yang sama terulang di masa depan.",
-  "",
-  "• Tujuan Utama Problem Analysis",
-  "Tujuan pertama adalah mencegah recurrence dari masalah yang sama dengan memastikan akar penyebab telah dieliminasi secara tuntas. Kedua, menemukan solusi yang efisien dari segi cost, time, dan resources, sehingga organisasi tidak perlu terus-menerus firefighting untuk issue yang seharusnya bisa dicegah. Ketiga, membangun kultur continuous improvement di mana setiap masalah dilihat sebagai opportunity untuk learning dan strengthening system, bukan sebagai blame game yang membuat orang takut untuk melaporkan issue."
-]`,
+	return basePrompt
+}
+
+// buildContextSection creates the training context section
+func (s *Service) buildContextSection(in GenerateInput, topicType string) string {
+	return fmt.Sprintf(`KONTEKS PELATIHAN:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+KODE TRAINING      : %s
+TOPIK PELATIHAN    : %s
+KOMPETENSI TARGET  : %s
+LEVEL PESERTA      : %d (1=Pemula, 2=Menengah, 3=Mahir)
+TOOLS/MODEL/METODE : %s
+TIPE KONTEN        : %s
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`,
 		in.Kode,
 		in.TopikTraining,
 		in.Kompetensi,
 		in.Level,
-		in.Tools,
-		extractKeyword(in.Referensi),
-		extractOptionalReferensi(in.Referensi),
+		valueOrDash(in.Tools),
 		topicType,
-		s.getTopicSpecificGuidelines(topicType),
 	)
+}
 
-	return basePrompt
+// buildFocusSection emphasizes the main training focus
+func (s *Service) buildFocusSection(in GenerateInput) string {
+	keyword := in.DeskripsiPerilaku
+	if keyword == "" {
+		keyword = extractKeyword(in.Referensi)
+	}
+	optionalRef := extractOptionalReferensi(in.Referensi)
+	
+	return fmt.Sprintf(`FOKUS UTAMA TRAINING:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. TOPIK TRAINING SEBAGAI INTI MATERI:
+   "%s" adalah core topic yang WAJIB menjadi benang merah di seluruh slide.
+   - Setiap slide HARUS mengacu kembali ke topik ini
+   - Gunakan variasi kata/frasa yang tetap relate dengan topik
+   - Pastikan peserta memahami relevance topik dengan pekerjaan mereka
+
+2. TOOLS/METODE SEBAGAI INSTRUMEN:
+   "%s" adalah tools/model/framework yang digunakan untuk achieve topik training.
+   - Jelaskan HOW tools ini mendukung pencapaian topik
+   - Berikan step-by-step cara menggunakan tools
+   - Sertakan praktik terbaik dan common mistakes dalam penggunaan tools
+   - Tunjukkan hubungan langsung: Tools → Implementasi → Hasil terkait Topik
+
+3. DESKRIPSI PERILAKU SEBAGAI OUTCOME:
+   KEYWORD PERILAKU: "%s"
+   Ini adalah behavioral indicator atau expected outcome yang harus dicapai.
+   - Setiap learning objective harus tie back ke keyword ini
+   - Case study harus demonstrate perilaku ini in action
+   - Assessment harus measure apakah peserta bisa exhibit perilaku ini
+   - Action items di closing harus actionable untuk develop perilaku ini
+
+4. REFERENSI TAMBAHAN (Opsional):
+   %s
+   %s
+
+INTEGRASI KETIGA ELEMEN:
+Topik Training + Tools/Metode + Deskripsi Perilaku = Materi Training yang Kohesif
+   
+Contoh flow yang baik:
+- OBJECTIVE: "Mampu [Deskripsi Perilaku] dengan menerapkan [Tools] dalam konteks [Topik Training]"
+- KONSEP: Jelaskan fundamental [Topik Training] dan bagaimana [Tools] relevant
+- LANGKAH: Step-by-step menggunakan [Tools] untuk implement [Topik Training]
+- STUDI KASUS: Real scenario yang show [Deskripsi Perilaku] achieved melalui [Tools] dan [Topik Training]
+- PENUTUP: Ringkas connection antara [Topik]+[Tools]+[Perilaku] dan next steps
+`,
+		in.TopikTraining,
+		valueOrDash(in.Tools),
+		keyword,
+		func() string {
+			if optionalRef != "-" {
+				return fmt.Sprintf("REFERENSI: %s", optionalRef)
+			}
+			return "Tidak ada referensi tambahan yang spesifik."
+		}(),
+		func() string {
+			if optionalRef != "-" {
+				return "Gunakan referensi ini untuk memperkaya contoh dan memperdalam pembahasan."
+			}
+			return "Fokus sepenuhnya pada Topik Training, Tools/Metode, dan Deskripsi Perilaku."
+		}(),
+	)
+}
+
+// buildStructureSection defines the slide structure
+func (s *Service) buildStructureSection() string {
+	return `STRUKTUR SLIDE WAJIB:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+1. SLIDE PEMBUKA (1 slide):
+   ├─ slide_type: "opening"
+   ├─ Judul menarik yang reflect Topik Training secara spesifik
+   ├─ Hook: Mengapa topik ini penting untuk pekerjaan peserta?
+   ├─ Overview: Brief context tentang Topik + Tools yang akan dipelajari
+   ├─ Learning outcomes yang tie ke Deskripsi Perilaku
+   └─ Ekspektasi hasil: Skill/knowledge yang langsung applicable
+
+2. OBJECTIVE (1-2 slide):
+   ├─ slide_type: "objective"
+   ├─ Tujuan SMART yang directly address Topik Training
+   ├─ Kompetensi yang developed (align dengan Deskripsi Perilaku)
+   ├─ Indikator keberhasilan yang measurable
+   ├─ Connection: Bagaimana Tools mendukung pencapaian objective
+   └─ Practical benefits dalam konteks pekerjaan sehari-hari
+
+3. KONSEP (3-4 slide):
+   ├─ slide_type: "concept"
+   ├─ Definisi Topik Training yang comprehensive
+   ├─ Prinsip fundamental yang underpin topik
+   ├─ Framework/Model (Tools) dijelaskan secara detail
+   ├─ Terminologi kunci dengan context dan contoh
+   ├─ Hubungan logis: Konsep → Tools → Aplikasi → Perilaku
+   ├─ Differentiate similar concepts untuk clarity
+   └─ Ilustrasi yang relatable dengan experience peserta
+
+4. LANGKAH (3-4 slide):
+   ├─ slide_type: "steps"
+   ├─ Step-by-step implementation menggunakan Tools
+   ├─ Setiap langkah explain: WHAT + HOW + WHY
+   ├─ Best practices proven effective dalam apply Tools
+   ├─ Practical tips untuk optimize hasil (relate ke Topik)
+   ├─ Specific tools/techniques dengan usage guidance
+   ├─ Checklist verification untuk ensure completeness
+   ├─ Common pitfalls dan prevention strategies
+   └─ Troubleshooting guide untuk handle obstacles
+
+5. STUDI KASUS (2-3 slide):
+   ├─ slide_type: "case_study"
+   ├─ Real case dari konteks Indonesia/industri relevant
+   ├─ Problem statement yang clearly describe situation
+   ├─ Analysis menggunakan Tools yang telah dijelaskan
+   ├─ Problem-solving process yang systematic
+   ├─ Alternative solutions dengan pros/cons evaluation
+   ├─ Implementation details dan results achieved
+   ├─ Lessons learned yang actionable
+   └─ Key takeaways: Bagaimana case ini demonstrate Deskripsi Perilaku
+
+6. PENUTUP (1 slide):
+   ├─ slide_type: "closing"
+   ├─ Summary: Topik + Tools + Perilaku yang telah covered
+   ├─ Action items konkret (24-48 jam pertama)
+   ├─ Next steps untuk continuous development
+   ├─ Additional resources untuk self-learning
+   ├─ Motivational closing yang inspire action
+   └─ Clear call-to-action untuk apply learning
+`
+}
+
+// buildContentRequirements specifies content quality standards
+func (s *Service) buildContentRequirements() string {
+	return `PERSYARATAN KONTEN BERKUALITAS TINGGI:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+CRITICAL REQUIREMENTS:
+✓ Setiap slide: 5-8 bullet points yang substansial
+✓ Setiap bullet: Minimal 2-4 kalimat lengkap dengan penjelasan mendalam
+✓ Hindari bullet yang hanya keyword atau satu kalimat pendek
+✓ Format heading: "OBJECTIVE:", "KONSEP:", "LANGKAH 1:", dll (untuk styling hijau)
+✓ Konten kaya detail praktis, contoh konkret, dan penjelasan clear
+✓ Bahasa Indonesia profesional, natural, engaging (tidak terlalu formal/kaku)
+✓ Konsistensi reference ke Topik + Tools + Deskripsi Perilaku di semua slide
+
+FORMAT BULLET POINTS YANG DIHARAPKAN:
+
+1. Sub-judul + Penjelasan Detail (3-4 kalimat):
+   "Definisi Problem Analysis
+   Problem analysis adalah proses berpikir sistematis untuk memahami akar penyebab dari sebuah masalah, bukan hanya mengidentifikasi gejala yang tampak di permukaan. Metode ini membantu kita untuk tidak terjebak pada solusi quick-fix yang hanya mengatasi symptom sementara, tetapi fokus pada penyelesaian fundamental yang mencegah masalah berulang. Dengan problem analysis yang baik, organisasi dapat menghemat waktu, biaya, dan resources karena masalah ditangani secara tuntas dari akarnya."
+
+2. Poin Utama dengan Elaborasi (3-4 kalimat):
+   "• Fokus pada sistem, bukan individu
+   Pendekatan yang efektif dalam problem analysis adalah melihat masalah sebagai hasil dari kegagalan sistem atau proses, bukan kesalahan personal seseorang. Dengan perspektif ini, kita dapat mengidentifikasi gap dalam prosedur, training, atau tools yang menyebabkan masalah terjadi. Blame culture hanya akan membuat orang defensif dan tidak mendorong perbaikan berkelanjutan, sedangkan system-focused approach menciptakan learning organization yang terus berkembang."
+
+3. Langkah dengan Penjelasan Lengkap (4-5 kalimat):
+   "Langkah 1: Identifikasi Masalah Secara Spesifik
+   Nyatakan masalah dalam satu kalimat yang jelas, objektif, dan berbasis fakta, hindari asumsi atau interpretasi subjektif. Pastikan definisi masalah fokus pada proses atau hasil yang tidak sesuai ekspektasi, bukan pada siapa yang melakukannya. Libatkan semua stakeholder yang relevan untuk memastikan pemahaman yang sama tentang apa yang menjadi masalah sebenarnya. Contoh yang baik: 'Pompa pendingin unit A berhenti beroperasi pada tanggal 15 Januari pukul 14:00, menyebabkan delay produksi selama 3 jam'."
+
+DURASI DAN AKTIVITAS:
+├─ Total durasi: 60-90 menit (alokasi realistis per sesi)
+├─ Speaker notes per slide: 250-400 kata (detailed guidance untuk fasilitator)
+├─ 4-6 aktivitas interaktif (clear instructions + time allocation)
+├─ 8-12 assessment questions (test pemahaman aplikatif + comprehensive answers)
+└─ Referensi credible, up-to-date, relevant (konteks Indonesia jika memungkinkan)
+
+LARANGAN:
+✗ JANGAN gunakan emoji dalam konten apapun
+✗ JANGAN buat bullet point hanya satu kalimat pendek tanpa elaborasi
+✗ JANGAN gunakan jargon tanpa penjelasan memadai
+✗ JANGAN konten terlalu teoretis tanpa aplikasi praktis
+✗ JANGAN bahasa ambigu atau tidak jelas
+✗ JANGAN abaikan integrasi Topik + Tools + Deskripsi Perilaku
+`
+}
+
+// getExampleSection provides quality content examples
+func (s *Service) getExampleSection() string {
+	return `CONTOH KONTEN BERKUALITAS TINGGI:
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Slide KONSEP yang baik (showing Topik + Tools integration):
+
+"bullets": [
+  "KONSEP: PROBLEM ANALYSIS SISTEMATIS",
+  "",
+  "Definisi Problem Analysis",
+  "Problem analysis adalah metodologi sistematis untuk mengidentifikasi, menganalisis, dan memahami akar penyebab dari sebuah masalah atau deviasi yang terjadi dalam proses kerja. Berbeda dengan troubleshooting yang hanya fokus pada memperbaiki gejala, problem analysis menggali lebih dalam untuk menemukan why di balik setiap issue yang muncul. Dengan pendekatan ini, solusi yang dihasilkan bersifat sustainable dan preventive, bukan hanya reaktif terhadap symptom yang tampak di permukaan. Metode ini directly support kompetensi dalam berpikir analitis dan pengambilan keputusan berbasis data.",
+  "",
+  "• Tools: 5 Whys Method",
+  "5 Whys adalah teknik iteratif yang developed oleh Toyota sebagai part dari problem-solving toolkit mereka. Metode ini bekerja dengan bertanya 'Mengapa?' secara berulang (typically 5 kali) untuk drill down dari symptom hingga root cause yang sebenarnya. Proses ini membantu team move beyond superficial answers dan uncover underlying system issues yang mungkin tidak obvious di awal. Ketika properly applied, 5 Whys prevent kita dari waste resources fixing wrong problems dan ensure effort focused pada real root causes.",
+  "",
+  "• Perbedaan Symptom dan Root Cause",
+  "Symptom adalah tanda atau gejala yang tampak di permukaan dan mudah diobservasi, seperti mesin yang berhenti, error message yang muncul, atau delay dalam delivery. Sementara root cause adalah faktor fundamental yang berada di balik symptom tersebut, yang mungkin berupa prosedur yang tidak diikuti, kurangnya maintenance, atau gap dalam training. Memahami perbedaan ini sangat critical karena mengatasi symptom saja hanya memberikan relief sementara, sedangkan menyelesaikan root cause akan mencegah issue yang sama terulang di masa depan dan demonstrate perilaku problem-solving yang efektif.",
+  "",
+  "• Hubungan: Problem Analysis → Decision Making → Continuous Improvement",
+  "Problem analysis yang solid menjadi foundation untuk decision making yang efektif karena keputusan dibuat based on accurate understanding of the situation, bukan assumptions. Decisions yang informed by proper analysis have higher success rate dan less risk dari unintended consequences. Furthermore, systematic problem analysis create learning opportunities yang feed ke continuous improvement cycle, di mana setiap problem menjadi chance untuk strengthen systems dan processes untuk future prevention."
+]`
+}
+
+// Keep the existing helper functions
+func valueOrDash(s string) string {
+	if strings.TrimSpace(s) == "" {
+		return "-"
+	}
+	return s
 }
 
 func (s *Service) determineTopicType(topik, tools string) string {
@@ -376,13 +546,6 @@ func (s *Service) getTopicSpecificGuidelines(topicType string) string {
 - Include real-world examples, success stories, dan lessons learned dari praktisi
 - Focus on transfer of learning dengan application exercises dan on-the-job implementation support`
 	}
-}
-
-func valueOrDash(s string) string {
-	if strings.TrimSpace(s) == "" {
-		return "-"
-	}
-	return s
 }
 
 // extractKeyword mengekstrak keyword utama (sebelum "Referensi Tambahan:")
@@ -494,8 +657,6 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 
 	pdf.AddUTF8Font("DejaVu", "", "fonts/DejaVuSans.ttf")
 	pdf.AddUTF8Font("DejaVu", "B", "fonts/DejaVuSans-Bold.ttf")
-	pdf.AddUTF8Font("DejaVu", "I", "fonts/DejaVuSans.ttf")
-	pdf.AddUTF8Font("DejaVu", "BI", "fonts/DejaVuSans-Bold.ttf")
 
 	pdf.AddPage()
 	pdf.SetFont("DejaVu", "B", 20)
@@ -525,7 +686,7 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 		}
 		if strings.TrimSpace(sl.SpeakerNotes) != "" {
 			pdf.Ln(3)
-			pdf.SetFont("DejaVu", "I", 10)
+			pdf.SetFont("DejaVu", "", 10)
 			pdf.SetTextColor(90, 90, 90)
 			pdf.MultiCell(0, 5, "Catatan Fasilitator: "+sl.SpeakerNotes, "", "L", false)
 			pdf.SetTextColor(0, 0, 0)
@@ -553,7 +714,7 @@ func (s *Service) buildPDF(plan *Plan, filename string) error {
 		pdf.SetFont("DejaVu", "", 12)
 		for i, qa := range plan.Assessment {
 			pdf.MultiCell(0, 6, fmt.Sprintf("%d) %s", i+1, qa.Question), "", "L", false)
-			pdf.SetFont("DejaVu", "I", 11)
+			pdf.SetFont("DejaVu", "", 11)
 			pdf.MultiCell(0, 6, "Jawaban: "+qa.Answer, "", "L", false)
 			pdf.SetFont("DejaVu", "", 12)
 			pdf.Ln(1)
@@ -1154,6 +1315,8 @@ type GenerateMeta struct {
 	Title      string `json:"title"`
 	SlideCount int    `json:"slide_count"`
 	Duration   string `json:"duration"`
+	PPTXLink   string `json:"pptx_link"`
+	PDFLink    string `json:"pdf_link"`
 }
 
 // DeleteOldFile menghapus file lama jika ada
@@ -1188,6 +1351,570 @@ func (s *Service) DeleteOldFile(fileURL string) error {
 	return nil
 }
 
+// buildDetailedPrompt creates prompt for comprehensive PDF guide
+func (s *Service) buildDetailedPrompt(in GenerateInput) string {
+	topicType := s.determineTopicType(in.TopikTraining, in.Tools)
+	topicGuidelines := s.getTopicSpecificGuidelines(topicType)
+	
+	keyword := extractKeyword(in.Referensi)
+	additionalRef := extractOptionalReferensi(in.Referensi)
+
+	basePrompt := fmt.Sprintf(`You are an expert educational content writer creating a COMPREHENSIVE, IN-DEPTH LEARNING GUIDE in Indonesian. This is NOT a presentation - it's a detailed study guide that provides complete understanding of the topic.
+
+KONTEKS PELATIHAN:
+- Topik: %s
+- Kompetensi: %s
+- Level: %d
+- Tools/Framework: %s
+- Deskripsi Perilaku: %s
+- Referensi Utama: %s
+- Referensi Tambahan: %s
+
+%s
+
+STRUKTUR KONTEN DETAIL (SUPER LENGKAP):
+
+1. INTRODUCTION (800-1200 kata):
+   - Konteks dan latar belakang topik secara mendalam
+   - Mengapa topik ini penting di workplace modern Indonesia
+   - Bagaimana topik ini relevan dengan level kompetensi yang ditargetkan
+   - Overview lengkap apa yang akan dipelajari
+   - Manfaat konkret yang akan didapat setelah mempelajari materi ini
+
+2. CORE CONCEPTS (4-6 SECTIONS, masing-masing 800-1500 kata):
+   Setiap section harus mencakup:
+   - Penjelasan konsep secara detail dan mendalam
+   - Teori dan framework yang mendasari
+   - Contoh-contoh konkret dan relatable (minimal 3 per section)
+   - Best practices dan proven strategies
+   - Common mistakes dan cara menghindarinya
+   - Tips implementasi praktis
+   - Latihan refleksi atau self-assessment
+
+3. PRACTICAL IMPLEMENTATION GUIDE (1500-2500 kata):
+   - Step-by-step guide yang sangat detail
+   - Setiap step dijelaskan dengan lengkap (150-300 kata per step)
+   - Contoh implementasi di berbagai konteks
+   - Checklist dan tools yang bisa digunakan
+   - Troubleshooting guide untuk masalah umum
+   - Success metrics dan cara mengukur progress
+
+4. CASE STUDIES (3-5 studi kasus, masing-masing 400-600 kata):
+   - Studi kasus lengkap dari dunia nyata
+   - Context, challenge, solution, outcome yang detail
+   - Analysis mendalam tentang mengapa berhasil/gagal
+   - Key lessons dan takeaways
+   - Aplikasi ke situasi lain
+
+5. COMPREHENSIVE FAQ (15-25 pertanyaan):
+   - Pertanyaan umum yang sering muncul
+   - Jawaban super detail dan lengkap (100-200 kata per jawaban)
+   - Include edge cases dan situasi khusus
+   - Cross-references ke bagian lain dalam guide
+
+6. RESOURCES & FURTHER LEARNING:
+   - Books (minimal 5) dengan deskripsi singkat
+   - Articles dan research papers
+   - Online courses dan tutorials
+   - Tools dan templates
+   - Communities dan forums
+
+7. CONCLUSION & ACTION PLAN (500-800 kata):
+   - Summary komprehensif
+   - Immediate action steps
+   - Long-term development roadmap
+   - Self-assessment tools
+   - Next steps untuk continuing education
+
+REQUIREMENTS:
+- Total content harus SANGAT PANJANG dan DETAIL (8000-12000+ kata total)
+- Setiap konsep dijelaskan secara menyeluruh dengan multiple perspectives
+- Banyak contoh konkret, real-world applications, dan practical tips
+- Bahasa Indonesia yang jelas, engaging, dan mudah dipahami
+- Include analogies, metaphors, dan storytelling untuk clarity
+- Cross-reference antar sections untuk comprehensive understanding
+- Actionable insights di setiap bagian
+- Focus pada deep understanding, bukan hanya surface-level knowledge
+
+OUTPUT FORMAT - JSON VALID:
+{
+  "title": "Panduan Lengkap: [Topik Training]",
+  "introduction": "Penjelasan panjang dan mendalam tentang topik (800-1200 kata)...",
+  "sections": [
+    {
+      "title": "Judul Section",
+      "content": "Konten super lengkap dan detail (800-1500 kata)...",
+      "key_points": ["Poin penting 1", "Poin penting 2", ...],
+      "examples": ["Contoh detail 1", "Contoh detail 2", "Contoh detail 3"],
+      "exercises": "Latihan atau pertanyaan refleksi untuk section ini"
+    }
+  ],
+  "practical_guide": {
+    "step_by_step": [
+      {
+        "step_number": 1,
+        "title": "Judul Step",
+        "description": "Penjelasan super detail step ini (150-300 kata)...",
+        "examples": ["Contoh implementasi 1", "Contoh implementasi 2"]
+      }
+    ],
+    "tips": ["Tips praktis 1", "Tips praktis 2", ...],
+    "common_pitfalls": ["Kesalahan umum 1 dan cara menghindarinya", ...]
+  },
+  "case_studies": [
+    {
+      "title": "Judul Case Study",
+      "context": "Konteks lengkap (100-150 kata)",
+      "challenge": "Tantangan yang dihadapi (80-120 kata)",
+      "solution": "Solusi yang diterapkan (150-200 kata)",
+      "outcome": "Hasil yang didapat (80-120 kata)",
+      "lessons": ["Pelajaran 1", "Pelajaran 2", "Pelajaran 3"]
+    }
+  ],
+  "faq": [
+    {
+      "question": "Pertanyaan yang relevan?",
+      "answer": "Jawaban super detail dan lengkap (100-200 kata)..."
+    }
+  ],
+  "resources": {
+    "books": ["Buku 1: Deskripsi", "Buku 2: Deskripsi", ...],
+    "articles": ["Artikel 1", "Artikel 2", ...],
+    "videos": ["Video 1", "Video 2", ...],
+    "tools": ["Tool 1", "Tool 2", ...],
+    "additional": ["Resource tambahan 1", "Resource tambahan 2", ...]
+  },
+  "conclusion": "Kesimpulan komprehensif dan action plan (500-800 kata)..."
+}
+
+PENTING: 
+- Hasilkan konten yang SANGAT LENGKAP dan DETAIL
+- Setiap bagian harus substantif dan value-adding
+- Ini bukan summary, tapi comprehensive learning guide
+- Peserta harus bisa menguasai topik HANYA dari membaca guide ini`, 
+		in.TopikTraining, 
+		in.Kompetensi, 
+		in.Level, 
+		in.Tools, 
+		keyword,
+		keyword,
+		additionalRef,
+		topicGuidelines)
+
+	return basePrompt
+}
+
+// callGroqForDetailedContent calls LLM for detailed content
+func (s *Service) callGroqForDetailedContent(ctx context.Context, prompt string) (*DetailedContent, error) {
+	payload := map[string]interface{}{
+		"model": s.model,
+		"messages": []map[string]string{
+			{"role": "system", "content": "You are an expert educational content writer. Always respond with valid JSON only, no markdown formatting."},
+			{"role": "user", "content": prompt},
+		},
+		"temperature": 0.8,
+		"max_tokens": 16000, // Much higher for detailed content
+	}
+
+	jsonData, err := json.Marshal(payload)
+	if err != nil {
+		return nil, err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.groq.com/openai/v1/chat/completions", bytes.NewReader(jsonData))
+	if err != nil {
+		return nil, err
+	}
+
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+s.apiKey)
+
+	resp, err := s.http.Do(req)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("groq API error: %d - %s", resp.StatusCode, string(body))
+	}
+
+	var groqResp struct {
+		Choices []struct {
+			Message struct {
+				Content string `json:"content"`
+			} `json:"message"`
+		} `json:"choices"`
+	}
+
+	if err := json.Unmarshal(body, &groqResp); err != nil {
+		return nil, err
+	}
+
+	if len(groqResp.Choices) == 0 {
+		return nil, errors.New("no choices in groq response")
+	}
+
+	content := groqResp.Choices[0].Message.Content
+	content = strings.TrimPrefix(content, "```json")
+	content = strings.TrimPrefix(content, "```")
+	content = strings.TrimSuffix(content, "```")
+	content = strings.TrimSpace(content)
+
+	var detailed DetailedContent
+	if err := json.Unmarshal([]byte(content), &detailed); err != nil {
+		s.log.Errorf("Failed to parse detailed content JSON: %v\nContent: %s", err, content)
+		return nil, fmt.Errorf("failed to parse LLM detailed output: %w", err)
+	}
+
+	return &detailed, nil
+}
+
+// buildDetailedPDF creates comprehensive PDF guide
+func (s *Service) buildDetailedPDF(content *DetailedContent, filename string) error {
+	pdf := gofpdf.New("P", "mm", "A4", "")
+	
+	// Add UTF-8 font (only use available fonts)
+	pdf.AddUTF8Font("DejaVu", "", "./fonts/DejaVuSans.ttf")
+	pdf.AddUTF8Font("DejaVu", "B", "./fonts/DejaVuSans-Bold.ttf")
+
+	// Cover page
+	pdf.AddPage()
+	pdf.SetFont("DejaVu", "B", 24)
+	pdf.SetTextColor(0, 51, 102)
+	pdf.MultiCell(0, 15, content.Title, "", "C", false)
+	pdf.Ln(20)
+	
+	pdf.SetFont("DejaVu", "", 14)
+	pdf.SetTextColor(80, 80, 80)
+	pdf.MultiCell(0, 8, "Panduan Pembelajaran Komprehensif", "", "C", false)
+	pdf.Ln(10)
+	pdf.MultiCell(0, 8, fmt.Sprintf("Generated: %s", time.Now().Format("02 January 2006")), "", "C", false)
+
+	// Table of Contents
+	pdf.AddPage()
+	pdf.SetFont("DejaVu", "B", 18)
+	pdf.SetTextColor(0, 51, 102)
+	pdf.Cell(0, 12, "Daftar Isi")
+	pdf.Ln(15)
+	
+	pdf.SetFont("DejaVu", "", 12)
+	pdf.SetTextColor(0, 0, 0)
+	tocItems := []string{
+		"1. Pendahuluan",
+		"2. Konsep Inti",
+		"3. Panduan Implementasi Praktis",
+		"4. Studi Kasus",
+		"5. FAQ (Frequently Asked Questions)",
+		"6. Sumber Belajar & Referensi",
+		"7. Kesimpulan & Rencana Aksi",
+	}
+	for _, item := range tocItems {
+		pdf.Cell(10, 8, "")
+		pdf.MultiCell(0, 8, item, "", "L", false)
+	}
+
+	// Introduction
+	pdf.AddPage()
+	pdf.SetFont("DejaVu", "B", 20)
+	pdf.SetTextColor(0, 51, 102)
+	pdf.Cell(0, 12, "1. PENDAHULUAN")
+	pdf.Ln(12)
+	
+	pdf.SetFont("DejaVu", "", 11)
+	pdf.SetTextColor(0, 0, 0)
+	pdf.MultiCell(0, 6, content.Introduction, "", "L", false)
+
+	// Core Sections
+	pdf.AddPage()
+	pdf.SetFont("DejaVu", "B", 20)
+	pdf.SetTextColor(0, 51, 102)
+	pdf.Cell(0, 12, "2. KONSEP INTI")
+	pdf.Ln(12)
+
+	for i, section := range content.Sections {
+		if i > 0 {
+			pdf.AddPage()
+		}
+		
+		// Section title
+		pdf.SetFont("DejaVu", "B", 16)
+		pdf.SetTextColor(0, 102, 204)
+		pdf.MultiCell(0, 10, fmt.Sprintf("2.%d %s", i+1, section.Title), "", "L", false)
+		pdf.Ln(5)
+		
+		// Section content
+		pdf.SetFont("DejaVu", "", 11)
+		pdf.SetTextColor(0, 0, 0)
+		pdf.MultiCell(0, 6, section.Content, "", "L", false)
+		pdf.Ln(5)
+		
+		// Key points
+		if len(section.KeyPoints) > 0 {
+			pdf.SetFont("DejaVu", "B", 12)
+			pdf.SetTextColor(0, 102, 204)
+			pdf.Cell(0, 8, "Poin-Poin Kunci:")
+			pdf.Ln(8)
+			
+			pdf.SetFont("DejaVu", "", 11)
+			pdf.SetTextColor(0, 0, 0)
+			for _, point := range section.KeyPoints {
+				pdf.Cell(5, 6, "")
+				pdf.Cell(5, 6, "•")
+				pdf.MultiCell(0, 6, point, "", "L", false)
+			}
+			pdf.Ln(3)
+		}
+		
+		// Examples
+		if len(section.Examples) > 0 {
+			pdf.SetFont("DejaVu", "B", 12)
+			pdf.SetTextColor(34, 139, 34)
+			pdf.Cell(0, 8, "Contoh Konkret:")
+			pdf.Ln(8)
+			
+			pdf.SetFont("DejaVu", "", 11)
+			pdf.SetTextColor(60, 60, 60)
+			for idx, example := range section.Examples {
+				pdf.SetFont("DejaVu", "B", 11)
+				pdf.Cell(0, 6, fmt.Sprintf("Contoh %d:", idx+1))
+				pdf.Ln(6)
+				pdf.SetFont("DejaVu", "", 11)
+				pdf.MultiCell(0, 6, example, "", "L", false)
+				pdf.Ln(3)
+			}
+		}
+		
+		// Exercises
+		if section.Exercises != "" {
+			pdf.Ln(3)
+			pdf.SetFillColor(255, 248, 220)
+			pdf.SetFont("DejaVu", "B", 11)
+			pdf.SetTextColor(139, 69, 19)
+			pdf.CellFormat(0, 8, "Latihan Refleksi:", "", 1, "L", true, 0, "")
+			pdf.SetFont("DejaVu", "", 10)
+			pdf.SetTextColor(0, 0, 0)
+			pdf.MultiCell(0, 6, section.Exercises, "", "L", true)
+		}
+	}
+
+	// Practical Guide
+	pdf.AddPage()
+	pdf.SetFont("DejaVu", "B", 20)
+	pdf.SetTextColor(0, 51, 102)
+	pdf.Cell(0, 12, "3. PANDUAN IMPLEMENTASI PRAKTIS")
+	pdf.Ln(15)
+
+	pdf.SetFont("DejaVu", "B", 14)
+	pdf.SetTextColor(0, 102, 204)
+	pdf.Cell(0, 10, "Langkah-Langkah Detail:")
+	pdf.Ln(10)
+
+	for _, step := range content.PracticalGuide.StepByStep {
+		pdf.SetFont("DejaVu", "B", 13)
+		pdf.SetTextColor(0, 0, 0)
+		pdf.MultiCell(0, 8, fmt.Sprintf("Langkah %d: %s", step.StepNumber, step.Title), "", "L", false)
+		pdf.Ln(3)
+		
+		pdf.SetFont("DejaVu", "", 11)
+		pdf.MultiCell(0, 6, step.Description, "", "L", false)
+		pdf.Ln(4)
+		
+		if len(step.Examples) > 0 {
+			pdf.SetFont("DejaVu", "", 10)
+			pdf.SetTextColor(60, 60, 60)
+			for _, ex := range step.Examples {
+				pdf.Cell(5, 6, "")
+				pdf.MultiCell(0, 6, "→ "+ex, "", "L", false)
+			}
+			pdf.SetTextColor(0, 0, 0)
+			pdf.Ln(4)
+		}
+	}
+
+	// Tips
+	if len(content.PracticalGuide.Tips) > 0 {
+		pdf.Ln(5)
+		pdf.SetFont("DejaVu", "B", 13)
+		pdf.SetTextColor(34, 139, 34)
+		pdf.Cell(0, 8, "Tips Implementasi:")
+		pdf.Ln(8)
+		
+		pdf.SetFont("DejaVu", "", 11)
+		pdf.SetTextColor(0, 0, 0)
+		for _, tip := range content.PracticalGuide.Tips {
+			pdf.Cell(5, 6, "")
+			pdf.Cell(5, 6, "✓")
+			pdf.MultiCell(0, 6, tip, "", "L", false)
+		}
+	}
+
+	// Common Pitfalls
+	if len(content.PracticalGuide.CommonPitfalls) > 0 {
+		pdf.Ln(8)
+		pdf.SetFont("DejaVu", "B", 13)
+		pdf.SetTextColor(204, 0, 0)
+		pdf.Cell(0, 8, "Kesalahan Umum yang Harus Dihindari:")
+		pdf.Ln(8)
+		
+		pdf.SetFont("DejaVu", "", 11)
+		pdf.SetTextColor(0, 0, 0)
+		for _, pitfall := range content.PracticalGuide.CommonPitfalls {
+			pdf.Cell(5, 6, "")
+			pdf.Cell(5, 6, "✗")
+			pdf.MultiCell(0, 6, pitfall, "", "L", false)
+		}
+	}
+
+	// Case Studies
+	if len(content.CaseStudies) > 0 {
+		pdf.AddPage()
+		pdf.SetFont("DejaVu", "B", 20)
+		pdf.SetTextColor(0, 51, 102)
+		pdf.Cell(0, 12, "4. STUDI KASUS")
+		pdf.Ln(15)
+
+		for i, cs := range content.CaseStudies {
+			if i > 0 {
+				pdf.Ln(10)
+			}
+			
+			pdf.SetFont("DejaVu", "B", 14)
+			pdf.SetTextColor(0, 102, 204)
+			pdf.MultiCell(0, 9, fmt.Sprintf("Studi Kasus %d: %s", i+1, cs.Title), "", "L", false)
+			pdf.Ln(5)
+			
+			pdf.SetFont("DejaVu", "B", 11)
+			pdf.SetTextColor(0, 0, 0)
+			pdf.Cell(0, 7, "Konteks:")
+			pdf.Ln(7)
+			pdf.SetFont("DejaVu", "", 11)
+			pdf.MultiCell(0, 6, cs.Context, "", "L", false)
+			pdf.Ln(3)
+			
+			pdf.SetFont("DejaVu", "B", 11)
+			pdf.Cell(0, 7, "Tantangan:")
+			pdf.Ln(7)
+			pdf.SetFont("DejaVu", "", 11)
+			pdf.MultiCell(0, 6, cs.Challenge, "", "L", false)
+			pdf.Ln(3)
+			
+			pdf.SetFont("DejaVu", "B", 11)
+			pdf.Cell(0, 7, "Solusi:")
+			pdf.Ln(7)
+			pdf.SetFont("DejaVu", "", 11)
+			pdf.MultiCell(0, 6, cs.Solution, "", "L", false)
+			pdf.Ln(3)
+			
+			pdf.SetFont("DejaVu", "B", 11)
+			pdf.Cell(0, 7, "Hasil:")
+			pdf.Ln(7)
+			pdf.SetFont("DejaVu", "", 11)
+			pdf.MultiCell(0, 6, cs.Outcome, "", "L", false)
+			pdf.Ln(5)
+			
+			if len(cs.Lessons) > 0 {
+				pdf.SetFont("DejaVu", "B", 11)
+				pdf.SetTextColor(34, 139, 34)
+				pdf.Cell(0, 7, "Pelajaran Penting:")
+				pdf.Ln(7)
+				pdf.SetFont("DejaVu", "", 11)
+				pdf.SetTextColor(0, 0, 0)
+				for _, lesson := range cs.Lessons {
+					pdf.Cell(5, 6, "")
+					pdf.Cell(5, 6, "•")
+					pdf.MultiCell(0, 6, lesson, "", "L", false)
+				}
+			}
+		}
+	}
+
+	// FAQ
+	if len(content.FAQ) > 0 {
+		pdf.AddPage()
+		pdf.SetFont("DejaVu", "B", 20)
+		pdf.SetTextColor(0, 51, 102)
+		pdf.Cell(0, 12, "5. FREQUENTLY ASKED QUESTIONS (FAQ)")
+		pdf.Ln(15)
+
+		for i, faq := range content.FAQ {
+			pdf.SetFont("DejaVu", "B", 12)
+			pdf.SetTextColor(0, 102, 204)
+			pdf.MultiCell(0, 7, fmt.Sprintf("Q%d: %s", i+1, faq.Question), "", "L", false)
+			pdf.Ln(4)
+			
+			pdf.SetFont("DejaVu", "", 11)
+			pdf.SetTextColor(0, 0, 0)
+			pdf.MultiCell(0, 6, "A: "+faq.Answer, "", "L", false)
+			pdf.Ln(6)
+		}
+	}
+
+	// Resources
+	pdf.AddPage()
+	pdf.SetFont("DejaVu", "B", 20)
+	pdf.SetTextColor(0, 51, 102)
+	pdf.Cell(0, 12, "6. SUMBER BELAJAR & REFERENSI")
+	pdf.Ln(15)
+
+	if len(content.Resources.Books) > 0 {
+		pdf.SetFont("DejaVu", "B", 13)
+		pdf.SetTextColor(0, 102, 204)
+		pdf.Cell(0, 8, "Buku Rekomendasi:")
+		pdf.Ln(8)
+		pdf.SetFont("DejaVu", "", 11)
+		pdf.SetTextColor(0, 0, 0)
+		for _, book := range content.Resources.Books {
+			pdf.Cell(5, 6, "")
+			pdf.MultiCell(0, 6, "• "+book, "", "L", false)
+		}
+		pdf.Ln(5)
+	}
+
+	if len(content.Resources.Articles) > 0 {
+		pdf.SetFont("DejaVu", "B", 13)
+		pdf.SetTextColor(0, 102, 204)
+		pdf.Cell(0, 8, "Artikel & Research Papers:")
+		pdf.Ln(8)
+		pdf.SetFont("DejaVu", "", 11)
+		pdf.SetTextColor(0, 0, 0)
+		for _, article := range content.Resources.Articles {
+			pdf.Cell(5, 6, "")
+			pdf.MultiCell(0, 6, "• "+article, "", "L", false)
+		}
+		pdf.Ln(5)
+	}
+
+	if len(content.Resources.Tools) > 0 {
+		pdf.SetFont("DejaVu", "B", 13)
+		pdf.SetTextColor(0, 102, 204)
+		pdf.Cell(0, 8, "Tools & Templates:")
+		pdf.Ln(8)
+		pdf.SetFont("DejaVu", "", 11)
+		pdf.SetTextColor(0, 0, 0)
+		for _, tool := range content.Resources.Tools {
+			pdf.Cell(5, 6, "")
+			pdf.MultiCell(0, 6, "• "+tool, "", "L", false)
+		}
+		pdf.Ln(5)
+	}
+
+	// Conclusion
+	pdf.AddPage()
+	pdf.SetFont("DejaVu", "B", 20)
+	pdf.SetTextColor(0, 51, 102)
+	pdf.Cell(0, 12, "7. KESIMPULAN & RENCANA AKSI")
+	pdf.Ln(15)
+	
+	pdf.SetFont("DejaVu", "", 11)
+	pdf.SetTextColor(0, 0, 0)
+	pdf.MultiCell(0, 6, content.Conclusion, "", "L", false)
+
+	return pdf.OutputFileAndClose(filename)
+}
+
 func (s *Service) GenerateAndBuildPDF(ctx context.Context, in GenerateInput) (link string, meta GenerateMeta, err error) {
 	s.log.Infof("[GenerateAndBuildPDF] Input: %+v", in)
 
@@ -1215,36 +1942,71 @@ func (s *Service) GenerateAndBuildPDF(ctx context.Context, in GenerateInput) (li
 	return link, meta, nil
 }
 
-func (s *Service) GenerateAndBuildPPTX(ctx context.Context, in GenerateInput, oldFileURL string) (link string, meta GenerateMeta, err error) {
+func (s *Service) GenerateAndBuildPPTX(ctx context.Context, in GenerateInput, oldFileURL string, oldPdfURL string) (pptxLink string, pdfLink string, meta GenerateMeta, err error) {
 	s.log.Infof("[GenerateAndBuildPPTX] Input: %+v", in)
 
-	// Delete old file if exists
+	// Delete old files if exists
 	if oldFileURL != "" {
 		if err := s.DeleteOldFile(oldFileURL); err != nil {
-			s.log.WithError(err).Warn("Gagal menghapus file lama, tapi proses generate tetap dilanjutkan")
+			s.log.WithError(err).Warn("Gagal menghapus file PPTX lama, tapi proses generate tetap dilanjutkan")
+		}
+	}
+	if oldPdfURL != "" {
+		if err := s.DeleteOldFile(oldPdfURL); err != nil {
+			s.log.WithError(err).Warn("Gagal menghapus file PDF lama, tapi proses generate tetap dilanjutkan")
 		}
 	}
 
-	prompt := s.buildPrompt(in)
-	plan, err := s.callGroq(ctx, prompt)
+	// Generate PPTX (enhanced dengan lebih banyak konten)
+	s.log.Info("Generating enhanced presentation slides...")
+	promptPPTX := s.buildPrompt(in)
+	plan, err := s.callGroq(ctx, promptPPTX)
 	if err != nil {
-		return "", GenerateMeta{}, err
+		return "", "", GenerateMeta{}, fmt.Errorf("failed to generate PPTX content: %w", err)
 	}
 
 	safe := strings.ReplaceAll(strings.ToLower(in.Kode+"_"+in.TopikTraining), " ", "-")
 	ts := time.Now().Format("20060102-150405")
-	filename := fmt.Sprintf("%s-%s.pptx", safe, ts)
-	abs := filepath.Join(s.outDir, filename)
+	
+	// Build PPTX
+	filenamePPTX := fmt.Sprintf("%s-%s.pptx", safe, ts)
+	absPPTX := filepath.Join(s.outDir, filenamePPTX)
+	if err := s.buildPPTX(plan, absPPTX); err != nil {
+		return "", "", GenerateMeta{}, fmt.Errorf("failed to build PPTX: %w", err)
+	}
+	pptxLink = fmt.Sprintf("%s/files/materi/%s", s.pubBase, filenamePPTX)
 
-	if err := s.buildPPTX(plan, abs); err != nil {
-		return "", GenerateMeta{}, err
+	// Generate comprehensive PDF guide
+	s.log.Info("Generating detailed PDF learning guide...")
+	promptPDF := s.buildDetailedPrompt(in)
+	detailedContent, err := s.callGroqForDetailedContent(ctx, promptPDF)
+	if err != nil {
+		s.log.WithError(err).Warn("Failed to generate detailed PDF content, using basic PDF instead")
+		// Fallback to basic PDF if detailed generation fails
+		filenamePDF := fmt.Sprintf("%s-%s-guide.pdf", safe, ts)
+		absPDF := filepath.Join(s.outDir, filenamePDF)
+		if err := s.buildPDF(plan, absPDF); err != nil {
+			return pptxLink, "", GenerateMeta{Title: plan.Title, SlideCount: len(plan.Slides), Duration: plan.Overview.Duration, PPTXLink: pptxLink, PDFLink: ""}, fmt.Errorf("failed to build fallback PDF: %w", err)
+		}
+		pdfLink = fmt.Sprintf("%s/files/materi/%s", s.pubBase, filenamePDF)
+	} else {
+		// Build detailed PDF
+		filenamePDF := fmt.Sprintf("%s-%s-guide.pdf", safe, ts)
+		absPDF := filepath.Join(s.outDir, filenamePDF)
+		if err := s.buildDetailedPDF(detailedContent, absPDF); err != nil {
+			return pptxLink, "", GenerateMeta{Title: plan.Title, SlideCount: len(plan.Slides), Duration: plan.Overview.Duration, PPTXLink: pptxLink, PDFLink: ""}, fmt.Errorf("failed to build detailed PDF: %w", err)
+		}
+		pdfLink = fmt.Sprintf("%s/files/materi/%s", s.pubBase, filenamePDF)
 	}
 
-	link = fmt.Sprintf("%s/files/materi/%s", s.pubBase, filename)
 	meta = GenerateMeta{
 		Title:      plan.Title,
 		SlideCount: len(plan.Slides),
 		Duration:   plan.Overview.Duration,
+		PPTXLink:   pptxLink,
+		PDFLink:    pdfLink,
 	}
-	return link, meta, nil
+	
+	s.log.Infof("Successfully generated both PPTX and PDF. PPTX: %s, PDF: %s", pptxLink, pdfLink)
+	return pptxLink, pdfLink, meta, nil
 }

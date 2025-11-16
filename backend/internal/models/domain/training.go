@@ -11,6 +11,7 @@ type Training struct {
 	Kode              string     `json:"kode"              gorm:"column:kode"`
 	TopikTraining     string     `json:"topik_training"    gorm:"column:topik_training"`
 	GeneratedFileURL  *string    `json:"generated_file_url" gorm:"column:generated_file_url"`
+	GeneratedPdfURL   *string    `json:"generated_pdf_url"  gorm:"column:generated_pdf_url"`
 	GeneratedAt       *time.Time `json:"generated_at"      gorm:"column:generated_at"`
 
 	// Relations

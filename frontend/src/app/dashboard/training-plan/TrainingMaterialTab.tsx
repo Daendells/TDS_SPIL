@@ -47,6 +47,7 @@ interface ITraining {
   topik_training: string;
   referensi?: string;
   generated_file_url?: string | null;
+  generated_pdf_url?: string | null;
   generated_at?: string | null;
   competencyType?: {
     id: number;
@@ -159,6 +160,7 @@ export default function TrainingMaterialTab() {
           lvl: item.lvl,
           tools_training: item.tools_training,
           old_file_url: isRegenerate ? item.generated_file_url : "",
+          old_pdf_url: isRegenerate ? item.generated_pdf_url : "",
         }),
       });
 
@@ -167,22 +169,26 @@ export default function TrainingMaterialTab() {
         const message = isRegenerate
           ? "Materi Berhasil Di-regenerate!"
           : "Materi Berhasil Digenerate!";
-        alert(message + " Silakan unduh melalui tombol download.");
+        toast.success(message + " PPTX dan PDF telah tersedia untuk diunduh.");
         
-        // Update local state
+        // Update local state with both URLs
         const updatedData = data.map((row) =>
           row.kode === item.kode
-            ? { ...row, generated_file_url: result.link }
+            ? { 
+                ...row, 
+                generated_file_url: result.pptx_link,
+                generated_pdf_url: result.pdf_link
+              }
             : row
         );
         setData(updatedData);
         groupTrainings(updatedData);
       } else {
-        alert(result.error || "Gagal generate materi.");
+        toast.error(result.error || "Gagal generate materi.");
       }
     } catch (error) {
       console.error("Error saat generate:", error);
-      alert("Terjadi kesalahan saat generate materi.");
+      toast.error("Terjadi kesalahan saat generate materi.");
     } finally {
       setGenerating(null);
     }
@@ -349,7 +355,7 @@ export default function TrainingMaterialTab() {
                           Action
                         </th>
                         <th className="py-3 px-4 text-center font-semibold">
-                          File
+                          Files
                         </th>
                         <th className="py-3 px-4 text-center font-semibold">
                           Actions
@@ -387,7 +393,7 @@ export default function TrainingMaterialTab() {
                             </Button>
                           </td>
                           <td className="py-3 px-4 text-center">
-                            {item.generated_file_url ? (
+                            {item.generated_file_url || item.generated_pdf_url ? (
                               <Button
                                 size="sm"
                                 variant="outline"
@@ -413,26 +419,48 @@ export default function TrainingMaterialTab() {
                             )}
                           </td>
                           <td className="py-3 px-4 text-center">
-                            {item.generated_file_url ? (
-                              <Button
-                                asChild
-                                size="sm"
-                                variant="default"
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <a
-                                  href={item.generated_file_url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="gap-2"
+                            <div className="flex gap-2 justify-center">
+                              {item.generated_file_url ? (
+                                <Button
+                                  asChild
+                                  size="sm"
+                                  variant="default"
+                                  className="bg-blue-600 hover:bg-blue-700"
                                 >
-                                  <FileText className="w-4 h-4" />
-                                  Download
-                                </a>
-                              </Button>
-                            ) : (
-                              <span className="text-gray-400">-</span>
-                            )}
+                                  <a
+                                    href={item.generated_file_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="gap-2"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                    PPT
+                                  </a>
+                                </Button>
+                              ) : (
+                                <span className="text-gray-400 text-sm">No PPT</span>
+                              )}
+                              {item.generated_pdf_url ? (
+                                <Button
+                                  asChild
+                                  size="sm"
+                                  variant="default"
+                                  className="bg-green-600 hover:bg-green-700"
+                                >
+                                  <a
+                                    href={item.generated_pdf_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="gap-2"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                    PDF
+                                  </a>
+                                </Button>
+                              ) : (
+                                <span className="text-gray-400 text-sm">No PDF</span>
+                              )}
+                            </div>
                           </td>
                           <td className="py-3 px-4 text-center">
                             <DropdownMenu>
@@ -619,13 +647,13 @@ export default function TrainingMaterialTab() {
           <AlertDialogHeader>
             <AlertDialogTitle>Regenerate Materi Training?</AlertDialogTitle>
             <AlertDialogDescription>
-              Materi training untuk{" "}
-              <span className="font-semibold">
-                {regenerateDialog?.topik_training}
-              </span>{" "}
-              sudah pernah digenerate sebelumnya. Apakah Anda ingin
-              me-regenerate dengan referensi yang baru? File lama akan
-              dihapus dan diganti dengan yang baru.
+            Materi training untuk{" "}
+            <span className="font-semibold">
+              {regenerateDialog?.topik_training}
+            </span>{" "}
+            sudah pernah digenerate sebelumnya. Apakah Anda ingin
+            me-regenerate dengan referensi yang baru? File lama (PPTX & PDF) akan
+            dihapus dan diganti dengan yang baru.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

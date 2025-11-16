@@ -48,14 +48,23 @@ func (s *TrainingService) FindAll() (*web.SuccessResponse, error) {
 	}, nil
 }
 
-func (s *TrainingService) UpdateGeneratedFileURL(kode string, fileURL string) error {
+func (s *TrainingService) UpdateGeneratedFileURL(kode string, fileURL string, pdfURL string) error {
 	now := time.Now()
+	updates := map[string]interface{}{
+		"generated_at": now,
+	}
+	
+	if fileURL != "" {
+		updates["generated_file_url"] = fileURL
+	}
+	
+	if pdfURL != "" {
+		updates["generated_pdf_url"] = pdfURL
+	}
+	
 	return s.DB.Model(&domain.Training{}).
 		Where("kode = ?", kode).
-		Updates(map[string]interface{}{
-			"generated_file_url": fileURL,
-			"generated_at":       now,
-		}).Error
+		Updates(updates).Error
 }
 
 func (s *TrainingService) Update(no string, req *web.TrainingUpdateRequest) (*web.SuccessResponse, error) {

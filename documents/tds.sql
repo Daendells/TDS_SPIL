@@ -2860,9 +2860,7 @@ CREATE TABLE `training` (
   `generated_file_url` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `generated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='competency_type_id adalah FK ke competency_types.id';
---
--- Dumping data for table `training`
---
+
 
 INSERT INTO `training` (`no`, `competency_type_id`, `lvl`, `deskripsi_perilaku`, `tools_training`, `kode`, `topik_training`) VALUES
 (1, 16, 4, 'Menjadi panutan dalam bersikap terutama dalam bertanggung jawab terhadap pekerjaan, membangun sistem kerja yang mendorong kedisiplinan dan konsistensi, serta menanamkan budaya kerja yang bisa dipercaya.', 'The Trust Equation', 'M051', 'Building Trust'),
