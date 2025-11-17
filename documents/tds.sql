@@ -2858,6 +2858,7 @@ CREATE TABLE `training` (
   `kode` varchar(4) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `topik_training` varchar(56) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL,
   `generated_file_url` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
+  `generated_pdf_url` varchar(512) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci DEFAULT NULL,
   `generated_at` timestamp NULL DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci COMMENT='competency_type_id adalah FK ke competency_types.id';
 

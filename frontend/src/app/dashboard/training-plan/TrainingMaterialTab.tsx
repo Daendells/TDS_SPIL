@@ -171,18 +171,11 @@ export default function TrainingMaterialTab() {
           : "Materi Berhasil Digenerate!";
         toast.success(message + " PPTX dan PDF telah tersedia untuk diunduh.");
         
-        // Update local state with both URLs
-        const updatedData = data.map((row) =>
-          row.kode === item.kode
-            ? { 
-                ...row, 
-                generated_file_url: result.pptx_link,
-                generated_pdf_url: result.pdf_link
-              }
-            : row
-        );
-        setData(updatedData);
-        groupTrainings(updatedData);
+        // Reload data from server to get persisted URLs
+        const refreshRes = await fetch(`${apiUrl}/trainings`);
+        const refreshJson = await refreshRes.json();
+        setData(refreshJson.data);
+        groupTrainings(refreshJson.data);
       } else {
         toast.error(result.error || "Gagal generate materi.");
       }
