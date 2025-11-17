@@ -74,7 +74,7 @@ func (c *MasterController) FindById(ctx *gin.Context) {
 }
 
 func (c *MasterController) Create(ctx *gin.Context) {
-	var request web.ReportData
+	var request web.MasterReportData
 	if err := ctx.ShouldBindJSON(&request); err != nil {
 		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
 			Code: http.StatusBadRequest, Status: "Bad Request", Error: err.Error(),

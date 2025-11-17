@@ -17,12 +17,18 @@ func NewMasterRepository(log *logrus.Logger) *MasterRepository {
 
 // Get all master reports
 func (r *MasterRepository) FindAll(db *gorm.DB, masters *[]domain.MasterReport) error {
-	return db.Find(masters).Error
+	return db.
+		Preload("GapCompetencies").
+		Preload("GapCompetencies.CompetencyType").
+		Find(masters).Error
 }
 
 // Get one by ID
 func (r *MasterRepository) FindById(db *gorm.DB, master *domain.FullReport, id uint) error {
-	return db.First(master, id).Error
+	return db.
+		Preload("GapCompetencies").
+		Preload("GapCompetencies.CompetencyType").
+		First(master, id).Error
 }
 
 // Create new master report

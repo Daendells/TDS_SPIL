@@ -59,6 +59,7 @@ export interface IReport {
   idpStart: string;
   idpMentor: string;
   idpCoach: string;
+  competencies: IGapCompetency[];
 }
 
 export interface IPaginationData<T> {
@@ -186,6 +187,16 @@ export interface IAssignmentUpdate {
     id: number;
   assessmentTypeId?: number;
   status?: string;
+}
+
+export interface IGapCompetency {
+  id?: number;
+  competencyTypeId?: number;
+  competencyType?: {
+    id: number;
+    code: string;
+    name: string;  // ✓ Must include name
+  }
 }
 
 // Re-export report types from specific types module

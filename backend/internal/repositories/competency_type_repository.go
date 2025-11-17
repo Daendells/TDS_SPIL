@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"backend/internal/models/domain"
+
 	"gorm.io/gorm"
 )
 

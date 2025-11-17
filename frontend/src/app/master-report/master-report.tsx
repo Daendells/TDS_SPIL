@@ -228,6 +228,16 @@ setCurrentPage((prev) => {
   const getRowNumber = (i: number) =>
     (currentPage - 1) * paginationRequest.pageSize + i + 1;
 
+  function colorFromString(str: string) {
+  let hash = 0;
+  for (let i = 0; i < str.length; i++) {
+    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+  }
+  const hue = Math.abs(hash) % 360;
+  return `hsl(${hue}, 70%, 70%)`;
+}
+
+
   const isAllCurrentPageSelected = () =>
     paginationData?.results?.every((r) => selectedIds.has(r.id)) ?? false;
 
@@ -533,7 +543,28 @@ setCurrentPage((prev) => {
                   <TableCell className="text-center">{row.kpiVessel}</TableCell>
                   <TableCell className="text-center">{row.performanceScore}</TableCell>
                   <TableCell className="text-center">{row.valueAssessment}</TableCell>
-                  <TableCell className="text-center">{row.competencyGapAnalysis}</TableCell>
+<TableCell className="text-center">
+  {Array.isArray(row.competencies) && row.competencies.length > 0 ? (
+    <div className="flex flex-wrap gap-1 justify-center">
+      {row.competencies.map((c) => {
+        const code = c?.competencyType?.code;
+        if (!code) return null;
+
+        return (
+          <span
+            key={code}
+            className="px-2 py-1 rounded-xl text-xs font-semibold text-white"
+            style={{ backgroundColor: colorFromString(code) }}
+          >
+            {code}
+          </span>
+        );
+      })}
+    </div>
+  ) : (
+    "-"
+  )}
+</TableCell>
                   <TableCell className="text-center">{row.totalGap}</TableCell>
                   <TableCell className="text-center">{row.strength}</TableCell>
                   <TableCell className="text-center">{row.havQuadran}</TableCell>

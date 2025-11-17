@@ -12,8 +12,8 @@ import (
 )
 
 type AssessmentTypeController struct {
-	Log                    *logrus.Logger
-	DB                     *gorm.DB
+	Log                   *logrus.Logger
+	DB                    *gorm.DB
 	AssessmentTypeService services.AssessmentTypeService
 }
 
@@ -23,8 +23,8 @@ func NewAssessmentTypeController(
 	assessmentTypeService services.AssessmentTypeService,
 ) *AssessmentTypeController {
 	return &AssessmentTypeController{
-		Log:                    log,
-		DB:                     db,
+		Log:                   log,
+		DB:                    db,
 		AssessmentTypeService: assessmentTypeService,
 	}
 }

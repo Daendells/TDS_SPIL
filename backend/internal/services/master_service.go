@@ -12,6 +12,7 @@ import (
 	"backend/internal/models/web"
 	"backend/internal/repositories"
 
+	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -34,9 +35,7 @@ func NewMasterService(db *gorm.DB, log *logrus.Logger, validate *validator.Valid
 
 //
 // ---------------------- READ OPERATIONS ----------------------
-//
 
-// FindAll returns paginated master reports
 func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse, error) {
 	db := s.DB.Model(&domain.MasterReport{})
 
@@ -66,6 +65,9 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 	}
 	db = db.Limit(limit)
 
+	// --- Preload GapCompetencies with CompetencyType ---
+	db = db.Preload("GapCompetencies").Preload("GapCompetencies.CompetencyType")
+
 	// --- execute query ---
 	var rows []domain.MasterReport
 	if err := db.Find(&rows).Error; err != nil {
@@ -83,6 +85,20 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 	// --- map domain → web model ---
 	result := make([]web.MasterReportData, 0, len(rows))
 	for _, r := range rows {
+		// Map competencies
+		competencies := make([]web.GapCompetencyData, 0, len(r.GapCompetencies))
+		for _, gc := range r.GapCompetencies {
+			competencies = append(competencies, web.GapCompetencyData{
+				ID:               gc.ID,
+				CompetencyTypeID: gc.CompetencyTypeID,
+				CompetencyType: web.CompetencyTypeData{
+					ID:   gc.CompetencyType.ID,
+					Code: gc.CompetencyType.Code,
+					Name: gc.CompetencyType.Name,
+				},
+			})
+		}
+
 		result = append(result, web.MasterReportData{
 			ID:                         r.ID,
 			VesselName:                 r.VesselName,
@@ -114,6 +130,7 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 			TotalReadinessUpdateMonths: r.TotalReadinessUpdateMonths,
 			Keterangan:                 r.Keterangan,
 			TmNm:                       r.TmNm,
+			Competencies:               competencies, // Add competencies here
 		})
 	}
 
@@ -151,6 +168,7 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 }
 
 // FindById retrieves one master report
+// FindById retrieves one master report with full competencies
 func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 	var master domain.FullReport
 	if err := s.MasterRepository.FindById(s.DB, &master, id); err != nil {
@@ -160,10 +178,59 @@ func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 		s.Log.WithError(err).Error("failed to find master report by ID")
 		return nil, fmt.Errorf("failed to retrieve master report: %w", err)
 	}
+
+	// Map competencies to web model
+	competencies := make([]web.GapCompetencyData, 0, len(master.GapCompetencies))
+	for _, gc := range master.GapCompetencies {
+		competencies = append(competencies, web.GapCompetencyData{
+			ID:               gc.ID,
+			CompetencyTypeID: gc.CompetencyTypeID,
+			CompetencyType: web.CompetencyTypeData{
+				ID:   gc.CompetencyType.ID,
+				Code: gc.CompetencyType.Code,
+				Name: gc.CompetencyType.Name,
+			},
+		})
+	}
+
+	// Create response with competencies
+	response := web.FullReportResponse{
+		ID:                         master.ID,
+		VesselName:                 master.VesselName,
+		Nama:                       master.Nama,
+		Jabatan:                    master.Jabatan,
+		SeamanCode:                 master.SeamanCode,
+		SeafarerCode:               master.SeafarerCode,
+		Certificate:                master.Certificate,
+		Age:                        master.Age,
+		KonditeReview:              master.KonditeReview,
+		KpiVessel:                  master.KpiVessel,
+		PerformanceScore:           master.PerformanceScore,
+		ValueAssessment:            master.ValueAssessment,
+		AssessmentCenter:           master.AssessmentCenter,
+		PotentialScore:             master.PotentialScore,
+		HavQuadran:                 master.HavQuadran,
+		HavMapping:                 master.HavMapping,
+		CompetencyGapAnalysis:      master.CompetencyGapAnalysis,
+		TotalGap:                   master.TotalGap,
+		Strength:                   master.Strength,
+		TalentClassified:           master.TalentClassified,
+		IDPProgram:                 master.IDPProgram,
+		HavQuadran2:                master.HavQuadran2,
+		TalentClassified2:          master.TalentClassified2,
+		ReadinessMonth:             master.ReadinessMonth,
+		CertificateEligible:        master.CertificateEligible,
+		EducationFulfillmentMonths: master.EducationFulfillmentMonths,
+		TotalReadinessUpdateMonths: master.TotalReadinessUpdateMonths,
+		Keterangan:                 master.Keterangan,
+		TmNm:                       master.TmNm,
+		Competencies:               competencies,
+	}
+
 	return &web.SuccessResponse{
 		Code:   http.StatusOK,
 		Status: "OK",
-		Data:   master,
+		Data:   response,
 	}, nil
 }
 
@@ -186,8 +253,8 @@ func fillReportDefaults(r *domain.FullReport) error {
 	return nil
 }
 
-// Create adds a new master report
-func (s *MasterService) Create(request *web.ReportData) (*web.SuccessResponse, error) {
+// Create adds a new master report with competencies
+func (s *MasterService) Create(request *web.MasterReportData) (*web.SuccessResponse, error) {
 	if err := s.Validate.Struct(request); err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
@@ -198,15 +265,57 @@ func (s *MasterService) Create(request *web.ReportData) (*web.SuccessResponse, e
 		return nil, err
 	}
 
+	// Process competencies if provided
+	if len(request.Competencies) > 0 {
+		competencies := make([]domain.GapCompetency, 0, len(request.Competencies))
+
+		for _, comp := range request.Competencies {
+			competencies = append(competencies, domain.GapCompetency{
+				CompetencyTypeID: comp.CompetencyTypeID,
+			})
+		}
+
+		master.GapCompetencies = competencies
+	}
+
 	if err := s.MasterRepository.Create(s.DB, master); err != nil {
 		s.Log.WithError(err).Error("failed to create master report")
 		return nil, fmt.Errorf("failed to create master report: %w", err)
 	}
 
+	// Reload with competency types for response
+	var created domain.FullReport
+	if err := s.MasterRepository.FindById(s.DB, &created, master.ID); err != nil {
+		s.Log.WithError(err).Warn("created but failed to reload with relations")
+	} else {
+		master = &created
+	}
+
+	// Map competencies for response
+	competencies := make([]web.GapCompetencyData, 0, len(master.GapCompetencies))
+	for _, gc := range master.GapCompetencies {
+		competencies = append(competencies, web.GapCompetencyData{
+			ID:               gc.ID,
+			CompetencyTypeID: gc.CompetencyTypeID,
+			CompetencyType: web.CompetencyTypeData{
+				ID:   gc.CompetencyType.ID,
+				Code: gc.CompetencyType.Code,
+				Name: gc.CompetencyType.Name,
+			},
+		})
+	}
+
+	response := web.CreateReportResponse{
+		ID:           master.ID,
+		Nama:         master.Nama,
+		SeafarerCode: master.SeafarerCode,
+		Competencies: competencies,
+	}
+
 	return &web.SuccessResponse{
 		Code:   http.StatusCreated,
 		Status: "Created",
-		Data:   master,
+		Data:   response,
 	}, nil
 }
 
@@ -224,25 +333,13 @@ func nullifyStringPtr(p *string) *string {
 	return p
 }
 
-func parseDateOrNil(p *string) (*time.Time, error) {
-	if p == nil {
-		return nil, nil
-	}
-	if strings.TrimSpace(*p) == "" {
-		return nil, nil
-	}
-	t, err := time.Parse("2006-01-02", *p)
-	if err != nil {
-		return nil, fmt.Errorf("invalid date format for startDate, expected YYYY-MM-DD")
-	}
-	return &t, nil
-}
-
 func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.SuccessResponse, error) {
+	// Validate input
 	if err := s.Validate.Struct(request); err != nil {
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
+	// Get existing report
 	var existing domain.FullReport
 	if err := s.MasterRepository.FindById(s.DB, &existing, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -251,25 +348,15 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 		return nil, err
 	}
 
-	// 🔒 Prevent FK-breaking updates
+	// Prevent breaking FK
 	if request.SeafarerCode != nil && existing.SeafarerCode != nil &&
 		*request.SeafarerCode != *existing.SeafarerCode {
-		return nil, fmt.Errorf("cannot update seafarerCode; it is referenced by other tables")
-	}
-	if request.SeamanCode != nil && existing.SeamanCode != nil &&
-		*request.SeamanCode != *existing.SeamanCode {
-		return nil, fmt.Errorf("cannot update seamanCode")
+		return nil, fmt.Errorf("cannot update seafarerCode; referenced by other tables")
 	}
 
-	// --- Apply partial updates ---
+	// Apply normal fields update
 	if request.Nama != nil {
 		existing.Nama = nullifyStringPtr(request.Nama)
-	}
-	if request.SeafarerCode != nil {
-		existing.SeafarerCode = nullifyStringPtr(request.SeafarerCode)
-	}
-	if request.SeamanCode != nil {
-		existing.SeamanCode = nullifyStringPtr(request.SeamanCode)
 	}
 	if request.Jabatan != nil {
 		existing.Jabatan = nullifyStringPtr(request.Jabatan)
@@ -277,42 +364,96 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 	if request.VesselName != nil {
 		existing.VesselName = nullifyStringPtr(request.VesselName)
 	}
-	if request.StartDate != nil {
-		t, err := parseDateOrNil(request.StartDate)
-		if err != nil {
-			return nil, err
+	if request.SeamanCode != nil {
+		existing.SeamanCode = nullifyStringPtr(request.SeamanCode)
+	}
+
+	//  UPDATE CHILD TABLE (GapCompetencies)
+
+	if request.Competencies != nil {
+
+		// 1. Load existing children
+		var existingComps []domain.GapCompetency
+		s.DB.Where("report_id = ?", existing.ID).Find(&existingComps)
+
+		// Map old children by ID
+		oldMap := make(map[int]domain.GapCompetency)
+		for _, c := range existingComps {
+			oldMap[c.ID] = c
 		}
-		existing.StartDate = t
+
+		// 2. Process incoming competencies
+		for _, comp := range request.Competencies {
+
+			// INSERT new row
+			if comp.ID == nil {
+				newComp := domain.GapCompetency{
+					ReportID:         int(existing.ID),
+					CompetencyTypeID: comp.CompetencyTypeID,
+				}
+				s.DB.Create(&newComp)
+				continue
+			}
+
+			// UPDATE existing row
+			if old, found := oldMap[*comp.ID]; found {
+				old.CompetencyTypeID = comp.CompetencyTypeID
+				s.DB.Save(&old)
+				delete(oldMap, *comp.ID) // remove from delete list
+			}
+		}
+
+		// 3. DELETE children not included in request
+		for _, leftover := range oldMap {
+			s.DB.Delete(&leftover)
+		}
 	}
 
-	// --- Required fields must remain non-empty ---
-	if existing.Nama == nil || strings.TrimSpace(*existing.Nama) == "" {
-		return nil, fmt.Errorf("field 'nama' is required and cannot be empty")
-	}
-	if existing.SeamanCode == nil || strings.TrimSpace(*existing.SeamanCode) == "" {
-		return nil, fmt.Errorf("field 'seamanCode' is required and cannot be empty")
-	}
-	if existing.SeafarerCode == nil || strings.TrimSpace(*existing.SeafarerCode) == "" {
-		return nil, fmt.Errorf("field 'seafarerCode' is required and cannot be empty")
-	}
-
+	// Save master report
 	if err := s.MasterRepository.Update(s.DB, &existing); err != nil {
-		s.Log.WithError(err).Error("failed to update master report")
 		return nil, fmt.Errorf("failed to update master report: %w", err)
+	}
+
+	// Reload with full relations
+	var updated domain.FullReport
+	if err := s.MasterRepository.FindById(s.DB, &updated, id); err != nil {
+		s.Log.WithError(err).Warn("updated but failed to reload with relations")
+	} else {
+		existing = updated
+	}
+
+	// Map competencies for response
+	competencies := make([]web.GapCompetencyData, 0, len(existing.GapCompetencies))
+	for _, gc := range existing.GapCompetencies {
+		competencies = append(competencies, web.GapCompetencyData{
+			ID:               gc.ID,
+			CompetencyTypeID: gc.CompetencyTypeID,
+			CompetencyType: web.CompetencyTypeData{
+				ID:   gc.CompetencyType.ID,
+				Code: gc.CompetencyType.Code,
+				Name: gc.CompetencyType.Name,
+			},
+		})
+	}
+
+	response := web.UpdateReportResponse{
+		ID:           existing.ID,
+		Nama:         existing.Nama,
+		Jabatan:      existing.Jabatan,
+		Competencies: competencies,
 	}
 
 	return &web.SuccessResponse{
 		Code:   http.StatusOK,
 		Status: "Updated",
-		Data:   existing,
+		Data:   response,
 	}, nil
 }
 
-//
 // ---------------------- DELETE ----------------------
-//
 
 func (s *MasterService) Delete(id uint) (*web.SuccessResponse, error) {
+
 	var master domain.FullReport
 	if err := s.MasterRepository.FindById(s.DB, &master, id); err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
@@ -321,14 +462,31 @@ func (s *MasterService) Delete(id uint) (*web.SuccessResponse, error) {
 		return nil, err
 	}
 
+	// Hapus child terlebih dahulu
+	var deleted int64
+	s.DB.Model(&domain.GapCompetency{}).
+		Where("report_id = ?", id).
+		Count(&deleted)
+
+	s.DB.Where("report_id = ?", id).Delete(&domain.GapCompetency{})
+
+	s.Log.WithFields(logrus.Fields{
+		"report_id":       id,
+		"childrenDeleted": deleted,
+		"time":            time.Now(),
+	}).Info("Deleting master report and children")
+
+	// Hapus parent
 	if err := s.MasterRepository.Delete(s.DB, &master); err != nil {
-		s.Log.WithError(err).Error("failed to delete master report")
 		return nil, fmt.Errorf("failed to delete master report: %w", err)
 	}
 
 	return &web.SuccessResponse{
 		Code:   http.StatusOK,
 		Status: "Deleted",
-		Data:   fmt.Sprintf("master report with ID %d deleted successfully", id),
+		Data: gin.H{
+			"message":      fmt.Sprintf("Master report %d deleted", id),
+			"childDeleted": deleted,
+		},
 	}, nil
 }

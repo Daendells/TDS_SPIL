@@ -64,23 +64,11 @@ if (paginationRequest.anchorId !== null && paginationRequest.anchorId !== undefi
           apiData = response.data;
         }
 
-        console.log("Extracted apiData:", apiData);
-        console.log("Number of records:", apiData.length);
+
 
         // FIX: parseReports expects an array, not individual items
-        let parsedReports: IReport[] = [];
-        
-        try {
-          // If parseReports expects an array, pass the whole array
-          parsedReports = parseReports(apiData);
-          console.log("Parsed reports (array method):", parsedReports);
-        } catch (err) {
-          console.error("Error parsing reports as array:", err);
-          
-          // Fallback: Try parsing individual items
-        }
-
-        console.log("Number of parsed reports:", parsedReports.length);
+      const parsedReports: IReport[] = apiData; 
+console.log("Parsed reports (raw API):", parsedReports);
 
         // --- Extract pagination metadata safely ---
 let apiMeta = response.data?.data;
