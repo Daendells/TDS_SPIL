@@ -5,6 +5,7 @@ import (
 	"backend/internal/models/web"
 	"backend/internal/services"
 	"fmt"
+	"math/rand"
 	"net/http"
 	"path/filepath"
 	"strconv"
@@ -154,6 +155,11 @@ func (controller *AssessmentController) FindByRolePublic(ctx *gin.Context) {
 		}
 		questionsWithOptions = append(questionsWithOptions, questionWithOptions)
 	}
+
+	// Randomize question order using Fisher-Yates shuffle
+	rand.Shuffle(len(questionsWithOptions), func(i, j int) {
+		questionsWithOptions[i], questionsWithOptions[j] = questionsWithOptions[j], questionsWithOptions[i]
+	})
 
 	assessmentResponse := web.AssessmentPublicResponse{
 		AssessmentID: assessment.AssessmentID,
