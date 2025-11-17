@@ -103,6 +103,7 @@ func Bootstrap(config *BootstrapConfig) {
 	trainingControllerDB := controllers.NewTrainingController(trainingServiceDB, config.Log)
 	trainingPlanController := controllers.NewTrainingPlanController(trainingPlanService, config.Log)
 	competencyMappingController := controllers.NewCompetencyMappingController(config.DB, config.Log, competencyProgramMappingRepository, trainingRepository)
+	competencyTypeController := controllers.NewCompetencyTypeController(competencyTypeRepository, config.Log)
 
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(
@@ -125,6 +126,7 @@ func Bootstrap(config *BootstrapConfig) {
 		TrainingGenController:        trainingGenController, // LLM Generator
 		TrainingPlanController:       trainingPlanController,
 		CompetencyMappingController:  competencyMappingController,
+		CompetencyTypeController:     competencyTypeController,
 		QuestionController:           questionController,
 		OptionController:             optionController,
 		AssessmentResultController:   assessmentResultController,

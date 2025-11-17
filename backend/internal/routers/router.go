@@ -16,6 +16,7 @@ type RouterConfig struct {
 	TrainingGenController        *traininggen.TrainingController // LLM Generator
 	TrainingPlanController       *controllers.TrainingPlanController
 	CompetencyMappingController  *controllers.CompetencyMappingController
+	CompetencyTypeController     *controllers.CompetencyTypeController
 	QuestionController           *controllers.QuestionController
 	OptionController             *controllers.OptionController
 	AssessmentResultController   *controllers.AssessmentResultController
@@ -77,6 +78,15 @@ func (c *RouterConfig) SetupGuestRouter() {
 		competencyMapping.POST("", c.CompetencyMappingController.CreateMapping)
 		competencyMapping.PUT("/:id", c.CompetencyMappingController.UpdateMapping)
 		competencyMapping.DELETE("/:id", c.CompetencyMappingController.DeleteMapping)
+	}
+
+	// Competency Types endpoints (Public - read only)
+	competencyTypes := c.App.Group("api/competency-types")
+	{
+		competencyTypes.GET("", c.CompetencyTypeController.GetAll)           // Get all competency types
+		competencyTypes.GET("/active", c.CompetencyTypeController.GetActive) // Get only active
+		competencyTypes.GET("/:id", c.CompetencyTypeController.GetByID)      // Get by ID
+		competencyTypes.GET("/code/:code", c.CompetencyTypeController.GetByCode) // Get by code
 	}
 
 	// All trainings endpoint for dropdowns
