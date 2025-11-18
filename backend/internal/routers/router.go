@@ -16,6 +16,7 @@ type RouterConfig struct {
 	TrainingGenController        *traininggen.TrainingController // LLM Generator
 	TrainingPlanController       *controllers.TrainingPlanController
 	CompetencyMappingController  *controllers.CompetencyMappingController
+	CompetencyTypeController     *controllers.CompetencyTypeController
 	QuestionController           *controllers.QuestionController
 	OptionController             *controllers.OptionController
 	AssessmentResultController   *controllers.AssessmentResultController
@@ -24,6 +25,7 @@ type RouterConfig struct {
 	AssessmentTypeController     *controllers.AssessmentTypeController
 	SeafarerAssessmentController *controllers.SeafarerAssessmentController
 	MasterController             *controllers.MasterController
+	AssignmentController         *controllers.AssignmentController
 	AuthMiddleware               gin.HandlerFunc
 }
 
@@ -32,6 +34,7 @@ func (c *RouterConfig) Setup() {
 	c.App.Static("/storage", "./storage")
 	c.SetupGuestRouter()
 	c.SetupAuthRouter()
+	c.SetupAssignmentRouter()
 	c.SetupMasterRouter()
 }
 
@@ -77,6 +80,15 @@ func (c *RouterConfig) SetupGuestRouter() {
 		competencyMapping.POST("", c.CompetencyMappingController.CreateMapping)
 		competencyMapping.PUT("/:id", c.CompetencyMappingController.UpdateMapping)
 		competencyMapping.DELETE("/:id", c.CompetencyMappingController.DeleteMapping)
+	}
+
+	// Competency Types endpoints (Public - read only)
+	competencyTypes := c.App.Group("api/competency-types")
+	{
+		competencyTypes.GET("", c.CompetencyTypeController.GetAll)           // Get all competency types
+		competencyTypes.GET("/active", c.CompetencyTypeController.GetActive) // Get only active
+		competencyTypes.GET("/:id", c.CompetencyTypeController.GetByID)      // Get by ID
+		competencyTypes.GET("/code/:code", c.CompetencyTypeController.GetByCode) // Get by code
 	}
 
 	// All trainings endpoint for dropdowns
@@ -160,6 +172,18 @@ func (r *RouterConfig) SetupMasterRouter() {
 		group.PUT("/:id", r.MasterController.Update)
 		group.DELETE("/:id", r.MasterController.Delete)
 
+	}
+}
+
+// --- Router assignment baru
+func (r *RouterConfig) SetupAssignmentRouter() {
+	group := r.App.Group("/api/assignments")
+	{
+		group.GET("", r.AssignmentController.ListPaged)
+		group.POST("", r.AssignmentController.Create)
+		group.POST("/bulk", r.AssignmentController.BulkCreate)
+		group.PUT("/:id", r.AssignmentController.Update)
+		group.DELETE("/:id", r.AssignmentController.Delete)
 	}
 }
 

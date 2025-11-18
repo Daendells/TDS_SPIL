@@ -4,39 +4,53 @@ import (
 	"strconv"
 )
 
-// MasterReportData is the JSON shape returned by /master-reports.
+// CompetencyTypeData represents competency type information
+type CompetencyTypeData struct {
+	ID   int    `json:"id"`
+	Code string `json:"code"`
+	Name string `json:"name"`
+}
+
+// GapCompetencyData represents gap competency with its type
+type GapCompetencyData struct {
+	ID               int                `json:"id"`
+	CompetencyTypeID int                `json:"competencyTypeId"`
+	CompetencyType   CompetencyTypeData `json:"competencyType"`
+}
+
 // Mirrors domain.MasterReport 1:1 so the frontend gets all columns.
 type MasterReportData struct {
-	ID                         int    `json:"id"`
-	VesselName                 string `json:"vesselName"`
-	Nama                       string `json:"nama"`
-	Jabatan                    string `json:"jabatan"`
-	User                       string `json:"user"`
-	SeamanCode                 string `json:"seamanCode"`
-	SeafarerCode               string `json:"seafarerCode"`
-	Certificate                string `json:"certificate"`
-	Age                        string `json:"age"`
-	KonditeReview              int    `json:"konditeReview"`
-	KpiVessel                  int    `json:"kpiVessel"`
-	PerformanceScore           int    `json:"performanceScore"`
-	ValueAssessment            int    `json:"valueAssessment"`
-	AssessmentCenter           int    `json:"assessmentCenter"`
-	PotentialScore             int    `json:"potentialScore"`
-	HavQuadran                 int    `json:"havQuadran"`
-	HavMapping                 string `json:"havMapping"`
-	CompetencyGapAnalysis      string `json:"competencyGapAnalysis"`
-	TotalGap                   int    `json:"totalGap"`
-	Strength                   int    `json:"strength"`
-	TalentClassified           string `json:"talentClassified"`
-	IDPProgram                 string `json:"idpProgram"`
-	HavQuadran2                int    `json:"havQuadran2"`
-	TalentClassified2          string `json:"talentClassified2"`
-	ReadinessMonth             int    `json:"readinessMonth"`
-	CertificateEligible        string `json:"certificateEligible"`
-	EducationFulfillmentMonths int    `json:"educationFulfillmentMonths"`
-	TotalReadinessUpdateMonths int    `json:"totalReadinessUpdateMonths"`
-	Keterangan                 string `json:"keterangan"`
-	TmNm                       int    `json:"tmNm"`
+	ID                         int                 `json:"id"`
+	VesselName                 string              `json:"vesselName"`
+	Nama                       string              `json:"nama"`
+	Jabatan                    string              `json:"jabatan"`
+	User                       string              `json:"user"`
+	SeamanCode                 string              `json:"seamanCode"`
+	SeafarerCode               string              `json:"seafarerCode"`
+	Certificate                string              `json:"certificate"`
+	Age                        string              `json:"age"`
+	KonditeReview              int                 `json:"konditeReview"`
+	KpiVessel                  int                 `json:"kpiVessel"`
+	PerformanceScore           int                 `json:"performanceScore"`
+	ValueAssessment            int                 `json:"valueAssessment"`
+	AssessmentCenter           int                 `json:"assessmentCenter"`
+	PotentialScore             int                 `json:"potentialScore"`
+	HavQuadran                 int                 `json:"havQuadran"`
+	HavMapping                 string              `json:"havMapping"`
+	CompetencyGapAnalysis      string              `json:"competencyGapAnalysis"`
+	TotalGap                   int                 `json:"totalGap"`
+	Strength                   int                 `json:"strength"`
+	TalentClassified           string              `json:"talentClassified"`
+	IDPProgram                 string              `json:"idpProgram"`
+	HavQuadran2                int                 `json:"havQuadran2"`
+	TalentClassified2          string              `json:"talentClassified2"`
+	ReadinessMonth             int                 `json:"readinessMonth"`
+	CertificateEligible        string              `json:"certificateEligible"`
+	EducationFulfillmentMonths int                 `json:"educationFulfillmentMonths"`
+	TotalReadinessUpdateMonths int                 `json:"totalReadinessUpdateMonths"`
+	Keterangan                 string              `json:"keterangan"`
+	TmNm                       int                 `json:"tmNm"`
+	Competencies               []GapCompetencyData `json:"competencies,omitempty"`
 }
 
 type MasterListRequest struct {
@@ -62,13 +76,18 @@ func (r *DeleteMasterRequest) ParseID(param string) error {
 }
 
 type UpdateMasterRequest struct {
-	ID           uint    `json:"id"`
+	ID           uint    `json:"-"`
 	Nama         *string `json:"nama"`
 	SeafarerCode *string `json:"seafarerCode"`
 	SeamanCode   *string `json:"seamanCode"`
 	Jabatan      *string `json:"jabatan"`
 	VesselName   *string `json:"vesselName"`
 	StartDate    *string `json:"startDate"`
+	// hanya competency types
+	Competencies []struct {
+		ID               *int `json:"id"` // null → INSERT
+		CompetencyTypeID int  `json:"competencyTypeId"`
+	} `json:"competencies"`
 }
 
 func (r *UpdateMasterRequest) ParseID(param string) error {
@@ -80,7 +99,6 @@ func (r *UpdateMasterRequest) ParseID(param string) error {
 	return nil
 }
 
-// MasterReportListResponse adalah bentuk response untuk endpoint GET /master-reports
 type MasterReportListResponse struct {
 	Data      []MasterReportData `json:"data"`
 	FirstID   int                `json:"firstId,omitempty"`
@@ -89,4 +107,56 @@ type MasterReportListResponse struct {
 	HasMore   bool               `json:"hasMore"`
 	FirstPage bool               `json:"firstPage"`
 	Total     int                `json:"total"`
+}
+
+// ReportData is the request body for creating a new report
+
+// FullReportResponse is the detailed response for FindById
+type FullReportResponse struct {
+	ID                         uint                `json:"id"`
+	VesselName                 *string             `json:"vesselName"`
+	Nama                       *string             `json:"nama"`
+	Jabatan                    *string             `json:"jabatan"`
+	SeamanCode                 *string             `json:"seamanCode"`
+	SeafarerCode               *string             `json:"seafarerCode"`
+	Certificate                *string             `json:"certificate"`
+	Age                        *string             `json:"age"`
+	KonditeReview              *int                `json:"konditeReview"`
+	KpiVessel                  *int                `json:"kpiVessel"`
+	PerformanceScore           *int                `json:"performanceScore"`
+	ValueAssessment            *int                `json:"valueAssessment"`
+	AssessmentCenter           *int                `json:"assessmentCenter"`
+	PotentialScore             *int                `json:"potentialScore"`
+	HavQuadran                 *int                `json:"havQuadran"`
+	HavMapping                 *string             `json:"havMapping"`
+	CompetencyGapAnalysis      *string             `json:"competencyGapAnalysis"`
+	TotalGap                   *int                `json:"totalGap"`
+	Strength                   *int                `json:"strength"`
+	TalentClassified           *string             `json:"talentClassified"`
+	IDPProgram                 *string             `json:"idpProgram"`
+	HavQuadran2                *int                `json:"havQuadran2"`
+	TalentClassified2          *string             `json:"talentClassified2"`
+	ReadinessMonth             *int                `json:"readinessMonth"`
+	CertificateEligible        *string             `json:"certificateEligible"`
+	EducationFulfillmentMonths *int                `json:"educationFulfillmentMonths"`
+	TotalReadinessUpdateMonths *int                `json:"totalReadinessUpdateMonths"`
+	Keterangan                 *string             `json:"keterangan"`
+	TmNm                       *int                `json:"tmNm"`
+	Competencies               []GapCompetencyData `json:"competencies"`
+}
+
+// CreateReportResponse is the response after creating a report
+type CreateReportResponse struct {
+	ID           uint                `json:"id"`
+	Nama         *string             `json:"nama"`
+	SeafarerCode *string             `json:"seafarerCode"`
+	Competencies []GapCompetencyData `json:"competencies"`
+}
+
+// UpdateReportResponse is the response after updating a report
+type UpdateReportResponse struct {
+	ID           uint                `json:"id"`
+	Nama         *string             `json:"nama"`
+	Jabatan      *string             `json:"jabatan"`
+	Competencies []GapCompetencyData `json:"competencies"`
 }

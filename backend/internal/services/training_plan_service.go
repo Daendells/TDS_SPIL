@@ -86,7 +86,7 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 		if mapping.CompetencyType == nil {
 			continue
 		}
-		
+
 		competencyCode := mapping.CompetencyType.Code
 		competencyName := mapping.CompetencyType.Name
 
@@ -140,7 +140,7 @@ func (s *trainingPlanService) GetTrainingPlan(program string) (*domain.TrainingP
 	// Build participants data
 	participants := make([]domain.TrainingPlanParticipant, 0)
 	participantIndex := 1
-	
+
 	for _, gaps := range reportGaps {
 		if len(gaps) == 0 || gaps[0].Report == nil {
 			continue
@@ -180,7 +180,7 @@ func (s *trainingPlanService) GetTrainingPlan(program string) (*domain.TrainingP
 // buildGapsMap converts gap competency boolean values to display format
 func (s *trainingPlanService) buildGapsMap(gc *domain.GapCompetency) map[string]interface{} {
 	result := make(map[string]interface{})
-	
+
 	if gc.CompetencyType != nil {
 		result[gc.CompetencyType.Code] = "1"
 	}
@@ -190,26 +190,26 @@ func (s *trainingPlanService) buildGapsMap(gc *domain.GapCompetency) map[string]
 
 func (s *trainingPlanService) buildGapsMapFromMultiple(gaps []domain.GapCompetency) map[string]interface{} {
 	result := make(map[string]interface{})
-	
+
 	// Get program from first gap's Report
 	program := ""
 	if len(gaps) > 0 && gaps[0].Report != nil {
 		program = gaps[0].Report.IDPProgram
 	}
-	
+
 	// Get all competency codes for the program directly from database
 	programMappings, err := s.competencyProgramMapRepo.GetByProgram(program)
 	if err != nil {
 		s.log.WithError(err).WithField("program", program).Error("Failed to get competency program mappings")
 	}
-	
+
 	// Initialize all competency codes as empty
 	for _, mapping := range programMappings {
 		if mapping.CompetencyType != nil {
 			result[mapping.CompetencyType.Code] = ""
 		}
 	}
-	
+
 	// Mark gaps that exist
 	for _, gap := range gaps {
 		if gap.CompetencyType != nil {
@@ -227,7 +227,7 @@ func (s *trainingPlanService) buildSummary(gapCompetencies []domain.GapCompetenc
 	for _, gc := range gapCompetencies {
 		reportGaps[gc.ReportID] = append(reportGaps[gc.ReportID], gc)
 	}
-	
+
 	totalParticipants := len(reportGaps)
 	if totalParticipants == 0 {
 		return domain.TrainingPlanSummary{}
@@ -244,14 +244,14 @@ func (s *trainingPlanService) buildSummary(gapCompetencies []domain.GapCompetenc
 	// Count gaps for each participant
 	for _, gaps := range reportGaps {
 		participantGaps := make(map[string]bool)
-		
+
 		// Mark which competencies this participant has gaps in
 		for _, gap := range gaps {
 			if gap.CompetencyType != nil {
 				participantGaps[gap.CompetencyType.Code] = true
 			}
 		}
-		
+
 		// Count each competency gap once per participant
 		for code := range participantGaps {
 			gapCounts[code]++
@@ -341,7 +341,7 @@ func (s *trainingPlanService) calculateGapStatistics(gapCompetencies []domain.Ga
 	for _, gc := range gapCompetencies {
 		reportGaps[gc.ReportID] = append(reportGaps[gc.ReportID], gc)
 	}
-	
+
 	totalParticipants := len(reportGaps)
 	competencyCodes := []string{"LDC", "DCM", "CIO", "SIO", "FLX", "LAG", "RSC", "CSO", "COM", "EMP", "TOR", "LDP", "PNO", "DIR", "ACH", "ACT", "IDS", "CFO", "RBG", "ING", "RSF", "BAC"}
 
@@ -397,8 +397,8 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 
 	var schedules []domain.TrainingSchedule
 
-    // Start date: October 1, 2025 (minggu I bulan Oktober)
-    startDate := time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC)
+	// Start date: October 1, 2025 (minggu I bulan Oktober)
+	startDate := time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC)
 
 	// Separate mandatory and non-mandatory competencies
 	var mandatoryCompetencies []string
@@ -444,8 +444,8 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 		dateKey := scheduleDate.Format("2006-01-02")
 		usedDates[dateKey] = true
 
-        // Pindah ke slot minggu berikutnya
-        currentDate = nextWeekSlotStart(scheduleDate)
+		// Pindah ke slot minggu berikutnya
+		currentDate = nextWeekSlotStart(scheduleDate)
 	}
 
 	// Schedule Non-Mandatory Materi 1
@@ -470,8 +470,8 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 		dateKey := scheduleDate.Format("2006-01-02")
 		usedDates[dateKey] = true
 
-        // Pindah ke slot minggu berikutnya
-        currentDate = nextWeekSlotStart(scheduleDate)
+		// Pindah ke slot minggu berikutnya
+		currentDate = nextWeekSlotStart(scheduleDate)
 	}
 
 	// Generate Materi 2 schedules (after all Materi 1 of same category are done + 60 days minimum gap)
@@ -482,80 +482,80 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 
 // findNextAvailableDate finds the next available date that meets all constraints
 func (s *trainingPlanService) findNextAvailableDate(startDate time.Time, usedDates map[string]bool, participantGaps map[int][]string, competencyCode string, categories map[string]string) time.Time {
-    currentDate := alignToWeekSlotStart(startDate)
+	currentDate := alignToWeekSlotStart(startDate)
 
-    maxIterations := 52 * 3 // Batas 3 tahun dalam unit minggu
-    iterations := 0
+	maxIterations := 52 * 3 // Batas 3 tahun dalam unit minggu
+	iterations := 0
 
-    for iterations < maxIterations {
-        // Hanya izinkan tanggal pada awal slot minggu (1, 8, 15, 22)
-        if isWeekSlotStart(currentDate.Day()) {
-            dateKey := currentDate.Format("2006-01-02")
+	for iterations < maxIterations {
+		// Hanya izinkan tanggal pada awal slot minggu (1, 8, 15, 22)
+		if isWeekSlotStart(currentDate.Day()) {
+			dateKey := currentDate.Format("2006-01-02")
 
-            if !usedDates[dateKey] {
-                if !s.hasParticipantConflict(currentDate, competencyCode, categories, participantGaps, usedDates) {
-                    return currentDate
-                }
-            }
-        }
+			if !usedDates[dateKey] {
+				if !s.hasParticipantConflict(currentDate, competencyCode, categories, participantGaps, usedDates) {
+					return currentDate
+				}
+			}
+		}
 
-        // Loncat ke slot minggu berikutnya
-        currentDate = nextWeekSlotStart(currentDate)
-        iterations++
-    }
+		// Loncat ke slot minggu berikutnya
+		currentDate = nextWeekSlotStart(currentDate)
+		iterations++
+	}
 
-    // Fallback jika tidak ditemukan
-    s.log.Warn("Could not find optimal weekly slot, using fallback")
-    return alignToWeekSlotStart(startDate)
+	// Fallback jika tidak ditemukan
+	s.log.Warn("Could not find optimal weekly slot, using fallback")
+	return alignToWeekSlotStart(startDate)
 }
 
 // Helper untuk penjadwalan berbasis slot minggu per bulan
 func isWeekSlotStart(day int) bool {
-    return day == 1 || day == 8 || day == 15 || day == 22
+	return day == 1 || day == 8 || day == 15 || day == 22
 }
 
 func alignToWeekSlotStart(date time.Time) time.Time {
-    day := date.Day()
-    switch {
-    case day <= 1:
-        return time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, time.UTC)
-    case day <= 8:
-        return time.Date(date.Year(), date.Month(), 8, 0, 0, 0, 0, time.UTC)
-    case day <= 15:
-        return time.Date(date.Year(), date.Month(), 15, 0, 0, 0, 0, time.UTC)
-    case day <= 22:
-        return time.Date(date.Year(), date.Month(), 22, 0, 0, 0, 0, time.UTC)
-    default:
-        // ke minggu I bulan berikutnya
-        nextMonth := date.Month() + 1
-        year := date.Year()
-        if nextMonth > 12 {
-            nextMonth = 1
-            year++
-        }
-        return time.Date(year, nextMonth, 1, 0, 0, 0, 0, time.UTC)
-    }
+	day := date.Day()
+	switch {
+	case day <= 1:
+		return time.Date(date.Year(), date.Month(), 1, 0, 0, 0, 0, time.UTC)
+	case day <= 8:
+		return time.Date(date.Year(), date.Month(), 8, 0, 0, 0, 0, time.UTC)
+	case day <= 15:
+		return time.Date(date.Year(), date.Month(), 15, 0, 0, 0, 0, time.UTC)
+	case day <= 22:
+		return time.Date(date.Year(), date.Month(), 22, 0, 0, 0, 0, time.UTC)
+	default:
+		// ke minggu I bulan berikutnya
+		nextMonth := date.Month() + 1
+		year := date.Year()
+		if nextMonth > 12 {
+			nextMonth = 1
+			year++
+		}
+		return time.Date(year, nextMonth, 1, 0, 0, 0, 0, time.UTC)
+	}
 }
 
 func nextWeekSlotStart(date time.Time) time.Time {
-    day := date.Day()
-    switch {
-    case day < 8:
-        return time.Date(date.Year(), date.Month(), 8, 0, 0, 0, 0, time.UTC)
-    case day < 15:
-        return time.Date(date.Year(), date.Month(), 15, 0, 0, 0, 0, time.UTC)
-    case day < 22:
-        return time.Date(date.Year(), date.Month(), 22, 0, 0, 0, 0, time.UTC)
-    default:
-        // minggu I bulan berikutnya
-        nextMonth := date.Month() + 1
-        year := date.Year()
-        if nextMonth > 12 {
-            nextMonth = 1
-            year++
-        }
-        return time.Date(year, nextMonth, 1, 0, 0, 0, 0, time.UTC)
-    }
+	day := date.Day()
+	switch {
+	case day < 8:
+		return time.Date(date.Year(), date.Month(), 8, 0, 0, 0, 0, time.UTC)
+	case day < 15:
+		return time.Date(date.Year(), date.Month(), 15, 0, 0, 0, 0, time.UTC)
+	case day < 22:
+		return time.Date(date.Year(), date.Month(), 22, 0, 0, 0, 0, time.UTC)
+	default:
+		// minggu I bulan berikutnya
+		nextMonth := date.Month() + 1
+		year := date.Year()
+		if nextMonth > 12 {
+			nextMonth = 1
+			year++
+		}
+		return time.Date(year, nextMonth, 1, 0, 0, 0, 0, time.UTC)
+	}
 }
 
 // hasParticipantConflict checks if scheduling this competency on this date would cause participant conflicts
@@ -627,8 +627,8 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 		}
 	}
 
-    // Schedule Mandatory Materi 2 (can start after all Mandatory Materi 1 are done)
-    materi2StartDate := nextWeekSlotStart(latestMandatoryMateri1) // mulai dari slot minggu berikutnya
+	// Schedule Mandatory Materi 2 (can start after all Mandatory Materi 1 are done)
+	materi2StartDate := nextWeekSlotStart(latestMandatoryMateri1) // mulai dari slot minggu berikutnya
 
 	for _, code := range mandatoryCompetencies {
 		// Find the Materi 1 date for this competency to ensure 60-day gap
@@ -666,12 +666,12 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 		dateKey := scheduleDate.Format("2006-01-02")
 		usedDates[dateKey] = true
 
-        // Pindah ke slot minggu berikutnya
-        materi2StartDate = nextWeekSlotStart(scheduleDate)
+		// Pindah ke slot minggu berikutnya
+		materi2StartDate = nextWeekSlotStart(scheduleDate)
 	}
 
-    // Schedule Non-Mandatory Materi 2
-    materi2StartDate = nextWeekSlotStart(latestNonMandatoryMateri1)
+	// Schedule Non-Mandatory Materi 2
+	materi2StartDate = nextWeekSlotStart(latestNonMandatoryMateri1)
 
 	for _, code := range nonMandatoryCompetencies {
 		// Find the Materi 1 date for this competency to ensure 60-day gap
@@ -709,7 +709,7 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 		dateKey := scheduleDate.Format("2006-01-02")
 		usedDates[dateKey] = true
 
-        // Pindah ke slot minggu berikutnya
-        materi2StartDate = nextWeekSlotStart(scheduleDate)
+		// Pindah ke slot minggu berikutnya
+		materi2StartDate = nextWeekSlotStart(scheduleDate)
 	}
 }

@@ -73,6 +73,7 @@ func Bootstrap(config *BootstrapConfig) {
 	competencyTypeRepository := repositories.NewCompetencyTypeRepository(config.DB)
 	assessmentTypeRepository := repositories.NewAssessmentTypeRepository()
 	seafarerAssessmentRepository := repositories.NewSeafarerAssessmentRepository()
+	assignmentRepo := repositories.NewAssignmentRepository()
 
 	// --- Services (DB-based)
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository)
@@ -87,6 +88,7 @@ func Bootstrap(config *BootstrapConfig) {
 	masterService := services.NewMasterService(config.DB, config.Log, config.Validate, masterRepository)
 	trainingServiceDB := services.NewTrainingService(config.DB, config.Log, config.Validate, trainingRepository)
 	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, competencyProgramMappingRepository, competencyTypeRepository, config.Log)
+	assignmentService := services.NewAssignmentService(assignmentRepo, config.Validate)
 
 	// --- Controllers (DB-based)
 	reportController := controllers.NewReportController(reportService, config.Log)
@@ -103,6 +105,8 @@ func Bootstrap(config *BootstrapConfig) {
 	trainingControllerDB := controllers.NewTrainingController(trainingServiceDB, config.Log)
 	trainingPlanController := controllers.NewTrainingPlanController(trainingPlanService, config.Log)
 	competencyMappingController := controllers.NewCompetencyMappingController(config.DB, config.Log, competencyProgramMappingRepository, trainingRepository)
+	assignmentController := controllers.NewAssignmentController(config.DB, assignmentService)
+	competencyTypeController := controllers.NewCompetencyTypeController(competencyTypeRepository, config.Log)
 
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(
@@ -125,6 +129,7 @@ func Bootstrap(config *BootstrapConfig) {
 		TrainingGenController:        trainingGenController, // LLM Generator
 		TrainingPlanController:       trainingPlanController,
 		CompetencyMappingController:  competencyMappingController,
+		CompetencyTypeController:     competencyTypeController,
 		QuestionController:           questionController,
 		OptionController:             optionController,
 		AssessmentResultController:   assessmentResultController,
@@ -134,6 +139,7 @@ func Bootstrap(config *BootstrapConfig) {
 		SeafarerAssessmentController: seafarerAssessmentController,
 		MasterController:             masterController,
 		AuthMiddleware:               authMiddleware,
+		AssignmentController:         assignmentController,
 	}
 	routerConfig.Setup()
 }

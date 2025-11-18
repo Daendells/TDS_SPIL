@@ -59,6 +59,7 @@ export interface IReport {
   idpStart: string;
   idpMentor: string;
   idpCoach: string;
+  competencies: IGapCompetency[];
 }
 
 export interface IPaginationData<T> {
@@ -164,56 +165,39 @@ export interface IUser {
   updated_at?: string;
 }
 
-export interface IAssignment {
-  // PascalCase (from backend)
-  ID?: number;
-  UserID?: number;
-  AssessmentID?: number;
-  Attempt?: number;
-  StartDate?: string;
-  EndDate?: string;
-  Status?: string;
-  Note?: string | null;
-  CreatedAt?: string;
-  UpdatedAt?: string;
-  User?: IUser;
-  Assessment?: IAssessment;
-  
-  // camelCase (for compatibility)
-  id?: number;
-  user_id?: number;
-  assessment_id?: number;
-  attempt?: number;
-  start_date?: string;
-  end_date?: string;
-  status?: string;
-  note?: string | null;
-  created_at?: string;
-  updated_at?: string;
-  user?: IUser;
-  assessment?: IAssessment;
+export interface IAssignmentFlat {
+  id: number;
+  seafarerCode: string;
+  nama: string;
+  assessmentTypeId: number;
+  assessmentType: string;
+  attempts: number;
+  status: string;
 }
 
-// Helper type for creating new assignments (request payload)
+// === For Create / Update API ===
 export interface IAssignmentCreate {
-  user_id: number;
-  assessment_id: number;
-  start_date: string;
-  end_date: string;
+  seafarerCode: string;
+  assessmentTypeId: number;
   status?: string;
-  note?: string;
+   createdBy: string; 
 }
 
-// Helper type for updating assignments
 export interface IAssignmentUpdate {
-  user_id?: number;
-  assessment_id?: number;
-  start_date?: string;
-  end_date?: string;
+    id: number;
+  assessmentTypeId?: number;
   status?: string;
-  note?: string;
 }
 
+export interface IGapCompetency {
+  id?: number;
+  competencyTypeId?: number;
+  competencyType?: {
+    id: number;
+    code: string;
+    name: string;  // ✓ Must include name
+  }
+}
 
 // Re-export report types from specific types module
 export type {
