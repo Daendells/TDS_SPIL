@@ -6,10 +6,8 @@ type GapCompetency struct {
 	ID               int    `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
 	ReportID         int    `json:"reportId" gorm:"column:report_id;not null"`
 	CompetencyTypeID int    `json:"competencyTypeId" gorm:"column:competency_type_id;not null"`
-	Program          string `json:"program" gorm:"column:program;not null;default:'SDP'"` // SDP, MDP, FDP
 	GapLevel         string `json:"gapLevel" gorm:"column:gap_level;type:enum('LOW','MEDIUM','HIGH');default:'MEDIUM'"`
 	Priority         int    `json:"priority" gorm:"column:priority;default:1"`
-	Notes            string `json:"notes" gorm:"column:notes"`
 
 	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`

@@ -17,5 +17,5 @@ func NewTrainingRepository(log *logrus.Logger) *TrainingRepository {
 }
 
 func (r *TrainingRepository) FindAll(db *gorm.DB, trainings *[]domain.Training) error {
-	return db.Find(trainings).Error
+	return db.Preload("CompetencyType").Find(trainings).Error
 }

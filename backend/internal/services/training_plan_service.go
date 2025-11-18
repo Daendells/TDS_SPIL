@@ -49,14 +49,46 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 		return make(map[string]domain.CompetencyMappingItem)
 	}
 
+	// Get gap competencies to calculate category directly
+	gapCompetencies, err := s.gapCompetencyRepo.GetWithReportsAndCompetencyTypes(program)
+	if err != nil {
+		s.log.WithError(err).WithField("program", program).Error("Failed to get gap competencies for categories")
+		// Continue without categories rather than failing
+	}
+
+	// Calculate categories directly using same logic as buildSummary
+	reportGaps := make(map[int][]domain.GapCompetency)
+	for _, gc := range gapCompetencies {
+		reportGaps[gc.ReportID] = append(reportGaps[gc.ReportID], gc)
+	}
+	totalParticipants := len(reportGaps)
+	gapCounts := make(map[string]int)
+	for _, gc := range gapCompetencies {
+		if gc.CompetencyType != nil {
+			gapCounts[gc.CompetencyType.Code]++
+		}
+	}
+	category := make(map[string]string)
+	if totalParticipants > 0 {
+		for code, count := range gapCounts {
+			percentage := (float64(count) / float64(totalParticipants)) * 100
+			if percentage > 60 {
+				category[code] = "M"
+			} else {
+				category[code] = "NM"
+			}
+		}
+	}
+
 	result := make(map[string]domain.CompetencyMappingItem)
 	for _, mapping := range programMappings {
-		// Get competency type to retrieve the full name
-		competencyType, err := s.competencyTypeRepo.GetByCode(mapping.CompetencyCode)
-		competencyName := mapping.CompetencyCode // fallback to code
-		if err == nil && competencyType != nil {
-			competencyName = competencyType.Name // use full name from competency_types
+		// Preload CompetencyType relation to get code and name
+		if mapping.CompetencyType == nil {
+			continue
 		}
+
+		competencyCode := mapping.CompetencyType.Code
+		competencyName := mapping.CompetencyType.Name
 
 		// Get training material names from relations
 		trainingTopics := []string{}
@@ -67,8 +99,15 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 			trainingTopics = append(trainingTopics, mapping.TrainingMaterial2.TopikTraining)
 		}
 
-		result[mapping.CompetencyCode] = domain.CompetencyMappingItem{
+		// Get category from calculated map
+		cat := "NM"
+		if c, exists := category[competencyCode]; exists {
+			cat = c
+		}
+
+		result[competencyCode] = domain.CompetencyMappingItem{
 			Name:           competencyName,
+			Category:       cat,
 			TrainingTopics: trainingTopics,
 		}
 	}
@@ -152,12 +191,23 @@ func (s *trainingPlanService) buildGapsMap(gc *domain.GapCompetency) map[string]
 func (s *trainingPlanService) buildGapsMapFromMultiple(gaps []domain.GapCompetency) map[string]interface{} {
 	result := make(map[string]interface{})
 
-	// Get all competency codes for the program
-	competencyMapping := s.GetCompetencyMapping(gaps[0].Program)
+	// Get program from first gap's Report
+	program := ""
+	if len(gaps) > 0 && gaps[0].Report != nil {
+		program = gaps[0].Report.IDPProgram
+	}
+
+	// Get all competency codes for the program directly from database
+	programMappings, err := s.competencyProgramMapRepo.GetByProgram(program)
+	if err != nil {
+		s.log.WithError(err).WithField("program", program).Error("Failed to get competency program mappings")
+	}
 
 	// Initialize all competency codes as empty
-	for code := range competencyMapping {
-		result[code] = ""
+	for _, mapping := range programMappings {
+		if mapping.CompetencyType != nil {
+			result[mapping.CompetencyType.Code] = ""
+		}
 	}
 
 	// Mark gaps that exist
@@ -386,7 +436,6 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 			Program:        program,
 			CompetencyCode: code,
 			TrainingTopic:  trainingTopic,
-			Category:       "M",
 			MaterialType:   1,
 			ScheduledDate:  scheduleDate,
 		}
@@ -413,7 +462,6 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 			Program:        program,
 			CompetencyCode: code,
 			TrainingTopic:  trainingTopic,
-			Category:       "NM",
 			MaterialType:   1,
 			ScheduledDate:  scheduleDate,
 		}
@@ -558,7 +606,9 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 	// Find the latest Mandatory Materi 1 date
 	var latestMandatoryMateri1 time.Time
 	for _, schedule := range *schedules {
-		if schedule.Category == "M" && schedule.MaterialType == 1 {
+		// Use dynamic category calculation instead of schedule.Category
+		competencyCategory := categories[schedule.CompetencyCode]
+		if competencyCategory == "M" && schedule.MaterialType == 1 {
 			if schedule.ScheduledDate.After(latestMandatoryMateri1) {
 				latestMandatoryMateri1 = schedule.ScheduledDate
 			}
@@ -568,7 +618,9 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 	// Find the latest Non-Mandatory Materi 1 date
 	var latestNonMandatoryMateri1 time.Time
 	for _, schedule := range *schedules {
-		if schedule.Category == "NM" && schedule.MaterialType == 1 {
+		// Use dynamic category calculation instead of schedule.Category
+		competencyCategory := categories[schedule.CompetencyCode]
+		if competencyCategory == "NM" && schedule.MaterialType == 1 {
 			if schedule.ScheduledDate.After(latestNonMandatoryMateri1) {
 				latestNonMandatoryMateri1 = schedule.ScheduledDate
 			}
@@ -606,7 +658,6 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 			Program:        program,
 			CompetencyCode: code,
 			TrainingTopic:  trainingTopic,
-			Category:       "M",
 			MaterialType:   2,
 			ScheduledDate:  scheduleDate,
 		}
@@ -650,7 +701,6 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 			Program:        program,
 			CompetencyCode: code,
 			TrainingTopic:  trainingTopic,
-			Category:       "NM",
 			MaterialType:   2,
 			ScheduledDate:  scheduleDate,
 		}

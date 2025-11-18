@@ -29,7 +29,23 @@ import {
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Pencil, Trash2, Plus, Loader2 } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Pencil, Trash2, Plus, Loader2, MoreVertical } from "lucide-react";
 import { toast } from "sonner";
 import {
   useGetCompetencyMappings,
@@ -41,12 +57,14 @@ import {
   type CompetencyMappingItem,
   type Training,
 } from "./_hooks/useCompetencyMappingCMS";
+import type { TrainingPlanResponse } from "./_hooks/useTrainingPlan";
 
 interface CompetencyMappingCMSProps {
   program: string;
+  trainingPlan?: TrainingPlanResponse;
 }
 
-export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSProps) {
+export default function CompetencyMappingCMS({ program, trainingPlan }: CompetencyMappingCMSProps) {
   const [editingMapping, setEditingMapping] = useState<CompetencyMappingItem | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
@@ -55,11 +73,10 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
 
   // Form state
   const [formData, setFormData] = useState<CompetencyMappingFormData>({
-    competencyCode: "",
+    competencyTypeId: 0,
     program: program,
     trainingMaterial1Id: null,
     trainingMaterial2Id: null,
-    category: "M",
   });
 
   // React Query hooks
@@ -69,15 +86,28 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
   const createMutation = useCreateCompetencyMapping();
   const deleteMutation = useDeleteCompetencyMapping();
 
+  // Sort mappings by gap summary order and add category info
+  const sortedMappings = mappings?.map((mapping) => {
+    const competencyCode = mapping.competencyType?.code;
+    const category = competencyCode && trainingPlan?.summary?.category ? trainingPlan.summary.category[competencyCode] || "NM" : "NM";
+    const percentageGap = competencyCode && trainingPlan?.summary?.percentageGap ? trainingPlan.summary.percentageGap[competencyCode] || 0 : 0;
+    return {
+      ...mapping,
+      category,
+      percentageGap,
+    };
+  }).sort((a, b) => {
+    return (b.percentageGap || 0) - (a.percentageGap || 0);
+  }) || [];
+
   // Handle edit click
   const handleEdit = (mapping: CompetencyMappingItem) => {
     setEditingMapping(mapping);
     setFormData({
-      competencyCode: mapping.competencyCode,
+      competencyTypeId: mapping.competencyTypeId,
       program: mapping.program,
       trainingMaterial1Id: mapping.trainingMaterial1Id,
       trainingMaterial2Id: mapping.trainingMaterial2Id,
-      category: mapping.category,
     });
     setIsEditDialogOpen(true);
   };
@@ -85,11 +115,10 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
   // Handle create new mapping
   const handleCreateNew = () => {
     setFormData({
-      competencyCode: "",
+      competencyTypeId: 0,
       program: program,
       trainingMaterial1Id: null,
       trainingMaterial2Id: null,
-      category: "M",
     });
     setIsCreateDialogOpen(true);
   };
@@ -173,14 +202,17 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
             </TableRow>
           </TableHeader>
           <TableBody>
-            {mappings && mappings.length > 0 ? (
-              mappings.map((mapping) => (
+            {sortedMappings && sortedMappings.length > 0 ? (
+              sortedMappings.map((mapping) => (
                 <TableRow key={mapping.id}>
                   <TableCell className="font-medium">
-                    {mapping.competencyCode}
+                    {mapping.competencyType?.code || "N/A"} - {mapping.competencyType?.name || "Unknown"}
                   </TableCell>
                   <TableCell>
-                    <Badge variant={mapping.category === "M" ? "destructive" : "secondary"}>
+                    <Badge
+                      variant={mapping.category === "M" ? "destructive" : "secondary"}
+                      className={mapping.category === "NM" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+                    >
                       {mapping.category === "M" ? "Mandatory" : "Non-Mandatory"}
                     </Badge>
                   </TableCell>
@@ -195,22 +227,34 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-end gap-2">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(mapping)}
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(mapping)}
-                      >
-                        <Trash2 className="h-4 w-4 text-destructive" />
-                      </Button>
-                    </div>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          className="h-8 w-8 p-0"
+                        >
+                          <span className="sr-only">Open menu</span>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem
+                          onClick={() => handleEdit(mapping)}
+                          className="cursor-pointer"
+                        >
+                          <Pencil className="mr-2 h-4 w-4" />
+                          <span>Edit</span>
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onClick={() => handleDelete(mapping)}
+                          className="cursor-pointer text-red-600"
+                        >
+                          <Trash2 className="mr-2 h-4 w-4" />
+                          <span>Delete</span>
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -231,15 +275,15 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
           <DialogHeader>
             <DialogTitle>Edit Competency Mapping</DialogTitle>
             <DialogDescription>
-              Update training materials for {formData.competencyCode}
+              Update training materials for {editingMapping?.competencyType?.code || "competency"}
             </DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Competency Code</Label>
+              <Label>Competency</Label>
               <Input
-                value={formData.competencyCode}
+                value={`${editingMapping?.competencyType?.code || "N/A"} - ${editingMapping?.competencyType?.name || "Unknown"}`}
                 disabled
                 className="bg-muted"
               />
@@ -328,14 +372,38 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
 
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label>Competency Code</Label>
-              <Input
-                placeholder="e.g. LDC, ACH, COM"
-                value={formData.competencyCode}
-                onChange={(e) =>
-                  setFormData({ ...formData, competencyCode: e.target.value.toUpperCase() })
+              <Label>Competency Type</Label>
+              <Select
+                value={formData.competencyTypeId > 0 ? formData.competencyTypeId.toString() : ""}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, competencyTypeId: parseInt(value) })
                 }
-              />
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select competency type..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {(() => {
+                    // Extract unique competency types from trainings
+                    const uniqueCompetencies = trainings
+                      ?.filter(t => t.competencyType)
+                      .reduce((acc, training) => {
+                        const ct = training.competencyType!;
+                        if (!acc.find(c => c.id === ct.id)) {
+                          acc.push(ct);
+                        }
+                        return acc;
+                      }, [] as Array<{ id: number; code: string; name: string }>)
+                      .sort((a, b) => a.code.localeCompare(b.code));
+
+                    return uniqueCompetencies?.map((ct) => (
+                      <SelectItem key={ct.id} value={ct.id.toString()}>
+                        {ct.code} - {ct.name}
+                      </SelectItem>
+                    ));
+                  })()}
+                </SelectContent>
+              </Select>
               <p className="text-xs text-muted-foreground">
                 Category (Mandatory/Non-Mandatory) is automatically calculated based on gap percentage (&gt;60% = Mandatory)
               </p>
@@ -401,7 +469,7 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
             </Button>
             <Button
               onClick={handleCreateSubmit}
-              disabled={createMutation.isPending || !formData.competencyCode}
+              disabled={createMutation.isPending || formData.competencyTypeId === 0}
             >
               {createMutation.isPending && (
                 <Loader2 className="h-4 w-4 mr-2 animate-spin" />
@@ -413,34 +481,30 @@ export default function CompetencyMappingCMS({ program }: CompetencyMappingCMSPr
       </Dialog>
 
       {/* Delete Confirmation Dialog */}
-      <Dialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Delete Competency Mapping</DialogTitle>
-            <DialogDescription>
-              Are you sure you want to delete this mapping? This action cannot be undone.
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDeleteDialogOpen(false)}
-            >
-              Cancel
-            </Button>
-            <Button
-              variant="destructive"
+      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Competency Mapping?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this mapping for{" "}
+              <span className="font-semibold">
+                {mappings?.find(m => m.id === deletingId)?.competencyType?.code}
+              </span>
+              ? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
               onClick={confirmDelete}
               disabled={deleteMutation.isPending}
+              className="bg-red-600 hover:bg-red-700"
             >
-              {deleteMutation.isPending && (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              )}
-              Delete
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+              {deleteMutation.isPending ? "Deleting..." : "Yes, Delete"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

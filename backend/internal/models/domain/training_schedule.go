@@ -10,13 +10,14 @@ type TrainingSchedule struct {
 	Program        string    `json:"program" gorm:"column:program;not null"`                // SDP, MDP, FDP
 	CompetencyCode string    `json:"competencyCode" gorm:"column:competency_code;not null"` // LDC, DCM, etc.
 	TrainingTopic  string    `json:"trainingTopic" gorm:"column:training_topic;not null"`   // Change Leadership, etc.
-	Category       string    `json:"category" gorm:"column:category;not null"`              // M (Mandatory) or NM (Non-Mandatory)
 	MaterialType   int       `json:"materialType" gorm:"column:material_type;not null"`     // 1 or 2 (Materi 1 or Materi 2)
 	ScheduledDate  time.Time `json:"scheduledDate" gorm:"column:scheduled_date;not null"`
 
 	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`
 }
+
+// Note: Category (M/NM) is now dynamically calculated in training_plan_service.go based on >60% participant gaps
 
 func (TrainingSchedule) TableName() string {
     return "training_schedules"
@@ -69,5 +70,6 @@ type TrainingPlanResponse struct {
 // CompetencyMappingItem represents the structure for competency mapping
 type CompetencyMappingItem struct {
 	Name           string   `json:"name"`
+	Category       string   `json:"category"`
 	TrainingTopics []string `json:"training_topics"`
 }

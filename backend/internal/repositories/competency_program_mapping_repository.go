@@ -26,19 +26,23 @@ func NewCompetencyProgramMappingRepository(db *gorm.DB) CompetencyProgramMapping
 
 func (r *competencyProgramMappingRepository) GetAll() ([]domain.CompetencyProgramMapping, error) {
 	var mappings []domain.CompetencyProgramMapping
-	err := r.db.Preload("TrainingMaterial1").Preload("TrainingMaterial2").Find(&mappings).Error
+	err := r.db.Preload("CompetencyType").Preload("TrainingMaterial1").Preload("TrainingMaterial2").Find(&mappings).Error
 	return mappings, err
 }
 
 func (r *competencyProgramMappingRepository) GetByProgram(program string) ([]domain.CompetencyProgramMapping, error) {
 	var mappings []domain.CompetencyProgramMapping
-	err := r.db.Preload("TrainingMaterial1").Preload("TrainingMaterial2").Where("program = ?", program).Find(&mappings).Error
+	err := r.db.Preload("CompetencyType").Preload("TrainingMaterial1").Preload("TrainingMaterial2").Where("program = ?", program).Find(&mappings).Error
 	return mappings, err
 }
 
 func (r *competencyProgramMappingRepository) GetByCompetencyCodeAndProgram(competencyCode, program string) (*domain.CompetencyProgramMapping, error) {
 	var mapping domain.CompetencyProgramMapping
-	err := r.db.Preload("TrainingMaterial1").Preload("TrainingMaterial2").Where("competency_code = ? AND program = ?", competencyCode, program).First(&mapping).Error
+	// Join with competency_types to filter by code
+	err := r.db.Preload("CompetencyType").Preload("TrainingMaterial1").Preload("TrainingMaterial2").
+		Joins("JOIN competency_types ON competency_types.id = competency_program_mappings.competency_type_id").
+		Where("competency_types.code = ? AND competency_program_mappings.program = ?", competencyCode, program).
+		First(&mapping).Error
 	if err != nil {
 		return nil, err
 	}
@@ -55,11 +59,10 @@ func (r *competencyProgramMappingRepository) Update(mapping *domain.CompetencyPr
 	return r.db.Model(&domain.CompetencyProgramMapping{}).
 		Where("id = ?", mapping.ID).
 		Updates(map[string]interface{}{
-			"competency_code":         mapping.CompetencyCode,
+			"competency_type_id":      mapping.CompetencyTypeID,
 			"program":                 mapping.Program,
 			"training_material_1_id":  mapping.TrainingMaterial1ID,
 			"training_material_2_id":  mapping.TrainingMaterial2ID,
-			"category":                mapping.Category,
 		}).Error
 }
 

@@ -10,7 +10,6 @@ type CompetencyTypeRepository interface {
 	GetAll() ([]domain.CompetencyType, error)
 	GetByID(id int) (*domain.CompetencyType, error)
 	GetByCode(code string) (*domain.CompetencyType, error)
-	GetByCategory(category string) ([]domain.CompetencyType, error)
 	GetActive() ([]domain.CompetencyType, error)
 	Create(competencyType *domain.CompetencyType) error
 	Update(competencyType *domain.CompetencyType) error
@@ -51,15 +50,9 @@ func (r *competencyTypeRepository) GetByCode(code string) (*domain.CompetencyTyp
 	return &competencyType, nil
 }
 
-func (r *competencyTypeRepository) GetByCategory(category string) ([]domain.CompetencyType, error) {
-	var competencyTypes []domain.CompetencyType
-	err := r.db.Where("category = ? AND is_active = ?", category, true).Find(&competencyTypes).Error
-	return competencyTypes, err
-}
-
 func (r *competencyTypeRepository) GetActive() ([]domain.CompetencyType, error) {
 	var competencyTypes []domain.CompetencyType
-	err := r.db.Where("is_active = ?", true).Order("category, code").Find(&competencyTypes).Error
+	err := r.db.Where("is_active = ?", true).Order("code").Find(&competencyTypes).Error
 	return competencyTypes, err
 }
 

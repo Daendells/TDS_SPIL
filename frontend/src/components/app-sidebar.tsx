@@ -53,11 +53,6 @@ const items = [
     icon: Inbox,
   },
   {
-    title: "Training",
-    url: "/dashboard/training",
-    icon: FileText,
-  },
-  {
     title: "Training Plan",
     url: "/dashboard/training-plan",
     icon: Calendar,
