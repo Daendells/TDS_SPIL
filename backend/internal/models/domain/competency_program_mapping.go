@@ -3,11 +3,12 @@ package domain
 import "time"
 
 type CompetencyProgramMapping struct {
-	ID                   int    `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
-	CompetencyTypeID     int    `json:"competencyTypeId" gorm:"column:competency_type_id;not null"`
-	Program              string `json:"program" gorm:"column:program;not null"` // SDP, MDP, FDP
-	TrainingMaterial1ID  *int   `json:"trainingMaterial1Id" gorm:"column:training_material_1_id"`
-	TrainingMaterial2ID  *int   `json:"trainingMaterial2Id" gorm:"column:training_material_2_id"`
+	ID                  int    `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
+	CompetencyTypeID    int    `json:"competencyTypeId" gorm:"column:competency_type_id;not null"`
+	Program             string `json:"program" gorm:"column:program;size:10;not null"` // SDP, MDP, FDP
+	TrainingMaterial1ID *int   `json:"trainingMaterial1Id" gorm:"column:training_material_1_id"`
+	TrainingMaterial2ID *int   `json:"trainingMaterial2Id" gorm:"column:training_material_2_id"`
+	Category            string `json:"category" gorm:"column:category;size:2;not null;default:M"` // enum('M','NM')
 
 	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`

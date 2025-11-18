@@ -57,4 +57,13 @@ type Report struct {
 	IDPStart  string `json:"idpStart" gorm:"column:idp_start"`
 	IDPMentor string `json:"idpMentor" gorm:"column:idp_mentor"`
 	IDPCoach  string `json:"idpCoach" gorm:"column:idp_coach"`
+
+	CreatedAt string `json:"createdAt" gorm:"column:created_at"`
+	UpdatedAt string `json:"updatedAt" gorm:"column:updated_at"`
+	User      string `json:"user" gorm:"column:user"`
+	ReadinessMonth string `json:"readinessMonth" gorm:"column:readiness_month"`
+	EducationFulfillmentMonths string `json:"educationFulfillmentMonths" gorm:"column:education_fulfillment_months"`
+	TotalReadinessUpdateMonths string `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness_update_months"`
+	Keterangan string `json:"keterangan" gorm:"column:keterangan"`
+	TMNM string `json:"tmnm" gorm:"column:tm_nm"`
 }

@@ -17,4 +17,14 @@ type QuestionUpdateRequest struct {
 	Category     *string `json:"category"`
 	IsImage      *string `json:"isImage"`
 	ImageURL     *string `json:"imageUrl"`
+	AspectID     *int64  `json:"aspectId"`
+}
+
+type QuestionUpdateAspectRequest struct {
+	AspectID *int64 `json:"aspectId"`
+}
+
+type QuestionBulkUpdateAspectRequest struct {
+	QuestionIds []int  `json:"questionIds" binding:"required"`
+	AspectID    *int64 `json:"aspectId"`
 }

@@ -6,15 +6,20 @@ import (
 )
 
 type TrainingSchedule struct {
-	ID             int       `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
-	Program        string    `json:"program" gorm:"column:program;not null"`                // SDP, MDP, FDP
-	CompetencyCode string    `json:"competencyCode" gorm:"column:competency_code;not null"` // LDC, DCM, etc.
-	TrainingTopic  string    `json:"trainingTopic" gorm:"column:training_topic;not null"`   // Change Leadership, etc.
-	MaterialType   int       `json:"materialType" gorm:"column:material_type;not null"`     // 1 or 2 (Materi 1 or Materi 2)
-	ScheduledDate  time.Time `json:"scheduledDate" gorm:"column:scheduled_date;not null"`
+	ID               int       `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
+	Program          string    `json:"program" gorm:"column:program;size:10;not null;default:SDP"` // SDP, MDP, FDP
+	CompetencyCode   string    `json:"competencyCode" gorm:"column:competency_code;size:10;not null"`
+	CompetencyTypeID *int64    `json:"competencyTypeId" gorm:"column:competency_type_id"`
+	TrainingTopic    string    `json:"trainingTopic" gorm:"column:training_topic;size:255;not null"`
+	Category         string    `json:"category" gorm:"column:category;size:2;not null;default:M"` // enum('M','NM')
+	MaterialType     int       `json:"materialType" gorm:"column:material_type;not null"`         // 1 or 2 (Materi 1 or Materi 2)
+	ScheduledDate    time.Time `json:"scheduledDate" gorm:"column:scheduled_date;not null"`
 
 	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`
+
+	// Relations
+	CompetencyType *CompetencyType `json:"competencyType,omitempty" gorm:"foreignKey:CompetencyTypeID;references:ID"`
 }
 
 // Note: Category (M/NM) is now dynamically calculated in training_plan_service.go based on >60% participant gaps

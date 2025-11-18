@@ -19,23 +19,37 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, Trash, FileText, Settings } from "lucide-react";
+import {
+  Plus,
+  Edit,
+  Trash2,
+  Trash,
+  FileText,
+  Settings,
+  Tags,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useDeleteQuestion,
   useBulkDeleteQuestions,
   useGetQuestionsByAssessmentId,
+  useBulkUpdateAspect,
 } from "./_hooks/useQuestion";
 import QuestionDialog from "./question-dialog";
 import DeleteConfirmationDialog from "./delete-confirmation-dialog";
 import BulkDeleteConfirmationDialog from "./bulk-delete-confirmation-dialog";
+import BulkAssignAspectDialog from "./bulk-assign-aspect-dialog";
 import AddAssessmentDialog from "./add-assessment-dialog";
 import AssessmentConfigDialog from "@/components/assessment-config-dialog";
+import { AspectManager } from "./aspect-manager";
+import { QuestionAspectSelector } from "./question-aspect-selector";
 import { useGetAllAssessments } from "./_hooks/useAssessment";
+import { useGetAspectsByAssessmentId } from "./_hooks/useAspect";
 import { QuestionOptionResponse } from "@/types/assessment";
 import Image from "next/image";
 import { BASE_URL } from "../lib/api";
+import { AspectResponse } from "@/types/aspect";
 
 const VA_1_CATEGORIES = [
   "Integrity",
@@ -59,6 +73,9 @@ export default function QuestionsAdmin() {
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
+  const [bulkAssignAspectDialogOpen, setBulkAssignAspectDialogOpen] =
+    useState(false);
+  const [bulkAssignAspectLoading, setBulkAssignAspectLoading] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [addAssessmentDialogOpen, setAddAssessmentDialogOpen] = useState(false);
 
@@ -67,6 +84,7 @@ export default function QuestionsAdmin() {
 
   const deleteQuestionMutation = useDeleteQuestion();
   const bulkDeleteMutation = useBulkDeleteQuestions();
+  const bulkUpdateAspectMutation = useBulkUpdateAspect();
 
   const { data: assessments } = useGetAllAssessments();
 
@@ -76,6 +94,9 @@ export default function QuestionsAdmin() {
     error,
     refetch,
   } = useGetQuestionsByAssessmentId(selectedAssessmentId);
+
+  const { data: aspectsData } =
+    useGetAspectsByAssessmentId(selectedAssessmentId);
 
   useEffect(() => {
     if (questionsData && questionsData.data) {
@@ -187,10 +208,48 @@ export default function QuestionsAdmin() {
     setBulkDeleteDialogOpen(false);
   };
 
+  const handleBulkAssignAspect = () => {
+    if (selectedQuestions.length === 0) {
+      toast.error("Silakan pilih pertanyaan untuk assign aspect");
+      return;
+    }
+    setBulkAssignAspectDialogOpen(true);
+  };
+
+  const handleConfirmBulkAssignAspect = async (aspectId: number | null) => {
+    setBulkAssignAspectLoading(true);
+    try {
+      await bulkUpdateAspectMutation.mutateAsync({
+        questionIds: selectedQuestions,
+        aspectId,
+      });
+      toast.success(
+        `Aspect berhasil diassign ke ${selectedQuestions.length} pertanyaan`
+      );
+      setSelectedQuestions([]);
+      setBulkAssignAspectDialogOpen(false);
+    } catch (error) {
+      toast.error("Gagal mengassign aspect ke pertanyaan yang dipilih");
+      console.error(error);
+    } finally {
+      setBulkAssignAspectLoading(false);
+    }
+  };
+
+  const handleCancelBulkAssignAspect = () => {
+    setBulkAssignAspectDialogOpen(false);
+  };
+
   const handleAddAssessmentSuccess = () => {
     setAddAssessmentDialogOpen(false);
     // Invalidate assessments query to refetch the list
     queryClient.invalidateQueries({ queryKey: ["assessments"] });
+  };
+
+  const getAspectName = (aspectId?: number) => {
+    if (!aspectId || !aspectsData) return null;
+    const aspect = aspectsData.find((a: AspectResponse) => a.id === aspectId);
+    return aspect ? aspect.name : null;
   };
 
   return (
@@ -288,6 +347,16 @@ export default function QuestionsAdmin() {
       </Card>
 
       {selectedAssessmentId > 0 && (
+        <AspectManager
+          assessmentId={selectedAssessmentId}
+          assessmentName={
+            assessments?.find((a) => a.assessmentId === selectedAssessmentId)
+              ?.assessmentName || "Assessment"
+          }
+        />
+      )}
+
+      {selectedAssessmentId > 0 && (
         <Card>
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -317,16 +386,28 @@ export default function QuestionsAdmin() {
                     <span className="text-sm font-medium">Pilih Semua</span>
                   </div>
                   {selectedQuestions.length > 0 && (
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={handleBulkDelete}
-                      disabled={bulkDeleteLoading}
-                      className="flex items-center gap-2"
-                    >
-                      <Trash className="h-4 w-4" />
-                      Hapus Terpilih ({selectedQuestions.length})
-                    </Button>
+                    <>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleBulkAssignAspect}
+                        disabled={bulkAssignAspectLoading}
+                        className="flex items-center gap-2"
+                      >
+                        <Tags className="h-4 w-4" />
+                        Assign Aspect ({selectedQuestions.length})
+                      </Button>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        onClick={handleBulkDelete}
+                        disabled={bulkDeleteLoading}
+                        className="flex items-center gap-2"
+                      >
+                        <Trash className="h-4 w-4" />
+                        Hapus Terpilih ({selectedQuestions.length})
+                      </Button>
+                    </>
                   )}
                 </div>
               )}
@@ -369,9 +450,10 @@ export default function QuestionsAdmin() {
                             <Badge variant="outline">
                               Pertanyaan {index + 1}
                             </Badge>
-                            {question.category && (
-                              <Badge variant="secondary">
-                                {question.category}
+
+                            {getAspectName(question.aspectId) && (
+                              <Badge variant="default" className="bg-blue-600">
+                                {getAspectName(question.aspectId)}
                               </Badge>
                             )}
                             {question.isImage === 1 && (
@@ -390,6 +472,18 @@ export default function QuestionsAdmin() {
                           <p className="text-sm font-medium mb-2">
                             {question.questionText}
                           </p>
+                          <div className="mt-2 flex gap-2 items-center">
+                            <span className="text-xs text-muted-foreground mr-2">
+                              Aspect:
+                            </span>
+                            <QuestionAspectSelector
+                              questionId={question.questionId}
+                              currentAspectId={question.aspectId}
+                              assessmentId={selectedAssessmentId}
+                              aspects={aspectsData ?? []}
+                              onSuccess={() => refetch()}
+                            />
+                          </div>
                         </div>
                       </div>
                       <div className="flex items-center gap-2">
@@ -472,6 +566,7 @@ export default function QuestionsAdmin() {
                 category: editingQuestion.category,
                 isImage: editingQuestion.isImage.toString(),
                 imageUrl: editingQuestion.imageUrl,
+                aspectId: editingQuestion.aspectId,
                 options: editingQuestion.options.map((option) => ({
                   ...option,
                   score: option.score ?? 0,
@@ -498,6 +593,15 @@ export default function QuestionsAdmin() {
         onCancel={handleCancelBulkDelete}
         selectedCount={selectedQuestions.length}
         loading={bulkDeleteLoading}
+      />
+
+      <BulkAssignAspectDialog
+        open={bulkAssignAspectDialogOpen}
+        onConfirm={handleConfirmBulkAssignAspect}
+        onCancel={handleCancelBulkAssignAspect}
+        selectedCount={selectedQuestions.length}
+        aspects={aspectsData ?? []}
+        loading={bulkAssignAspectLoading}
       />
 
       <AssessmentConfigDialog

@@ -23,6 +23,7 @@ type QuestionOptionResponse struct {
 	Category     string       `json:"category"`
 	IsImage      string       `json:"isImage"`
 	ImageUrl     string       `json:"imageUrl"`
+	AspectId     *int64       `json:"aspectId"`
 	Options      []OptionData `json:"options"`
 }
 

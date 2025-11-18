@@ -8,4 +8,5 @@ type QuestionData struct {
 	Category     *string `json:"category"`
 	IsImage      *string `json:"isImage"`
 	ImageURL     *string `json:"imageUrl"`
+	AspectID     *int64  `json:"aspectId"`
 }

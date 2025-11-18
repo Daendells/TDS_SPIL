@@ -18,11 +18,10 @@ func SeafarerAssessmentToSeafarerAssessmentData(seafarerAssessment *domain.Seafa
 }
 
 func SeafarerAssessmentCreateRequestToSeafarerAssessment(request *web.SeafarerAssessmentCreateRequest) domain.SeafarerAssessment {
-	now := time.Now()
 	return domain.SeafarerAssessment{
 		SeafarerCode:     request.SeafarerCode,
 		AssessmentTypeID: request.AssessmentTypeID,
-		AssignedAt:       &now,
+		AssignedAt:       time.Now(),
 		Status:           "assigned",
 		AttemptsCount:    0,
 	}

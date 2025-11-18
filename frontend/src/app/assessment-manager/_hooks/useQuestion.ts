@@ -109,6 +109,27 @@ export function useBulkDeleteQuestions() {
   });
 }
 
+export function useBulkUpdateAspect() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, { questionIds: number[]; aspectId: number | null }>({
+    mutationFn: async ({ questionIds, aspectId }) => {
+      const response = await api.put<ApiReturn<void>>(
+        `/api/questions/bulk/aspect`,
+        { questionIds, aspectId }
+      );
+
+      if (!response.data) {
+        throw new Error("Failed to bulk update aspect");
+      }
+    },
+    onSuccess: () => {
+      // Invalidate questions queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["questions"] });
+    },
+  });
+}
+
 // Hook for creating a new question with options
 export function useCreateQuestion() {
   const queryClient = useQueryClient();

@@ -4,9 +4,10 @@ import "time"
 
 type CompetencyType struct {
 	ID          int    `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
-	Code        string `json:"code" gorm:"column:code;not null;unique"`
-	Name        string `json:"name" gorm:"column:name;not null"`
-	Description string `json:"description" gorm:"column:description"`
+	Code        string `json:"code" gorm:"column:code;size:10;not null;unique"`
+	Name        string `json:"name" gorm:"column:name;size:255;not null"`
+	Description string `json:"description" gorm:"column:description;type:text"`
+	Category    string `json:"category" gorm:"column:category;size:2;not null;default:M"` // enum('M','NM')
 	IsActive    bool   `json:"isActive" gorm:"column:is_active;default:true"`
 
 	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;autoCreateTime"`

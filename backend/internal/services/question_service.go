@@ -17,8 +17,10 @@ type QuestionService interface {
 	FindByRole(db *gorm.DB, role string) ([]web.QuestionData, error)
 	FindByAssessmentId(db *gorm.DB, assessmentId uint64) ([]web.QuestionData, error)
 	Update(db *gorm.DB, request *web.QuestionUpdateRequest) (web.QuestionData, error)
+	UpdateAspect(db *gorm.DB, questionId int, aspectId *int64) (web.QuestionData, error)
 	Delete(db *gorm.DB, questionId int) error
 	BulkDelete(db *gorm.DB, questionIds []int) error
+	BulkUpdateAspect(db *gorm.DB, questionIds []int, aspectId *int64) error
 }
 
 type questionServiceImpl struct {
@@ -114,4 +116,23 @@ func (service *questionServiceImpl) Delete(db *gorm.DB, questionId int) error {
 
 func (service *questionServiceImpl) BulkDelete(db *gorm.DB, questionIds []int) error {
 	return service.QuestionRepository.BulkDelete(db, questionIds)
+}
+
+func (service *questionServiceImpl) UpdateAspect(db *gorm.DB, questionId int, aspectId *int64) (web.QuestionData, error) {
+	question, err := service.QuestionRepository.FindById(db, questionId)
+	if err != nil {
+		return web.QuestionData{}, err
+	}
+
+	question.AspectID = aspectId
+	err = service.QuestionRepository.Update(db, &question)
+	if err != nil {
+		return web.QuestionData{}, err
+	}
+
+	return converter.QuestionToQuestionData(&question), nil
+}
+
+func (service *questionServiceImpl) BulkUpdateAspect(db *gorm.DB, questionIds []int, aspectId *int64) error {
+	return service.QuestionRepository.BulkUpdateAspect(db, questionIds, aspectId)
 }

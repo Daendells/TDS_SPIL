@@ -8,34 +8,27 @@ import (
 )
 
 type RouterConfig struct {
-	App                          *gin.Engine
-	ReportController             *controllers.ReportController
-	UserController               *controllers.UserController
-	MentoringReportController    *controllers.MentoringReportController
-	TrainingController           *controllers.TrainingController // DB
-	TrainingGenController        *traininggen.TrainingController // LLM Generator
-	TrainingPlanController       *controllers.TrainingPlanController
-	CompetencyMappingController  *controllers.CompetencyMappingController
+	App                        *gin.Engine
+	ReportController           *controllers.ReportController
+	UserController             *controllers.UserController
+	MentoringReportController  *controllers.MentoringReportController
+	TrainingController        *controllers.TrainingController   // DB
+	TrainingGenController     *traininggen.TrainingController    // LLM Generator
 	CompetencyTypeController     *controllers.CompetencyTypeController
-	QuestionController           *controllers.QuestionController
-	OptionController             *controllers.OptionController
-	AssessmentResultController   *controllers.AssessmentResultController
-	QuestionOptionController     *controllers.QuestionOptionController
-	AssessmentController         *controllers.AssessmentController
-	AssessmentTypeController     *controllers.AssessmentTypeController
-	SeafarerAssessmentController *controllers.SeafarerAssessmentController
-	MasterController             *controllers.MasterController
+	QuestionController         *controllers.QuestionController
+	OptionController           *controllers.OptionController
+	AssessmentResultController *controllers.AssessmentResultController
+	QuestionOptionController   *controllers.QuestionOptionController
+	AssessmentController       *controllers.AssessmentController
 	AssignmentController         *controllers.AssignmentController
-	AuthMiddleware               gin.HandlerFunc
+	AuthMiddleware             gin.HandlerFunc
 }
 
 func (c *RouterConfig) Setup() {
 	c.App.Static("/files", "./public")
-	c.App.Static("/storage", "./storage")
 	c.SetupGuestRouter()
 	c.SetupAuthRouter()
 	c.SetupAssignmentRouter()
-	c.SetupMasterRouter()
 }
 
 func (c *RouterConfig) SetupGuestRouter() {
@@ -55,6 +48,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		report.POST("/upload", c.ReportController.CreateAll)
 		report.GET("/test", c.ReportController.TestPanic)
 	}
+
 
 	trainings := c.App.Group("trainings")
 	{
@@ -136,25 +130,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 	{
 		assessment.GET("/public/:role", c.AssessmentController.FindByRolePublic)
 		assessment.GET("", c.AssessmentController.FindAllAssessments)
-	}
-
-	// Assessment Types endpoints (Public - read only)
-	assessmentTypes := c.App.Group("api/assessment-types")
-	{
-		assessmentTypes.GET("", c.AssessmentTypeController.FindAll)
-		assessmentTypes.GET("/check-status/:id", c.AssessmentTypeController.CheckStatus)
-		assessmentTypes.GET("/:id", c.AssessmentTypeController.FindByID)
-	}
-
-	// Seafarer Assessments endpoints (Public - read only)
-	seafarerAssessments := c.App.Group("api/seafarer-assessments")
-	{
-		seafarerAssessments.GET("", c.SeafarerAssessmentController.FindAll)
-		seafarerAssessments.GET("/check-assignment/:seafarerCode/:assessmentTypeId", c.SeafarerAssessmentController.CheckAssignment)
-		seafarerAssessments.POST("/increment-attempts/:seafarerCode/:assessmentTypeId", c.SeafarerAssessmentController.IncrementAttempts)
-		seafarerAssessments.GET("/:id", c.SeafarerAssessmentController.FindByID)
-		seafarerAssessments.GET("/by-seafarer/:seafarerCode", c.SeafarerAssessmentController.FindBySeafarerCode)
-		seafarerAssessments.GET("/by-assessment-type/:assessmentTypeId", c.SeafarerAssessmentController.FindByAssessmentTypeID)
+		
 	}
 
 	// Register Question and Option routes
@@ -194,32 +170,14 @@ func (c *RouterConfig) SetupAuthRouter() {
 		auth.POST("/logout", c.UserController.Logout)
 	}
 
-
-
-	assessmentAuth := c.App.Group("api/assessments").Use(c.AuthMiddleware)
+	assessmentAuth := c.App.Group("api/assessments")
 	{
 		assessmentAuth.GET("/:role", c.AssessmentController.FindByRole)
 		assessmentAuth.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
 		assessmentAuth.POST("", c.AssessmentController.CreateAssessment)
 		assessmentAuth.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
-		assessmentAuth.POST("/upload-image", c.AssessmentController.UploadAssessmentImage)
 	}
 
-	// Protected Assessment Types endpoints
-	assessmentTypesAuth := c.App.Group("api/assessment-types").Use(c.AuthMiddleware)
-	{
-		assessmentTypesAuth.POST("", c.AssessmentTypeController.Create)
-		assessmentTypesAuth.PUT("/:id", c.AssessmentTypeController.Update)
-		assessmentTypesAuth.DELETE("/:id", c.AssessmentTypeController.Delete)
-	}
-
-	// Protected Seafarer Assessments endpoints
-	seafarerAssessmentsAuth := c.App.Group("api/seafarer-assessments").Use(c.AuthMiddleware)
-	{
-		seafarerAssessmentsAuth.POST("", c.SeafarerAssessmentController.Assign)
-		seafarerAssessmentsAuth.PUT("/:id/status", c.SeafarerAssessmentController.UpdateStatus)
-		seafarerAssessmentsAuth.DELETE("/:id", c.SeafarerAssessmentController.Delete)
-	}
 
 	// Protected Combined question-option routes
 	questionsWithOptionsAuth := c.App.Group("api/questions-with-options").Use(c.AuthMiddleware)

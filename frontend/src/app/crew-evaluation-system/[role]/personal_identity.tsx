@@ -16,8 +16,8 @@ import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { ValueAssessmentData } from "./page";
-import Image from "next/image";
+import { CESAssessmentData } from "./page";
+import HeaderSection from "./header_section";
 
 const FormSchema = z.object({
   fullName: z.string().min(1, { message: "Nama lengkap harus diisi" }),
@@ -29,8 +29,9 @@ const FormSchema = z.object({
 interface PersonalIdentityProps {
   onNext: () => void;
   onBack: () => void;
-  assessmentData: ValueAssessmentData;
-  updateAssessmentData: (data: Partial<ValueAssessmentData>) => void;
+  assessmentData: CESAssessmentData;
+  updateAssessmentData: (data: Partial<CESAssessmentData>) => void;
+  role: string;
 }
 
 export default function PersonalIdentity({
@@ -38,12 +39,20 @@ export default function PersonalIdentity({
   onBack,
   assessmentData,
   updateAssessmentData,
+  role,
 }: PersonalIdentityProps) {
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [verificationError, setVerificationError] = useState("");
   const [lastVerifiedSeafarerCode, setLastVerifiedSeafarerCode] =
     useState<string>("");
+
+  const formatRoleName = (roleSlug: string) => {
+    return roleSlug
+      .split("_")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+      .join(" ");
+  };
 
   // Mutation for incrementing attempts
   const incrementAttemptsMutation = useIncrementAttempts();
@@ -61,10 +70,12 @@ export default function PersonalIdentity({
   // State for checking assignment
   const [querySeafarerCode, setQuerySeafarerCode] = useState<string>("");
   const [queryAssessmentTypeId, setQueryAssessmentTypeId] = useState<number>(0);
+  const [queryRole, setQueryRole] = useState<string>("");
 
   const assignmentQuery = useCheckSeafarerAssignment(
     querySeafarerCode,
-    queryAssessmentTypeId
+    queryAssessmentTypeId,
+    queryRole
   );
 
   const verifySeafarerCode = async (seafarerCode: string) => {
@@ -76,9 +87,10 @@ export default function PersonalIdentity({
     setIsVerifying(true);
     setVerificationError("");
 
-    // Trigger the query by setting the seafarer code and assessment type (hardcoded to 1)
+    // Trigger the query by setting the seafarer code and assessment type (using ID 2 for CES)
     setQuerySeafarerCode(seafarerCode);
-    setQueryAssessmentTypeId(1);
+    setQueryAssessmentTypeId(2);
+    setQueryRole(role);
   };
 
   // Effect to handle query results
@@ -91,7 +103,6 @@ export default function PersonalIdentity({
           data.message ||
             "Anda tidak diassign untuk assessment ini. Silakan hubungi administrator."
         );
-        // Clear the auto-populated fields
         form.setValue("fullName", "");
         form.setValue("rank", "");
         form.setValue("vesselName", "");
@@ -105,7 +116,6 @@ export default function PersonalIdentity({
         setVerificationError(
           "Data pribadi tidak ditemukan. Silakan hubungi administrator untuk memperbarui data Anda."
         );
-        // Clear the auto-populated fields
         form.setValue("fullName", "");
         form.setValue("rank", "");
         form.setValue("vesselName", "");
@@ -119,7 +129,6 @@ export default function PersonalIdentity({
         setVerificationError(
           `Anda sudah melebihi batas maksimal attempts (${data.attemptsCount}/${data.maxAttempts}). Hubungi administrator untuk bantuan lebih lanjut.`
         );
-        // Clear the auto-populated fields
         form.setValue("fullName", "");
         form.setValue("rank", "");
         form.setValue("vesselName", "");
@@ -166,7 +175,6 @@ export default function PersonalIdentity({
     if (value !== lastVerifiedSeafarerCode) {
       setIsVerified(false);
       setVerificationError("");
-      // Clear auto-populated fields when seafarer code changes
       form.setValue("fullName", "");
       form.setValue("rank", "");
       form.setValue("vesselName", "");
@@ -180,10 +188,10 @@ export default function PersonalIdentity({
     }
 
     try {
-      // Increment attempts count
+      // Increment attempts count (using ID 2 for CES)
       await incrementAttemptsMutation.mutateAsync({
         seafarerCode: data.seafarerCode,
-        assessmentTypeId: 1,
+        assessmentTypeId: 2,
       });
 
       // Update assessment data and move to next step
@@ -201,29 +209,10 @@ export default function PersonalIdentity({
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-6">
         {/* Header Section */}
-        <div className="bg-white rounded-lg shadow-sm border p-8 mb-3">
-          <div className="flex justify-between items-center mb-6">
-            <Image
-              width={64}
-              height={64}
-              src="/images/logo1.png"
-              alt="Logo Kiri"
-              className="h-10 w-auto md:h-16"
-            />
-            <div className="text-center">
-              <h1 className="text-lg md:text-3xl font-bold uppercase text-gray-800 mb-2">
-                Value Assessment
-              </h1>
-            </div>
-            <Image
-              width={64}
-              height={64}
-              src="/images/logo2.png"
-              alt="Logo Kanan"
-              className="h-10 w-auto md:h-16"
-            />
-          </div>
-        </div>
+        <HeaderSection
+          title="Crew Evaluation System"
+          subtitle={formatRoleName(role)}
+        />
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
@@ -269,7 +258,7 @@ export default function PersonalIdentity({
                       )}
                       {isVerified && (
                         <p className="text-sm text-green-600 mt-1">
-                          ✓ Seafarer code berhasil diverifikasi
+                          Seafarer code berhasil diverifikasi
                         </p>
                       )}
                       <FormMessage />
@@ -287,7 +276,7 @@ export default function PersonalIdentity({
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Nama akan terisi otomatis setelah verifikasi seaman code"
+                          placeholder="Nama akan terisi otomatis setelah verifikasi seafarer code"
                           {...field}
                           readOnly={true}
                           className="border-gray-300 bg-gray-50 text-gray-700"
@@ -308,7 +297,7 @@ export default function PersonalIdentity({
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Rank akan terisi otomatis setelah verifikasi seaman code"
+                          placeholder="Rank akan terisi otomatis setelah verifikasi seafarer code"
                           {...field}
                           readOnly={true}
                           className="border-gray-300 bg-gray-50 text-gray-700"
@@ -330,7 +319,7 @@ export default function PersonalIdentity({
                       </FormLabel>
                       <FormControl>
                         <Input
-                          placeholder="Nama vessel akan terisi otomatis setelah verifikasi seaman code"
+                          placeholder="Nama vessel akan terisi otomatis setelah verifikasi seafarer code"
                           {...field}
                           readOnly={true}
                           className="border-gray-300 bg-gray-50 text-gray-700"

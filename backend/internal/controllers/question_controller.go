@@ -156,6 +156,7 @@ func (controller *QuestionController) FindByAssessmentId(ctx *gin.Context) {
 			Category:     helpers.PtrToString(question.Category),
 			IsImage:      helpers.PtrToString(question.IsImage),
 			ImageUrl:     helpers.PtrToString(question.ImageURL),
+			AspectId:     question.AspectID,
 			Options:      options,
 		}
 		questionsWithOptions = append(questionsWithOptions, questionWithOptions)
@@ -261,5 +262,81 @@ func (controller *QuestionController) BulkDelete(ctx *gin.Context) {
 		Code:   http.StatusOK,
 		Status: "OK",
 		Data:   "Questions deleted successfully",
+	})
+}
+
+func (controller *QuestionController) UpdateAspect(ctx *gin.Context) {
+	questionIdStr := ctx.Param("questionId")
+	questionId, err := strconv.Atoi(questionIdStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  "Invalid question ID",
+		})
+		return
+	}
+
+	var request web.QuestionUpdateAspectRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	questionData, err := controller.QuestionService.UpdateAspect(controller.DB, questionId, request.AspectID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   questionData,
+	})
+}
+
+func (controller *QuestionController) BulkUpdateAspect(ctx *gin.Context) {
+	var request web.QuestionBulkUpdateAspectRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if len(request.QuestionIds) == 0 {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  "No question IDs provided",
+		})
+		return
+	}
+
+	err := controller.QuestionService.BulkUpdateAspect(controller.DB, request.QuestionIds, request.AspectID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   "Questions aspect updated successfully",
 	})
 }

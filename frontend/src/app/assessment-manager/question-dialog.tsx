@@ -26,6 +26,8 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { useApi } from "@/hooks/use-api";
 import { useUploadAssessmentImage } from "./_hooks/useAssessment";
+import { useGetAspectsByAssessmentId } from "./_hooks/useAspect";
+import { AspectResponse } from "@/types/aspect";
 
 interface Option {
   optionId?: number;
@@ -48,6 +50,7 @@ interface Question {
   isImage?: string;
   imageUrl?: string;
   options?: Option[];
+  aspectId?: number;
 }
 
 interface QuestionDialogProps {
@@ -110,6 +113,7 @@ export default function QuestionDialog({
     category: "",
     isImage: "0",
     imageUrl: "",
+    aspectId: 0,
   });
   const [options, setOptions] = useState<Option[]>([]);
 
@@ -119,6 +123,7 @@ export default function QuestionDialog({
 
   const api = useApi();
   const uploadImageMutation = useUploadAssessmentImage();
+  const { data: aspectsData } = useGetAspectsByAssessmentId(assessmentId);
 
   useEffect(() => {
     if (open) {
@@ -129,6 +134,7 @@ export default function QuestionDialog({
           category: question.category || "",
           isImage: question.isImage || "0",
           imageUrl: question.imageUrl || "",
+          aspectId: question.aspectId || 0,
         });
 
         // If question has existing image, don't show preview (keep as URL only)
@@ -150,6 +156,7 @@ export default function QuestionDialog({
           category: "",
           isImage: "0",
           imageUrl: "",
+          aspectId: 0,
         });
 
         // Reset image upload state for new question
@@ -278,6 +285,7 @@ export default function QuestionDialog({
           category: role === "va_1" ? formData.category : null,
           isImage: formData.isImage,
           imageUrl: imageUrl || null,
+          aspectId: formData.aspectId || null,
           options: optionsWithUploadedImages.map((option) => {
             // Determine action based on option state
             let action = option.action || "update";
@@ -313,6 +321,7 @@ export default function QuestionDialog({
           category: role === "va_1" ? formData.category : "",
           isImage: formData.isImage,
           imageUrl: imageUrl || "",
+          aspectId: formData.aspectId || null,
           options: optionsWithUploadedImages.map((option) => ({
             optionLetter: option.optionLetter,
             optionText: option.optionText,
@@ -461,30 +470,39 @@ export default function QuestionDialog({
                   />
                 </div>
 
-                {role === "va_1" && (
-                  <div>
-                    <Label htmlFor="category" className="text-sm font-medium">
-                      Kategori <span className="text-red-500">*</span>
-                    </Label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, category: value })
-                      }
-                    >
-                      <SelectTrigger className="mt-2">
-                        <SelectValue placeholder="Pilih kategori..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {categories.map((category) => (
-                          <SelectItem key={category} value={category}>
-                            {category}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                )}
+                {aspectsData &&
+                  aspectsData.data &&
+                  aspectsData.data.length > 0 && (
+                    <div>
+                      <Label htmlFor="aspectId" className="text-sm font-medium">
+                        Aspek Penilaian
+                      </Label>
+                      <Select
+                        value={formData.aspectId.toString()}
+                        onValueChange={(value) =>
+                          setFormData({
+                            ...formData,
+                            aspectId: parseInt(value),
+                          })
+                        }
+                      >
+                        <SelectTrigger className="mt-2">
+                          <SelectValue placeholder="Pilih aspek..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="0">Tidak Ada Aspek</SelectItem>
+                          {aspectsData.data.map((aspect: AspectResponse) => (
+                            <SelectItem
+                              key={aspect.id}
+                              value={aspect.id.toString()}
+                            >
+                              {aspect.name} ({aspect.weight}%)
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
