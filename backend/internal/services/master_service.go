@@ -167,7 +167,6 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 	}, nil
 }
 
-// FindById retrieves one master report
 // FindById retrieves one master report with full competencies
 func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 	var master domain.FullReport
