@@ -22,9 +22,7 @@ import HeaderSection from "./header_section";
 const FormSchema = z.object({
   fullName: z.string().min(1, { message: "Nama lengkap harus diisi" }),
   rank: z.string().min(1, { message: "Rank harus dipilih" }),
-  vesselName: z
-    .string()
-    .min(1, { message: "Nama vessel/akademi harus diisi" }),
+  vesselName: z.string().min(1, { message: "Nama vessel/akademi harus diisi" }),
   seafarerCode: z.string().min(1, { message: "Seafarer code harus diisi" }),
 });
 
@@ -72,10 +70,12 @@ export default function PersonalIdentity({
   // State for checking assignment
   const [querySeafarerCode, setQuerySeafarerCode] = useState<string>("");
   const [queryAssessmentTypeId, setQueryAssessmentTypeId] = useState<number>(0);
+  const [queryRole, setQueryRole] = useState<string>("");
 
   const assignmentQuery = useCheckSeafarerAssignment(
     querySeafarerCode,
-    queryAssessmentTypeId
+    queryAssessmentTypeId,
+    queryRole
   );
 
   const verifySeafarerCode = async (seafarerCode: string) => {
@@ -90,6 +90,7 @@ export default function PersonalIdentity({
     // Trigger the query by setting the seafarer code and assessment type (using ID 2 for CES)
     setQuerySeafarerCode(seafarerCode);
     setQueryAssessmentTypeId(2);
+    setQueryRole(role);
   };
 
   // Effect to handle query results
@@ -124,10 +125,7 @@ export default function PersonalIdentity({
       }
 
       // Check if attempts have been exceeded
-      if (
-        data.maxAttempts !== null &&
-        data.attemptsCount >= data.maxAttempts
-      ) {
+      if (data.maxAttempts !== null && data.attemptsCount >= data.maxAttempts) {
         setVerificationError(
           `Anda sudah melebihi batas maksimal attempts (${data.attemptsCount}/${data.maxAttempts}). Hubungi administrator untuk bantuan lebih lanjut.`
         );

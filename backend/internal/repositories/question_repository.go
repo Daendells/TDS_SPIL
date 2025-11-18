@@ -15,6 +15,7 @@ type QuestionRepository interface {
 	Update(db *gorm.DB, question *domain.Question) error
 	Delete(db *gorm.DB, questionId int) error
 	BulkDelete(db *gorm.DB, questionIds []int) error
+	BulkUpdateAspect(db *gorm.DB, questionIds []int, aspectId *int64) error
 }
 
 type questionRepositoryImpl struct {
@@ -62,4 +63,8 @@ func (repository *questionRepositoryImpl) Delete(db *gorm.DB, questionId int) er
 
 func (repository *questionRepositoryImpl) BulkDelete(db *gorm.DB, questionIds []int) error {
 	return db.Where("question_id IN ?", questionIds).Delete(&domain.Question{}).Error
+}
+
+func (repository *questionRepositoryImpl) BulkUpdateAspect(db *gorm.DB, questionIds []int, aspectId *int64) error {
+	return db.Model(&domain.Question{}).Where("question_id IN ?", questionIds).Update("aspect_id", aspectId).Error
 }

@@ -4,7 +4,6 @@ import (
 	"backend/internal/models/domain"
 	"backend/internal/models/web"
 	"backend/internal/repositories"
-	"encoding/json"
 	"errors"
 	"time"
 
@@ -22,7 +21,7 @@ type assessmentResultServiceImpl struct {
 	AssessmentResultRepository repositories.AssessmentResultRepository
 	QuestionRepository         repositories.QuestionRepository
 	OptionRepository           repositories.OptionRepository
-	ReportRepository          *repositories.ReportRepository
+	ReportRepository           *repositories.ReportRepository
 	Log                        *logrus.Logger
 	Validate                   *validator.Validate
 }
@@ -39,7 +38,7 @@ func NewAssessmentResultService(
 		AssessmentResultRepository: assessmentResultRepository,
 		QuestionRepository:         questionRepository,
 		OptionRepository:           optionRepository,
-		ReportRepository:          reportRepository,
+		ReportRepository:           reportRepository,
 		Log:                        log,
 		Validate:                   validate,
 	}
@@ -52,249 +51,138 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 		return nil, err
 	}
 
+	// Get assessment by role
+	var assessment domain.Assessment
+	if err := db.Where("role = ?", request.Role).First(&assessment).Error; err != nil {
+		service.Log.WithError(err).Error("Error finding assessment by role")
+		return nil, err
+	}
+
 	// Find or create assessment result
-	assessmentResult, err := service.AssessmentResultRepository.FindBySeafarerCode(db, request.SeafarerCode)
-	if err != nil && !errors.Is(err, gorm.ErrRecordNotFound) {
+	var assessmentResult *domain.AssessmentResult
+	err = db.Where("seafarer_code = ? AND assessment_id = ?", request.SeafarerCode, assessment.AssessmentID).
+		First(&assessmentResult).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// Create new assessment result
+		assessmentResult = &domain.AssessmentResult{
+			SeafarerCode: request.SeafarerCode,
+			AssessmentID: int64(assessment.AssessmentID),
+			IsCompleted:  0,
+		}
+		if err := db.Create(assessmentResult).Error; err != nil {
+			service.Log.WithError(err).Error("Error creating assessment result")
+			return nil, err
+		}
+	} else if err != nil {
 		service.Log.WithError(err).Error("Error finding assessment result")
 		return nil, err
 	}
 
-	if assessmentResult == nil {
-		// Create new assessment result
-		assessmentResult = &domain.AssessmentResult{
-			SeafarerCode:        request.SeafarerCode,
-			VA1CategoryScores: "{}",
-		}
-		assessmentResult, err = service.AssessmentResultRepository.Create(db, assessmentResult)
-		if err != nil {
-			service.Log.WithError(err).Error("Error creating assessment result")
-			return nil, err
-		}
-	}
-
-	switch request.Role {
-	case "va_1":
-		err = service.calculateVA1Scores(db, assessmentResult, request.Answers)
-	case "va_2":
-		err = service.calculateVA2Scores(db, assessmentResult, request.Answers)
-	case "va_3":
-		err = service.calculateVA3Scores(db, assessmentResult, request.Answers)
-	default:
-		return nil, errors.New("invalid role")
-	}
-
+	// Calculate scores based on aspects
+	err = service.calculateAspectScores(db, assessmentResult, request.Answers, int(assessment.AssessmentID))
 	if err != nil {
-		service.Log.WithError(err).Error("Error calculating scores")
+		service.Log.WithError(err).Error("Error calculating aspect scores")
 		return nil, err
 	}
 
-	service.calculateFinalScores(assessmentResult)
+	// Mark as completed
+	assessmentResult.IsCompleted = 1
+	now := time.Now()
+	assessmentResult.CompletedAt = &now
 
-	assessmentResult, err = service.AssessmentResultRepository.Update(db, assessmentResult)
-
-	if request.Role == "va_3" {
-		err = service.updateReport(db, assessmentResult)
+	// Update assessment result
+	if err := db.Save(assessmentResult).Error; err != nil {
+		service.Log.WithError(err).Error("Error updating assessment result")
+		return nil, err
 	}
 
-	if err != nil {
-		service.Log.WithError(err).Error("Error updating assessment result")
+	// Reload with relations
+	if err := db.Preload("ScoreResults.Aspect").First(assessmentResult, assessmentResult.ID).Error; err != nil {
+		service.Log.WithError(err).Error("Error reloading assessment result")
 		return nil, err
 	}
 
 	return service.convertToAssessmentResultData(assessmentResult), nil
 }
 
-func (service *assessmentResultServiceImpl) updateReport(db *gorm.DB, assessmentResults *domain.AssessmentResult) error {
-	report := &domain.Report{}
-	_, err := service.ReportRepository.FindBySeafarerCode(db, assessmentResults.SeafarerCode, report)
-
-	if err != nil {
+func (service *assessmentResultServiceImpl) calculateAspectScores(db *gorm.DB, assessmentResult *domain.AssessmentResult, answers map[int]int, assessmentID int) error {
+	// Get all aspects for this assessment
+	var aspects []domain.Aspect
+	if err := db.Where("assessment_id = ?", assessmentID).Find(&aspects).Error; err != nil {
 		return err
 	}
 
-	// Convert total_final_score to value_assessment scale
-	// 1 if score < 60
-	// 2 if score >= 60 and < 80
-	// 3 if score >= 80
-	valueAssessmentScore := convertScoreToValueAssessment(assessmentResults.TotalFinalScore)
-
-	// Update only value_assessment field to avoid overwriting empty fields
-	err = db.Model(&domain.Report{}).
-		Where("seafarer_code = ?", assessmentResults.SeafarerCode).
-		Update("value_assessment", valueAssessmentScore).Error
-	
-	if err != nil {
-		service.Log.WithError(err).Error("Error updating report with value assessment score")
+	// Group questions by aspect
+	questionAspectMap := make(map[int]int) // questionID -> aspectID
+	var questions []domain.Question
+	if err := db.Where("assessment_id = ?", assessmentID).Find(&questions).Error; err != nil {
 		return err
 	}
 
-	service.Log.Infof("Report updated successfully: SeafarerCode=%s, TotalFinalScore=%.2f, ValueAssessment=%d", 
-		assessmentResults.SeafarerCode, assessmentResults.TotalFinalScore, valueAssessmentScore)
-
-	return nil
-}
-
-func convertScoreToValueAssessment(totalScore float64) int {
-	if totalScore < 60 {
-		return 1
-	} else if totalScore < 80 {
-		return 2
-	} else {
-		return 3
-	}
-}
-
-
-func (service *assessmentResultServiceImpl) calculateVA1Scores(db *gorm.DB, assessmentResult *domain.AssessmentResult, answers map[int]int) error {
-	allQuestions, err := service.QuestionRepository.FindAll(db)
-	if err != nil {
-		return err
-	}
-
-	var va1Questions []domain.Question
-	for _, q := range allQuestions {
-		if q.Role == "va_1" {
-			va1Questions = append(va1Questions, q)
+	for _, q := range questions {
+		if q.AspectID != nil {
+			questionAspectMap[q.QuestionID] = int(*q.AspectID)
 		}
 	}
 
-	for i := 0; i < len(va1Questions)-1; i++ {
-		for j := i + 1; j < len(va1Questions); j++ {
-			if va1Questions[i].QuestionID > va1Questions[j].QuestionID {
-				va1Questions[i], va1Questions[j] = va1Questions[j], va1Questions[i]
+	// Calculate raw scores per aspect
+	aspectRawScores := make(map[int]int)
+	for questionID, optionID := range answers {
+		option, err := service.OptionRepository.FindById(db, optionID)
+		if err != nil {
+			service.Log.WithError(err).Errorf("Error finding option %d", optionID)
+			continue
+		}
+
+		if aspectID, exists := questionAspectMap[questionID]; exists {
+			aspectRawScores[aspectID] += option.Score
+		}
+	}
+
+	// Create or update score results for each aspect
+	for _, aspect := range aspects {
+		rawScore := aspectRawScores[aspect.ID]
+		// Calculate final score based on weight
+		finalScore := (rawScore * aspect.Weight) / 100
+
+		// Check if score result already exists
+		var existingScoreResult domain.ScoreResult
+		err := db.Where("assessment_result_id = ? AND aspect_id = ?", assessmentResult.ID, aspect.ID).
+			First(&existingScoreResult).Error
+
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			// Create new score result
+			scoreResult := domain.ScoreResult{
+				RawScore:           rawScore,
+				FinalScore:         finalScore,
+				AssessmentResultID: assessmentResult.ID,
+				AspectID:           aspect.ID,
+			}
+			if err := db.Create(&scoreResult).Error; err != nil {
+				return err
+			}
+		} else if err != nil {
+			return err
+		} else {
+			// Update existing score result
+			existingScoreResult.RawScore = rawScore
+			existingScoreResult.FinalScore = finalScore
+			if err := db.Save(&existingScoreResult).Error; err != nil {
+				return err
 			}
 		}
 	}
 
-	questionIdToNumber := make(map[int]int)
-	for i, q := range va1Questions {
-		questionIdToNumber[q.QuestionID] = i + 1
-	}
-
-	categoryMappings := map[string][]int{
-		"integrity":        {1, 6, 16, 21, 26, 31, 36},
-		"customerOriented": {2, 7, 12, 17, 22, 27, 32, 37},
-		"competitive":      {3, 8, 13, 18, 23, 28, 33, 38},
-		"teamWork":         {4, 9, 14, 19, 24, 29, 34, 39},
-		"visioner":         {5, 10, 15, 20, 25, 30, 35, 40},
-	}
-
-	categoryFactors := map[string]float64{
-		"integrity":        24,
-		"customerOriented": 12,
-		"competitive":      31,
-		"teamWork":         10,
-		"visioner":         24,
-	}
-
-	categoryScores := make(map[string]float64)
-	totalRawScore := 0
-
-	for category, questionNumbers := range categoryMappings {
-		categorySum := 0
-		for _, questionNum := range questionNumbers {
-			for questionId, questionNumber := range questionIdToNumber {
-				if questionNumber == questionNum {
-					if optionID, exists := answers[questionId]; exists {
-						option, err := service.OptionRepository.FindById(db, optionID)
-						if err != nil {
-							service.Log.WithError(err).Errorf("Error finding option %d", optionID)
-							continue
-						}
-						categorySum += option.Score
-						totalRawScore += option.Score
-					}
-					break
-				}
-			}
-		}
-		// Calculate category score: (sum/40) * factor
-		categoryScores[category] = (float64(categorySum) / 40.0) * categoryFactors[category]
-	}
-
-	// Calculate COREVA OCAI
-	corevaOcai := categoryScores["integrity"] + categoryScores["customerOriented"] +
-		categoryScores["competitive"] + categoryScores["teamWork"] + categoryScores["visioner"]
-
-	categoryScoresJSON, err := json.Marshal(map[string]float64{
-		"integrity":        categoryScores["integrity"],
-		"customerOriented": categoryScores["customerOriented"],
-		"competitive":      categoryScores["competitive"],
-		"teamWork":         categoryScores["teamWork"],
-		"visioner":         categoryScores["visioner"],
-	})
-	if err != nil {
-		return err
-	}
-
-	assessmentResult.VA1RawScore = totalRawScore
-	assessmentResult.VA1CategoryScores = string(categoryScoresJSON)
-	assessmentResult.CorevaOcai = corevaOcai
-
-	service.Log.Infof("VA1 Calculation - Total Raw Score: %d, COREVA OCAI: %f", totalRawScore, corevaOcai)
-	service.Log.Infof("Category Scores: %s", string(categoryScoresJSON))
-
 	return nil
-}
-
-
-func (service *assessmentResultServiceImpl) calculateVA2Scores(db *gorm.DB, assessmentResult *domain.AssessmentResult, answers map[int]int) error {
-	totalScore := 0
-
-	for _, optionID := range answers {
-		option, err := service.OptionRepository.FindById(db, optionID)
-		if err != nil {
-			return err
-		}
-		totalScore += option.Score
-	}
-
-	assessmentResult.VA2RawScore = totalScore
-	assessmentResult.AwareConverted = float64(totalScore)
-
-	return nil
-}
-
-func (service *assessmentResultServiceImpl) calculateVA3Scores(db *gorm.DB, assessmentResult *domain.AssessmentResult, answers map[int]int) error {
-	totalScore := 0
-
-	for _, optionID := range answers {
-		option, err := service.OptionRepository.FindById(db, optionID)
-		if err != nil {
-			return err
-		}
-		totalScore += option.Score
-	}
-
-	assessmentResult.VA3RawScore = totalScore
-	assessmentResult.GritConverted = float64(totalScore)
-
-	return nil
-}
-
-func (service *assessmentResultServiceImpl) calculateFinalScores(assessmentResult *domain.AssessmentResult) {
-	assessmentResult.CorevaFinal = (assessmentResult.CorevaOcai / 100.0) * 40.0
-	assessmentResult.AwareFinal = (assessmentResult.AwareConverted / 50.0) * 30.0
-	assessmentResult.GritFinal = (assessmentResult.GritConverted / 48.0) * 30.0
-
-	assessmentResult.TotalFinalScore = assessmentResult.CorevaFinal + assessmentResult.AwareFinal + assessmentResult.GritFinal
-
-	if assessmentResult.VA1RawScore > 0 && assessmentResult.VA2RawScore > 0 && assessmentResult.VA3RawScore > 0 {
-		assessmentResult.IsCompleted = true
-		now := time.Now()
-		assessmentResult.CompletedAt = &now
-	}
 }
 
 func (service *assessmentResultServiceImpl) FindBySeafarerCode(db *gorm.DB, seafarerCode string) (*web.AssessmentResultData, error) {
 	assessmentResult, err := service.AssessmentResultRepository.FindBySeafarerCode(db, seafarerCode)
 	if err != nil {
-		// Check if it's a "record not found" error (normal case for seafarer who hasn't completed assessment)
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("assessment result not found")
 		}
-		
-		// For other database errors, log and return the error
 		service.Log.WithError(err).Error("Error finding assessment result by seafarer code")
 		return nil, err
 	}
@@ -303,23 +191,43 @@ func (service *assessmentResultServiceImpl) FindBySeafarerCode(db *gorm.DB, seaf
 }
 
 func (service *assessmentResultServiceImpl) convertToAssessmentResultData(assessmentResult *domain.AssessmentResult) *web.AssessmentResultData {
-	return &web.AssessmentResultData{
-		ID:                assessmentResult.ID,
-		SeafarerCode:        assessmentResult.SeafarerCode,
-		VA1RawScore:       assessmentResult.VA1RawScore,
-		VA2RawScore:       assessmentResult.VA2RawScore,
-		VA3RawScore:       assessmentResult.VA3RawScore,
-		VA1CategoryScores: assessmentResult.VA1CategoryScores,
-		CorevaOcai:        assessmentResult.CorevaOcai,
-		AwareConverted:    assessmentResult.AwareConverted,
-		GritConverted:     assessmentResult.GritConverted,
-		CorevaFinal:       assessmentResult.CorevaFinal,
-		AwareFinal:        assessmentResult.AwareFinal,
-		GritFinal:         assessmentResult.GritFinal,
-		TotalFinalScore:   assessmentResult.TotalFinalScore,
-		IsCompleted:       assessmentResult.IsCompleted,
-		CompletedAt:       assessmentResult.CompletedAt,
-		CreatedAt:         assessmentResult.CreatedAt,
-		UpdatedAt:         assessmentResult.UpdatedAt,
+	data := &web.AssessmentResultData{
+		ID:           assessmentResult.ID,
+		SeafarerCode: assessmentResult.SeafarerCode,
+		AssessmentID: assessmentResult.AssessmentID,
+		IsCompleted:  assessmentResult.IsCompleted,
+		CompletedAt:  assessmentResult.CompletedAt,
+		CreatedAt:    assessmentResult.CreatedAt,
+		UpdatedAt:    assessmentResult.UpdatedAt,
 	}
+
+	// Convert score results if available
+	if len(assessmentResult.ScoreResults) > 0 {
+		data.ScoreResults = make([]web.ScoreResultData, len(assessmentResult.ScoreResults))
+		for i, sr := range assessmentResult.ScoreResults {
+			scoreData := web.ScoreResultData{
+				ID:                 sr.ID,
+				RawScore:           sr.RawScore,
+				FinalScore:         sr.FinalScore,
+				AssessmentResultID: sr.AssessmentResultID,
+				AspectID:           sr.AspectID,
+			}
+
+			// Convert aspect if available
+			if sr.Aspect != nil {
+				aspectData := web.AspectData{
+					ID:           sr.Aspect.ID,
+					Name:         sr.Aspect.Name,
+					Weight:       sr.Aspect.Weight,
+					AssessmentID: sr.Aspect.AssessmentID,
+					QuestionID:   sr.Aspect.QuestionID,
+				}
+				scoreData.Aspect = &aspectData
+			}
+
+			data.ScoreResults[i] = scoreData
+		}
+	}
+
+	return data
 }

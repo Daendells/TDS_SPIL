@@ -212,7 +212,7 @@ export default function PersonalIdentity({
             />
             <div className="text-center">
               <h1 className="text-lg md:text-3xl font-bold uppercase text-gray-800 mb-2">
-                Value Assessment Section 1
+                Value Assessment
               </h1>
             </div>
             <Image

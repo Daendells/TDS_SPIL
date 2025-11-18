@@ -6,23 +6,41 @@ import (
 )
 
 func AssessmentResultToAssessmentResultData(assessmentResult *domain.AssessmentResult) web.AssessmentResultData {
-	return web.AssessmentResultData{
-		ID:                  assessmentResult.ID,
-		SeafarerCode:          assessmentResult.SeafarerCode,
-		VA1RawScore:         assessmentResult.VA1RawScore,
-		VA2RawScore:         assessmentResult.VA2RawScore,
-		VA3RawScore:         assessmentResult.VA3RawScore,
-		VA1CategoryScores:   assessmentResult.VA1CategoryScores,
-		CorevaOcai:          assessmentResult.CorevaOcai,
-		AwareConverted:      assessmentResult.AwareConverted,
-		GritConverted:       assessmentResult.GritConverted,
-		CorevaFinal:         assessmentResult.CorevaFinal,
-		AwareFinal:          assessmentResult.AwareFinal,
-		GritFinal:           assessmentResult.GritFinal,
-		TotalFinalScore:     assessmentResult.TotalFinalScore,
-		IsCompleted:         assessmentResult.IsCompleted,
-		CompletedAt:         assessmentResult.CompletedAt,
-		CreatedAt:           assessmentResult.CreatedAt,
-		UpdatedAt:           assessmentResult.UpdatedAt,
+	data := web.AssessmentResultData{
+		ID:           assessmentResult.ID,
+		SeafarerCode: assessmentResult.SeafarerCode,
+		AssessmentID: assessmentResult.AssessmentID,
+		IsCompleted:  assessmentResult.IsCompleted,
+		CompletedAt:  assessmentResult.CompletedAt,
+		CreatedAt:    assessmentResult.CreatedAt,
+		UpdatedAt:    assessmentResult.UpdatedAt,
 	}
+
+	// Convert score results if available
+	if len(assessmentResult.ScoreResults) > 0 {
+		data.ScoreResults = make([]web.ScoreResultData, len(assessmentResult.ScoreResults))
+		for i, sr := range assessmentResult.ScoreResults {
+			data.ScoreResults[i] = ScoreResultToScoreResultData(&sr)
+		}
+	}
+
+	return data
+}
+
+func ScoreResultToScoreResultData(scoreResult *domain.ScoreResult) web.ScoreResultData {
+	data := web.ScoreResultData{
+		ID:                 scoreResult.ID,
+		RawScore:           scoreResult.RawScore,
+		FinalScore:         scoreResult.FinalScore,
+		AssessmentResultID: scoreResult.AssessmentResultID,
+		AspectID:           scoreResult.AspectID,
+	}
+
+	// Convert aspect if available
+	if scoreResult.Aspect != nil {
+		aspectData := AspectToAspectData(scoreResult.Aspect)
+		data.Aspect = &aspectData
+	}
+
+	return data
 }

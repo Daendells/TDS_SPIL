@@ -5,23 +5,17 @@ import (
 )
 
 type AssessmentResult struct {
-	ID                int        `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
-	SeafarerCode      string     `json:"seafarerCode" gorm:"column:seafarer_code;not null"`
-	VA1RawScore       int        `json:"va1RawScore" gorm:"column:va_1_raw_score;default:0"`
-	VA2RawScore       int        `json:"va2RawScore" gorm:"column:va_2_raw_score;default:0"`
-	VA3RawScore       int        `json:"va3RawScore" gorm:"column:va_3_raw_score;default:0"`
-	VA1CategoryScores string     `json:"va1CategoryScores" gorm:"column:va_1_category_scores;type:json"`
-	CorevaOcai        float64    `json:"corevaOcai" gorm:"column:coreva_ocai;type:decimal(5,2);default:0"`
-	AwareConverted    float64    `json:"awareConverted" gorm:"column:aware_converted;type:decimal(5,2);default:0"`
-	GritConverted     float64    `json:"gritConverted" gorm:"column:grit_converted;type:decimal(5,2);default:0"`
-	CorevaFinal       float64    `json:"corevaFinal" gorm:"column:coreva_final;type:decimal(5,2);default:0"`
-	AwareFinal        float64    `json:"awareFinal" gorm:"column:aware_final;type:decimal(5,2);default:0"`
-	GritFinal         float64    `json:"gritFinal" gorm:"column:grit_final;type:decimal(5,2);default:0"`
-	TotalFinalScore   float64    `json:"totalFinalScore" gorm:"column:total_final_score;type:decimal(5,2);default:0"`
-	IsCompleted       bool       `json:"isCompleted" gorm:"column:is_completed;default:0"`
-	CompletedAt       *time.Time `json:"completedAt" gorm:"column:completed_at"`
-	CreatedAt         time.Time  `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt         time.Time  `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`
+	ID           int64      `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
+	SeafarerCode string     `json:"seafarerCode" gorm:"column:seafarer_code;size:50;not null"`
+	AssessmentID int64      `json:"assessmentId" gorm:"column:assessment_id;not null"`
+	IsCompleted  int8       `json:"isCompleted" gorm:"column:is_completed;default:0"`
+	CompletedAt  *time.Time `json:"completedAt" gorm:"column:completed_at"`
+	CreatedAt    time.Time  `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt    time.Time  `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`
+
+	// Relations - use constraint:false for HasMany to prevent reverse FK constraints
+	Assessment   *Assessment   `json:"assessment,omitempty" gorm:"foreignKey:AssessmentID;references:AssessmentID;constraint:false"`
+	ScoreResults []ScoreResult `json:"scoreResults,omitempty" gorm:"foreignKey:AssessmentResultID;references:ID;constraint:false"`
 }
 
 func (AssessmentResult) TableName() string {

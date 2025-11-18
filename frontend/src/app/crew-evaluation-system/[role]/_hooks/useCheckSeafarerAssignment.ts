@@ -15,15 +15,16 @@ export interface AssignmentCheckResponse {
 
 export function useCheckSeafarerAssignment(
   seafarerCode: string,
-  assessmentTypeId: number
+  assessmentTypeId: number,
+  role: string
 ) {
   const response = useQuery<AssignmentCheckResponse>({
-    queryKey: ["ces-seafarer-assignment", seafarerCode, assessmentTypeId],
-    enabled: !!seafarerCode && !!assessmentTypeId,
+    queryKey: ["ces-seafarer-assignment", seafarerCode, assessmentTypeId, role],
+    enabled: !!seafarerCode && !!assessmentTypeId && !!role,
     queryFn: async () => {
       try {
         const response = await api.get<ApiReturn<AssignmentCheckResponse>>(
-          `/api/seafarer-assessments/check-assignment/${seafarerCode}/${assessmentTypeId}`
+          `/api/seafarer-assessments/check-assignment/${seafarerCode}/${assessmentTypeId}/${role}`
         );
 
         if (!response.data || !response.data.data) {

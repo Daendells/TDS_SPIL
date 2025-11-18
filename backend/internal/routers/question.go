@@ -15,6 +15,8 @@ func QuestionRouter(router *gin.Engine, questionController *controllers.Question
 		questionRoutes.GET("/role/:role", questionController.FindByRole)
 		questionRoutes.GET("/assessment/:assessmentId", questionController.FindByAssessmentId)
 		questionRoutes.PUT("/:questionId", questionController.Update)
+		questionRoutes.PUT("/:questionId/aspect", questionController.UpdateAspect)
+		questionRoutes.PUT("/bulk/aspect", questionController.BulkUpdateAspect)
 		questionRoutes.DELETE("/:questionId", questionController.Delete)
 		questionRoutes.DELETE("/bulk", questionController.BulkDelete)
 	}

@@ -14,6 +14,7 @@ func QuestionToQuestionData(question *domain.Question) web.QuestionData {
 		Category:     question.Category,
 		IsImage:      question.IsImage,
 		ImageURL:     question.ImageURL,
+		AspectID:     question.AspectID,
 	}
 }
 
@@ -37,5 +38,6 @@ func QuestionUpdateRequestToQuestion(request *web.QuestionUpdateRequest) domain.
 		Category:     request.Category,
 		IsImage:      request.IsImage,
 		ImageURL:     request.ImageURL,
+		AspectID:     request.AspectID,
 	}
 }
