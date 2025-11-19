@@ -44,10 +44,10 @@ type MasterReportData struct {
 	IDPProgram                 string              `json:"idpProgram"`
 	HavQuadran2                int                 `json:"havQuadran2"`
 	TalentClassified2          string              `json:"talentClassified2"`
-	ReadinessMonth             int                 `json:"readinessMonth"`
+	ReadinessMonth             *int                `json:"readinessMonth"`
 	CertificateEligible        string              `json:"certificateEligible"`
-	EducationFulfillmentMonths int                 `json:"educationFulfillmentMonths"`
-	TotalReadinessUpdateMonths int                 `json:"totalReadinessUpdateMonths"`
+	EducationFulfillmentMonths *int                `json:"educationFulfillmentMonths"`
+	TotalReadinessUpdateMonths *int                `json:"totalReadinessUpdateMonths"`
 	Keterangan                 string              `json:"keterangan"`
 	TmNm                       int                 `json:"tmNm"`
 	Competencies               []GapCompetencyData `json:"competencies,omitempty"`

@@ -20,6 +20,7 @@ type SeafarerAssessmentService interface {
 	IncrementAttempts(db *gorm.DB, seafarerCode string, assessmentTypeID uint64) (web.SeafarerAssessmentData, error)
 	Delete(db *gorm.DB, id uint64) error
 	CheckAssignment(db *gorm.DB, seafarerCode string, assessmentTypeID uint64) (web.AssignmentCheckResponse, error)
+	CheckAssignmentWithRole(db *gorm.DB, seafarerCode string, assessmentTypeID uint64, role string) (web.AssignmentCheckResponse, error)
 }
 
 type seafarerAssessmentServiceImpl struct {
@@ -199,4 +200,85 @@ func (service *seafarerAssessmentServiceImpl) CheckAssignment(db *gorm.DB, seafa
 
 	return response, nil
 }
+
+func (service *seafarerAssessmentServiceImpl) CheckAssignmentWithRole(db *gorm.DB, seafarerCode string, assessmentTypeID uint64, role string) (web.AssignmentCheckResponse, error) {
+	seafarerAssessment, err := service.SeafarerAssessmentRepository.FindBySeafarerCodeAndAssessmentType(db, seafarerCode, assessmentTypeID)
+	
+	if err != nil {
+		// If record not found, it means not assigned
+		if err == gorm.ErrRecordNotFound {
+			return web.AssignmentCheckResponse{
+				IsAssigned: false,
+				Message: "Seafarer dengan kode '" + seafarerCode + "' tidak diassign untuk assessment type ini. Silakan hubungi administrator untuk mendapatkan akses.",
+				SeafarerCode: seafarerCode,
+				AssessmentTypeID: assessmentTypeID,
+				AttemptsCount: 0,
+				MaxAttempts: nil,
+			}, nil
+		}
+		// Other errors should return error
+		return web.AssignmentCheckResponse{}, err
+	}
+
+	// Fetch assessment type to get max attempts and verify it matches the assessment
+	var assessmentType domain.AssessmentType
+	if err := db.Where("id = ?", assessmentTypeID).First(&assessmentType).Error; err != nil {
+		return web.AssignmentCheckResponse{
+			IsAssigned: false,
+			Message: "Assessment type tidak ditemukan",
+			SeafarerCode: seafarerCode,
+			AssessmentTypeID: assessmentTypeID,
+			AttemptsCount: 0,
+			MaxAttempts: nil,
+		}, nil
+	}
+
+	// Check if there's an assessment with this assessment_type_id and role
+	var assessment domain.Assessment
+	if err := db.Where("assess_type_id = ? AND role = ?", assessmentTypeID, role).First(&assessment).Error; err != nil {
+		return web.AssignmentCheckResponse{
+			IsAssigned: false,
+			Message: "Role '" + role + "' tidak sesuai dengan assessment type yang di-assign. Pastikan Anda membuka halaman assessment yang benar.",
+			SeafarerCode: seafarerCode,
+			AssessmentTypeID: assessmentTypeID,
+			AttemptsCount: seafarerAssessment.AttemptsCount,
+			MaxAttempts: assessmentType.MaxAttempts,
+		}, nil
+	}
+
+	// Record found, so it's assigned. Now fetch the report data
+	report, reportErr := service.ReportRepository.FindBySeafarerCode(db, seafarerCode, &domain.Report{})
+	
+	// Convert to web.ReportData if report found
+	var reportData *web.ReportData
+	if reportErr == nil {
+		reportWebData := web.ReportData{
+			ID: report.ID,
+			SeamanCode: report.SeamanCode,
+			SeafarerCode: report.SeafarerCode,
+			Nama: report.Nama,
+			IDP: report.IDP,
+			Jabatan: report.Jabatan,
+			VesselName: report.VesselName,
+			Certificate: report.Certificate,
+			Age: report.Age,
+			TanggalLahir: report.TanggalLahir,
+			StartDate: report.StartDate,
+		}
+		reportData = &reportWebData
+	}
+	
+	response := web.AssignmentCheckResponse{
+		IsAssigned: true,
+		Message: "Seafarer is assigned to this assessment type and role matches",
+		SeafarerCode: seafarerCode,
+		AssessmentTypeID: assessmentTypeID,
+		PersonalData: reportData,
+		AttemptsCount: seafarerAssessment.AttemptsCount,
+		MaxAttempts: assessmentType.MaxAttempts,
+	}
+
+	return response, nil
+}
+
 

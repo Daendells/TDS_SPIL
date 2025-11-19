@@ -65,8 +65,16 @@ func Bootstrap(config *BootstrapConfig) {
 	questionRepository := repositories.NewQuestionRepository()
 	optionRepository := repositories.NewOptionRepository()
 	assessmentResultRepository := repositories.NewAssessmentResultRepository()
+	masterRepository := repositories.NewMasterRepository(config.Log)
 	trainingRepository := repositories.NewTrainingRepository(config.Log)
+	gapCompetencyRepository := repositories.NewGapCompetencyRepository(config.DB, config.Log)
+	trainingScheduleRepository := repositories.NewTrainingScheduleRepository(config.DB, config.Log)
+	competencyProgramMappingRepository := repositories.NewCompetencyProgramMappingRepository(config.DB)
+	competencyTypeRepository := repositories.NewCompetencyTypeRepository(config.DB)
+	assessmentTypeRepository := repositories.NewAssessmentTypeRepository()
+	seafarerAssessmentRepository := repositories.NewSeafarerAssessmentRepository()
 	assignmentRepo := repositories.NewAssignmentRepository()
+	aspectRepository := repositories.NewAspectRepository(config.Log)
 
 	// --- Services (DB-based)
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository)
@@ -76,8 +84,13 @@ func Bootstrap(config *BootstrapConfig) {
 	optionService := services.NewOptionService(optionRepository, config.Validate)
 	assessmentResultService := services.NewAssessmentResultService(assessmentResultRepository, questionRepository, optionRepository, reportRepository, config.Log, config.Validate)
 	assessmentService := services.NewAssessmentService(repositories.NewAssessmentRepository(), config.Validate)
+	assessmentTypeService := services.NewAssessmentTypeService(assessmentTypeRepository, config.Validate)
+	seafarerAssessmentService := services.NewSeafarerAssessmentService(seafarerAssessmentRepository, reportRepository, config.Validate)
+	masterService := services.NewMasterService(config.DB, config.Log, config.Validate, masterRepository)
 	trainingServiceDB := services.NewTrainingService(config.DB, config.Log, config.Validate, trainingRepository)
+	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, competencyProgramMappingRepository, competencyTypeRepository, config.Log)
 	assignmentService := services.NewAssignmentService(assignmentRepo, config.Validate)
+	aspectService := services.NewAspectService(config.DB, config.Log, aspectRepository)
 
 	// --- Controllers (DB-based)
 	reportController := controllers.NewReportController(reportService, config.Log)
@@ -88,9 +101,15 @@ func Bootstrap(config *BootstrapConfig) {
 	assessmentResultController := controllers.NewAssessmentResultController(assessmentResultService, config.Log, config.DB)
 	questionOptionController := controllers.NewQuestionOptionController(config.DB, questionService, optionService, config.Log)
 	assessmentController := controllers.NewAssessmentController(config.Log, config.DB, assessmentService, questionService, optionService)
+	assessmentTypeController := controllers.NewAssessmentTypeController(config.Log, config.DB, assessmentTypeService)
+	seafarerAssessmentController := controllers.NewSeafarerAssessmentController(config.Log, config.DB, seafarerAssessmentService)
+	masterController := controllers.NewMasterController(masterService, config.Log)
 	trainingControllerDB := controllers.NewTrainingController(trainingServiceDB, config.Log)
+	trainingPlanController := controllers.NewTrainingPlanController(trainingPlanService, config.Log)
+	competencyMappingController := controllers.NewCompetencyMappingController(config.DB, config.Log, competencyProgramMappingRepository, trainingRepository)
 	assignmentController := controllers.NewAssignmentController(config.DB, assignmentService)
 	competencyTypeController := controllers.NewCompetencyTypeController(competencyTypeRepository, config.Log)
+	aspectController := controllers.NewAspectController(config.Log, aspectService)
 
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(
@@ -105,21 +124,26 @@ func Bootstrap(config *BootstrapConfig) {
 
 	// --- Router setup
 	routerConfig := &routers.RouterConfig{
-		App:                        config.App,
-		ReportController:           reportController,
-		UserController:             userController,
-		MentoringReportController:  mentoringReportController,
-		TrainingController:        trainingControllerDB,   // DB
-		TrainingGenController:     trainingGenController,   // LLM Generator
+		App:                          config.App,
+		ReportController:             reportController,
+		UserController:               userController,
+		MentoringReportController:    mentoringReportController,
+		TrainingController:           trainingControllerDB,  // DB
+		TrainingGenController:        trainingGenController, // LLM Generator
+		TrainingPlanController:       trainingPlanController,
+		CompetencyMappingController:  competencyMappingController,
 		CompetencyTypeController:     competencyTypeController,
-		QuestionController:         questionController,
-		OptionController:           optionController,
-		AssessmentResultController: assessmentResultController,
-		QuestionOptionController:   questionOptionController,
-		AssessmentController:       assessmentController,
-		AuthMiddleware:             authMiddleware,
+		QuestionController:           questionController,
+		OptionController:             optionController,
+		AssessmentResultController:   assessmentResultController,
+		QuestionOptionController:     questionOptionController,
+		AssessmentController:         assessmentController,
+		AssessmentTypeController:     assessmentTypeController,
+		SeafarerAssessmentController: seafarerAssessmentController,
+		MasterController:             masterController,
+		AspectController:             aspectController,
+		AuthMiddleware:               authMiddleware,
 		AssignmentController:         assignmentController,
 	}
-
 	routerConfig.Setup()
 }

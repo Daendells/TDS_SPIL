@@ -103,6 +103,15 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 		return nil, err
 	}
 
+	if request.Role == "va_1" || request.Role == "va_2" || request.Role == "va_3" {
+		// Update ValueAssessment in Report table for VA_1, VA_2, VA_3
+		if err := service.updateValueAssessmentScore(db, &assessment, assessmentResult, request); err != nil {
+			service.Log.WithError(err).Error("Error updating value assessment score in report")
+			// Don't return error, just log it - assessment submission should still succeed
+		}
+	}
+
+
 	return service.convertToAssessmentResultData(assessmentResult), nil
 }
 
@@ -230,4 +239,39 @@ func (service *assessmentResultServiceImpl) convertToAssessmentResultData(assess
 	}
 
 	return data
+}
+
+func (service *assessmentResultServiceImpl) updateValueAssessmentScore(db *gorm.DB, assessment *domain.Assessment, assessmentResult *domain.AssessmentResult, request *web.AssessmentSubmitRequest) error {
+    // Check if this is a Value Assessment (VA_1, VA_2, or VA_3)
+    assessmentName := assessment.Role
+
+
+    // Calculate total final score from all aspects
+    var totalFinalScore int
+    for _, scoreResult := range assessmentResult.ScoreResults {
+        totalFinalScore += scoreResult.FinalScore
+    }
+
+    // Find report by seafarer code
+    report, err := (*service.ReportRepository).FindBySeafarerCode(db, request.SeafarerCode, &domain.Report{})
+    if err != nil {
+        if errors.Is(err, gorm.ErrRecordNotFound) {
+            service.Log.Warnf("Report not found for seafarer code: %s", assessmentResult.SeafarerCode)
+            return nil // Don't fail if report doesn't exist
+        }
+        return err
+    }
+
+    // Update ValueAssessment field
+    report.ValueAssessment = totalFinalScore
+
+    // Save updated report
+    if err := db.Save(report).Error; err != nil {
+        return err
+    }
+
+    service.Log.Infof("Updated ValueAssessment score to %d for seafarer %s (assessment: %s)", 
+        totalFinalScore, assessmentResult.SeafarerCode, assessmentName)
+
+    return nil
 }

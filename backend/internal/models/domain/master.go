@@ -29,10 +29,10 @@ type MasterReport struct {
 	IDPProgram                 string `json:"idpProgram" gorm:"column:idp_program"`
 	HavQuadran2                int    `json:"havQuadran2" gorm:"column:hav_quadran2"`
 	TalentClassified2          string `json:"talentClassified2" gorm:"column:talent_classified2"`
-	ReadinessMonth             int    `json:"readinessMonth" gorm:"column:readiness_month"`
+	ReadinessMonth             *int   `json:"readinessMonth" gorm:"column:readiness_month"`
 	CertificateEligible        string `json:"certificateEligible" gorm:"column:certificate_eligible"`
-	EducationFulfillmentMonths int    `json:"educationFulfillmentMonths" gorm:"column:education_fulfillment_months"`
-	TotalReadinessUpdateMonths int    `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness_update_months"`
+	EducationFulfillmentMonths *int   `json:"educationFulfillmentMonths" gorm:"column:education_fulfillment_months"`
+	TotalReadinessUpdateMonths *int   `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness_update_months"`
 	Keterangan                 string `json:"keterangan" gorm:"column:keterangan"`
 	TmNm                       int    `json:"tmNm" gorm:"column:tm_nm"`
 	StartDate                  string `json:"startDate" gorm:"column:start_date"` //
