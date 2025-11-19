@@ -159,30 +159,35 @@ func (c *RouterConfig) SetupGuestRouter() {
 		seafarerAssessments.GET("/by-assessment-type/:assessmentTypeId", c.SeafarerAssessmentController.FindByAssessmentTypeID)
 	}
 
-	assignment := c.App.Group("/api/assignments")
-	{
-		assignment.GET("", c.AssignmentController.ListPaged)
-		assignment.POST("", c.AssignmentController.Create)
-		assignment.POST("/bulk", c.AssignmentController.BulkCreate)
-		assignment.PUT("/:id", c.AssignmentController.Update)
-		assignment.DELETE("/:id", c.AssignmentController.Delete)
-	}
-
-	masterReports := c.App.Group("/api/master-reports")
-
-	{
-		masterReports.GET("", c.MasterController.FindAll)
-		masterReports.GET("/:id", c.MasterController.FindById)
-		masterReports.POST("", c.MasterController.Create)
-		masterReports.PUT("/:id", c.MasterController.Update)
-		masterReports.DELETE("/:id", c.MasterController.Delete)
-
-	}
-
 	// Register Question and Option routes
 	QuestionRouter(c.App, c.QuestionController)
 	OptionRouter(c.App, c.OptionController)
 	AspectRouter(c.App, c.AspectController)
+}
+func (r *RouterConfig) SetupMasterRouter() {
+
+	group := r.App.Group("/api/master-reports")
+
+	{
+		group.GET("", r.MasterController.FindAll)
+		group.GET("/:id", r.MasterController.FindById)
+		group.POST("", r.MasterController.Create)
+		group.PUT("/:id", r.MasterController.Update)
+		group.DELETE("/:id", r.MasterController.Delete)
+
+	}
+}
+
+// --- Router assignment baru
+func (r *RouterConfig) SetupAssignmentRouter() {
+	group := r.App.Group("/api/assignments")
+	{
+		group.GET("", r.AssignmentController.ListPaged)
+		group.POST("", r.AssignmentController.Create)
+		group.POST("/bulk", r.AssignmentController.BulkCreate)
+		group.PUT("/:id", r.AssignmentController.Update)
+		group.DELETE("/:id", r.AssignmentController.Delete)
+	}
 }
 
 func (c *RouterConfig) SetupAuthRouter() {
@@ -215,7 +220,6 @@ func (c *RouterConfig) SetupAuthRouter() {
 		seafarerAssessmentsAuth.POST("", c.SeafarerAssessmentController.Assign)
 		seafarerAssessmentsAuth.PUT("/:id/status", c.SeafarerAssessmentController.UpdateStatus)
 		seafarerAssessmentsAuth.DELETE("/:id", c.SeafarerAssessmentController.Delete)
-	}
 	}
 
 	// Protected Combined question-option routes
