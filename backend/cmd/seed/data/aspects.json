@@ -1,0 +1,10 @@
+[
+  {"id": 1, "name": "Integrity", "weight": 40, "assessmentId": 1, "questionId": null},
+  {"id": 2, "name": "Customer Oriented", "weight": 25, "assessmentId": 1, "questionId": null},
+  {"id": 3, "name": "Competitive", "weight": 15, "assessmentId": 1, "questionId": null},
+  {"id": 4, "name": "Team Work", "weight": 10, "assessmentId": 1, "questionId": null},
+  {"id": 5, "name": "Visioner", "weight": 10, "assessmentId": 1, "questionId": null},
+  {"id": 6, "name": "Awareness Score", "weight": 100, "assessmentId": 2, "questionId": null},
+  {"id": 7, "name": "Grit Score", "weight": 100, "assessmentId": 3, "questionId": null},
+  {"id": 8, "name": "Technical Knowledge", "weight": 100, "assessmentId": 4, "questionId": null}
+]

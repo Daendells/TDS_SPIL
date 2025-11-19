@@ -290,6 +290,65 @@ func (controller *SeafarerAssessmentController) CheckAssignment(ctx *gin.Context
 	})
 }
 
+func (controller *SeafarerAssessmentController) CheckAssignmentWithRole(ctx *gin.Context) {
+	seafarerCode := ctx.Param("seafarerCode")
+	assessmentTypeIDStr := ctx.Param("assessmentTypeId")
+	role := ctx.Param("role")
+
+	if seafarerCode == "" {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  "Seafarer code is required",
+		})
+		return
+	}
+
+	if role == "" {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  "Role is required",
+		})
+		return
+	}
+
+	assessmentTypeID, err := strconv.ParseUint(assessmentTypeIDStr, 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "BAD REQUEST",
+			Error:  "Invalid assessment type ID",
+		})
+		return
+	}
+
+	result, err := controller.SeafarerAssessmentService.CheckAssignmentWithRole(controller.DB, seafarerCode, assessmentTypeID, role)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	if !result.IsAssigned {
+		ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
+			Code:   http.StatusUnauthorized,
+			Status: "UNAUTHORIZED",
+			Error:  result.Message,
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   result,
+	})
+}
+
 func (controller *SeafarerAssessmentController) IncrementAttempts(ctx *gin.Context) {
 	seafarerCode := ctx.Param("seafarerCode")
 	assessmentTypeID, err := strconv.ParseUint(ctx.Param("assessmentTypeId"), 10, 64)

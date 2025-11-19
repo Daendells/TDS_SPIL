@@ -44,7 +44,7 @@ func main() {
 
 func seedUsers(db *gorm.DB) error {
 	users := []domain.User{
-		{ID: 1, Username: "admin", Password: "$2a$10$YourHashedPasswordHere"},
+		{ID: 1, Username: "admin", Password: "$2a$10$i73dulm0qkkUwHfbgW80AuisPWji64sPnEwziy8mTiMOKxSOYcdMy"},
 	}
 
 	for _, user := range users {
@@ -63,14 +63,7 @@ func seedAssessmentTypes(db *gorm.DB) error {
 
 	types := []domain.AssessmentType{
 		{ID: 1, AssessmentTypeName: "Value Assessment", StartTime: parseTime("2025-01-01 08:00:00"), EndTime: parseTime("2025-12-31 17:00:00"), MaxAttempts: intPtr(3)},
-		{ID: 2, AssessmentTypeName: "KKM", StartTime: parseTime("2025-02-01 08:00:00"), EndTime: parseTime("2025-12-31 17:00:00"), MaxAttempts: intPtr(2)},
-		{ID: 3, AssessmentTypeName: "Masinis 2", StartTime: parseTime("2025-03-01 08:00:00"), EndTime: parseTime("2025-12-31 17:00:00"), MaxAttempts: intPtr(5)},
-		{ID: 4, AssessmentTypeName: "Mualim 1", StartTime: parseTime("2025-04-01 08:00:00"), EndTime: parseTime("2025-12-31 17:00:00"), MaxAttempts: intPtr(4)},
-		{ID: 5, AssessmentTypeName: "Nakhoda", StartTime: parseTime("2025-05-01 08:00:00"), EndTime: parseTime("2025-12-31 17:00:00"), MaxAttempts: intPtr(3)},
-		{ID: 6, AssessmentTypeName: "Masinis 3", StartTime: parseTime("2025-03-01 08:00:00"), EndTime: parseTime("2025-12-31 17:00:00"), MaxAttempts: intPtr(3)},
-		{ID: 7, AssessmentTypeName: "Masinis 4", StartTime: parseTime("2025-03-01 08:00:00"), EndTime: parseTime("2025-12-31 17:00:00"), MaxAttempts: intPtr(3)},
-		{ID: 8, AssessmentTypeName: "Mualim 2", StartTime: parseTime("2025-04-01 08:00:00"), EndTime: parseTime("2025-12-31 17:00:00"), MaxAttempts: intPtr(3)},
-		{ID: 9, AssessmentTypeName: "Mualim 3", StartTime: parseTime("2025-04-01 08:00:00"), EndTime: parseTime("2025-12-31 17:00:00"), MaxAttempts: intPtr(3)},
+		{ID: 2, AssessmentTypeName: "CES", StartTime: parseTime("2025-02-01 08:00:00"), EndTime: parseTime("2025-12-31 17:00:00"), MaxAttempts: intPtr(2)},
 	}
 
 	for _, t := range types {
@@ -87,13 +80,13 @@ func seedAssessments(db *gorm.DB) error {
 		{AssessmentID: 2, AssessTypeID: uint64Ptr(1), Role: "va_2", AssessmentName: "AWARE", UsingTimer: true, TimerLimitMinutes: uint64Ptr(0)},
 		{AssessmentID: 3, AssessTypeID: uint64Ptr(1), Role: "va_3", AssessmentName: "GRIT", UsingTimer: true, TimerLimitMinutes: uint64Ptr(15)},
 		{AssessmentID: 4, AssessTypeID: uint64Ptr(2), Role: "kkm", AssessmentName: "KKM", UsingTimer: false, TimerLimitMinutes: nil},
-		{AssessmentID: 5, AssessTypeID: uint64Ptr(3), Role: "masinis_2", AssessmentName: "Masinis 2", UsingTimer: false, TimerLimitMinutes: nil},
-		{AssessmentID: 6, AssessTypeID: uint64Ptr(6), Role: "masinis_3", AssessmentName: "Masinis 3", UsingTimer: false, TimerLimitMinutes: nil},
-		{AssessmentID: 7, AssessTypeID: uint64Ptr(7), Role: "masinis_4", AssessmentName: "Masinis 4", UsingTimer: false, TimerLimitMinutes: nil},
-		{AssessmentID: 8, AssessTypeID: uint64Ptr(4), Role: "mualim_1", AssessmentName: "Mualim 1", UsingTimer: false, TimerLimitMinutes: nil},
-		{AssessmentID: 9, AssessTypeID: uint64Ptr(8), Role: "mualim_2", AssessmentName: "Mualim 2", UsingTimer: false, TimerLimitMinutes: nil},
-		{AssessmentID: 10, AssessTypeID: uint64Ptr(9), Role: "mualim_3", AssessmentName: "Mualim 3", UsingTimer: false, TimerLimitMinutes: nil},
-		{AssessmentID: 11, AssessTypeID: uint64Ptr(5), Role: "nahkoda", AssessmentName: "Nahkoda", UsingTimer: false, TimerLimitMinutes: nil},
+		{AssessmentID: 5, AssessTypeID: uint64Ptr(2), Role: "masinis_2", AssessmentName: "Masinis 2", UsingTimer: false, TimerLimitMinutes: nil},
+		{AssessmentID: 6, AssessTypeID: uint64Ptr(2), Role: "masinis_3", AssessmentName: "Masinis 3", UsingTimer: false, TimerLimitMinutes: nil},
+		{AssessmentID: 7, AssessTypeID: uint64Ptr(2), Role: "masinis_4", AssessmentName: "Masinis 4", UsingTimer: false, TimerLimitMinutes: nil},
+		{AssessmentID: 8, AssessTypeID: uint64Ptr(2), Role: "mualim_1", AssessmentName: "Mualim 1", UsingTimer: false, TimerLimitMinutes: nil},
+		{AssessmentID: 9, AssessTypeID: uint64Ptr(2), Role: "mualim_2", AssessmentName: "Mualim 2", UsingTimer: false, TimerLimitMinutes: nil},
+		{AssessmentID: 10, AssessTypeID: uint64Ptr(2), Role: "mualim_3", AssessmentName: "Mualim 3", UsingTimer: false, TimerLimitMinutes: nil},
+		{AssessmentID: 11, AssessTypeID: uint64Ptr(2), Role: "nahkoda", AssessmentName: "Nahkoda", UsingTimer: false, TimerLimitMinutes: nil},
 	}
 
 	for _, a := range assessments {
