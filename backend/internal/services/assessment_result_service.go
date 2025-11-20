@@ -103,14 +103,11 @@ func (service *assessmentResultServiceImpl) SubmitAssessment(db *gorm.DB, reques
 		return nil, err
 	}
 
-	if request.Role == "va_1" || request.Role == "va_2" || request.Role == "va_3" {
-		// Update ValueAssessment in Report table for VA_1, VA_2, VA_3
-		if err := service.updateValueAssessmentScore(db, &assessment, assessmentResult, request); err != nil {
-			service.Log.WithError(err).Error("Error updating value assessment score in report")
-			// Don't return error, just log it - assessment submission should still succeed
-		}
+	// Calculate and save to report_scores table
+	if err := service.calculateAndSaveReportScore(db, &assessment, assessmentResult, request); err != nil {
+		service.Log.WithError(err).Error("Error calculating and saving report score")
+		// Don't return error, just log it - assessment submission should still succeed
 	}
-
 
 	return service.convertToAssessmentResultData(assessmentResult), nil
 }
@@ -186,6 +183,8 @@ func (service *assessmentResultServiceImpl) calculateAspectScores(db *gorm.DB, a
 	return nil
 }
 
+
+
 func (service *assessmentResultServiceImpl) FindBySeafarerCode(db *gorm.DB, seafarerCode string) (*web.AssessmentResultData, error) {
 	assessmentResult, err := service.AssessmentResultRepository.FindBySeafarerCode(db, seafarerCode)
 	if err != nil {
@@ -241,37 +240,158 @@ func (service *assessmentResultServiceImpl) convertToAssessmentResultData(assess
 	return data
 }
 
-func (service *assessmentResultServiceImpl) updateValueAssessmentScore(db *gorm.DB, assessment *domain.Assessment, assessmentResult *domain.AssessmentResult, request *web.AssessmentSubmitRequest) error {
-    // Check if this is a Value Assessment (VA_1, VA_2, or VA_3)
-    assessmentName := assessment.Role
+func (service *assessmentResultServiceImpl) calculateAndSaveReportScore(db *gorm.DB, assessment *domain.Assessment, assessmentResult *domain.AssessmentResult, request *web.AssessmentSubmitRequest) error {
+	// Get the assessment type
+	var assessmentType domain.AssessmentType
+	if err := db.Where("id = ?", assessment.AssessTypeID).First(&assessmentType).Error; err != nil {
+		service.Log.WithError(err).Error("Error finding assessment type")
+		return err
+	}
 
+	var finalScore int
 
-    // Calculate total final score from all aspects
-    var totalFinalScore int
-    for _, scoreResult := range assessmentResult.ScoreResults {
-        totalFinalScore += scoreResult.FinalScore
-    }
+	// Check if this is a Value Assessment
+	if assessmentType.AssessmentTypeName == "Value Assessment" {
+		// For Value Assessment: aggregate all scores from same seafarer + Value Assessment type
+		var err error
+		finalScore, err = service.calculateValueAssessmentScore(db, request.SeafarerCode)
+		if err != nil {
+			return err
+		}
 
-    // Find report by seafarer code
-    report, err := (*service.ReportRepository).FindBySeafarerCode(db, request.SeafarerCode, &domain.Report{})
-    if err != nil {
-        if errors.Is(err, gorm.ErrRecordNotFound) {
-            service.Log.Warnf("Report not found for seafarer code: %s", assessmentResult.SeafarerCode)
-            return nil // Don't fail if report doesn't exist
-        }
-        return err
-    }
+		// Find or create report_scores entry for this assessment type
+		if err := service.saveReportScore(db, request.SeafarerCode, assessment.AssessTypeID, finalScore); err != nil {
+			return err
+		}
 
-    // Update ValueAssessment field
-    report.ValueAssessment = totalFinalScore
+		service.Log.Infof("Saved Value Assessment score %d to report_scores for seafarer %s", finalScore, request.SeafarerCode)
+	} else {
+		// For other assessment types: use the final score directly from assessment_results
+		// Calculate total final score from all aspects of this assessment result
+		finalScore = 0
+		for _, scoreResult := range assessmentResult.ScoreResults {
+			finalScore += scoreResult.FinalScore
+		}
 
-    // Save updated report
-    if err := db.Save(report).Error; err != nil {
-        return err
-    }
+		// Find or create report_scores entry
+		if err := service.saveReportScore(db, request.SeafarerCode, assessment.AssessTypeID, finalScore); err != nil {
+			return err
+		}
 
-    service.Log.Infof("Updated ValueAssessment score to %d for seafarer %s (assessment: %s)", 
-        totalFinalScore, assessmentResult.SeafarerCode, assessmentName)
+		service.Log.Infof("Saved %s score %d to report_scores for seafarer %s", assessmentType.AssessmentTypeName, finalScore, request.SeafarerCode)
+	}
 
-    return nil
+	return nil
+}
+
+// calculateValueAssessmentScore aggregates all Value Assessment scores for a seafarer
+// Weight: VA_1 = 40%, VA_2 = 30%, VA_3 = 30%
+// Conversion: <60 = 1, <80 = 2, >=80 = 3
+func (service *assessmentResultServiceImpl) calculateValueAssessmentScore(db *gorm.DB, seafarerCode string) (int, error) {
+	// Get Value Assessment type ID
+	var assessmentType domain.AssessmentType
+	if err := db.Where("assessment_type_name = ?", "Value Assessment").First(&assessmentType).Error; err != nil {
+		service.Log.WithError(err).Error("Error finding Value Assessment type")
+		return 0, err
+	}
+
+	// Get all assessments of type Value Assessment
+	var assessments []domain.Assessment
+	if err := db.Where("assess_type_id = ?", assessmentType.ID).Find(&assessments).Error; err != nil {
+		service.Log.WithError(err).Error("Error finding assessments for Value Assessment type")
+		return 0, err
+	}
+
+	// Map to store scores for each VA role
+	vaScores := make(map[string]int) // role -> score
+
+	// Get assessment results for this seafarer with each VA assessment
+	for _, assessment := range assessments {
+		var assessmentResult domain.AssessmentResult
+		if err := db.Where("seafarer_code = ? AND assessment_id = ?", seafarerCode, assessment.AssessmentID).
+			Preload("ScoreResults.Aspect").
+			First(&assessmentResult).Error; err != nil {
+			// If no result found for this VA, continue to next
+			if errors.Is(err, gorm.ErrRecordNotFound) {
+				continue
+			}
+			service.Log.WithError(err).Error("Error finding assessment result")
+			return 0, err
+		}
+
+		// Calculate total final score for this VA assessment
+		vaScore := 0
+		for _, sr := range assessmentResult.ScoreResults {
+			vaScore += sr.FinalScore
+		}
+
+		// Store score by role
+		vaScores[assessment.Role] = vaScore
+	}
+
+	// Calculate weighted total
+	// VA_1: 40%, VA_2: 30%, VA_3: 30%
+	va1Score := vaScores["va_1"]
+	va2Score := vaScores["va_2"]
+	va3Score := vaScores["va_3"]
+
+	totalScore := (va1Score * 40 / 100) + (va2Score * 30 / 100) + (va3Score * 30 / 100)
+
+	// Convert to scale 1-3
+	// <60 = 1, <80 = 2, >=80 = 3
+	var finalScore int
+	if totalScore < 60 {
+		finalScore = 1
+	} else if totalScore < 80 {
+		finalScore = 2
+	} else {
+		finalScore = 3
+	}
+
+	service.Log.Infof("Value Assessment calculation for seafarer %s: VA_1=%d, VA_2=%d, VA_3=%d, Total=%.0f, Final=%d",
+		seafarerCode, va1Score, va2Score, va3Score, float64(totalScore), finalScore)
+
+	return finalScore, nil
+}
+
+// saveReportScore saves or updates a report score entry
+func (service *assessmentResultServiceImpl) saveReportScore(db *gorm.DB, seafarerCode string, assessmentTypeID *uint64, score int) error {
+	// Find report by seafarer code
+	report, err := (*service.ReportRepository).FindBySeafarerCode(db, seafarerCode, &domain.Report{})
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			service.Log.Warnf("Report not found for seafarer code: %s", seafarerCode)
+			return nil // Don't fail if report doesn't exist
+		}
+		return err
+	}
+
+	// Check if report_scores entry already exists
+	var reportScore domain.ReportScore
+	err = db.Where("report_id = ? AND assessment_type_id = ?", report.ID, assessmentTypeID).
+		First(&reportScore).Error
+
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		// Create new entry
+		reportScore = domain.ReportScore{
+			ReportID:         int64(report.ID),
+			AssessmentTypeID: *assessmentTypeID,
+			Score:            score,
+		}
+		if err := db.Create(&reportScore).Error; err != nil {
+			service.Log.WithError(err).Error("Error creating report score")
+			return err
+		}
+	} else if err != nil {
+		return err
+	} else {
+		// Update existing entry
+		reportScore.Score = score
+		if err := db.Save(&reportScore).Error; err != nil {
+			service.Log.WithError(err).Error("Error updating report score")
+			return err
+		}
+	}
+
+	return nil
 }

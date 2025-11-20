@@ -18,6 +18,14 @@ type GapCompetencyData struct {
 	CompetencyType   CompetencyTypeData `json:"competencyType"`
 }
 
+// ReportScoreData represents score for an assessment type
+type ReportScoreData struct {
+	ID               int                `json:"id"`
+	Score            int                `json:"score"`
+	AssessmentTypeID uint64             `json:"assessmentTypeId"`
+	AssessmentType   AssessmentTypeData `json:"assessmentType,omitempty"`
+}
+
 // Mirrors domain.MasterReport 1:1 so the frontend gets all columns.
 type MasterReportData struct {
 	ID                         int                 `json:"id"`
@@ -51,6 +59,7 @@ type MasterReportData struct {
 	Keterangan                 string              `json:"keterangan"`
 	TmNm                       int                 `json:"tmNm"`
 	Competencies               []GapCompetencyData `json:"competencies,omitempty"`
+	ReportScores               []ReportScoreData   `json:"reportScores,omitempty"`
 }
 
 type MasterListRequest struct {
@@ -143,6 +152,7 @@ type FullReportResponse struct {
 	Keterangan                 *string             `json:"keterangan"`
 	TmNm                       *int                `json:"tmNm"`
 	Competencies               []GapCompetencyData `json:"competencies"`
+	ReportScores               []ReportScoreData   `json:"reportScores,omitempty"`
 }
 
 // CreateReportResponse is the response after creating a report

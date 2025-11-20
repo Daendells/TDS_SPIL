@@ -65,8 +65,9 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 	}
 	db = db.Limit(limit)
 
-	// --- Preload GapCompetencies with CompetencyType ---
-	db = db.Preload("GapCompetencies").Preload("GapCompetencies.CompetencyType")
+	// --- Preload GapCompetencies with CompetencyType and ReportScores with AssessmentType ---
+	db = db.Preload("GapCompetencies").Preload("GapCompetencies.CompetencyType").
+		Preload("ReportScores").Preload("ReportScores.AssessmentType")
 
 	// --- execute query ---
 	var rows []domain.MasterReport
@@ -97,6 +98,25 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 					Name: gc.CompetencyType.Name,
 				},
 			})
+		}
+
+		// Map report scores
+		reportScores := make([]web.ReportScoreData, 0, len(r.ReportScores))
+		for _, rs := range r.ReportScores {
+			if rs.AssessmentType != nil {
+				reportScores = append(reportScores, web.ReportScoreData{
+					ID:               rs.ID,
+					Score:            rs.Score,
+					AssessmentTypeID: rs.AssessmentTypeID,
+					AssessmentType: web.AssessmentTypeData{
+						ID:                 rs.AssessmentType.ID,
+						AssessmentTypeName: rs.AssessmentType.AssessmentTypeName,
+						StartTime:          rs.AssessmentType.StartTime,
+						EndTime:            rs.AssessmentType.EndTime,
+						MaxAttempts:        rs.AssessmentType.MaxAttempts,
+					},
+				})
+			}
 		}
 
 		result = append(result, web.MasterReportData{
@@ -130,7 +150,8 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 			TotalReadinessUpdateMonths: r.TotalReadinessUpdateMonths,
 			Keterangan:                 r.Keterangan,
 			TmNm:                       r.TmNm,
-			Competencies:               competencies, // Add competencies here
+			Competencies:               competencies,    // Add competencies here
+			ReportScores:               reportScores,    // Add report scores here
 		})
 	}
 
@@ -167,10 +188,12 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 	}, nil
 }
 
-// FindById retrieves one master report with full competencies
+// FindById retrieves one master report with full competencies and report scores
 func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 	var master domain.FullReport
-	if err := s.MasterRepository.FindById(s.DB, &master, id); err != nil {
+	if err := s.DB.Preload("GapCompetencies.CompetencyType").
+		Preload("ReportScores.AssessmentType").
+		First(&master, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("master report not found")
 		}
@@ -192,7 +215,26 @@ func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 		})
 	}
 
-	// Create response with competencies
+	// Map report scores to web model
+	reportScores := make([]web.ReportScoreData, 0, len(master.ReportScores))
+	for _, rs := range master.ReportScores {
+		if rs.AssessmentType != nil {
+			reportScores = append(reportScores, web.ReportScoreData{
+				ID:               rs.ID,
+				Score:            rs.Score,
+				AssessmentTypeID: rs.AssessmentTypeID,
+				AssessmentType: web.AssessmentTypeData{
+					ID:                 rs.AssessmentType.ID,
+					AssessmentTypeName: rs.AssessmentType.AssessmentTypeName,
+					StartTime:          rs.AssessmentType.StartTime,
+					EndTime:            rs.AssessmentType.EndTime,
+					MaxAttempts:        rs.AssessmentType.MaxAttempts,
+				},
+			})
+		}
+	}
+
+	// Create response with competencies and report scores
 	response := web.FullReportResponse{
 		ID:                         master.ID,
 		VesselName:                 master.VesselName,
@@ -224,6 +266,7 @@ func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 		Keterangan:                 master.Keterangan,
 		TmNm:                       master.TmNm,
 		Competencies:               competencies,
+		ReportScores:               reportScores,
 	}
 
 	return &web.SuccessResponse{
