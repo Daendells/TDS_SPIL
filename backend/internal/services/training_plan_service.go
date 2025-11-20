@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"gorm.io/gorm"
 )
 
 type TrainingPlanService interface {
@@ -21,6 +22,8 @@ type trainingPlanService struct {
 	trainingScheduleRepo     repositories.TrainingScheduleRepository
 	competencyProgramMapRepo repositories.CompetencyProgramMappingRepository
 	competencyTypeRepo       repositories.CompetencyTypeRepository
+	reportRepo               repositories.ReportRepository
+	db                       *gorm.DB
 	log                      *logrus.Logger
 }
 
@@ -29,6 +32,8 @@ func NewTrainingPlanService(
 	trainingScheduleRepo repositories.TrainingScheduleRepository,
 	competencyProgramMapRepo repositories.CompetencyProgramMappingRepository,
 	competencyTypeRepo repositories.CompetencyTypeRepository,
+	reportRepo repositories.ReportRepository,
+	db *gorm.DB,
 	log *logrus.Logger,
 ) TrainingPlanService {
 	return &trainingPlanService{
@@ -36,6 +41,8 @@ func NewTrainingPlanService(
 		trainingScheduleRepo:     trainingScheduleRepo,
 		competencyProgramMapRepo: competencyProgramMapRepo,
 		competencyTypeRepo:       competencyTypeRepo,
+		reportRepo:               reportRepo,
+		db:                       db,
 		log:                      log,
 	}
 }
@@ -167,11 +174,19 @@ func (s *trainingPlanService) GetTrainingPlan(program string) (*domain.TrainingP
 	// Build summary data
 	summary := s.buildSummary(gapCompetencies, schedules, program)
 
+	// Get minimum deadline months for this program
+	minDeadlineMonths, err := s.reportRepo.GetMinTotalReadinessMonths(s.db, program)
+	if err != nil {
+		s.log.WithError(err).Error("Failed to get minimum deadline months")
+		minDeadlineMonths = 0 // Default to 0 if error
+	}
+
 	response := &domain.TrainingPlanResponse{
-		Participants: participants,
-		Summary:      summary,
-		Program:      program,
-		TotalCount:   len(participants),
+		Participants:      participants,
+		Summary:           summary,
+		Program:           program,
+		TotalCount:        len(participants),
+		MinDeadlineMonths: minDeadlineMonths,
 	}
 
 	return response, nil
@@ -297,6 +312,19 @@ func (s *trainingPlanService) buildSummary(gapCompetencies []domain.GapCompetenc
 
 // GenerateSchedules creates training schedules based on the complex scheduling logic
 func (s *trainingPlanService) GenerateSchedules(program string) error {
+	// Get minimum readiness deadline from active participants (readiness_month > 0)
+	// This deadline applies ONLY to Mandatory (M) schedules
+	minDeadlineMonths, err := s.reportRepo.GetMinTotalReadinessMonths(s.db, program)
+	if err != nil {
+		s.log.WithError(err).WithField("program", program).Error("Failed to get minimum readiness deadline")
+		return fmt.Errorf("failed to get readiness deadline: %w", err)
+	}
+
+	s.log.WithFields(logrus.Fields{
+		"program":         program,
+		"deadline_months": minDeadlineMonths,
+	}).Info("Found minimum readiness deadline for MANDATORY schedules")
+
 	// Get gap competencies to analyze
 	gapCompetencies, err := s.gapCompetencyRepo.GetByProgram(program)
 	if err != nil {
@@ -316,7 +344,7 @@ func (s *trainingPlanService) GenerateSchedules(program string) error {
 	gapStats := s.calculateGapStatistics(gapCompetencies)
 
 	// Generate schedules using the complex scheduling algorithm
-	schedules, err := s.generateOptimalSchedule(program, gapStats)
+	schedules, err := s.generateOptimalSchedule(program, gapStats, minDeadlineMonths)
 	if err != nil {
 		return fmt.Errorf("failed to generate optimal schedule: %w", err)
 	}
@@ -329,6 +357,7 @@ func (s *trainingPlanService) GenerateSchedules(program string) error {
 	s.log.WithFields(logrus.Fields{
 		"program":         program,
 		"schedules_count": len(schedules),
+		"deadline_months": minDeadlineMonths,
 	}).Info("Successfully generated training schedules")
 
 	return nil
@@ -389,8 +418,8 @@ func (s *trainingPlanService) calculateGapStatistics(gapCompetencies []domain.Ga
 	}
 }
 
-// generateOptimalSchedule implements the complex scheduling algorithm
-func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats map[string]interface{}) ([]domain.TrainingSchedule, error) {
+// generateOptimalSchedule implements the complex scheduling algorithm with deadline constraint
+func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats map[string]interface{}, deadlineMonths int) ([]domain.TrainingSchedule, error) {
 	categories := gapStats["categories"].(map[string]string)
 	participantGaps := gapStats["participantGaps"].(map[int][]string)
 	competencyMapping := s.GetCompetencyMapping(program)
@@ -399,6 +428,19 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 
 	// Start date: October 1, 2025 (minggu I bulan Oktober)
 	startDate := time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC)
+
+	// Calculate deadline date based on minimum total_readiness_update_months
+	// Convert months to approximate weeks (1 month = 4 weeks)
+	deadlineWeeks := deadlineMonths * 4
+	deadlineDate := startDate.AddDate(0, 0, deadlineWeeks*7) // Add weeks as days
+
+	s.log.WithFields(logrus.Fields{
+		"program":        program,
+		"start_date":     startDate.Format("2006-01-02"),
+		"deadline_months": deadlineMonths,
+		"deadline_weeks":  deadlineWeeks,
+		"deadline_date":   deadlineDate.Format("2006-01-02"),
+	}).Info("Scheduling with deadline constraint")
 
 	// Separate mandatory and non-mandatory competencies
 	var mandatoryCompetencies []string
@@ -422,9 +464,23 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 	currentDate := startDate
 	usedDates := make(map[string]bool) // Track used dates to avoid conflicts
 
-	// Schedule Mandatory Materi 1 first (must complete within 11 months)
+	// Schedule Mandatory Materi 1 first (must complete before deadline)
 	for _, code := range mandatoryCompetencies {
 		scheduleDate := s.findNextAvailableDate(currentDate, usedDates, participantGaps, code, categories)
+
+		// For Mandatory, check if Materi 2 (which is +60 days) would exceed deadline
+		// Materi 1 date + 60 days must be <= deadline
+		materi2Date := scheduleDate.AddDate(0, 0, 60)
+		if materi2Date.After(deadlineDate) {
+			s.log.WithFields(logrus.Fields{
+				"competency":         code,
+				"materi1_date":       scheduleDate.Format("2006-01-02"),
+				"materi2_date":       materi2Date.Format("2006-01-02"),
+				"deadline_date":      deadlineDate.Format("2006-01-02"),
+			}).Error("Materi 2 would exceed deadline - cannot fit all Mandatory trainings within readiness timeframe")
+			return nil, fmt.Errorf("cannot schedule Mandatory training %s within deadline (%d months) - Materi 2 date %s would exceed deadline %s",
+				code, deadlineMonths, materi2Date.Format("2006-01-02"), deadlineDate.Format("2006-01-02"))
+		}
 
 		// Get training material 1 for this competency and program
 		trainingTopic := ""
@@ -448,9 +504,11 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 		currentDate = nextWeekSlotStart(scheduleDate)
 	}
 
-	// Schedule Non-Mandatory Materi 1
+	// Schedule Non-Mandatory Materi 1 (NOT constrained by deadline)
 	for _, code := range nonMandatoryCompetencies {
 		scheduleDate := s.findNextAvailableDate(currentDate, usedDates, participantGaps, code, categories)
+
+		// Non-Mandatory is NOT constrained by deadline - can schedule beyond deadline
 
 		// Get training material 1 for this competency and program
 		trainingTopic := ""
@@ -475,7 +533,10 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 	}
 
 	// Generate Materi 2 schedules (after all Materi 1 of same category are done + 60 days minimum gap)
-	s.generateMateri2Schedules(&schedules, mandatoryCompetencies, nonMandatoryCompetencies, competencyMapping, program, usedDates, participantGaps, categories)
+	err := s.generateMateri2Schedules(&schedules, mandatoryCompetencies, nonMandatoryCompetencies, competencyMapping, program, usedDates, participantGaps, categories, deadlineDate)
+	if err != nil {
+		return nil, fmt.Errorf("failed to generate Materi 2 schedules: %w", err)
+	}
 
 	return schedules, nil
 }
@@ -601,8 +662,8 @@ func (s *trainingPlanService) hasParticipantConflict(date time.Time, competencyC
 	return false // No conflict
 }
 
-// generateMateri2Schedules generates Materi 2 schedules with proper sequencing and gaps
-func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.TrainingSchedule, mandatoryCompetencies, nonMandatoryCompetencies []string, competencyMapping map[string]domain.CompetencyMappingItem, program string, usedDates map[string]bool, participantGaps map[int][]string, categories map[string]string) {
+// generateMateri2Schedules generates Materi 2 schedules with proper sequencing, gaps, and deadline constraint
+func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.TrainingSchedule, mandatoryCompetencies, nonMandatoryCompetencies []string, competencyMapping map[string]domain.CompetencyMappingItem, program string, usedDates map[string]bool, participantGaps map[int][]string, categories map[string]string, deadlineDate time.Time) error {
 	// Find the latest Mandatory Materi 1 date
 	var latestMandatoryMateri1 time.Time
 	for _, schedule := range *schedules {
@@ -648,6 +709,18 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 
 		scheduleDate := s.findNextAvailableDate(materi2StartDate, usedDates, participantGaps, code, categories)
 
+		// Validate Mandatory Materi 2 doesn't exceed deadline
+		if scheduleDate.After(deadlineDate) {
+			s.log.WithFields(logrus.Fields{
+				"competency":    code,
+				"material":      "Materi 2 (M)",
+				"schedule_date": scheduleDate.Format("2006-01-02"),
+				"deadline_date": deadlineDate.Format("2006-01-02"),
+			}).Error("Mandatory Materi 2 schedule exceeds deadline")
+			return fmt.Errorf("cannot schedule Mandatory Materi 2 for %s within deadline - schedule date %s exceeds deadline %s",
+				code, scheduleDate.Format("2006-01-02"), deadlineDate.Format("2006-01-02"))
+		}
+
 		// Get training material 2 for this competency and program
 		trainingTopic := ""
 		if mapping, exists := competencyMapping[code]; exists && len(mapping.TrainingTopics) > 1 {
@@ -691,6 +764,9 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 
 		scheduleDate := s.findNextAvailableDate(materi2StartDate, usedDates, participantGaps, code, categories)
 
+		// NO deadline check for Non-Mandatory (NM) Materi 2
+		// Deadline hanya berlaku untuk Mandatory (M)
+
 		// Get training material 2 for this competency and program
 		trainingTopic := ""
 		if mapping, exists := competencyMapping[code]; exists && len(mapping.TrainingTopics) > 1 {
@@ -712,4 +788,6 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 		// Pindah ke slot minggu berikutnya
 		materi2StartDate = nextWeekSlotStart(scheduleDate)
 	}
+
+	return nil // Success
 }

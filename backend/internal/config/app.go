@@ -88,7 +88,7 @@ func Bootstrap(config *BootstrapConfig) {
 	seafarerAssessmentService := services.NewSeafarerAssessmentService(seafarerAssessmentRepository, reportRepository, config.Validate)
 	masterService := services.NewMasterService(config.DB, config.Log, config.Validate, masterRepository)
 	trainingServiceDB := services.NewTrainingService(config.DB, config.Log, config.Validate, trainingRepository)
-	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, competencyProgramMappingRepository, competencyTypeRepository, config.Log)
+	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, competencyProgramMappingRepository, competencyTypeRepository, *reportRepository, config.DB, config.Log)
 	assignmentService := services.NewAssignmentService(assignmentRepo, config.Validate)
 	aspectService := services.NewAspectService(config.DB, config.Log, aspectRepository)
 

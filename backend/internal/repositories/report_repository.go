@@ -25,6 +25,28 @@ func (r *ReportRepository) CreateAll(db *gorm.DB, reports *[]domain.Report) erro
 	return db.Create(reports).Error
 }
 
+// GetMinTotalReadinessMonths returns the minimum total_readiness_update_months
+// for active participants (readiness_month > 0) in a specific program
+func (r *ReportRepository) GetMinTotalReadinessMonths(db *gorm.DB, program string) (int, error) {
+	var result struct {
+		MinMonths int
+	}
+	
+	err := db.Raw(`
+		SELECT COALESCE(MIN(total_readiness_update_months), 0) as min_months 
+		FROM reports 
+		WHERE idp_program = ? 
+		AND readiness_month > 0 
+		AND total_readiness_update_months IS NOT NULL
+	`, program).Scan(&result).Error
+	
+	if err != nil {
+		return 0, err
+	}
+	
+	return result.MinMonths, nil
+}
+
 func (r *ReportRepository) SelectAll(db *gorm.DB, filter *web.DashboardRequest, reports *[]domain.Report) error {
 	// var query string
 	var queryBuilder strings.Builder
@@ -96,5 +118,27 @@ func (r *ReportRepository) FindBySeafarerCode(db *gorm.DB, seafarerCode string, 
 
 func (r *ReportRepository) Update(db *gorm.DB, report *domain.Report) error {
 	return db.Save(report).Error
+}
+
+// GetMinimumReadinessDeadline returns the minimum total_readiness_update_months
+// for active participants (readiness_month > 0) in a specific program
+func (r *ReportRepository) GetMinimumReadinessDeadline(db *gorm.DB, program string) (int, error) {
+	var result struct {
+		MinMonths int
+	}
+
+	err := db.Raw(`
+		SELECT COALESCE(MIN(total_readiness_update_months), 0) as min_months
+		FROM reports
+		WHERE idp_program = ?
+		AND readiness_month > 0
+		AND total_readiness_update_months IS NOT NULL
+	`, program).Scan(&result).Error
+
+	if err != nil {
+		return 0, err
+	}
+
+	return result.MinMonths, nil
 }
 

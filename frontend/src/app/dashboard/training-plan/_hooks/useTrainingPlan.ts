@@ -27,6 +27,7 @@ export interface TrainingPlanResponse {
   summary: TrainingPlanSummary;
   program: string;
   totalCount: number;
+  minDeadlineMonths: number; // Minimum total_readiness_update_months from active participants
 }
 
 export interface CompetencyMapping {

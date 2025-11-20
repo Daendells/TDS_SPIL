@@ -3409,6 +3409,158 @@ ALTER TABLE `training_schedules`
 ALTER TABLE `user_answers`
   ADD CONSTRAINT `user_answers_ibfk_1` FOREIGN KEY (`seaman_code`) REFERENCES `reports` (`seaman_code`) ON DELETE CASCADE,
   ADD CONSTRAINT `user_answers_ibfk_2` FOREIGN KEY (`question_id`) REFERENCES `questions` (`question_id`) ON DELETE CASCADE;
+
+-- --------------------------------------------------------
+
+--
+-- Triggers for automatic readiness calculation in `reports` table
+-- These triggers automatically calculate:
+-- 1. readiness_month (from readiness string)
+-- 2. education_fulfillment_months (from certificate and idp_program)
+-- 3. total_readiness_update_months (sum of above two)
+--
+
+DELIMITER $$
+
+--
+-- Trigger: BEFORE INSERT
+--
+CREATE TRIGGER `calculate_readiness_before_insert`
+BEFORE INSERT ON `reports`
+FOR EACH ROW
+BEGIN
+    -- 1. Convert readiness string to readiness_month integer
+    SET NEW.readiness_month = CASE 
+        WHEN NEW.readiness = 'Ready Now' THEN 0
+        WHEN NEW.readiness = '6 Months' THEN 6
+        WHEN NEW.readiness = '7-12 Months' THEN 12
+        WHEN NEW.readiness = '13-18 Months' THEN 18
+        ELSE 0
+    END;
+    
+    -- 2. Calculate education_fulfillment_months based on idp_program and certificate
+    SET NEW.education_fulfillment_months = CASE 
+        -- SDP Program (highest level)
+        WHEN NEW.idp_program = 'SDP' THEN
+            CASE 
+                WHEN NEW.certificate IN ('ANT-I', 'ATT-I') THEN 0
+                WHEN NEW.certificate IN ('ANT-II', 'ATT-II') THEN 5
+                WHEN NEW.certificate IN ('ANT-III', 'ATT-III') THEN 8
+                ELSE 0
+            END
+        -- MDP Program (middle level)
+        WHEN NEW.idp_program = 'MDP' THEN
+            CASE 
+                WHEN NEW.certificate IN ('ANT-I', 'ATT-I', 'ANT-II', 'ATT-II') THEN 0
+                WHEN NEW.certificate IN ('ANT-III', 'ATT-III') THEN 8
+                ELSE 0
+            END
+        -- FDP Program (lowest level - all certificates result in 0)
+        WHEN NEW.idp_program = 'FDP' THEN 0
+        -- Default if program is not recognized
+        ELSE 0
+    END;
+    
+    -- 3. Calculate total_readiness_update_months (sum of readiness_month + education_fulfillment_months)
+    SET NEW.total_readiness_update_months = 
+        COALESCE(NEW.readiness_month, 0) + COALESCE(NEW.education_fulfillment_months, 0);
+END$$
+
+--
+-- Trigger: BEFORE UPDATE
+--
+CREATE TRIGGER `calculate_readiness_before_update`
+BEFORE UPDATE ON `reports`
+FOR EACH ROW
+BEGIN
+    -- 1. Convert readiness string to readiness_month integer
+    SET NEW.readiness_month = CASE 
+        WHEN NEW.readiness = 'Ready Now' THEN 0
+        WHEN NEW.readiness = '6 Months' THEN 6
+        WHEN NEW.readiness = '7-12 Months' THEN 12
+        WHEN NEW.readiness = '13-18 Months' THEN 18
+        ELSE 0
+    END;
+    
+    -- 2. Calculate education_fulfillment_months based on idp_program and certificate
+    SET NEW.education_fulfillment_months = CASE 
+        -- SDP Program (highest level)
+        WHEN NEW.idp_program = 'SDP' THEN
+            CASE 
+                WHEN NEW.certificate IN ('ANT-I', 'ATT-I') THEN 0
+                WHEN NEW.certificate IN ('ANT-II', 'ATT-II') THEN 5
+                WHEN NEW.certificate IN ('ANT-III', 'ATT-III') THEN 8
+                ELSE 0
+            END
+        -- MDP Program (middle level)
+        WHEN NEW.idp_program = 'MDP' THEN
+            CASE 
+                WHEN NEW.certificate IN ('ANT-I', 'ATT-I', 'ANT-II', 'ATT-II') THEN 0
+                WHEN NEW.certificate IN ('ANT-III', 'ATT-III') THEN 8
+                ELSE 0
+            END
+        -- FDP Program (lowest level - all certificates result in 0)
+        WHEN NEW.idp_program = 'FDP' THEN 0
+        -- Default if program is not recognized
+        ELSE 0
+    END;
+    
+    -- 3. Calculate total_readiness_update_months (sum of readiness_month + education_fulfillment_months)
+    SET NEW.total_readiness_update_months = 
+        COALESCE(NEW.readiness_month, 0) + COALESCE(NEW.education_fulfillment_months, 0);
+END$$
+
+DELIMITER ;
+
+-- --------------------------------------------------------
+
+--
+-- Update existing records to populate the calculated columns
+-- This is a one-time operation for existing data
+--
+
+-- Step 1: Update readiness_month based on readiness string
+UPDATE `reports`
+SET `readiness_month` = CASE 
+    WHEN `readiness` = 'Ready Now' THEN 0
+    WHEN `readiness` = '6 Months' THEN 6
+    WHEN `readiness` = '7-12 Months' THEN 12
+    WHEN `readiness` = '13-18 Months' THEN 18
+    ELSE 0
+END
+WHERE `readiness_month` IS NULL OR `readiness_month` = 0;
+
+-- Step 2: Update education_fulfillment_months based on certificate and idp_program
+UPDATE `reports`
+SET `education_fulfillment_months` = CASE 
+    -- SDP Program (highest level)
+    WHEN `idp_program` = 'SDP' THEN
+        CASE 
+            WHEN `certificate` IN ('ANT-I', 'ATT-I') THEN 0
+            WHEN `certificate` IN ('ANT-II', 'ATT-II') THEN 5
+            WHEN `certificate` IN ('ANT-III', 'ATT-III') THEN 8
+            ELSE 0
+        END
+    -- MDP Program (middle level)
+    WHEN `idp_program` = 'MDP' THEN
+        CASE 
+            WHEN `certificate` IN ('ANT-I', 'ATT-I', 'ANT-II', 'ATT-II') THEN 0
+            WHEN `certificate` IN ('ANT-III', 'ATT-III') THEN 8
+            ELSE 0
+        END
+    -- FDP Program (lowest level - all certificates result in 0)
+    WHEN `idp_program` = 'FDP' THEN 0
+    -- Default if program is not recognized
+    ELSE 0
+END
+WHERE `education_fulfillment_months` IS NULL;
+
+-- Step 3: Update total_readiness_update_months as sum of the two columns
+UPDATE `reports`
+SET `total_readiness_update_months` = 
+    COALESCE(`readiness_month`, 0) + COALESCE(`education_fulfillment_months`, 0)
+WHERE `total_readiness_update_months` IS NULL;
+
 COMMIT;
 
 /*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;

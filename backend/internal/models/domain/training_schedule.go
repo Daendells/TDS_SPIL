@@ -11,7 +11,7 @@ type TrainingSchedule struct {
 	CompetencyCode   string    `json:"competencyCode" gorm:"column:competency_code;size:10;not null"`
 	CompetencyTypeID *int64    `json:"competencyTypeId" gorm:"column:competency_type_id"`
 	TrainingTopic    string    `json:"trainingTopic" gorm:"column:training_topic;size:255;not null"`
-	Category         string    `json:"category" gorm:"column:category;size:2;not null;default:M"` // enum('M','NM')
+	Category         string    `json:"category" gorm:"-"` // Dynamically calculated, NOT stored in database
 	MaterialType     int       `json:"materialType" gorm:"column:material_type;not null"`         // 1 or 2 (Materi 1 or Materi 2)
 	ScheduledDate    time.Time `json:"scheduledDate" gorm:"column:scheduled_date;not null"`
 
@@ -66,10 +66,11 @@ type TrainingPlanSummary struct {
 }
 
 type TrainingPlanResponse struct {
-	Participants []TrainingPlanParticipant `json:"participants"`
-	Summary      TrainingPlanSummary       `json:"summary"`
-	Program      string                    `json:"program"`
-	TotalCount   int                       `json:"totalCount"`
+	Participants      []TrainingPlanParticipant `json:"participants"`
+	Summary           TrainingPlanSummary       `json:"summary"`
+	Program           string                    `json:"program"`
+	TotalCount        int                       `json:"totalCount"`
+	MinDeadlineMonths int                       `json:"minDeadlineMonths"` // Minimum total_readiness_update_months from active participants
 }
 
 // CompetencyMappingItem represents the structure for competency mapping
