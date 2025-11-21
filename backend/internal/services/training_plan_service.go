@@ -435,8 +435,8 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 	deadlineDate := startDate.AddDate(0, 0, deadlineWeeks*7) // Add weeks as days
 
 	s.log.WithFields(logrus.Fields{
-		"program":        program,
-		"start_date":     startDate.Format("2006-01-02"),
+		"program":         program,
+		"start_date":      startDate.Format("2006-01-02"),
 		"deadline_months": deadlineMonths,
 		"deadline_weeks":  deadlineWeeks,
 		"deadline_date":   deadlineDate.Format("2006-01-02"),
@@ -473,10 +473,10 @@ func (s *trainingPlanService) generateOptimalSchedule(program string, gapStats m
 		materi2Date := scheduleDate.AddDate(0, 0, 60)
 		if materi2Date.After(deadlineDate) {
 			s.log.WithFields(logrus.Fields{
-				"competency":         code,
-				"materi1_date":       scheduleDate.Format("2006-01-02"),
-				"materi2_date":       materi2Date.Format("2006-01-02"),
-				"deadline_date":      deadlineDate.Format("2006-01-02"),
+				"competency":    code,
+				"materi1_date":  scheduleDate.Format("2006-01-02"),
+				"materi2_date":  materi2Date.Format("2006-01-02"),
+				"deadline_date": deadlineDate.Format("2006-01-02"),
 			}).Error("Materi 2 would exceed deadline - cannot fit all Mandatory trainings within readiness timeframe")
 			return nil, fmt.Errorf("cannot schedule Mandatory training %s within deadline (%d months) - Materi 2 date %s would exceed deadline %s",
 				code, deadlineMonths, materi2Date.Format("2006-01-02"), deadlineDate.Format("2006-01-02"))

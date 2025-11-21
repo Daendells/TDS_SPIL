@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Radar,
   RadarChart,
@@ -24,15 +24,9 @@ interface PageProps {
 }
 
 export default function TalentProfilePage({ params }: PageProps) {
-  const [seafarerCode, setSeafarerCode] = useState<string>("");
+  const { seafarerCode } = params;
   const [mentoringDialogOpen, setMentoringDialogOpen] = useState(false);
   const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
-
-  useEffect(() => {
-    // Avoid direct synchronous access of params properties in a client component
-    // per Next.js guidance; assign via effect instead.
-    if (params?.seafarerCode) setSeafarerCode(params.seafarerCode);
-  }, [params]);
 
   // Fetch report data using React Query hook
   const {

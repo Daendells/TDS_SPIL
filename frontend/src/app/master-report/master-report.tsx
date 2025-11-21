@@ -12,6 +12,8 @@ import {
   CommandGroup,
   CommandItem,
   CommandList,
+  CommandInput,
+  CommandEmpty,
 } from "@/components/ui/command";
 import {
   Popover,
@@ -38,6 +40,7 @@ import {
   TrashIcon,
   XIcon,
   AlertTriangle,
+  Loader2,
 } from "lucide-react";
 import {
   Pagination,
@@ -51,22 +54,28 @@ import {
   DialogHeader,
   DialogTitle,
   DialogFooter,
+  DialogDescription,
 } from "@/components/ui/dialog";
+import { Badge } from "@/components/ui/badge";
+import { Label } from "@/components/ui/label";
 import { useMasterReports } from "./_hooks/master-report";
+import { useApi } from "@/hooks/use-api";
 import { useGetAllAssessmentTypes } from "./_hooks/useAssessmentType";
 
+interface CompetencyType {
+  id: number;
+  code: string;
+  name: string;
+}
+
 /* Dynamic sticky offset calculator */
-function useDynamicStickyOffsets(
-  ref: React.RefObject<HTMLDivElement | null>,
-  pinnedCount = 2
-) {
+function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pinnedCount = 2) {
   const [offsets, setOffsets] = useState<number[]>([]);
   useEffect(() => {
     const container = ref.current;
     if (!container) return;
     const updateOffsets = () => {
-      const heads =
-        container.querySelectorAll<HTMLTableCellElement>("thead th");
+      const heads = container.querySelectorAll<HTMLTableCellElement>("thead th");
       const newOffsets: number[] = [];
       let runningLeft = 0;
       for (let i = 0; i < pinnedCount; i++) {
@@ -84,6 +93,7 @@ function useDynamicStickyOffsets(
 }
 
 export default function MasterPage() {
+  const api = useApi();
   const {
     onCallApi,
     paginationData,
@@ -103,16 +113,19 @@ export default function MasterPage() {
 
   const [openDialog, setOpenDialog] = useState(false);
   const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false);
-  const [form, setForm] = useState({
-    nama: "",
-    seamanCode: "",
-    seafarerCode: "",
-  });
+  const [form, setForm] = useState({ nama: "", seamanCode: "", seafarerCode: "" });
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [editingRow, setEditingRow] = useState<any>(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isUpdating, setIsUpdating] = useState(false);
+
+  // Competency states
+  const [competencyTypes, setCompetencyTypes] = useState<CompetencyType[]>([]);
+  const [selectedCompetencies, setSelectedCompetencies] = useState<number[]>([]);
+  const [competencySearchOpen, setCompetencySearchOpen] = useState(false);
+  const [loadingCompetencies, setLoadingCompetencies] = useState(false);
 
   const tableRef = useRef<HTMLDivElement>(null);
   const offsets = useDynamicStickyOffsets(tableRef, 2);
@@ -133,7 +146,6 @@ export default function MasterPage() {
     "Kondite Review",
     "KPI Vessel",
     "Performance Score",
-    "Value Assessment",
     "Competency Gap Analysis",
     "Total Gap",
     "Strength Analysis",
@@ -150,56 +162,99 @@ export default function MasterPage() {
 
   const TABLE_COLUMNS = [...STATIC_COLUMNS, ...assessmentTypeColumns];
 
+  // Fetch competency types on mount
+  useEffect(() => {
+    fetchCompetencyTypes();
+  }, []);
+
+  const fetchCompetencyTypes = async () => {
+    setLoadingCompetencies(true);
+    try {
+      const response = await api.get("/api/competency-types");
+      const data = response.data?.data || response.data || [];
+      setCompetencyTypes(Array.isArray(data) ? data : []);
+      console.log("Loaded competency types:", data);
+    } catch (error: any) {
+      console.error("Failed to fetch competency types:", error);
+      toast.error("Failed to load competency types");
+    } finally {
+      setLoadingCompetencies(false);
+    }
+  };
+
   const isFormValid = () =>
     form.nama.trim() && form.seamanCode.trim() && form.seafarerCode.trim();
 
   const isEditFormValid = () =>
-    editingRow?.nama?.trim() &&
-    editingRow?.seamanCode?.trim() &&
+    editingRow?.nama?.trim() && 
+    editingRow?.seamanCode?.trim() && 
     editingRow?.seafarerCode?.trim();
 
   const navigatePage = (page: "prev" | "next") => {
     if (!paginationData) return;
     setCurrentPage((prev) => {
-      if (page === "prev" && prev <= 1) return 1; // prevent going below 1
+      if (page === "prev" && prev <= 1) return 1;
       return page === "next" ? prev + 1 : prev - 1;
     });
 
     setPaginationRequest({
       ...paginationRequest,
       page,
-      anchorId:
-        page === "next" ? paginationData.last_id : paginationData.first_id,
+      anchorId: page === "next" ? paginationData.last_id : paginationData.first_id,
     });
   };
 
   const handleAdd = async () => {
-    if (!isFormValid()) return toast.error("Please fill in all fields!");
+    if (!isFormValid()) {
+      toast.error("Please fill in all required fields!");
+      return;
+    }
+    
     try {
       await createReport(form);
-      toast.success("Added successfully!");
       setForm({ nama: "", seamanCode: "", seafarerCode: "" });
       setOpenDialog(false);
-      setPaginationRequest({ ...paginationRequest, anchorId: 0, page: "next" });
+      setCurrentPage(1);
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to add report");
+      console.error("Create error:", err);
     }
   };
 
   const handleEdit = async () => {
-    if (!isEditFormValid()) return toast.error("Please fill in all fields!");
+    if (!isEditFormValid()) {
+      toast.error("Please fill in all required fields!");
+      return;
+    }
+    
+    setIsUpdating(true);
     try {
-      await updateReport(editingRow.id, {
+      const updatePayload: any = {
         nama: editingRow.nama,
         seamanCode: editingRow.seamanCode,
         seafarerCode: editingRow.seafarerCode,
-      });
-      toast.success("Report updated successfully!");
+      };
+
+      // Add competencies if they were modified
+      if (selectedCompetencies.length > 0) {
+        updatePayload.competencies = selectedCompetencies.map(typeId => ({
+          competencyTypeId: typeId
+        }));
+      } else {
+        // Send empty array to clear competencies
+        updatePayload.competencies = [];
+      }
+
+      console.log("Update payload:", updatePayload);
+      await updateReport(editingRow.id, updatePayload);
+      
       setOpenEditDialog(false);
       setEditingRow(null);
-      setPaginationRequest({ ...paginationRequest });
+      setSelectedCompetencies([]);
+      setCurrentPage(1);
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to update report");
+      console.error("Update error:", err);
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -219,9 +274,7 @@ export default function MasterPage() {
     const ids = paginationData.results.map((r) => r.id);
     const allSelected = ids.every((id) => selectedIds.has(id));
     const newSet = new Set(selectedIds);
-    allSelected
-      ? ids.forEach((id) => newSet.delete(id))
-      : ids.forEach((id) => newSet.add(id));
+    allSelected ? ids.forEach((id) => newSet.delete(id)) : ids.forEach((id) => newSet.add(id));
     setSelectedIds(newSet);
   };
 
@@ -237,24 +290,45 @@ export default function MasterPage() {
     setConfirmDeleteDialog(false);
     try {
       for (const id of selectedIds) await deleteReport(id);
-      toast.success("Selected reports deleted!");
       setSelectedIds(new Set());
-      setPaginationRequest({ ...paginationRequest, anchorId: 0, page: "next" });
+      setCurrentPage(1);
     } catch (err: any) {
-      toast.error(err.response?.data?.error || "Delete failed");
+      console.error("Delete error:", err);
     }
   };
 
   const handleRowClick = (row: any) => {
     if (!isEditMode) return;
     setEditingRow({ ...row });
+    
+    // Set selected competencies from row data
+    const competencyIds = row.competencies?.map((c: any) => c.competencyTypeId) || [];
+    setSelectedCompetencies(competencyIds);
+    
+    console.log("Editing row:", row);
+    console.log("Existing competencies:", competencyIds);
     setOpenEditDialog(true);
+  };
+
+  const toggleCompetencySelection = (typeId: number) => {
+    setSelectedCompetencies(prev => {
+      if (prev.includes(typeId)) {
+        return prev.filter(id => id !== typeId);
+      } else {
+        return [...prev, typeId];
+      }
+    });
+  };
+
+  const removeCompetency = (typeId: number) => {
+    setSelectedCompetencies(prev => prev.filter(id => id !== typeId));
   };
 
   const getRowNumber = (i: number) =>
     (currentPage - 1) * paginationRequest.pageSize + i + 1;
 
-  function colorFromString(str: string) {
+  function colorFromString(str: string | undefined | null) {
+    if (!str) return "hsl(200, 70%, 70%)"; // Default color if undefined
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       hash = str.charCodeAt(i) + ((hash << 5) - hash);
@@ -286,7 +360,6 @@ export default function MasterPage() {
       <div className="space-y-6 mb-6">
         <div>
           <div className="flex items-center gap-4 mb-6">
-            {/* Left Logo */}
             <Image
               width={64}
               height={64}
@@ -295,18 +368,13 @@ export default function MasterPage() {
               className="h-12 w-auto"
             />
 
-            {/* Title & Description */}
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">
-                Master Table
-              </h1>
+              <h1 className="text-3xl font-bold tracking-tight">Master Table</h1>
               <p className="text-gray-500 mt-1">
-                Kelola data induk pelaut, performa, dan rencana pengembangan
-                individu.
+                Kelola data induk pelaut, performa, dan rencana pengembangan individu.
               </p>
             </div>
 
-            {/* Right Logo */}
             <Image
               width={64}
               height={64}
@@ -316,13 +384,11 @@ export default function MasterPage() {
             />
           </div>
 
-          {/* Line Separator */}
           <Separator />
         </div>
 
-        {/* Toolbar: Search + Action Buttons */}
+        {/* Toolbar */}
         <div className="flex items-center justify-between">
-          {/* Search Input */}
           <Input
             placeholder="Search by Name or Seafarer Code..."
             value={searchName}
@@ -333,9 +399,7 @@ export default function MasterPage() {
             className="w-[300px]"
           />
 
-          {/* Action Buttons */}
           <div className="flex items-center gap-2">
-            {/* Edit / Cancel toggle */}
             <Button
               size="lg"
               variant={isEditMode ? "destructive" : "outline"}
@@ -353,7 +417,6 @@ export default function MasterPage() {
               )}
             </Button>
 
-            {/* Delete button (only visible in edit mode) */}
             {isEditMode && (
               <Button
                 size="lg"
@@ -366,7 +429,6 @@ export default function MasterPage() {
               </Button>
             )}
 
-            {/* Add Report Dialog */}
             <Dialog open={openDialog} onOpenChange={setOpenDialog}>
               <DialogTrigger asChild>
                 <Button size="lg" className="flex items-center gap-2">
@@ -377,47 +439,58 @@ export default function MasterPage() {
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Add New Report</DialogTitle>
+                  <DialogDescription>
+                    Fill in the required information to create a new report.
+                  </DialogDescription>
                 </DialogHeader>
 
                 <div className="grid gap-4 py-2">
-                  <Input
-                    placeholder="Name"
-                    value={form.nama}
-                    onChange={(e) =>
-                      setForm({ ...form, nama: e.target.value.toUpperCase() })
-                    }
-                  />
-                  <Input
-                    placeholder="Seaman Code"
-                    value={form.seamanCode}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        seamanCode: e.target.value.toUpperCase(),
-                      })
-                    }
-                  />
-                  <Input
-                    placeholder="Seafarer Code"
-                    value={form.seafarerCode}
-                    onChange={(e) =>
-                      setForm({
-                        ...form,
-                        seafarerCode: e.target.value.toUpperCase(),
-                      })
-                    }
-                  />
+                  <div>
+                    <Label htmlFor="nama">Name *</Label>
+                    <Input
+                      id="nama"
+                      placeholder="Enter name"
+                      value={form.nama}
+                      onChange={(e) => setForm({ ...form, nama: e.target.value.toUpperCase() })}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="seamanCode">Seaman Code *</Label>
+                    <Input
+                      id="seamanCode"
+                      placeholder="Enter seaman code"
+                      value={form.seamanCode}
+                      onChange={(e) =>
+                        setForm({ ...form, seamanCode: e.target.value.toUpperCase() })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="seafarerCode">Seafarer Code *</Label>
+                    <Input
+                      id="seafarerCode"
+                      placeholder="Enter seafarer code"
+                      value={form.seafarerCode}
+                      onChange={(e) =>
+                        setForm({ ...form, seafarerCode: e.target.value.toUpperCase() })
+                      }
+                    />
+                  </div>
                 </div>
 
                 <DialogFooter>
-                  <Button
-                    variant="outline"
-                    onClick={() => setOpenDialog(false)}
-                  >
+                  <Button variant="outline" onClick={() => setOpenDialog(false)}>
                     Cancel
                   </Button>
-                  <Button onClick={handleAdd} disabled={!isFormValid()}>
-                    Save
+                  <Button onClick={handleAdd} disabled={!isFormValid() || onCallApi}>
+                    {onCallApi ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Saving...
+                      </>
+                    ) : (
+                      "Save"
+                    )}
                   </Button>
                 </DialogFooter>
               </DialogContent>
@@ -425,7 +498,6 @@ export default function MasterPage() {
           </div>
         </div>
 
-        {/* Line separator below toolbar */}
         <Separator />
       </div>
 
@@ -436,76 +508,191 @@ export default function MasterPage() {
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertTriangle className="w-5 h-5" /> Confirm Deletion
             </DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. The selected reports will be permanently deleted.
+            </DialogDescription>
           </DialogHeader>
           <p className="text-gray-700">
             Are you sure you want to delete {selectedIds.size} selected{" "}
-            {selectedIds.size > 1 ? "reports" : "report"}? This action cannot be
-            undone.
+            {selectedIds.size > 1 ? "reports" : "report"}?
           </p>
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setConfirmDeleteDialog(false)}
-            >
+            <Button variant="outline" onClick={() => setConfirmDeleteDialog(false)}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={handleDeleteConfirmed}>
-              Yes, Delete
+            <Button variant="destructive" onClick={handleDeleteConfirmed} disabled={onCallApi}>
+              {onCallApi ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                "Yes, Delete"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
-      {/* Edit Dialog */}
+      {/* Edit Dialog with Competency Selection */}
       <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
-        <DialogContent>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Report</DialogTitle>
+            <DialogDescription>
+              Update report information and manage competency gap analysis.
+            </DialogDescription>
           </DialogHeader>
+          
           <div className="grid gap-4 py-2">
-            <Input
-              placeholder="Name"
-              value={editingRow?.nama || ""}
-              onChange={(e) =>
-                setEditingRow({
-                  ...editingRow,
-                  nama: e.target.value.toUpperCase(),
-                })
-              }
-            />
-            <Input
-              placeholder="Seaman Code"
-              value={editingRow?.seamanCode || ""}
-              onChange={(e) =>
-                setEditingRow({
-                  ...editingRow,
-                  seamanCode: e.target.value.toUpperCase(),
-                })
-              }
-            />
-            <Input
-              placeholder="Seafarer Code"
-              value={editingRow?.seafarerCode || ""}
-              onChange={(e) =>
-                setEditingRow({
-                  ...editingRow,
-                  seafarerCode: e.target.value.toUpperCase(),
-                })
-              }
-            />
+            <div>
+              <Label htmlFor="edit-nama">Name *</Label>
+              <Input
+                id="edit-nama"
+                placeholder="Name"
+                value={editingRow?.nama || ""}
+                onChange={(e) =>
+                  setEditingRow({ ...editingRow, nama: e.target.value.toUpperCase() })
+                }
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="edit-seamanCode">Seaman Code *</Label>
+              <Input
+                id="edit-seamanCode"
+                placeholder="Seaman Code"
+                value={editingRow?.seamanCode || ""}
+                onChange={(e) =>
+                  setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })
+                }
+              />
+            </div>
+            
+            <div>
+              <Label htmlFor="edit-seafarerCode">Seafarer Code *</Label>
+              <Input
+                id="edit-seafarerCode"
+                placeholder="Seafarer Code"
+                value={editingRow?.seafarerCode || ""}
+                onChange={(e) =>
+                  setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Competency Gap Analysis</Label>
+              
+              {/* Selected Competencies */}
+              <div className="flex flex-wrap gap-2 min-h-[60px] p-3 border rounded-md bg-gray-50">
+                {selectedCompetencies.length === 0 ? (
+                  <span className="text-sm text-gray-400">No competencies selected</span>
+                ) : (
+                  selectedCompetencies.map(typeId => {
+                    const comp = competencyTypes.find(ct => ct.id === typeId);
+                    if (!comp) return null;
+                    return (
+                      <Badge
+                        key={typeId}
+                        style={{ backgroundColor: colorFromString(comp.code) }}
+                        className="text-white flex items-center gap-1"
+                      >
+                        <span className="font-semibold">{comp.code}</span>
+                        <span className="text-xs opacity-90">- {comp.name}</span>
+                        <button
+                          onClick={() => removeCompetency(typeId)}
+                          className="ml-1 hover:text-red-200 transition-colors"
+                          type="button"
+                        >
+                          <XIcon className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    );
+                  })
+                )}
+              </div>
+
+              {/* Competency Selector */}
+              <Popover open={competencySearchOpen} onOpenChange={setCompetencySearchOpen}>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    role="combobox"
+                    className="w-full justify-between"
+                    type="button"
+                    disabled={loadingCompetencies}
+                  >
+                    {loadingCompetencies ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Loading competencies...
+                      </>
+                    ) : (
+                      <>
+                        Add Competency Type
+                        <ChevronsUpDownIcon className="ml-2 h-4 w-4 opacity-50" />
+                      </>
+                    )}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-[500px] p-0" align="start">
+                  <Command>
+                    <CommandInput placeholder="Search competency types..." />
+                    <CommandEmpty>No competency type found.</CommandEmpty>
+                    <CommandList className="max-h-[300px]">
+                      <CommandGroup>
+                        {competencyTypes.map((type) => (
+                          <CommandItem
+                            key={type.id}
+                            value={`${type.code} ${type.name}`}
+                            onSelect={() => {
+                              toggleCompetencySelection(type.id);
+                            }}
+                          >
+                            <CheckIcon
+                              className={cn(
+                                "mr-2 h-4 w-4",
+                                selectedCompetencies.includes(type.id)
+                                  ? "opacity-100"
+                                  : "opacity-0"
+                              )}
+                            />
+                            <div className="flex flex-col">
+                              <span className="font-medium">{type.code}</span>
+                              <span className="text-xs text-gray-500">{type.name}</span>
+                            </div>
+                          </CommandItem>
+                        ))}
+                      </CommandGroup>
+                    </CommandList>
+                  </Command>
+                </PopoverContent>
+              </Popover>
+            </div>
           </div>
+
           <DialogFooter>
             <Button
               variant="outline"
               onClick={() => {
                 setOpenEditDialog(false);
                 setEditingRow(null);
+                setSelectedCompetencies([]);
               }}
+              disabled={isUpdating}
             >
               Cancel
             </Button>
-            <Button onClick={handleEdit} disabled={!isEditFormValid()}>
-              Update
+            <Button onClick={handleEdit} disabled={!isEditFormValid() || isUpdating}>
+              {isUpdating ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Updating...
+                </>
+              ) : (
+                "Update"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -536,10 +723,7 @@ export default function MasterPage() {
               {TABLE_COLUMNS.map((col, i) => (
                 <TableHead
                   key={col}
-                  className={cn(
-                    "text-center bg-background border",
-                    i < 2 ? "sticky z-40" : ""
-                  )}
+                  className={cn("text-center bg-background border", i < 2 ? "sticky z-40" : "")}
                   style={i < 2 ? { left: `${offsets[i] || 0}px` } : {}}
                 >
                   {col}
@@ -553,9 +737,10 @@ export default function MasterPage() {
               <TableRow>
                 <TableCell
                   colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)}
-                  className="text-center text-gray-400"
+                  className="text-center text-gray-400 h-32"
                 >
-                  Loading...
+                  <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                  <p className="mt-2">Loading...</p>
                 </TableCell>
               </TableRow>
             ) : paginationData?.results?.length ? (
@@ -584,56 +769,28 @@ export default function MasterPage() {
                   )}
                   <TableCell
                     className="text-center bg-background border sticky z-30"
-                    style={{
-                      left: `${offsets[0] || 0}px`,
-                      width: "60px",
-                      pointerEvents: "none",
-                    }}
+                    style={{ left: `${offsets[0] || 0}px`, width: "60px", pointerEvents: "none" }}
                   >
-                    <span className="pointer-events-auto">
-                      {getRowNumber(i)}
-                    </span>
+                    <span className="pointer-events-auto">{getRowNumber(i)}</span>
                   </TableCell>
                   <TableCell
                     className="text-center bg-background border sticky z-30"
-                    style={{
-                      left: `${offsets[1] || 0}px`,
-                      width: "200px",
-                      pointerEvents: "none",
-                    }}
+                    style={{ left: `${offsets[1] || 0}px`, width: "200px", pointerEvents: "none" }}
                   >
                     <span className="pointer-events-auto">{row.nama}</span>
                   </TableCell>
+                  <TableCell className="text-center">{row.seamanCode || "-"}</TableCell>
+                  <TableCell className="text-center">{row.seafarerCode || "-"}</TableCell>
+                  <TableCell className="text-center">{row.vesselName || "-"}</TableCell>
+                  <TableCell className="text-center">{row.jabatan || "-"}</TableCell>
+                  <TableCell className="text-center">{row.idpProgram || "-"}</TableCell>
+                  <TableCell className="text-center">{row.age || "-"}</TableCell>
+                  <TableCell className="text-center">{row.certificate || "-"}</TableCell>
+                  <TableCell className="text-center">{row.konditeReview || "-"}</TableCell>
+                  <TableCell className="text-center">{row.kpiVessel || "-"}</TableCell>
+                  <TableCell className="text-center">{row.performanceScore || "-"}</TableCell>
                   <TableCell className="text-center">
-                    {row.seamanCode}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.seafarerCode}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.vesselName}
-                  </TableCell>
-                  <TableCell className="text-center">{row.jabatan}</TableCell>
-                  <TableCell className="text-center">
-                    {row.idpProgram}
-                  </TableCell>
-                  <TableCell className="text-center">{row.age}</TableCell>
-                  <TableCell className="text-center">
-                    {row.certificate}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.konditeReview}
-                  </TableCell>
-                  <TableCell className="text-center">{row.kpiVessel}</TableCell>
-                  <TableCell className="text-center">
-                    {row.performanceScore}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.valueAssessment}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {Array.isArray(row.competencies) &&
-                    row.competencies.length > 0 ? (
+                    {Array.isArray(row.competencies) && row.competencies.length > 0 ? (
                       <div className="flex flex-wrap gap-1 justify-center">
                         {row.competencies.map((c) => {
                           const code = c?.competencyType?.code;
@@ -654,18 +811,12 @@ export default function MasterPage() {
                       "-"
                     )}
                   </TableCell>
-                  <TableCell className="text-center">{row.totalGap}</TableCell>
-                  <TableCell className="text-center">{row.strength}</TableCell>
-                  <TableCell className="text-center">
-                    {row.havQuadran}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.talentClassified}
-                  </TableCell>
-                  <TableCell className="text-center">{row.readiness}</TableCell>
-                  <TableCell className="text-center">
-                    {row.certificateEligible}
-                  </TableCell>
+                  <TableCell className="text-center">{row.totalGap || "-"}</TableCell>
+                  <TableCell className="text-center">{row.strength || "-"}</TableCell>
+                  <TableCell className="text-center">{row.havQuadran || "-"}</TableCell>
+                  <TableCell className="text-center">{row.talentClassified || "-"}</TableCell>
+                  <TableCell className="text-center">{row.readiness || "-"}</TableCell>
+                  <TableCell className="text-center">{row.certificateEligible || "-"}</TableCell>
                   {/* Dynamic assessment type score columns */}
                   {assessmentTypeColumns.map((assessmentTypeName) => (
                     <TableCell key={assessmentTypeName} className="text-center">
@@ -678,9 +829,9 @@ export default function MasterPage() {
               <TableRow>
                 <TableCell
                   colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)}
-                  className="text-center text-gray-400"
+                  className="text-center text-gray-400 h-32"
                 >
-                  No Data
+                  No Data Available
                 </TableCell>
               </TableRow>
             )}
@@ -688,15 +839,11 @@ export default function MasterPage() {
         </Table>
       </div>
 
-      {/* Pagination + page size */}
+      {/* Pagination */}
       <div className="flex items-center justify-between mt-4">
         <Popover>
           <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              className="w-[120px] justify-between"
-            >
+            <Button variant="outline" role="combobox" className="w-[120px] justify-between">
               {paginationRequest.pageSize}
               <ChevronsUpDownIcon className="ml-2 h-4 w-4 opacity-50" />
             </Button>
@@ -723,9 +870,7 @@ export default function MasterPage() {
                       <CheckIcon
                         className={cn(
                           "mr-2 h-4 w-4",
-                          paginationRequest.pageSize === size
-                            ? "opacity-100"
-                            : "opacity-0"
+                          paginationRequest.pageSize === size ? "opacity-100" : "opacity-0"
                         )}
                       />
                       {size}
@@ -742,14 +887,11 @@ export default function MasterPage() {
             <PaginationItem>
               <Button
                 disabled={
-                  !paginationData ||
-                  paginationData.first_page ||
-                  currentPage <= 1 ||
-                  onCallApi
+                  !paginationData || paginationData.first_page || currentPage <= 1 || onCallApi
                 }
                 onClick={() => navigatePage("prev")}
               >
-                <ChevronLeftIcon /> Previous
+                <ChevronLeftIcon className="h-4 w-4 mr-1" /> Previous
               </Button>
             </PaginationItem>
             <PaginationItem>
@@ -757,14 +899,14 @@ export default function MasterPage() {
                 disabled={!paginationData?.has_more || onCallApi}
                 onClick={() => navigatePage("next")}
               >
-                Next <ChevronRightIcon />
+                Next <ChevronRightIcon className="h-4 w-4 ml-1" />
               </Button>
             </PaginationItem>
           </PaginationContent>
         </Pagination>
 
         <span className="text-sm text-gray-600">
-          Page {currentPage} | Showing {paginationRequest.pageSize} rows
+          Page {currentPage} | Showing {paginationData?.results?.length || 0} of {paginationRequest.pageSize} rows
         </span>
       </div>
     </div>
