@@ -53,15 +53,20 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { useMasterReports } from "./_hooks/master-report";
+import { useGetAllAssessmentTypes } from "./_hooks/useAssessmentType";
 
 /* Dynamic sticky offset calculator */
-function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pinnedCount = 2) {
+function useDynamicStickyOffsets(
+  ref: React.RefObject<HTMLDivElement | null>,
+  pinnedCount = 2
+) {
   const [offsets, setOffsets] = useState<number[]>([]);
   useEffect(() => {
     const container = ref.current;
     if (!container) return;
     const updateOffsets = () => {
-      const heads = container.querySelectorAll<HTMLTableCellElement>("thead th");
+      const heads =
+        container.querySelectorAll<HTMLTableCellElement>("thead th");
       const newOffsets: number[] = [];
       let runningLeft = 0;
       for (let i = 0; i < pinnedCount; i++) {
@@ -93,9 +98,16 @@ export default function MasterPage() {
     updateReport,
   } = useMasterReports(10);
 
+  // Fetch assessment types
+  const { data: assessmentTypes = [] } = useGetAllAssessmentTypes();
+
   const [openDialog, setOpenDialog] = useState(false);
   const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false);
-  const [form, setForm] = useState({ nama: "", seamanCode: "", seafarerCode: "" });
+  const [form, setForm] = useState({
+    nama: "",
+    seamanCode: "",
+    seafarerCode: "",
+  });
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [editingRow, setEditingRow] = useState<any>(null);
@@ -106,7 +118,9 @@ export default function MasterPage() {
   const offsets = useDynamicStickyOffsets(tableRef, 2);
 
   const PAGE_SIZES = [10, 20, 30, 50, 100];
-  const TABLE_COLUMNS = [
+
+  // Build dynamic columns with assessment types
+  const STATIC_COLUMNS = [
     "No",
     "Name",
     "Seaman Code",
@@ -129,23 +143,33 @@ export default function MasterPage() {
     "Certificate Eligible",
   ];
 
+  // Add assessment type columns dynamically
+  const assessmentTypeColumns = assessmentTypes.map(
+    (type) => type.assessmentTypeName
+  );
+
+  const TABLE_COLUMNS = [...STATIC_COLUMNS, ...assessmentTypeColumns];
+
   const isFormValid = () =>
     form.nama.trim() && form.seamanCode.trim() && form.seafarerCode.trim();
 
   const isEditFormValid = () =>
-    editingRow?.nama?.trim() && editingRow?.seamanCode?.trim() && editingRow?.seafarerCode?.trim();
+    editingRow?.nama?.trim() &&
+    editingRow?.seamanCode?.trim() &&
+    editingRow?.seafarerCode?.trim();
 
   const navigatePage = (page: "prev" | "next") => {
     if (!paginationData) return;
-setCurrentPage((prev) => {
-  if (page === "prev" && prev <= 1) return 1; // prevent going below 1
-  return page === "next" ? prev + 1 : prev - 1;
-});
+    setCurrentPage((prev) => {
+      if (page === "prev" && prev <= 1) return 1; // prevent going below 1
+      return page === "next" ? prev + 1 : prev - 1;
+    });
 
     setPaginationRequest({
       ...paginationRequest,
       page,
-      anchorId: page === "next" ? paginationData.last_id : paginationData.first_id,
+      anchorId:
+        page === "next" ? paginationData.last_id : paginationData.first_id,
     });
   };
 
@@ -195,7 +219,9 @@ setCurrentPage((prev) => {
     const ids = paginationData.results.map((r) => r.id);
     const allSelected = ids.every((id) => selectedIds.has(id));
     const newSet = new Set(selectedIds);
-    allSelected ? ids.forEach((id) => newSet.delete(id)) : ids.forEach((id) => newSet.add(id));
+    allSelected
+      ? ids.forEach((id) => newSet.delete(id))
+      : ids.forEach((id) => newSet.add(id));
     setSelectedIds(newSet);
   };
 
@@ -229,228 +255,261 @@ setCurrentPage((prev) => {
     (currentPage - 1) * paginationRequest.pageSize + i + 1;
 
   function colorFromString(str: string) {
-  let hash = 0;
-  for (let i = 0; i < str.length; i++) {
-    hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      hash = str.charCodeAt(i) + ((hash << 5) - hash);
+    }
+    const hue = Math.abs(hash) % 360;
+    return `hsl(${hue}, 70%, 70%)`;
   }
-  const hue = Math.abs(hash) % 360;
-  return `hsl(${hue}, 70%, 70%)`;
-}
 
+  // Helper function to get score for assessment type
+  const getScoreForAssessmentType = (
+    row: any,
+    assessmentTypeName: string
+  ): number => {
+    if (!row.reportScores || !Array.isArray(row.reportScores)) {
+      return 0;
+    }
+    const scoreEntry = row.reportScores.find(
+      (rs: any) => rs.assessmentType?.assessmentTypeName === assessmentTypeName
+    );
+    return scoreEntry?.score ?? 0;
+  };
 
   const isAllCurrentPageSelected = () =>
     paginationData?.results?.every((r) => selectedIds.has(r.id)) ?? false;
 
   return (
-  
-      <div className="mt-8 p-4 m-6">
-  {/* Header Section */}
-  <div className="space-y-6 mb-6">
-    <div>
-      <div className="flex items-center gap-4 mb-6">
-        {/* Left Logo */}
-        <Image
-          width={64}
-          height={64}
-          src="/images/logo1.png"
-          alt="Company Logo"
-          className="h-12 w-auto"
-        />
-
-        {/* Title & Description */}
+    <div className="mt-8 p-4 m-6">
+      {/* Header Section */}
+      <div className="space-y-6 mb-6">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Master Table
-          </h1>
-          <p className="text-gray-500 mt-1">
-            Kelola data induk pelaut, performa, dan rencana pengembangan individu.
-          </p>
-        </div>
+          <div className="flex items-center gap-4 mb-6">
+            {/* Left Logo */}
+            <Image
+              width={64}
+              height={64}
+              src="/images/logo1.png"
+              alt="Company Logo"
+              className="h-12 w-auto"
+            />
 
-        {/* Right Logo */}
-        <Image
-          width={64}
-          height={64}
-          src="/images/logo2.png"
-          alt="Partner Logo"
-          className="h-12 w-auto ml-auto"
-        />
-      </div>
-
-      {/* Line Separator */}
-      <Separator />
-    </div>
-
-    {/* Toolbar: Search + Action Buttons */}
-    <div className="flex items-center justify-between">
-      {/* Search Input */}
-      <Input
-        placeholder="Search by Name or Seafarer Code..."
-        value={searchName}
-        onChange={(e) => {
-          setSearchName(e.target.value);
-          setCurrentPage(1);
-        }}
-        className="w-[300px]"
-      />
-
-      {/* Action Buttons */}
-      <div className="flex items-center gap-2">
-        {/* Edit / Cancel toggle */}
-        <Button
-          size="lg"
-          variant={isEditMode ? "destructive" : "outline"}
-          onClick={toggleEditMode}
-          className="flex items-center gap-2"
-        >
-          {isEditMode ? (
-            <>
-              <XIcon className="w-4 h-4" /> Cancel
-            </>
-          ) : (
-            <>
-              <EditIcon className="w-4 h-4" /> Edit
-            </>
-          )}
-        </Button>
-
-        {/* Delete button (only visible in edit mode) */}
-        {isEditMode && (
-          <Button
-            size="lg"
-            variant="destructive"
-            onClick={confirmDelete}
-            disabled={selectedIds.size === 0}
-            className="flex items-center gap-2"
-          >
-            <TrashIcon className="w-4 h-4" /> Delete ({selectedIds.size})
-          </Button>
-        )}
-
-        {/* Add Report Dialog */}
-        <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-          <DialogTrigger asChild>
-            <Button size="lg" className="flex items-center gap-2">
-              <PlusIcon className="w-4 h-4" /> Add Report
-            </Button>
-          </DialogTrigger>
-
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add New Report</DialogTitle>
-            </DialogHeader>
-
-            <div className="grid gap-4 py-2">
-              <Input
-                placeholder="Name"
-                value={form.nama}
-                onChange={(e) =>
-                  setForm({ ...form, nama: e.target.value.toUpperCase() })
-                }
-              />
-              <Input
-                placeholder="Seaman Code"
-                value={form.seamanCode}
-                onChange={(e) =>
-                  setForm({ ...form, seamanCode: e.target.value.toUpperCase() })
-                }
-              />
-              <Input
-                placeholder="Seafarer Code"
-                value={form.seafarerCode}
-                onChange={(e) =>
-                  setForm({ ...form, seafarerCode: e.target.value.toUpperCase() })
-                }
-              />
+            {/* Title & Description */}
+            <div>
+              <h1 className="text-3xl font-bold tracking-tight">
+                Master Table
+              </h1>
+              <p className="text-gray-500 mt-1">
+                Kelola data induk pelaut, performa, dan rencana pengembangan
+                individu.
+              </p>
             </div>
 
-            <DialogFooter>
-              <Button variant="outline" onClick={() => setOpenDialog(false)}>
-                Cancel
+            {/* Right Logo */}
+            <Image
+              width={64}
+              height={64}
+              src="/images/logo2.png"
+              alt="Partner Logo"
+              className="h-12 w-auto ml-auto"
+            />
+          </div>
+
+          {/* Line Separator */}
+          <Separator />
+        </div>
+
+        {/* Toolbar: Search + Action Buttons */}
+        <div className="flex items-center justify-between">
+          {/* Search Input */}
+          <Input
+            placeholder="Search by Name or Seafarer Code..."
+            value={searchName}
+            onChange={(e) => {
+              setSearchName(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-[300px]"
+          />
+
+          {/* Action Buttons */}
+          <div className="flex items-center gap-2">
+            {/* Edit / Cancel toggle */}
+            <Button
+              size="lg"
+              variant={isEditMode ? "destructive" : "outline"}
+              onClick={toggleEditMode}
+              className="flex items-center gap-2"
+            >
+              {isEditMode ? (
+                <>
+                  <XIcon className="w-4 h-4" /> Cancel
+                </>
+              ) : (
+                <>
+                  <EditIcon className="w-4 h-4" /> Edit
+                </>
+              )}
+            </Button>
+
+            {/* Delete button (only visible in edit mode) */}
+            {isEditMode && (
+              <Button
+                size="lg"
+                variant="destructive"
+                onClick={confirmDelete}
+                disabled={selectedIds.size === 0}
+                className="flex items-center gap-2"
+              >
+                <TrashIcon className="w-4 h-4" /> Delete ({selectedIds.size})
               </Button>
-              <Button onClick={handleAdd} disabled={!isFormValid()}>
-                Save
-              </Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
+            )}
+
+            {/* Add Report Dialog */}
+            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+              <DialogTrigger asChild>
+                <Button size="lg" className="flex items-center gap-2">
+                  <PlusIcon className="w-4 h-4" /> Add Report
+                </Button>
+              </DialogTrigger>
+
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Report</DialogTitle>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-2">
+                  <Input
+                    placeholder="Name"
+                    value={form.nama}
+                    onChange={(e) =>
+                      setForm({ ...form, nama: e.target.value.toUpperCase() })
+                    }
+                  />
+                  <Input
+                    placeholder="Seaman Code"
+                    value={form.seamanCode}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        seamanCode: e.target.value.toUpperCase(),
+                      })
+                    }
+                  />
+                  <Input
+                    placeholder="Seafarer Code"
+                    value={form.seafarerCode}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        seafarerCode: e.target.value.toUpperCase(),
+                      })
+                    }
+                  />
+                </div>
+
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => setOpenDialog(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button onClick={handleAdd} disabled={!isFormValid()}>
+                    Save
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </div>
+
+        {/* Line separator below toolbar */}
+        <Separator />
       </div>
-    </div>
 
-    {/* Line separator below toolbar */}
-    <Separator />
-  </div>
+      {/* Delete Confirmation Dialog */}
+      <Dialog open={confirmDeleteDialog} onOpenChange={setConfirmDeleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-red-600">
+              <AlertTriangle className="w-5 h-5" /> Confirm Deletion
+            </DialogTitle>
+          </DialogHeader>
+          <p className="text-gray-700">
+            Are you sure you want to delete {selectedIds.size} selected{" "}
+            {selectedIds.size > 1 ? "reports" : "report"}? This action cannot be
+            undone.
+          </p>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setConfirmDeleteDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteConfirmed}>
+              Yes, Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
-  {/* Delete Confirmation Dialog */}
-  <Dialog open={confirmDeleteDialog} onOpenChange={setConfirmDeleteDialog}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle className="flex items-center gap-2 text-red-600">
-          <AlertTriangle className="w-5 h-5" /> Confirm Deletion
-        </DialogTitle>
-      </DialogHeader>
-      <p className="text-gray-700">
-        Are you sure you want to delete {selectedIds.size} selected{" "}
-        {selectedIds.size > 1 ? "reports" : "report"}? This action cannot be undone.
-      </p>
-      <DialogFooter>
-        <Button variant="outline" onClick={() => setConfirmDeleteDialog(false)}>
-          Cancel
-        </Button>
-        <Button variant="destructive" onClick={handleDeleteConfirmed}>
-          Yes, Delete
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-
-  {/* Edit Dialog */}
-  <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
-    <DialogContent>
-      <DialogHeader>
-        <DialogTitle>Edit Report</DialogTitle>
-      </DialogHeader>
-      <div className="grid gap-4 py-2">
-        <Input
-          placeholder="Name"
-          value={editingRow?.nama || ""}
-          onChange={(e) =>
-            setEditingRow({ ...editingRow, nama: e.target.value.toUpperCase() })
-          }
-        />
-        <Input
-          placeholder="Seaman Code"
-          value={editingRow?.seamanCode || ""}
-          onChange={(e) =>
-            setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })
-          }
-        />
-        <Input
-          placeholder="Seafarer Code"
-          value={editingRow?.seafarerCode || ""}
-          onChange={(e) =>
-            setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })
-          }
-        />
-      </div>
-      <DialogFooter>
-        <Button
-          variant="outline"
-          onClick={() => {
-            setOpenEditDialog(false);
-            setEditingRow(null);
-          }}
-        >
-          Cancel
-        </Button>
-        <Button onClick={handleEdit} disabled={!isEditFormValid()}>
-          Update
-        </Button>
-      </DialogFooter>
-    </DialogContent>
-  </Dialog>
-
-
+      {/* Edit Dialog */}
+      <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Report</DialogTitle>
+          </DialogHeader>
+          <div className="grid gap-4 py-2">
+            <Input
+              placeholder="Name"
+              value={editingRow?.nama || ""}
+              onChange={(e) =>
+                setEditingRow({
+                  ...editingRow,
+                  nama: e.target.value.toUpperCase(),
+                })
+              }
+            />
+            <Input
+              placeholder="Seaman Code"
+              value={editingRow?.seamanCode || ""}
+              onChange={(e) =>
+                setEditingRow({
+                  ...editingRow,
+                  seamanCode: e.target.value.toUpperCase(),
+                })
+              }
+            />
+            <Input
+              placeholder="Seafarer Code"
+              value={editingRow?.seafarerCode || ""}
+              onChange={(e) =>
+                setEditingRow({
+                  ...editingRow,
+                  seafarerCode: e.target.value.toUpperCase(),
+                })
+              }
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setOpenEditDialog(false);
+                setEditingRow(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button onClick={handleEdit} disabled={!isEditFormValid()}>
+              Update
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Table */}
       <div
@@ -477,7 +536,10 @@ setCurrentPage((prev) => {
               {TABLE_COLUMNS.map((col, i) => (
                 <TableHead
                   key={col}
-                  className={cn("text-center bg-background border", i < 2 ? "sticky z-40" : "")}
+                  className={cn(
+                    "text-center bg-background border",
+                    i < 2 ? "sticky z-40" : ""
+                  )}
                   style={i < 2 ? { left: `${offsets[i] || 0}px` } : {}}
                 >
                   {col}
@@ -522,55 +584,94 @@ setCurrentPage((prev) => {
                   )}
                   <TableCell
                     className="text-center bg-background border sticky z-30"
-                    style={{ left: `${offsets[0] || 0}px`, width: "60px", pointerEvents: "none" }}
+                    style={{
+                      left: `${offsets[0] || 0}px`,
+                      width: "60px",
+                      pointerEvents: "none",
+                    }}
                   >
-                    <span className="pointer-events-auto">{getRowNumber(i)}</span>
+                    <span className="pointer-events-auto">
+                      {getRowNumber(i)}
+                    </span>
                   </TableCell>
                   <TableCell
                     className="text-center bg-background border sticky z-30"
-                    style={{ left: `${offsets[1] || 0}px`, width: "200px", pointerEvents: "none" }}
+                    style={{
+                      left: `${offsets[1] || 0}px`,
+                      width: "200px",
+                      pointerEvents: "none",
+                    }}
                   >
                     <span className="pointer-events-auto">{row.nama}</span>
                   </TableCell>
-                  <TableCell className="text-center">{row.seamanCode}</TableCell>
-                  <TableCell className="text-center">{row.seafarerCode}</TableCell>
-                  <TableCell className="text-center">{row.vesselName}</TableCell>
+                  <TableCell className="text-center">
+                    {row.seamanCode}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.seafarerCode}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.vesselName}
+                  </TableCell>
                   <TableCell className="text-center">{row.jabatan}</TableCell>
-                  <TableCell className="text-center">{row.idpProgram}</TableCell>
+                  <TableCell className="text-center">
+                    {row.idpProgram}
+                  </TableCell>
                   <TableCell className="text-center">{row.age}</TableCell>
-                  <TableCell className="text-center">{row.certificate}</TableCell>
-                  <TableCell className="text-center">{row.konditeReview}</TableCell>
+                  <TableCell className="text-center">
+                    {row.certificate}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.konditeReview}
+                  </TableCell>
                   <TableCell className="text-center">{row.kpiVessel}</TableCell>
-                  <TableCell className="text-center">{row.performanceScore}</TableCell>
-                  <TableCell className="text-center">{row.valueAssessment}</TableCell>
-<TableCell className="text-center">
-  {Array.isArray(row.competencies) && row.competencies.length > 0 ? (
-    <div className="flex flex-wrap gap-1 justify-center">
-      {row.competencies.map((c) => {
-        const code = c?.competencyType?.code;
-        if (!code) return null;
+                  <TableCell className="text-center">
+                    {row.performanceScore}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.valueAssessment}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {Array.isArray(row.competencies) &&
+                    row.competencies.length > 0 ? (
+                      <div className="flex flex-wrap gap-1 justify-center">
+                        {row.competencies.map((c) => {
+                          const code = c?.competencyType?.code;
+                          if (!code) return null;
 
-        return (
-          <span
-            key={code}
-            className="px-2 py-1 rounded-xl text-xs font-semibold text-white"
-            style={{ backgroundColor: colorFromString(code) }}
-          >
-            {code}
-          </span>
-        );
-      })}
-    </div>
-  ) : (
-    "-"
-  )}
-</TableCell>
+                          return (
+                            <span
+                              key={code}
+                              className="px-2 py-1 rounded-xl text-xs font-semibold text-white"
+                              style={{ backgroundColor: colorFromString(code) }}
+                            >
+                              {code}
+                            </span>
+                          );
+                        })}
+                      </div>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   <TableCell className="text-center">{row.totalGap}</TableCell>
                   <TableCell className="text-center">{row.strength}</TableCell>
-                  <TableCell className="text-center">{row.havQuadran}</TableCell>
-                  <TableCell className="text-center">{row.talentClassified}</TableCell>
+                  <TableCell className="text-center">
+                    {row.havQuadran}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.talentClassified}
+                  </TableCell>
                   <TableCell className="text-center">{row.readiness}</TableCell>
-                  <TableCell className="text-center">{row.certificateEligible}</TableCell>
+                  <TableCell className="text-center">
+                    {row.certificateEligible}
+                  </TableCell>
+                  {/* Dynamic assessment type score columns */}
+                  {assessmentTypeColumns.map((assessmentTypeName) => (
+                    <TableCell key={assessmentTypeName} className="text-center">
+                      {getScoreForAssessmentType(row, assessmentTypeName)}
+                    </TableCell>
+                  ))}
                 </TableRow>
               ))
             ) : (
@@ -586,8 +687,6 @@ setCurrentPage((prev) => {
           </TableBody>
         </Table>
       </div>
-
-
 
       {/* Pagination + page size */}
       <div className="flex items-center justify-between mt-4">
@@ -641,11 +740,15 @@ setCurrentPage((prev) => {
         <Pagination className="mx-auto">
           <PaginationContent className="flex justify-center">
             <PaginationItem>
-<Button
-  disabled={!paginationData || paginationData.first_page || currentPage <= 1 || onCallApi}
-  onClick={() => navigatePage("prev")}
->
-
+              <Button
+                disabled={
+                  !paginationData ||
+                  paginationData.first_page ||
+                  currentPage <= 1 ||
+                  onCallApi
+                }
+                onClick={() => navigatePage("prev")}
+              >
                 <ChevronLeftIcon /> Previous
               </Button>
             </PaginationItem>
