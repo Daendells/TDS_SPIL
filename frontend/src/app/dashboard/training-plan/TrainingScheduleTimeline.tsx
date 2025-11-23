@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Save, RotateCcw } from "lucide-react";
+import { ChevronDown, ChevronRight, Save, RotateCcw, Edit } from "lucide-react";
 import { toast } from "sonner";
 import { useSwapSchedules } from "./_hooks/useTrainingPlan";
 import type { TrainingPlanSummary } from "./_hooks/useTrainingPlan";
@@ -34,6 +34,7 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
   const [originalSchedules, setOriginalSchedules] = useState<ScheduleItem[]>([]);
   const [draggedItem, setDraggedItem] = useState<ScheduleItem | null>(null);
   const [dragOverItem, setDragOverItem] = useState<ScheduleItem | null>(null);
+  const [editMode, setEditMode] = useState(false);
   const swapSchedules = useSwapSchedules();
 
   const toggleMonth = (monthKey: string) => {
@@ -231,6 +232,7 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
     try {
       await swapSchedules.mutateAsync({ swaps, program });
       setOriginalSchedules(schedules.map(s => ({ ...s, scheduledDate: new Date(s.scheduledDate) })));
+      setEditMode(false);
       toast.success("Schedules saved successfully!");
     } catch (error) {
       toast.error("Failed to save schedules");
@@ -240,6 +242,7 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
 
   const handleReset = () => {
     setSchedules(originalSchedules.map(s => ({ ...s, scheduledDate: new Date(s.scheduledDate) })));
+    setEditMode(false);
     toast.info("Changes reset");
   };
 
@@ -258,7 +261,13 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Training Schedule Timeline ({program})</h3>
         <div className="flex items-center gap-2">
-          {hasChanges() && (
+          {!editMode && (
+            <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
+              <Edit className="h-4 w-4 mr-2" />
+              Edit Schedules
+            </Button>
+          )}
+          {editMode && hasChanges() && (
             <>
               <Button variant="outline" size="sm" onClick={handleReset}>
                 <RotateCcw className="h-4 w-4 mr-2" />
@@ -269,6 +278,11 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
                 {swapSchedules.isPending ? "Saving..." : "Save Changes"}
               </Button>
             </>
+          )}
+          {editMode && !hasChanges() && (
+            <Button variant="outline" size="sm" onClick={() => setEditMode(false)}>
+              Cancel
+            </Button>
           )}
         </div>
       </div>
@@ -312,18 +326,22 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
                           .map((schedule, index) => (
                             <div 
                               key={schedule.id}
-                              draggable
-                              onDragStart={(e) => handleDragStart(e, schedule)}
-                              onDragOver={(e) => handleDragOver(e, schedule)}
-                              onDragLeave={handleDragLeave}
-                              onDrop={(e) => handleDrop(e, schedule)}
-                              onDragEnd={handleDragEnd}
-                              className={`flex items-center gap-4 p-3 rounded-lg cursor-move transition-all ${
-                                draggedItem?.id === schedule.id 
-                                  ? 'opacity-50 bg-blue-100' 
-                                  : dragOverItem?.id === schedule.id
-                                  ? 'bg-blue-50 border-2 border-blue-300'
-                                  : 'bg-muted/50 hover:bg-muted/70'
+                              draggable={editMode}
+                              onDragStart={(e) => editMode && handleDragStart(e, schedule)}
+                              onDragOver={(e) => editMode && handleDragOver(e, schedule)}
+                              onDragLeave={editMode ? handleDragLeave : undefined}
+                              onDrop={(e) => editMode && handleDrop(e, schedule)}
+                              onDragEnd={editMode ? handleDragEnd : undefined}
+                              className={`flex items-center gap-4 p-3 rounded-lg transition-all ${
+                                editMode 
+                                  ? `cursor-move ${
+                                      draggedItem?.id === schedule.id 
+                                        ? 'opacity-50 bg-blue-100' 
+                                        : dragOverItem?.id === schedule.id
+                                        ? 'bg-blue-50 border-2 border-blue-300'
+                                        : 'bg-muted/50 hover:bg-muted/70'
+                                    }`
+                                  : 'bg-muted/50'
                               }`}
                             >
                               <div className="flex-shrink-0 w-12 text-center">
