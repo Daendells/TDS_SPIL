@@ -15,11 +15,12 @@ export interface TrainingPlanParticipant {
 }
 
 export interface TrainingPlanSummary {
-  total: { [key: string]: number };           // Total participants with each gap
-  percentageGap: { [key: string]: number };   // Percentage of participants with each gap
-  category: { [key: string]: string };        // M or NM for each competency
-  trainingMateri1: { [key: string]: string }; // Scheduled dates for Materi 1
-  trainingMateri2: { [key: string]: string }; // Scheduled dates for Materi 2
+  total: { [key: string]: number };           
+  percentageGap: { [key: string]: number };   
+  category: { [key: string]: string };        
+  trainingMateri1: { [key: string]: string }; 
+  trainingMateri2: { [key: string]: string }; 
+  scheduleIds: { [competencyCode: string]: { [materialType: string]: number } };
 }
 
 export interface TrainingPlanResponse {
@@ -154,6 +155,28 @@ export function useGenerateSchedules() {
     },
     onSuccess: (_, variables) => {
       // Invalidate and refetch training plan data after successful generation
+      queryClient.invalidateQueries({
+        queryKey: trainingPlanKeys.byProgram(variables.program)
+      });
+    },
+  });
+}
+
+export function useSwapSchedules() {
+  const queryClient = useQueryClient();
+
+  return useMutation<void, Error, { swaps: { id: number; scheduledDate: string }[]; program: string }>({
+    mutationFn: async ({ swaps }) => {
+      const response = await api.put<ApiResponse<{ message: string }>>(
+        `/api/training-plan/swap-schedules`,
+        { swaps }
+      );
+
+      if (!response.data || !response.data.success) {
+        throw new Error("Failed to swap training schedules");
+      }
+    },
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: trainingPlanKeys.byProgram(variables.program)
       });

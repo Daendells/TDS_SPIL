@@ -1,7 +1,10 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
-import { ChevronDown, ChevronRight } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { ChevronDown, ChevronRight, Save, RotateCcw } from "lucide-react";
+import { toast } from "sonner";
+import { useSwapSchedules } from "./_hooks/useTrainingPlan";
 import type { TrainingPlanSummary } from "./_hooks/useTrainingPlan";
 
 interface TrainingScheduleTimelineProps {
@@ -16,6 +19,7 @@ interface TrainingScheduleTimelineProps {
 }
 
 interface ScheduleItem {
+  id: number;
   competencyCode: string;
   competencyName: string;
   trainingMaterial: string;
@@ -26,6 +30,11 @@ interface ScheduleItem {
 
 export default function TrainingScheduleTimeline({ summary, program, competencyMapping }: TrainingScheduleTimelineProps) {
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
+  const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
+  const [originalSchedules, setOriginalSchedules] = useState<ScheduleItem[]>([]);
+  const [draggedItem, setDraggedItem] = useState<ScheduleItem | null>(null);
+  const [dragOverItem, setDragOverItem] = useState<ScheduleItem | null>(null);
+  const swapSchedules = useSwapSchedules();
 
   const toggleMonth = (monthKey: string) => {
     const newCollapsed = new Set(collapsedMonths);
@@ -37,7 +46,6 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
     setCollapsedMonths(newCollapsed);
   };
 
-  // Helper untuk memetakan label minggu ke tanggal representatif (1, 8, 15, 22)
   const weekLabelToDay = (label: string): number => {
     switch (label.trim().toUpperCase()) {
       case "I":
@@ -61,36 +69,33 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
     return "IV";
   };
 
-  // Get competency name from mapping
   const getCompetencyName = (competencyCode: string): string => {
     return competencyMapping?.[competencyCode]?.name || competencyCode;
   };
 
-  // Get training material from mapping based on material type
   const getTrainingMaterial = (competencyCode: string, materialType: 1 | 2): string => {
     const topics = competencyMapping?.[competencyCode]?.training_topics;
     if (!topics || topics.length === 0) return "Training Material";
-    
-    // materialType 1 = index 0, materialType 2 = index 1
     return topics[materialType - 1] || topics[0] || "Training Material";
   };
 
-  // Parse and combine schedule data dari trainingMateri1 dan trainingMateri2 (format "I-10")
   const parseSchedules = (): ScheduleItem[] => {
-    const schedules: ScheduleItem[] = [];
+    const schedulesArray: ScheduleItem[] = [];
 
-    // Parse Materi 1 schedules
     Object.entries(summary.trainingMateri1).forEach(([competencyCode, dateStr]) => {
       if (dateStr && dateStr !== "-") {
         const [weekLabel, month] = dateStr.split("-");
         let year = 2025;
         const monthNum = parseInt(month);
         if (monthNum >= 1 && monthNum <= 9) {
-          year = 2026; // Januari–September 2026
+          year = 2026;
         }
         const date = new Date(year, monthNum - 1, weekLabelToDay(weekLabel));
         
-        schedules.push({
+        const scheduleId = summary.scheduleIds?.[competencyCode]?.["1"] || 0;
+        
+        schedulesArray.push({
+          id: scheduleId,
           competencyCode,
           competencyName: getCompetencyName(competencyCode),
           trainingMaterial: getTrainingMaterial(competencyCode, 1),
@@ -101,18 +106,20 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
       }
     });
 
-    // Parse Materi 2 schedules
     Object.entries(summary.trainingMateri2).forEach(([competencyCode, dateStr]) => {
       if (dateStr && dateStr !== "-") {
         const [weekLabel, month] = dateStr.split("-");
         let year = 2025;
         const monthNum = parseInt(month);
         if (monthNum >= 1 && monthNum <= 9) {
-          year = 2026; // Januari–September 2026
+          year = 2026;
         }
         const date = new Date(year, monthNum - 1, weekLabelToDay(weekLabel));
         
-        schedules.push({
+        const scheduleId = summary.scheduleIds?.[competencyCode]?.["2"] || 0;
+        
+        schedulesArray.push({
+          id: scheduleId,
           competencyCode,
           competencyName: getCompetencyName(competencyCode),
           trainingMaterial: getTrainingMaterial(competencyCode, 2),
@@ -123,16 +130,20 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
       }
     });
 
-    // Sort by date
-    return schedules.sort((a, b) => a.scheduledDate.getTime() - b.scheduledDate.getTime());
+    return schedulesArray.sort((a, b) => a.scheduledDate.getTime() - b.scheduledDate.getTime());
   };
 
-  // Generate months to display based on schedules
-  const generateMonthsToDisplay = (schedules: ScheduleItem[]): Date[] => {
-    if (schedules.length === 0) return [];
+  useEffect(() => {
+    const parsedSchedules = parseSchedules();
+    setSchedules(parsedSchedules);
+    setOriginalSchedules(parsedSchedules.map(s => ({ ...s, scheduledDate: new Date(s.scheduledDate) })));
+  }, [summary]);
 
-    const startDate = new Date(schedules[0].scheduledDate);
-    const endDate = new Date(schedules[schedules.length - 1].scheduledDate);
+  const generateMonthsToDisplay = (schedulesData: ScheduleItem[]): Date[] => {
+    if (schedulesData.length === 0) return [];
+
+    const startDate = new Date(schedulesData[0].scheduledDate);
+    const endDate = new Date(schedulesData[schedulesData.length - 1].scheduledDate);
     
     const months: Date[] = [];
     const current = new Date(startDate.getFullYear(), startDate.getMonth(), 1);
@@ -146,15 +157,92 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
     return months;
   };
 
-  // Get schedules for a specific month
-  const getSchedulesForMonth = (schedules: ScheduleItem[], month: Date): ScheduleItem[] => {
-    return schedules.filter(schedule => 
+  const getSchedulesForMonth = (schedulesData: ScheduleItem[], month: Date): ScheduleItem[] => {
+    return schedulesData.filter(schedule => 
       schedule.scheduledDate.getMonth() === month.getMonth() &&
       schedule.scheduledDate.getFullYear() === month.getFullYear()
     );
   };
 
-  const schedules = parseSchedules();
+  const handleDragStart = (e: React.DragEvent, item: ScheduleItem) => {
+    setDraggedItem(item);
+    e.dataTransfer.effectAllowed = "move";
+  };
+
+  const handleDragOver = (e: React.DragEvent, item: ScheduleItem) => {
+    e.preventDefault();
+    setDragOverItem(item);
+  };
+
+  const handleDragLeave = () => {
+    setDragOverItem(null);
+  };
+
+  const handleDrop = (e: React.DragEvent, targetItem: ScheduleItem) => {
+    e.preventDefault();
+    
+    if (!draggedItem || draggedItem.id === targetItem.id) {
+      setDraggedItem(null);
+      setDragOverItem(null);
+      return;
+    }
+
+    const newSchedules = [...schedules];
+    const draggedIndex = newSchedules.findIndex(s => s.id === draggedItem.id);
+    const targetIndex = newSchedules.findIndex(s => s.id === targetItem.id);
+
+    const tempDate = newSchedules[draggedIndex].scheduledDate;
+    newSchedules[draggedIndex].scheduledDate = newSchedules[targetIndex].scheduledDate;
+    newSchedules[targetIndex].scheduledDate = tempDate;
+
+    newSchedules.sort((a, b) => a.scheduledDate.getTime() - b.scheduledDate.getTime());
+    
+    setSchedules(newSchedules);
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedItem(null);
+    setDragOverItem(null);
+  };
+
+  const hasChanges = () => {
+    return JSON.stringify(schedules.map(s => ({ id: s.id, date: s.scheduledDate.getTime() }))) !== 
+           JSON.stringify(originalSchedules.map(s => ({ id: s.id, date: s.scheduledDate.getTime() })));
+  };
+
+  const handleSave = async () => {
+    const swaps = schedules
+      .filter((schedule, index) => {
+        const original = originalSchedules.find(o => o.id === schedule.id);
+        return original && original.scheduledDate.getTime() !== schedule.scheduledDate.getTime();
+      })
+      .map(schedule => ({
+        id: schedule.id,
+        scheduledDate: schedule.scheduledDate.toISOString(),
+      }));
+
+    if (swaps.length === 0) {
+      toast.info("No changes to save");
+      return;
+    }
+
+    try {
+      await swapSchedules.mutateAsync({ swaps, program });
+      setOriginalSchedules(schedules.map(s => ({ ...s, scheduledDate: new Date(s.scheduledDate) })));
+      toast.success("Schedules saved successfully!");
+    } catch (error) {
+      toast.error("Failed to save schedules");
+      console.error("Save error:", error);
+    }
+  };
+
+  const handleReset = () => {
+    setSchedules(originalSchedules.map(s => ({ ...s, scheduledDate: new Date(s.scheduledDate) })));
+    toast.info("Changes reset");
+  };
+
   const monthsToDisplay = generateMonthsToDisplay(schedules);
 
   if (schedules.length === 0) {
@@ -169,8 +257,19 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold">Training Schedule Timeline ({program})</h3>
-        <div className="flex items-center gap-4 text-sm">
-          
+        <div className="flex items-center gap-2">
+          {hasChanges() && (
+            <>
+              <Button variant="outline" size="sm" onClick={handleReset}>
+                <RotateCcw className="h-4 w-4 mr-2" />
+                Reset
+              </Button>
+              <Button size="sm" onClick={handleSave} disabled={swapSchedules.isPending}>
+                <Save className="h-4 w-4 mr-2" />
+                {swapSchedules.isPending ? "Saving..." : "Save Changes"}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
@@ -206,13 +305,27 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
                 
                 {!isCollapsed && (
                   <div className="p-4">
-                    {/* Timeline view for the month */}
                     <div className="space-y-3">
                       {monthSchedules.length > 0 ? (
                         monthSchedules
                           .sort((a, b) => a.scheduledDate.getDate() - b.scheduledDate.getDate())
                           .map((schedule, index) => (
-                            <div key={index} className="flex items-center gap-4 p-3 bg-muted/50 rounded-lg">
+                            <div 
+                              key={schedule.id}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, schedule)}
+                              onDragOver={(e) => handleDragOver(e, schedule)}
+                              onDragLeave={handleDragLeave}
+                              onDrop={(e) => handleDrop(e, schedule)}
+                              onDragEnd={handleDragEnd}
+                              className={`flex items-center gap-4 p-3 rounded-lg cursor-move transition-all ${
+                                draggedItem?.id === schedule.id 
+                                  ? 'opacity-50 bg-blue-100' 
+                                  : dragOverItem?.id === schedule.id
+                                  ? 'bg-blue-50 border-2 border-blue-300'
+                                  : 'bg-muted/50 hover:bg-muted/70'
+                              }`}
+                            >
                               <div className="flex-shrink-0 w-12 text-center">
                                 <div className="text-lg font-bold">
                                   {getWeekLabel(schedule.scheduledDate)}

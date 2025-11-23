@@ -69,6 +69,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 	{
 		trainingPlan.GET("", c.TrainingPlanController.GetTrainingPlan)
 		trainingPlan.POST("/generate-schedules", c.TrainingPlanController.GenerateSchedules)
+		trainingPlan.PUT("/swap-schedules", c.TrainingPlanController.SwapSchedules)
 		trainingPlan.GET("/competency-mapping", c.TrainingPlanController.GetCompetencyMapping)
 		trainingPlan.GET("/programs", c.TrainingPlanController.GetAvailablePrograms)
 	}
