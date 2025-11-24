@@ -3,13 +3,14 @@ package web
 import "time"
 
 type AssessmentResultData struct {
-	ID           int64      `json:"id"`
-	SeafarerCode string     `json:"seafarerCode"`
-	AssessmentID int64      `json:"assessmentId"`
-	IsCompleted  int8       `json:"isCompleted"`
-	CompletedAt  *time.Time `json:"completedAt"`
-	CreatedAt    time.Time  `json:"createdAt"`
-	UpdatedAt    time.Time  `json:"updatedAt"`
+	ID              int64      `json:"id"`
+	SeafarerCode    string     `json:"seafarerCode"`
+	AssessmentID    int64      `json:"assessmentId"`
+	IsCompleted     int8       `json:"isCompleted"`
+	CompletedAt     *time.Time `json:"completedAt"`
+	CreatedAt       time.Time  `json:"createdAt"`
+	UpdatedAt       time.Time  `json:"updatedAt"`
+	ValueAssessment int        `json:"valueAssessment"`
 
 	// Optional relations
 	ScoreResults []ScoreResultData `json:"scoreResults,omitempty"`

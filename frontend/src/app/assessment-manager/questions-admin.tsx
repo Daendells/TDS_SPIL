@@ -26,7 +26,6 @@ import {
   Trash,
   FileText,
   Settings,
-  Tags,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
@@ -208,13 +207,6 @@ export default function QuestionsAdmin() {
     setBulkDeleteDialogOpen(false);
   };
 
-  const handleBulkAssignAspect = () => {
-    if (selectedQuestions.length === 0) {
-      toast.error("Silakan pilih pertanyaan untuk assign aspect");
-      return;
-    }
-    setBulkAssignAspectDialogOpen(true);
-  };
 
   const handleConfirmBulkAssignAspect = async (aspectId: number | null) => {
     setBulkAssignAspectLoading(true);
@@ -387,16 +379,6 @@ export default function QuestionsAdmin() {
                   </div>
                   {selectedQuestions.length > 0 && (
                     <>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleBulkAssignAspect}
-                        disabled={bulkAssignAspectLoading}
-                        className="flex items-center gap-2"
-                      >
-                        <Tags className="h-4 w-4" />
-                        Assign Aspect ({selectedQuestions.length})
-                      </Button>
                       <Button
                         variant="destructive"
                         size="sm"

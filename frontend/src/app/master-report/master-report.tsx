@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -61,6 +61,7 @@ import { Label } from "@/components/ui/label";
 import { useMasterReports } from "./_hooks/master-report";
 import { useApi } from "@/hooks/use-api";
 import { useGetAllAssessmentTypes } from "./_hooks/useAssessmentType";
+import type { IReport } from "@/types/global-types";
 
 interface CompetencyType {
   id: number;
@@ -99,7 +100,6 @@ export default function MasterPage() {
     paginationData,
     paginationRequest,
     setPaginationRequest,
-    pageSize,
     setPageSize,
     searchName,
     setSearchName,
@@ -116,10 +116,9 @@ export default function MasterPage() {
   const [form, setForm] = useState({ nama: "", seamanCode: "", seafarerCode: "" });
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [editingRow, setEditingRow] = useState<any>(null);
+  const [editingRow, setEditingRow] = useState<IReport | null>(null);
   const [openEditDialog, setOpenEditDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [isUpdating, setIsUpdating] = useState(false);
 
   // Competency states
   const [competencyTypes, setCompetencyTypes] = useState<CompetencyType[]>([]);
@@ -162,25 +161,25 @@ export default function MasterPage() {
 
   const TABLE_COLUMNS = [...STATIC_COLUMNS, ...assessmentTypeColumns];
 
-  // Fetch competency types on mount
-  useEffect(() => {
-    fetchCompetencyTypes();
-  }, []);
-
-  const fetchCompetencyTypes = async () => {
+  const fetchCompetencyTypes = useCallback(async () => {
     setLoadingCompetencies(true);
     try {
       const response = await api.get("/api/competency-types");
       const data = response.data?.data || response.data || [];
       setCompetencyTypes(Array.isArray(data) ? data : []);
       console.log("Loaded competency types:", data);
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Failed to fetch competency types:", error);
       toast.error("Failed to load competency types");
     } finally {
       setLoadingCompetencies(false);
     }
-  };
+  }, [api]);
+
+  // Fetch competency types on mount
+  useEffect(() => {
+    fetchCompetencyTypes();
+  }, [fetchCompetencyTypes]);
 
   const isFormValid = () =>
     form.nama.trim() && form.seamanCode.trim() && form.seafarerCode.trim();
@@ -214,21 +213,23 @@ export default function MasterPage() {
       await createReport(form);
       setForm({ nama: "", seamanCode: "", seafarerCode: "" });
       setOpenDialog(false);
-      setCurrentPage(1);
-    } catch (err: any) {
-      console.error("Create error:", err);
+      setPaginationRequest({ ...paginationRequest, anchorId: 0, page: "next" });
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to add report");
     }
   };
 
   const handleEdit = async () => {
-    if (!isEditFormValid()) {
-      toast.error("Please fill in all required fields!");
-      return;
-    }
-    
-    setIsUpdating(true);
+    if (!isEditFormValid()) return toast.error("Please fill in all fields!");
+    if (!editingRow) return;
     try {
-      const updatePayload: any = {
+      const updatePayload: {
+        nama: string;
+        seamanCode: string;
+        seafarerCode: string;
+        competencies?: Array<{ competencyTypeId: number }>;
+      } = {
         nama: editingRow.nama,
         seamanCode: editingRow.seamanCode,
         seafarerCode: editingRow.seafarerCode,
@@ -246,15 +247,13 @@ export default function MasterPage() {
 
       console.log("Update payload:", updatePayload);
       await updateReport(editingRow.id, updatePayload);
-      
+
       setOpenEditDialog(false);
       setEditingRow(null);
-      setSelectedCompetencies([]);
-      setCurrentPage(1);
-    } catch (err: any) {
-      console.error("Update error:", err);
-    } finally {
-      setIsUpdating(false);
+      setPaginationRequest({ ...paginationRequest });
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to update report");
     }
   };
 
@@ -265,7 +264,11 @@ export default function MasterPage() {
 
   const toggleRowSelection = (id: number) => {
     const newSet = new Set(selectedIds);
-    newSet.has(id) ? newSet.delete(id) : newSet.add(id);
+    if (newSet.has(id)) {
+      newSet.delete(id);
+    } else {
+      newSet.add(id);
+    }
     setSelectedIds(newSet);
   };
 
@@ -274,7 +277,11 @@ export default function MasterPage() {
     const ids = paginationData.results.map((r) => r.id);
     const allSelected = ids.every((id) => selectedIds.has(id));
     const newSet = new Set(selectedIds);
-    allSelected ? ids.forEach((id) => newSet.delete(id)) : ids.forEach((id) => newSet.add(id));
+    if (allSelected) {
+      ids.forEach((id) => newSet.delete(id));
+    } else {
+      ids.forEach((id) => newSet.add(id));
+    }
     setSelectedIds(newSet);
   };
 
@@ -291,18 +298,19 @@ export default function MasterPage() {
     try {
       for (const id of selectedIds) await deleteReport(id);
       setSelectedIds(new Set());
-      setCurrentPage(1);
-    } catch (err: any) {
-      console.error("Delete error:", err);
+      setPaginationRequest({ ...paginationRequest, anchorId: 0, page: "next" });
+    } catch (err: unknown) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Delete failed");
     }
   };
 
-  const handleRowClick = (row: any) => {
+  const handleRowClick = (row: IReport) => {
     if (!isEditMode) return;
     setEditingRow({ ...row });
-    
+
     // Set selected competencies from row data
-    const competencyIds = row.competencies?.map((c: any) => c.competencyTypeId) || [];
+    const competencyIds = row.competencies?.map((c) => c.competencyTypeId).filter((id): id is number => id !== undefined) || [];
     setSelectedCompetencies(competencyIds);
     
     console.log("Editing row:", row);
@@ -339,14 +347,14 @@ export default function MasterPage() {
 
   // Helper function to get score for assessment type
   const getScoreForAssessmentType = (
-    row: any,
+    row: IReport & { reportScores?: Array<{ score?: number; assessmentType?: { assessmentTypeName?: string } }> },
     assessmentTypeName: string
   ): number => {
     if (!row.reportScores || !Array.isArray(row.reportScores)) {
       return 0;
     }
     const scoreEntry = row.reportScores.find(
-      (rs: any) => rs.assessmentType?.assessmentTypeName === assessmentTypeName
+      (rs) => rs.assessmentType?.assessmentTypeName === assessmentTypeName
     );
     return scoreEntry?.score ?? 0;
   };
@@ -552,11 +560,11 @@ export default function MasterPage() {
                 placeholder="Name"
                 value={editingRow?.nama || ""}
                 onChange={(e) =>
-                  setEditingRow({ ...editingRow, nama: e.target.value.toUpperCase() })
+                  editingRow && setEditingRow({ ...editingRow, nama: e.target.value.toUpperCase() })
                 }
               />
             </div>
-            
+
             <div>
               <Label htmlFor="edit-seamanCode">Seaman Code *</Label>
               <Input
@@ -564,11 +572,11 @@ export default function MasterPage() {
                 placeholder="Seaman Code"
                 value={editingRow?.seamanCode || ""}
                 onChange={(e) =>
-                  setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })
+                  editingRow && setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })
                 }
               />
             </div>
-            
+
             <div>
               <Label htmlFor="edit-seafarerCode">Seafarer Code *</Label>
               <Input
@@ -576,7 +584,7 @@ export default function MasterPage() {
                 placeholder="Seafarer Code"
                 value={editingRow?.seafarerCode || ""}
                 onChange={(e) =>
-                  setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })
+                  editingRow && setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })
                 }
               />
             </div>
@@ -680,19 +688,11 @@ export default function MasterPage() {
                 setEditingRow(null);
                 setSelectedCompetencies([]);
               }}
-              disabled={isUpdating}
             >
               Cancel
             </Button>
-            <Button onClick={handleEdit} disabled={!isEditFormValid() || isUpdating}>
-              {isUpdating ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Updating...
-                </>
-              ) : (
-                "Update"
-              )}
+            <Button onClick={handleEdit} disabled={!isEditFormValid()}>
+              Update
             </Button>
           </DialogFooter>
         </DialogContent>

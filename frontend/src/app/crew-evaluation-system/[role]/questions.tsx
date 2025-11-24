@@ -7,9 +7,12 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { useCountdown } from "@/hooks/use-session-storage";
 import { useTimerPauseResume } from "@/hooks/useTimerPauseResume";
-import { CESAssessmentData } from "./page";
+import { CESAssessmentData } from "../types";
 import Image from "next/image";
-import { useGetAssessmentByRole, usePostCESResults } from "./_hooks/useAssessment";
+import {
+  useGetAssessmentByRole,
+  usePostCESResults,
+} from "./_hooks/useAssessment";
 import { BASE_URL } from "../../lib/api";
 
 interface QuestionsProps {

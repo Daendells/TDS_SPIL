@@ -122,11 +122,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		options.GET("/question/:questionId", c.OptionController.FindByQuestionId)
 	}
 
-	assessmentResults := c.App.Group("assessment-results")
-	{
-		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
-		assessmentResults.GET("/seafarer/:seafarerCode", c.AssessmentResultController.FindBySeafarerCode)
-	}
+	
 
 	// Combined question-option routes (Public access - only read operations)
 	questionsWithOptions := c.App.Group("api/questions-with-options")
@@ -205,6 +201,13 @@ func (c *RouterConfig) SetupAuthRouter() {
 		assessmentAuth.POST("", c.AssessmentController.CreateAssessment)
 		assessmentAuth.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
 		assessmentAuth.POST("/upload-image", c.AssessmentController.UploadAssessmentImage)
+	}
+
+	assessmentResults := c.App.Group("assessment-results").Use(c.AuthMiddleware)
+	{
+		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
+		assessmentResults.GET("/seafarer/:seafarerCode", c.AssessmentResultController.FindBySeafarerCode)
+		assessmentResults.GET("/report/:seafarerCode", c.AssessmentResultController.GetValueAssessmentReportBySeafarerCode)
 	}
 
 	// Protected Assessment Types endpoints

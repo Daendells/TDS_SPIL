@@ -9,7 +9,7 @@ import {
   PolarRadiusAxis,
   ResponsiveContainer,
 } from "recharts";
-import { ChevronRightIcon, ChevronLeftIcon } from "lucide-react";
+import { ChevronRightIcon } from "lucide-react";
 import MentoringListDialog from "@/components/mentoring-list-dialog";
 import AssessmentResultDialog from "@/components/assessment-result-dialog";
 import { useGetReportBySeafarerCode } from "@/app/dashboard/_hooks/useReportData";
@@ -35,7 +35,8 @@ export default function TalentProfilePage({ params }: PageProps) {
     error,
   } = useGetReportBySeafarerCode(seafarerCode);
 
-  if (isLoading) {
+  // Show loading while waiting for seafarerCode to be set or while fetching
+  if (!seafarerCode || isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <div className="flex flex-col items-center gap-4">
@@ -64,7 +65,7 @@ export default function TalentProfilePage({ params }: PageProps) {
 
   // Prepare data for kinerja chart
   const dataKinerja = [
-    { subject: "Values Assessment", value: report.valueAssessment || 0 },
+    { subject: "Values Assessment", value: report.valueAssessmentScore || 0 },
     { subject: "Assessment Center", value: report.assessmentCenter || 0 },
     { subject: "Kondite Review", value: report.konditeReview || 0 },
     { subject: "KPI Vessel", value: report.kpiVessel || 0 },
@@ -325,7 +326,7 @@ export default function TalentProfilePage({ params }: PageProps) {
                       <ChevronRightIcon className="h-4 w-4 text-gray-400" />
                     </td>
                     <td className="border px-3 py-2 text-right font-semibold">
-                      {report.valueAssessment || "-"}
+                      {report.valueAssessmentScore || "-"}
                     </td>
                   </tr>
                   <tr className="hover:bg-gray-50">

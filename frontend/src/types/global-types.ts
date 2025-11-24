@@ -27,6 +27,7 @@ export interface IReport {
   kpiVessel: number;
   performanceScore: number;
   valueAssessment: number;
+  valueAssessmentScore: number;
   assessmentCenter: number;
   potentialScore: number;
   havQuadran: number;

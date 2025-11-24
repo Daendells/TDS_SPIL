@@ -92,7 +92,7 @@ export class ValueAssessmentStorage {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `value-assessment-${data.seamanCode || "backup"}-${
+        a.download = `value-assessment-${data.seafarerCode || "backup"}-${
           new Date().toISOString().split("T")[0]
         }.json`;
         document.body.appendChild(a);
@@ -187,7 +187,7 @@ export class ValueAssessmentStorage {
     const total = 5; // 5 steps: greeting, personal, section1, section2, section3
 
     if (data.email && data.consent) completed++;
-    if (data.fullName && data.seamanCode) completed++;
+    if (data.fullName && data.seafarerCode) completed++;
     if (Object.keys(data.section1Answers).length > 0) completed++;
     if (Object.keys(data.section2Answers).length > 0) completed++;
     if (Object.keys(data.section3Answers).length > 0) completed++;

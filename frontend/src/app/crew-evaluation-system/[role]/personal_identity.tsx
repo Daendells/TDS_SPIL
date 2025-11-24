@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { CESAssessmentData } from "./page";
+import { CESAssessmentData } from "../types";
 import HeaderSection from "./header_section";
 
 const FormSchema = z.object({
