@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -16,7 +16,7 @@ import {
 import { ChevronRightIcon } from "lucide-react";
 import MentoringListDialog from "@/components/mentoring-list-dialog";
 import AssessmentResultDialog from "@/components/assessment-result-dialog";
-import { useApi } from "@/hooks/use-api";
+import { useGetAssessmentBySeafarerCode } from "@/app/assessment-results/_hooks/useAssessmentResults";
 import Image from "next/image";
 import { IReport } from "@/types/global-types";
 
@@ -33,33 +33,11 @@ export default function ProfilingDialog({
 }: ProfilingDialogProps) {
   const [mentoringDialogOpen, setMentoringDialogOpen] = useState(false);
   const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
-  const [assessmentScore, setAssessmentScore] = useState<number | null>(null);
-  const { get } = useApi();
 
-  useEffect(() => {
-    if (report?.seafarerCode) {
-      get(`/assessment-results/seafarer/${report.seafarerCode}`)
-        .then((response) => {
-          // Check if response is successful and has data
-          if (response.data && response.data.code === 200) {
-            if (response.data.data && response.data.data.totalFinalScore) {
-              setAssessmentScore(
-                Math.round(response.data.data.totalFinalScore * 10) / 10
-              );
-            } else {
-              // Backend returned success but with null data (seafarer hasn't completed assessment)
-              setAssessmentScore(null);
-            }
-          } else {
-            setAssessmentScore(null);
-          }
-        })
-        .catch(() => {
-          // Handle any network or other errors
-          setAssessmentScore(null);
-        });
-    }
-  }, [report?.seafarerCode, get]);
+  // Use React Query hook to fetch assessment score
+  const { data: assessmentScore } = useGetAssessmentBySeafarerCode(
+    report?.seafarerCode || ""
+  );
 
   if (!report) return null;
 

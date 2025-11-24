@@ -1,41 +1,10 @@
-import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useApi } from "@/hooks/use-api";
-import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
 import Image from "next/image";
-
-interface AspectScoreResult {
-  aspectId: number;
-  aspectName: string;
-  rawScore: number;
-  finalScore: number;
-}
-
-interface CorevaReportData {
-  rawScore: number;
-  finalScore: number;
-  konversiScore: number;
-  scoreResult: AspectScoreResult[];
-}
-
-interface AssessmentReportData {
-  rawScore: number;
-  finalScore: number;
-  konversiScore: number;
-}
-
-interface ValueAssessmentReport {
-  seafarerCode: string;
-  completedAt: string | null;
-  totalScore: number;
-  valueAssessment: number;
-  valueAssessmentScore: number;
-  interpretasi: string;
-  coreva: CorevaReportData;
-  aware: AssessmentReportData;
-  grit: AssessmentReportData;
-}
+import {
+  useGetAssessmentReport,
+  type AspectScoreResult,
+} from "@/app/assessment-results/_hooks/useAssessmentResults";
 
 interface AssessmentResultDialogProps {
   open: boolean;
@@ -50,56 +19,12 @@ export default function AssessmentResultDialog({
   seafarerCode,
   seamanName,
 }: AssessmentResultDialogProps) {
-  const [assessmentReport, setAssessmentReport] = useState<ValueAssessmentReport | null>(null);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const api = useApi();
-
-  const fetchAssessmentReport = useCallback(async () => {
-    try {
-      setLoading(true);
-      setError(null);
-      const response = await api.get(`/assessment-results/report/${seafarerCode}`);
-
-      if (response.data && response.data.code === 200) {
-        if (response.data.data) {
-          setAssessmentReport(response.data.data);
-        } else {
-          setAssessmentReport(null);
-          setError("Assessment belum dikerjakan");
-        }
-      } else {
-        setAssessmentReport(null);
-        setError("Data assessment tidak ditemukan");
-      }
-    } catch (error: unknown) {
-      console.error("Failed to fetch assessment report:", error);
-      setAssessmentReport(null);
-
-      // Handle different error types
-      const axiosError = error as { response?: { status?: number } };
-      if (axiosError.response?.status === 404) {
-        setError("Assessment belum dikerjakan atau data tidak ditemukan");
-      } else if (axiosError.response?.status && axiosError.response.status >= 500) {
-        setError("Terjadi kesalahan server. Silakan coba lagi nanti");
-      } else {
-        setError("Gagal memuat data assessment");
-      }
-
-      // Don't show toast for 404 errors as they're expected
-      if (axiosError.response?.status !== 404) {
-        toast.error("Gagal memuat hasil assessment");
-      }
-    } finally {
-      setLoading(false);
-    }
-  }, [api, seafarerCode]);
-
-  useEffect(() => {
-    if (open && seafarerCode) {
-      fetchAssessmentReport();
-    }
-  }, [open, seafarerCode, fetchAssessmentReport]);
+  // Use React Query hook
+  const {
+    data: assessmentReport,
+    isLoading,
+    error,
+  } = useGetAssessmentReport(seafarerCode);
 
   const formatDate = (dateString: string | null) => {
     if (!dateString) return "-";
@@ -136,6 +61,27 @@ export default function AssessmentResultDialog({
     return "text-green-600";
   };
 
+  // Fungsi untuk klasifikasi aspek COREVA berdasarkan raw score
+  // Formula: =IF(rawScore<=16; "Rendah"; IF(rawScore<=25; "Sedang";"Tinggi"))
+  const getAspectCategory = (rawScore: number): string => {
+    if (rawScore <= 16) return "Rendah";
+    if (rawScore <= 25) return "Sedang";
+    return "Tinggi";
+  };
+
+  // Determine error message
+  const getErrorMessage = () => {
+    if (!error) return null;
+
+    const axiosError = error as { response?: { status?: number } };
+    if (axiosError.response?.status === 404) {
+      return "Assessment belum dikerjakan atau data tidak ditemukan";
+    } else if (axiosError.response?.status && axiosError.response.status >= 500) {
+      return "Terjadi kesalahan server. Silakan coba lagi nanti";
+    }
+    return "Gagal memuat data assessment";
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="!w-[90vw] !max-w-[800px] !h-[80vh] overflow-y-auto">
@@ -148,7 +94,7 @@ export default function AssessmentResultDialog({
           </div>
         </DialogHeader>
 
-        {loading ? (
+        {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loader2 className="h-8 w-8 animate-spin" />
             <span className="ml-2">Memuat hasil assessment...</span>
@@ -161,7 +107,7 @@ export default function AssessmentResultDialog({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <p className="text-gray-500 mb-2">{error}</p>
+              <p className="text-gray-500 mb-2">{getErrorMessage()}</p>
               <p className="text-sm text-gray-400">
                 Seafarer Code: <span className="font-mono">{seafarerCode}</span>
               </p>
@@ -211,13 +157,28 @@ export default function AssessmentResultDialog({
               {assessmentReport.coreva.scoreResult && assessmentReport.coreva.scoreResult.length > 0 && (
                 <div>
                   <h3 className="font-semibold text-sm mb-2">Breakdown per Aspect:</h3>
-                  <div className="grid grid-cols-2 gap-2">
-                    {assessmentReport.coreva.scoreResult.map((aspect) => (
-                      <div key={aspect.aspectId} className="flex justify-between p-2 bg-gray-50 rounded">
-                        <span className="text-sm">{aspect.aspectName}:</span>
-                        <div className="text-sm">
-                          <span className="font-semibold">Raw: {aspect.rawScore}</span>
-                          <span className="ml-2 font-semibold text-blue-600">Final: {aspect.finalScore}</span>
+                  <div className="grid grid-cols-1 gap-3">
+                    {assessmentReport.coreva.scoreResult.map((aspect: AspectScoreResult) => (
+                      <div key={aspect.aspectId} className="p-3 bg-gray-50 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-semibold">{aspect.aspectName}</span>
+                          <span className={`text-xs font-bold px-2 py-1 rounded ${
+                            getAspectCategory(aspect.rawScore) === "Rendah" ? "bg-red-100 text-red-700" :
+                            getAspectCategory(aspect.rawScore) === "Sedang" ? "bg-yellow-100 text-yellow-700" :
+                            "bg-green-100 text-green-700"
+                          }`}>
+                            {getAspectCategory(aspect.rawScore)}
+                          </span>
+                        </div>
+                        <div className="flex gap-4 text-sm">
+                          <div>
+                            <span className="text-gray-600">Raw:</span>
+                            <span className="ml-1 font-semibold">{aspect.rawScore}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-600">Final:</span>
+                            <span className="ml-1 font-semibold text-blue-600">{aspect.finalScore}</span>
+                          </div>
                         </div>
                       </div>
                     ))}
