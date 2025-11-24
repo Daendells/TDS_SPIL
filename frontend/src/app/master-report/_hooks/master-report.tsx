@@ -3,7 +3,6 @@ import { useEffect, useState, useRef, startTransition, useDeferredValue } from "
 import { toast } from "sonner";
 import { useApi } from "@/hooks/use-api";
 import { IPaginationData, IPaginationRequest, IReport } from "@/types/global-types";
-import { parsePaginationData, parseReports } from "@/lib/utils";
 import { useDebounce } from "use-debounce";
 import axios from "axios";
 
@@ -30,15 +29,15 @@ export function useMasterReports(initialPageSize = 10) {
     const fetchData = async () => {
       setOnCallApi(true);
       const params = new URLSearchParams({
-  page: paginationRequest.page,
-  page_size: paginationRequest.pageSize.toString(),
-});
+        page: paginationRequest.page,
+        page_size: paginationRequest.pageSize.toString(),
+      });
 
-if (paginationRequest.anchorId !== null && paginationRequest.anchorId !== undefined) {
-  params.set("anchor_id", paginationRequest.anchorId.toString());
-} else {
-  params.set("anchor_id", "0"); // default when null
-}
+      if (paginationRequest.anchorId !== null && paginationRequest.anchorId !== undefined) {
+        params.set("anchor_id", paginationRequest.anchorId.toString());
+      } else {
+        params.set("anchor_id", "0");
+      }
 
       if (debouncedName) params.set("query", debouncedName);
       const queryKey = params.toString();
@@ -64,24 +63,21 @@ if (paginationRequest.anchorId !== null && paginationRequest.anchorId !== undefi
           apiData = response.data;
         }
 
+        const parsedReports: IReport[] = apiData; 
+        console.log("Parsed reports:", parsedReports);
 
+        // Extract pagination metadata safely
+        let apiMeta = response.data?.data;
 
-        // FIX: parseReports expects an array, not individual items
-      const parsedReports: IReport[] = apiData; 
-console.log("Parsed reports (raw API):", parsedReports);
-
-        // --- Extract pagination metadata safely ---
-let apiMeta = response.data?.data;
-
-// Build pagination object using backend data
-const paginationResult: IPaginationData<IReport> = {
-  results: parsedReports,
-  first_id: apiMeta?.first_id ?? parsedReports[0]?.id ?? null,
-  last_id: apiMeta?.last_id ?? parsedReports.at(-1)?.id ?? null,
-  page_size: apiMeta?.page_size ?? paginationRequest.pageSize,
-  has_more: apiMeta?.has_more ?? (parsedReports.length >= paginationRequest.pageSize),
-  first_page: apiMeta?.first_page ?? false,
-};
+        // Build pagination object using backend data
+        const paginationResult: IPaginationData<IReport> = {
+          results: parsedReports,
+          first_id: apiMeta?.first_id ?? parsedReports[0]?.id ?? null,
+          last_id: apiMeta?.last_id ?? parsedReports.at(-1)?.id ?? null,
+          page_size: apiMeta?.page_size ?? paginationRequest.pageSize,
+          has_more: apiMeta?.has_more ?? (parsedReports.length >= paginationRequest.pageSize),
+          first_page: apiMeta?.first_page ?? false,
+        };
 
         console.log("Final pagination result:", paginationResult);
 

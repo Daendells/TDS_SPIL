@@ -87,9 +87,9 @@ func (c *RouterConfig) SetupGuestRouter() {
 	// Competency Types endpoints (Public - read only)
 	competencyTypes := c.App.Group("api/competency-types")
 	{
-		competencyTypes.GET("", c.CompetencyTypeController.GetAll)           // Get all competency types
-		competencyTypes.GET("/active", c.CompetencyTypeController.GetActive) // Get only active
-		competencyTypes.GET("/:id", c.CompetencyTypeController.GetByID)      // Get by ID
+		competencyTypes.GET("", c.CompetencyTypeController.GetAll)               // Get all competency types
+		competencyTypes.GET("/active", c.CompetencyTypeController.GetActive)     // Get only active
+		competencyTypes.GET("/:id", c.CompetencyTypeController.GetByID)          // Get by ID
 		competencyTypes.GET("/code/:code", c.CompetencyTypeController.GetByCode) // Get by code
 	}
 
@@ -197,8 +197,6 @@ func (c *RouterConfig) SetupAuthRouter() {
 	{
 		auth.POST("/logout", c.UserController.Logout)
 	}
-
-
 
 	assessmentAuth := c.App.Group("api/assessments").Use(c.AuthMiddleware)
 	{

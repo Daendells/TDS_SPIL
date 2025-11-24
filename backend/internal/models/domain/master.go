@@ -29,13 +29,13 @@ type MasterReport struct {
 	IDPProgram                 string `json:"idpProgram" gorm:"column:idp_program"`
 	HavQuadran2                int    `json:"havQuadran2" gorm:"column:hav_quadran2"`
 	TalentClassified2          string `json:"talentClassified2" gorm:"column:talent_classified2"`
-	ReadinessMonth             *int   `json:"readinessMonth" gorm:"column:readiness_month"`
+	Readiness                  string `json:"readiness" gorm:"column:readiness"`
 	CertificateEligible        string `json:"certificateEligible" gorm:"column:certificate_eligible"`
 	EducationFulfillmentMonths *int   `json:"educationFulfillmentMonths" gorm:"column:education_fulfillment_months"`
 	TotalReadinessUpdateMonths *int   `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness_update_months"`
 	Keterangan                 string `json:"keterangan" gorm:"column:keterangan"`
 	TmNm                       int    `json:"tmNm" gorm:"column:tm_nm"`
-	StartDate      string          `json:"startDate" gorm:"column:start_date"` //
+	StartDate                  string `json:"startDate" gorm:"column:start_date"` //
 	//optional, but if provided must be a valid date
 	GapCompetencies []GapCompetency `json:"gapCompetencies" gorm:"foreignKey:ReportID"`
 	ReportScores    []ReportScore   `json:"reportScores" gorm:"foreignKey:ReportID;references:ID"`
@@ -102,10 +102,10 @@ type FullReport struct {
 	Keterangan *string `gorm:"column:keterangan;default:null"`
 	TmNm       *int    `gorm:"column:tm_nm;default:0"`
 
-	CreatedAt       time.Time        `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt       time.Time        `gorm:"column:updated_at;autoUpdateTime"`
-	GapCompetencies []GapCompetency  `json:"gapCompetencies" gorm:"foreignKey:ReportID"`
-	ReportScores    []ReportScore    `json:"reportScores" gorm:"foreignKey:ReportID;references:ID"`
+	CreatedAt       time.Time       `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt       time.Time       `gorm:"column:updated_at;autoUpdateTime"`
+	GapCompetencies []GapCompetency `json:"gapCompetencies" gorm:"foreignKey:ReportID"`
+	ReportScores    []ReportScore   `json:"reportScores" gorm:"foreignKey:ReportID;references:ID"`
 }
 
 func (FullReport) TableName() string {

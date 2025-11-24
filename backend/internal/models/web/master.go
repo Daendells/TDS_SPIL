@@ -5,10 +5,14 @@ import (
 )
 
 // CompetencyTypeData represents competency type information
+
 type CompetencyTypeData struct {
-	ID   int    `json:"id"`
-	Code string `json:"code"`
-	Name string `json:"name"`
+	ID          int    `json:"id"`
+	Code        string `json:"code"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Category    string `json:"category"`
+	IsActive    bool   `json:"isActive"`
 }
 
 // GapCompetencyData represents gap competency with its type
@@ -52,7 +56,7 @@ type MasterReportData struct {
 	IDPProgram                 string              `json:"idpProgram"`
 	HavQuadran2                int                 `json:"havQuadran2"`
 	TalentClassified2          string              `json:"talentClassified2"`
-	ReadinessMonth             *int                `json:"readinessMonth"`
+	Readiness                  string              `json:"readiness"`
 	CertificateEligible        string              `json:"certificateEligible"`
 	EducationFulfillmentMonths *int                `json:"educationFulfillmentMonths"`
 	TotalReadinessUpdateMonths *int                `json:"totalReadinessUpdateMonths"`
@@ -93,10 +97,7 @@ type UpdateMasterRequest struct {
 	VesselName   *string `json:"vesselName"`
 	StartDate    *string `json:"startDate"`
 	// hanya competency types
-	Competencies []struct {
-		ID               *int `json:"id"` // null → INSERT
-		CompetencyTypeID int  `json:"competencyTypeId"`
-	} `json:"competencies"`
+	CompetencyUpdateRequests []CompetencyUpdateRequest `json:"competencies"`
 }
 
 func (r *UpdateMasterRequest) ParseID(param string) error {
@@ -145,7 +146,7 @@ type FullReportResponse struct {
 	IDPProgram                 *string             `json:"idpProgram"`
 	HavQuadran2                *int                `json:"havQuadran2"`
 	TalentClassified2          *string             `json:"talentClassified2"`
-	ReadinessMonth             *int                `json:"readinessMonth"`
+	Readiness                  *string             `json:"readiness"`
 	CertificateEligible        *string             `json:"certificateEligible"`
 	EducationFulfillmentMonths *int                `json:"educationFulfillmentMonths"`
 	TotalReadinessUpdateMonths *int                `json:"totalReadinessUpdateMonths"`
@@ -169,4 +170,13 @@ type UpdateReportResponse struct {
 	Nama         *string             `json:"nama"`
 	Jabatan      *string             `json:"jabatan"`
 	Competencies []GapCompetencyData `json:"competencies"`
+}
+
+// All fields are pointers to handle omitempty and distinguish between not provided and empty string
+type CompetencyUpdateRequest struct {
+	CompetencyTypeID *int    `json:"competencyTypeId,omitempty"` // Use existing competency type by ID
+	Code             *string `json:"code,omitempty"`             // Create or find by code
+	Name             *string `json:"name,omitempty"`             // Name for new/update competency type
+	Description      *string `json:"description,omitempty"`      // Description for new/update
+	Category         *string `json:"category,omitempty"`         // M or NM
 }

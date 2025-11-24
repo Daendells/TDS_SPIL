@@ -119,6 +119,9 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 			}
 		}
 
+		// Calculate total gap as count of gap competencies
+		totalGap := len(r.GapCompetencies)
+
 		result = append(result, web.MasterReportData{
 			ID:                         r.ID,
 			VesselName:                 r.VesselName,
@@ -138,20 +141,20 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 			HavQuadran:                 r.HavQuadran,
 			HavMapping:                 r.HavMapping,
 			CompetencyGapAnalysis:      r.CompetencyGapAnalysis,
-			TotalGap:                   r.TotalGap,
+			TotalGap:                   totalGap, // Set as count of gap competencies
 			Strength:                   r.Strength,
 			TalentClassified:           r.TalentClassified,
 			IDPProgram:                 r.IDPProgram,
 			HavQuadran2:                r.HavQuadran2,
 			TalentClassified2:          r.TalentClassified2,
-			ReadinessMonth:             r.ReadinessMonth,
+			Readiness:                  r.Readiness,
 			CertificateEligible:        r.CertificateEligible,
 			EducationFulfillmentMonths: r.EducationFulfillmentMonths,
 			TotalReadinessUpdateMonths: r.TotalReadinessUpdateMonths,
 			Keterangan:                 r.Keterangan,
 			TmNm:                       r.TmNm,
-			Competencies:               competencies,    // Add competencies here
-			ReportScores:               reportScores,    // Add report scores here
+			Competencies:               competencies,
+			ReportScores:               reportScores,
 		})
 	}
 
@@ -259,7 +262,7 @@ func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 		IDPProgram:                 master.IDPProgram,
 		HavQuadran2:                master.HavQuadran2,
 		TalentClassified2:          master.TalentClassified2,
-		ReadinessMonth:             master.ReadinessMonth,
+		Readiness:                  master.Readiness,
 		CertificateEligible:        master.CertificateEligible,
 		EducationFulfillmentMonths: master.EducationFulfillmentMonths,
 		TotalReadinessUpdateMonths: master.TotalReadinessUpdateMonths,
@@ -381,9 +384,9 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 		return nil, fmt.Errorf("validation error: %w", err)
 	}
 
-	// Get existing report
+	// Get existing report (basic fields only, no preload)
 	var existing domain.FullReport
-	if err := s.MasterRepository.FindById(s.DB, &existing, id); err != nil {
+	if err := s.DB.First(&existing, id).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return nil, errors.New("master report not found")
 		}
@@ -410,78 +413,197 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 		existing.SeamanCode = nullifyStringPtr(request.SeamanCode)
 	}
 
-	//  UPDATE CHILD TABLE (GapCompetencies)
-
-	if request.Competencies != nil {
-
-		// 1. Load existing children
-		var existingComps []domain.GapCompetency
-		s.DB.Where("report_id = ?", existing.ID).Find(&existingComps)
-
-		// Map old children by ID
-		oldMap := make(map[int]domain.GapCompetency)
-		for _, c := range existingComps {
-			oldMap[c.ID] = c
-		}
-
-		// 2. Process incoming competencies
-		for _, comp := range request.Competencies {
-
-			// INSERT new row
-			if comp.ID == nil {
-				newComp := domain.GapCompetency{
-					ReportID:         int(existing.ID),
-					CompetencyTypeID: comp.CompetencyTypeID,
-				}
-				s.DB.Create(&newComp)
-				continue
-			}
-
-			// UPDATE existing row
-			if old, found := oldMap[*comp.ID]; found {
-				old.CompetencyTypeID = comp.CompetencyTypeID
-				s.DB.Save(&old)
-				delete(oldMap, *comp.ID) // remove from delete list
-			}
-		}
-
-		// 3. DELETE children not included in request
-		for _, leftover := range oldMap {
-			s.DB.Delete(&leftover)
-		}
-	}
-
-	// Save master report
-	if err := s.MasterRepository.Update(s.DB, &existing); err != nil {
+	// Save master report basic fields
+	if err := s.DB.Save(&existing).Error; err != nil {
 		return nil, fmt.Errorf("failed to update master report: %w", err)
 	}
 
-	// Reload with full relations
-	var updated domain.FullReport
-	if err := s.MasterRepository.FindById(s.DB, &updated, id); err != nil {
-		s.Log.WithError(err).Warn("updated but failed to reload with relations")
-	} else {
-		existing = updated
+	// UPDATE COMPETENCIES if the field is present in request
+	if request.CompetencyUpdateRequests != nil {
+		s.Log.Infof("Updating competencies for report ID: %d (received %d competencies)", id, len(request.CompetencyUpdateRequests))
+
+		// Start transaction for atomic operations
+		err := s.DB.Transaction(func(tx *gorm.DB) error {
+			// STEP 1: DELETE ALL existing gap_competencies for this report
+			deleteResult := tx.Where("report_id = ?", id).Delete(&domain.GapCompetency{})
+			if deleteResult.Error != nil {
+				s.Log.WithError(deleteResult.Error).Error("failed to delete existing gap competencies")
+				return fmt.Errorf("failed to delete existing gap competencies: %w", deleteResult.Error)
+			}
+
+			s.Log.Infof("✅ Deleted %d existing competencies", deleteResult.RowsAffected)
+
+			// STEP 2: CREATE new competencies if array is not empty
+			if len(request.CompetencyUpdateRequests) > 0 {
+				s.Log.Infof("📝 Processing %d new competencies", len(request.CompetencyUpdateRequests))
+				newGapCompetencies := make([]domain.GapCompetency, 0, len(request.CompetencyUpdateRequests))
+
+				for i, comp := range request.CompetencyUpdateRequests {
+					var competencyTypeID int
+
+					// Option 1: Using existing competency type ID
+					if comp.CompetencyTypeID != nil && *comp.CompetencyTypeID > 0 {
+						var existingType domain.CompetencyType
+						if err := tx.First(&existingType, *comp.CompetencyTypeID).Error; err != nil {
+							if errors.Is(err, gorm.ErrRecordNotFound) {
+								return fmt.Errorf("competency type with ID %d not found", *comp.CompetencyTypeID)
+							}
+							return fmt.Errorf("error checking competency type: %w", err)
+						}
+						competencyTypeID = *comp.CompetencyTypeID
+						s.Log.Infof("  [%d] Using existing competency type ID: %d", i+1, competencyTypeID)
+
+						// Option 2: Using code (find or create)
+					} else if comp.Code != nil && *comp.Code != "" {
+						code := strings.ToUpper(strings.TrimSpace(*comp.Code))
+
+						var competencyType domain.CompetencyType
+						err := tx.Where("code = ?", code).First(&competencyType).Error
+
+						if err != nil {
+							if errors.Is(err, gorm.ErrRecordNotFound) {
+								// Create new competency type
+								name := code
+								if comp.Name != nil && *comp.Name != "" {
+									name = *comp.Name
+								}
+
+								description := ""
+								if comp.Description != nil {
+									description = *comp.Description
+								}
+
+								category := "M"
+								if comp.Category != nil && *comp.Category != "" {
+									cat := strings.ToUpper(*comp.Category)
+									if cat == "M" || cat == "NM" {
+										category = cat
+									}
+								}
+
+								newCompetencyType := domain.CompetencyType{
+									Code:        code,
+									Name:        name,
+									Description: description,
+									Category:    category,
+									IsActive:    true,
+								}
+
+								if err := tx.Create(&newCompetencyType).Error; err != nil {
+									s.Log.WithError(err).Errorf("failed to create competency type: %s", code)
+									return fmt.Errorf("failed to create competency type '%s': %w", code, err)
+								}
+
+								competencyTypeID = newCompetencyType.ID
+								s.Log.Infof("  [%d] ✨ Created new competency type: %s (ID: %d)", i+1, code, competencyTypeID)
+							} else {
+								return fmt.Errorf("error checking competency type: %w", err)
+							}
+						} else {
+							// Use existing and optionally update fields
+							competencyTypeID = competencyType.ID
+
+							needUpdate := false
+							if comp.Name != nil && *comp.Name != "" && *comp.Name != competencyType.Name {
+								competencyType.Name = *comp.Name
+								needUpdate = true
+							}
+							if comp.Description != nil && *comp.Description != "" && *comp.Description != competencyType.Description {
+								competencyType.Description = *comp.Description
+								needUpdate = true
+							}
+							if comp.Category != nil && *comp.Category != "" {
+								cat := strings.ToUpper(*comp.Category)
+								if (cat == "M" || cat == "NM") && cat != competencyType.Category {
+									competencyType.Category = cat
+									needUpdate = true
+								}
+							}
+
+							if needUpdate {
+								if err := tx.Save(&competencyType).Error; err != nil {
+									s.Log.WithError(err).Warn("failed to update competency type fields")
+								} else {
+									s.Log.Infof("  [%d] Updated competency type: %s", i+1, code)
+								}
+							} else {
+								s.Log.Infof("  [%d] Using existing competency type: %s (ID: %d)", i+1, code, competencyTypeID)
+							}
+						}
+					} else {
+						s.Log.Warnf("  [%d] ⚠️  Competency has no ID or Code, skipping", i+1)
+						continue
+					}
+
+					// Add to batch
+					newGapCompetencies = append(newGapCompetencies, domain.GapCompetency{
+						ReportID:         int(id),
+						CompetencyTypeID: competencyTypeID,
+					})
+				}
+
+				// Bulk insert
+				if len(newGapCompetencies) > 0 {
+					if err := tx.Create(&newGapCompetencies).Error; err != nil {
+						s.Log.WithError(err).Error("failed to create gap competencies")
+						return fmt.Errorf("failed to create gap competencies: %w", err)
+					}
+					s.Log.Infof("✅ Successfully created %d new gap competencies", len(newGapCompetencies))
+				}
+			} else {
+				s.Log.Infof("📭 Empty competencies array - all competencies removed")
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			s.Log.WithError(err).Error("Transaction failed")
+			return nil, err
+		}
+
+		s.Log.Info("✅ Transaction committed successfully")
 	}
 
-	// Map competencies for response
-	competencies := make([]web.GapCompetencyData, 0, len(existing.GapCompetencies))
-	for _, gc := range existing.GapCompetencies {
+	// CRITICAL FIX: Create a COMPLETELY FRESH database session to avoid cache
+	// This ensures we get the latest data from database
+	freshDB := s.DB.Session(&gorm.Session{NewDB: true})
+
+	// Reload data with fresh session using repository
+	var finalResult domain.FullReport
+	if err := s.MasterRepository.FindById(freshDB, &finalResult, id); err != nil {
+		s.Log.WithError(err).Error("failed to reload report with relations")
+		return nil, fmt.Errorf("failed to reload report: %w", err)
+	}
+
+	s.Log.Infof("🔄 Reloaded report - found %d competencies in response", len(finalResult.GapCompetencies))
+
+	// Build response
+	competencies := make([]web.GapCompetencyData, 0, len(finalResult.GapCompetencies))
+	for _, gc := range finalResult.GapCompetencies {
+		competencyTypeData := web.CompetencyTypeData{}
+		if gc.CompetencyType != nil {
+			competencyTypeData = web.CompetencyTypeData{
+				ID:          gc.CompetencyType.ID,
+				Code:        gc.CompetencyType.Code,
+				Name:        gc.CompetencyType.Name,
+				Description: gc.CompetencyType.Description,
+				Category:    gc.CompetencyType.Category,
+				IsActive:    gc.CompetencyType.IsActive,
+			}
+		}
+
 		competencies = append(competencies, web.GapCompetencyData{
 			ID:               gc.ID,
 			CompetencyTypeID: gc.CompetencyTypeID,
-			CompetencyType: web.CompetencyTypeData{
-				ID:   gc.CompetencyType.ID,
-				Code: gc.CompetencyType.Code,
-				Name: gc.CompetencyType.Name,
-			},
+			CompetencyType:   competencyTypeData,
 		})
 	}
 
 	response := web.UpdateReportResponse{
-		ID:           existing.ID,
-		Nama:         existing.Nama,
-		Jabatan:      existing.Jabatan,
+		ID:           finalResult.ID,
+		Nama:         finalResult.Nama,
+		Jabatan:      finalResult.Jabatan,
 		Competencies: competencies,
 	}
 
