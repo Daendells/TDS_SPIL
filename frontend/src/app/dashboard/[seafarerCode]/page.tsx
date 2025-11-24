@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, use } from "react";
 import {
   Radar,
   RadarChart,
@@ -18,13 +18,13 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 
 interface PageProps {
-  params: {
+  params: Promise<{
     seafarerCode: string;
-  };
+  }>;
 }
 
 export default function TalentProfilePage({ params }: PageProps) {
-  const { seafarerCode } = params;
+  const { seafarerCode } = use(params);
   const [mentoringDialogOpen, setMentoringDialogOpen] = useState(false);
   const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
 
