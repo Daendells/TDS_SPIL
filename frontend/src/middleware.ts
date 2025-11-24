@@ -54,5 +54,10 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/", "/login", "/dashboard", "/dashboard/excel", "/master-report"],
+  matcher: [
+    "/",
+    "/login",
+    "/dashboard/:path*", // Match all dashboard routes
+    "/master-report/:path*", // Match all master-report routes
+  ],
 };

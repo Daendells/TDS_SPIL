@@ -58,8 +58,9 @@ export function useLogin() {
       // Show success message
       toast.success("Login berhasil!");
 
-      // Navigate to dashboard
-      router.replace("/dashboard");
+      // Navigate to dashboard with window.location to ensure full page reload
+      // This prevents RSC issues and ensures middleware runs properly
+      window.location.href = "/dashboard";
     },
     onError: (error) => {
       // Handle login error
