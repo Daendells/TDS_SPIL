@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { CESAssessmentData } from "./page";
+import type { CESAssessmentData } from "../types";
 import Image from "next/image";
 import { CheckCircle } from "lucide-react";
 

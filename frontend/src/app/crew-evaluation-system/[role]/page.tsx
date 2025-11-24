@@ -9,23 +9,7 @@ import Questions from "./questions";
 import Completion from "./completion";
 import TimerDisplay from "@/components/timer-display";
 import { useCheckAssessmentTypeStatus } from "./_hooks/useAssessmentTypeStatus";
-
-export interface CESAssessmentData {
-  email: string;
-  consent: boolean;
-  fullName: string;
-  identityNumber: string;
-  rank: string;
-  vesselName: string;
-  seafarerCode: string;
-  answers: { [questionId: number]: number };
-  startTime?: string;
-  currentStep?: number;
-  assessmentStartTime?: string;
-  timerMinutes?: number;
-  pauseTimestamp?: string;
-  sisaWaktu?: number;
-}
+import { CESAssessmentData } from "../types";
 
 export default function CESAssessmentPage() {
   const params = useParams();

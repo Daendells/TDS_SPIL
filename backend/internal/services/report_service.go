@@ -309,10 +309,58 @@ func (service *ReportService) FindBySeafarerCode(ctx context.Context, seafarerCo
 
 	reportData := converter.ToReportData(&report)
 
+	// Get value assessment score from report_scores table
+	reportData.ValueAssessmentScore = service.getValueAssessmentScore(service.DB, seafarerCode)
+
 	return &web.SuccessResponse{
 		Status: "Ok",
 		Code:   http.StatusOK,
 		Data:   reportData,
 	}, nil
+}
+
+// getValueAssessmentScore retrieves the value assessment score from report_scores table
+func (service *ReportService) getValueAssessmentScore(db *gorm.DB, seafarerCode string) int {
+	service.Log.Infof("=== START getValueAssessmentScore for seafarer: %s ===", seafarerCode)
+
+	// First, find the report for this seafarer
+	var reportModel domain.Report
+	report, reportErr := service.ReportRepository.FindBySeafarerCode(db, seafarerCode, &reportModel)
+	if reportErr != nil {
+		// If report not found, return 0
+		service.Log.Warnf("❌ Report not found for seafarer %s, error: %v, returning 0", seafarerCode, reportErr)
+		return 0
+	}
+	service.Log.Infof("✅ Found report for seafarer %s: report.ID=%d, report.ValueAssessment=%d", seafarerCode, report.ID, report.ValueAssessment)
+
+	// Get Value Assessment type ID
+	var assessmentType domain.AssessmentType
+	typeErr := db.Where("assessment_type_name = ?", "Value Assessment").First(&assessmentType).Error
+	if typeErr != nil {
+		// If assessment type not found, try to get from reports table
+		service.Log.Warnf("❌ Value Assessment type not found, error: %v. Using fallback from reports table. Score: %d", typeErr, report.ValueAssessment)
+		return report.ValueAssessment
+	}
+	service.Log.Infof("✅ Found Value Assessment type: ID=%d, Name=%s", assessmentType.ID, assessmentType.AssessmentTypeName)
+
+	// Get the score from report_scores table
+	var reportScore domain.ReportScore
+	scoreErr := db.Where("report_id = ? AND assessment_type_id = ?", report.ID, assessmentType.ID).
+		First(&reportScore).Error
+	if scoreErr != nil {
+		// Fallback: use value from reports table if report_scores not found
+		service.Log.Warnf("❌ report_scores not found for report_id=%d, assessment_type_id=%d. Error: %v. Using fallback from reports table. Score: %d", report.ID, assessmentType.ID, scoreErr, report.ValueAssessment)
+
+		// Let's also check what's actually in report_scores table
+		var allReportScores []domain.ReportScore
+		db.Where("report_id = ?", report.ID).Find(&allReportScores)
+		service.Log.Infof("📊 All report_scores for report_id=%d: %+v", report.ID, allReportScores)
+
+		return report.ValueAssessment
+	}
+
+	service.Log.Infof("✅ Successfully retrieved value assessment from report_scores for seafarer %s. reportScore.ID=%d, reportScore.Score=%d (from report_scores table)", seafarerCode, reportScore.ID, reportScore.Score)
+	service.Log.Infof("=== END getValueAssessmentScore: returning %d ===", reportScore.Score)
+	return reportScore.Score
 }
 

@@ -713,10 +713,7 @@ INSERT IGNORE INTO `questions` (`question_id`, `role`, `question_text`, `categor
 (409, 'va_3', 'Saya akan menyelesaikan apa pun yang telah saya mulai.', NULL, NULL, NULL, 3),
 (410, 'va_3', 'Saya telah atau pernah mencapai tujuan yang membutuhkan kerja keras selama bertahun-tahun.', NULL, NULL, NULL, 3),
 (411, 'va_3', 'Saya tertarik pada hal baru atau mengejar hal baru setiap beberapa bulan.', NULL, NULL, NULL, 3),
-(412, 'va_3', 'Saya adalah orang yang tekun.', NULL, NULL, NULL, 3),
-(414, 'va_2', 'Tes', NULL, '0', NULL, 2),
-(425, 'va_1', 'RESSE', 'Customer Oriented', '0', NULL, NULL),
-(426, 'va_1', 'EQESSE', 'Integrity', '0', NULL, NULL);
+(412, 'va_3', 'Saya adalah orang yang tekun.', NULL, NULL, NULL, 3);
 
 
 -- =============================================
@@ -2207,8 +2204,6 @@ INSERT IGNORE INTO `options` (`option_id`, `question_id`, `option_letter`, `opti
 (1483, 412, 'b', 'Tidak Menggambarkan Diri Saya', 2, '0', NULL),
 (1484, 412, 'c', 'Menggambarkan Diri Saya', 3, '0', NULL),
 (1485, 412, 'd', 'Sangat Menggambarkan Diri Saya', 4, '0', NULL),
-(1489, 414, 'a', 'Benar', 1, '0', NULL),
-(1490, 414, 'b', 'Salah', 0, '0', NULL),
 (1501, 301, 'a', 'Melaporkan temuan kepada atasan, sambil mengajak berdiskusi rekan kerja tentang pentingnya pelaporan.', 4, '0', NULL),
 (1502, 301, 'b', 'Memberitahu rekan kerja tersebut secara pribadi bahwa dia harus melaporkan kerusakan tersebut tanpa ikut campur dalam proses pelaporan.', 2, '0', NULL),
 (1503, 301, 'c', 'Tidak mengambil tindakan apa pun karena percaya rekan kerja akan mencatatnya sendiri nanti saat ada waktu luang, dan Anda tidak ingin memicu konflik.', 0, '0', NULL),

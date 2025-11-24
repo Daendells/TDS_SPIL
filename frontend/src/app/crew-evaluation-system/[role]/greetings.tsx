@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
-import { CESAssessmentData } from "./page";
+import type { CESAssessmentData } from "../types";
 import { Mail } from "lucide-react";
 import z from "zod";
 import { useForm } from "react-hook-form";

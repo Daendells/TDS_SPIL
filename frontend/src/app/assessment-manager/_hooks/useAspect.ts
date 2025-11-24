@@ -1,8 +1,12 @@
 "use client";
 
 import { useApi } from "@/hooks/use-api";
-import { ApiReturn } from "@/types/api";
-import { AspectResponse, AspectCreatePayload, AspectUpdatePayload } from "@/types/aspect";
+import { ApiReturn } from "@/app/types/api";
+import {
+  AspectResponse,
+  AspectCreatePayload,
+  AspectUpdatePayload,
+} from "@/types/aspect";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useGetAspectsByAssessmentId(assessmentId: number) {
@@ -26,7 +30,9 @@ export function useGetAllAspects() {
   return useQuery({
     queryKey: ["aspects"],
     queryFn: async () => {
-      const response = await api.get<ApiReturn<AspectResponse[]>>("/api/aspects");
+      const response = await api.get<ApiReturn<AspectResponse[]>>(
+        "/api/aspects"
+      );
       return response.data.data;
     },
   });

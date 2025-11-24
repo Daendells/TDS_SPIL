@@ -1,27 +1,40 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useApi } from "@/hooks/use-api";
 import { toast } from "sonner";
 import { Loader2 } from "lucide-react";
+import Image from "next/image";
 
-interface AssessmentResult {
-  id: number;
+interface AspectScoreResult {
+  aspectId: number;
+  aspectName: string;
+  rawScore: number;
+  finalScore: number;
+}
+
+interface CorevaReportData {
+  rawScore: number;
+  finalScore: number;
+  konversiScore: number;
+  scoreResult: AspectScoreResult[];
+}
+
+interface AssessmentReportData {
+  rawScore: number;
+  finalScore: number;
+  konversiScore: number;
+}
+
+interface ValueAssessmentReport {
   seafarerCode: string;
-  va1RawScore: number;
-  va2RawScore: number;
-  va3RawScore: number;
-  va1CategoryScores: string;
-  corevaOcai: number;
-  awareConverted: number;
-  gritConverted: number;
-  corevaFinal: number;
-  awareFinal: number;
-  gritFinal: number;
-  totalFinalScore: number;
-  isCompleted: boolean;
-  completedAt: string;
-  createdAt: string;
-  updatedAt: string;
+  completedAt: string | null;
+  totalScore: number;
+  valueAssessment: number;
+  valueAssessmentScore: number;
+  interpretasi: string;
+  coreva: CorevaReportData;
+  aware: AssessmentReportData;
+  grit: AssessmentReportData;
 }
 
 interface AssessmentResultDialogProps {
@@ -37,73 +50,59 @@ export default function AssessmentResultDialog({
   seafarerCode,
   seamanName,
 }: AssessmentResultDialogProps) {
-  const [assessmentResult, setAssessmentResult] = useState<AssessmentResult | null>(null);
+  const [assessmentReport, setAssessmentReport] = useState<ValueAssessmentReport | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const api = useApi();
 
-  useEffect(() => {
-    if (open && seafarerCode) {
-      fetchAssessmentResult();
-    }
-  }, [open, seafarerCode]);
-
-  const fetchAssessmentResult = async () => {
+  const fetchAssessmentReport = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
-      const response = await api.get(`/assessment-results/seafarer/${seafarerCode}`);
-      
+      const response = await api.get(`/assessment-results/report/${seafarerCode}`);
+
       if (response.data && response.data.code === 200) {
         if (response.data.data) {
-          setAssessmentResult(response.data.data);
+          setAssessmentReport(response.data.data);
         } else {
-          setAssessmentResult(null);
+          setAssessmentReport(null);
           setError("Assessment belum dikerjakan");
         }
       } else {
-        setAssessmentResult(null);
+        setAssessmentReport(null);
         setError("Data assessment tidak ditemukan");
       }
-    } catch (error: any) {
-      console.error("Failed to fetch assessment result:", error);
-      setAssessmentResult(null);
-      
+    } catch (error: unknown) {
+      console.error("Failed to fetch assessment report:", error);
+      setAssessmentReport(null);
+
       // Handle different error types
-      if (error.response?.status === 404) {
+      const axiosError = error as { response?: { status?: number } };
+      if (axiosError.response?.status === 404) {
         setError("Assessment belum dikerjakan atau data tidak ditemukan");
-      } else if (error.response?.status >= 500) {
+      } else if (axiosError.response?.status && axiosError.response.status >= 500) {
         setError("Terjadi kesalahan server. Silakan coba lagi nanti");
       } else {
         setError("Gagal memuat data assessment");
       }
-      
+
       // Don't show toast for 404 errors as they're expected
-      if (error.response?.status !== 404) {
+      if (axiosError.response?.status !== 404) {
         toast.error("Gagal memuat hasil assessment");
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, [api, seafarerCode]);
 
-  const parseCategoryScores = (categoryScoresJson: string): Record<string, number> => {
-    try {
-      const parsed = JSON.parse(categoryScoresJson);
-      // Ensure all values are numbers
-      const result: Record<string, number> = {};
-      for (const [key, value] of Object.entries(parsed)) {
-        if (typeof value === 'number') {
-          result[key] = value;
-        }
-      }
-      return result;
-    } catch {
-      return {};
+  useEffect(() => {
+    if (open && seafarerCode) {
+      fetchAssessmentReport();
     }
-  };
+  }, [open, seafarerCode, fetchAssessmentReport]);
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString: string | null) => {
+    if (!dateString) return "-";
     return new Date(dateString).toLocaleDateString("id-ID", {
       year: "numeric",
       month: "long",
@@ -113,15 +112,39 @@ export default function AssessmentResultDialog({
     });
   };
 
+  const getCorevaCategory = (rawScore: number): string => {
+    if (rawScore <= 100) return "Rendah";
+    if (rawScore <= 131) return "Sedang";
+    return "Tinggi";
+  };
+
+  const getAwareCategory = (rawScore: number): string => {
+    if (rawScore <= 30) return "Tidak Direkomendasi";
+    if (rawScore <= 45) return "Rekomendasi dengan Pengawasan";
+    return "Rekomendasi";
+  };
+
+  const getGritCategory = (rawScore: number): string => {
+    if (rawScore <= 24) return "Rendah";
+    if (rawScore <= 36) return "Sedang";
+    return "Tinggi";
+  };
+
+  const getCategoryColor = (category: string): string => {
+    if (category === "Rendah" || category === "Tidak Direkomendasi") return "text-red-600";
+    if (category === "Sedang" || category === "Rekomendasi dengan Pengawasan") return "text-yellow-600";
+    return "text-green-600";
+  };
+
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogContent className="!w-[90vw] !max-w-[800px] !h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">Assessment Result</DialogTitle>
           <div className="flex justify-between items-center">
-            <img src="/images/logo1.png" alt="Logo Kiri" className="h-12" />
+            <Image src="/images/logo1.png" alt="Logo Kiri" width={48} height={48} className="h-12 w-auto" />
             <h1 className="text-2xl font-bold uppercase">Values Assessment Result</h1>
-            <img src="/images/logo2.png" alt="Logo Kanan" className="h-12" />
+            <Image src="/images/logo2.png" alt="Logo Kanan" width={48} height={48} className="h-12 w-auto" />
           </div>
         </DialogHeader>
 
@@ -144,93 +167,120 @@ export default function AssessmentResultDialog({
               </p>
             </div>
           </div>
-        ) : assessmentResult ? (
+        ) : assessmentReport ? (
           <div className="space-y-6 mt-6">
             <div className="border rounded-xl shadow-sm p-4 bg-white">
               <h2 className="font-bold text-lg mb-4">INFORMASI PESERTA</h2>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <p><strong>Nama:</strong> {seamanName}</p>
-                <p><strong>Seafarer Code:</strong> {assessmentResult.seafarerCode}</p>
-                <p><strong>Status:</strong> {assessmentResult.isCompleted ? "Selesai" : "Belum Selesai"}</p>
-                <p><strong>Tanggal Selesai:</strong> {assessmentResult.completedAt ? formatDate(assessmentResult.completedAt) : "-"}</p>
+                <p><strong>Seafarer Code:</strong> {assessmentReport.seafarerCode}</p>
+                <p><strong>Tanggal Selesai:</strong> {formatDate(assessmentReport.completedAt)}</p>
+                <p><strong>Value Assessment Score:</strong> <span className="text-2xl font-bold text-green-600">{assessmentReport.valueAssessmentScore}</span></p>
+                <p className="col-span-2"><strong>Total Score:</strong> <span className="text-2xl font-bold text-blue-600">{assessmentReport.totalScore.toFixed(2)}</span></p>
               </div>
             </div>
 
-            <div className="border rounded-xl shadow-sm p-4 bg-white">
-              <h2 className="font-bold text-lg mb-4">RAW SCORES</h2>
-              <div className="grid grid-cols-3 gap-4 text-sm">
-                <div className="text-center p-3 bg-blue-50 rounded">
-                  <p className="font-semibold">COREVA Raw</p>
-                  <p className="text-2xl font-bold text-blue-600">{assessmentResult.va1RawScore}</p>
-                </div>
-                <div className="text-center p-3 bg-green-50 rounded">
-                  <p className="font-semibold">AWARE Raw</p>
-                  <p className="text-2xl font-bold text-green-600">{assessmentResult.va2RawScore}</p>
-                </div>
-                <div className="text-center p-3 bg-purple-50 rounded">
-                  <p className="font-semibold">GRIT Raw</p>
-                  <p className="text-2xl font-bold text-purple-600">{assessmentResult.va3RawScore}</p>
-                </div>
-              </div>
+            <div className="border rounded-xl shadow-sm p-4 bg-blue-50">
+              <h2 className="font-bold text-lg mb-4">INTERPRETASI</h2>
+              <p className="text-sm">{assessmentReport.interpretasi}</p>
             </div>
 
             <div className="border rounded-xl shadow-sm p-4 bg-white">
               <h2 className="font-bold text-lg mb-4">COREVA</h2>
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                {Object.entries(parseCategoryScores(assessmentResult.va1CategoryScores)).map(([key, value]) => (
-                  <div key={key} className="flex justify-between p-2 bg-gray-50 rounded">
-                    <span className="capitalize">{key.replace(/([A-Z])/g, ' $1').trim()}:</span>
-                    <span className="font-semibold">{value.toFixed(1)}</span>
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg text-center">
+                <p className="text-sm font-semibold text-gray-600 mb-1">Kategori</p>
+                <p className={`text-xl font-bold ${getCategoryColor(getCorevaCategory(assessmentReport.coreva.rawScore))}`}>
+                  {getCorevaCategory(assessmentReport.coreva.rawScore)}
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-sm mb-4">
+                <div className="text-center p-3 bg-blue-50 rounded">
+                  <p className="font-semibold">Raw Score</p>
+                  <p className="text-2xl font-bold text-blue-600">{assessmentReport.coreva.rawScore}</p>
+                </div>
+                <div className="text-center p-3 bg-green-50 rounded">
+                  <p className="font-semibold">Final Score</p>
+                  <p className="text-2xl font-bold text-green-600">{assessmentReport.coreva.finalScore}</p>
+                </div>
+                <div className="text-center p-3 bg-purple-50 rounded">
+                  <p className="font-semibold">Konversi Score (40%)</p>
+                  <p className="text-2xl font-bold text-purple-600">{assessmentReport.coreva.konversiScore.toFixed(2)}</p>
+                </div>
+              </div>
+
+              {assessmentReport.coreva.scoreResult && assessmentReport.coreva.scoreResult.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-sm mb-2">Breakdown per Aspect:</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {assessmentReport.coreva.scoreResult.map((aspect) => (
+                      <div key={aspect.aspectId} className="flex justify-between p-2 bg-gray-50 rounded">
+                        <span className="text-sm">{aspect.aspectName}:</span>
+                        <div className="text-sm">
+                          <span className="font-semibold">Raw: {aspect.rawScore}</span>
+                          <span className="ml-2 font-semibold text-blue-600">Final: {aspect.finalScore}</span>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </div>
+              )}
             </div>
 
             <div className="border rounded-xl shadow-sm p-4 bg-white">
-              <h2 className="font-bold text-lg mb-4">SKOR SISTEM</h2>
+              <h2 className="font-bold text-lg mb-4">AWARE</h2>
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg text-center">
+                <p className="text-sm font-semibold text-gray-600 mb-1">Kategori</p>
+                <p className={`text-xl font-bold ${getCategoryColor(getAwareCategory(assessmentReport.aware.rawScore))}`}>
+                  {getAwareCategory(assessmentReport.aware.rawScore)}
+                </p>
+              </div>
               <div className="grid grid-cols-3 gap-4 text-sm">
-                <div className="text-center p-3 bg-orange-50 rounded">
-                  <p className="font-semibold">COREVA OCAI</p>
-                  <p className="text-2xl font-bold text-orange-600">{assessmentResult.corevaOcai}</p>
-                </div>
                 <div className="text-center p-3 bg-teal-50 rounded">
-                  <p className="font-semibold">AWARE</p>
-                  <p className="text-2xl font-bold text-teal-600">{assessmentResult.awareConverted}</p>
+                  <p className="font-semibold">Raw Score</p>
+                  <p className="text-2xl font-bold text-teal-600">{assessmentReport.aware.rawScore}</p>
                 </div>
-                <div className="text-center p-3 bg-indigo-50 rounded">
-                  <p className="font-semibold">GRIT</p>
-                  <p className="text-2xl font-bold text-indigo-600">{assessmentResult.gritConverted}</p>
+                <div className="text-center p-3 bg-green-50 rounded">
+                  <p className="font-semibold">Final Score</p>
+                  <p className="text-2xl font-bold text-green-600">{assessmentReport.aware.finalScore}</p>
+                </div>
+                <div className="text-center p-3 bg-orange-50 rounded">
+                  <p className="font-semibold">Konversi Score (30%)</p>
+                  <p className="text-2xl font-bold text-orange-600">{assessmentReport.aware.konversiScore.toFixed(2)}</p>
                 </div>
               </div>
             </div>
 
             <div className="border rounded-xl shadow-sm p-4 bg-white">
-              <h2 className="font-bold text-lg mb-4">SKOR FINAL</h2>
-              <div className="grid grid-cols-2 gap-4 text-sm mb-4">
-                <div className="text-center p-3 bg-red-50 rounded">
-                  <p className="font-semibold">Konversi COREVA</p>
-                  <p className="text-2xl font-bold text-red-600">{assessmentResult.corevaFinal}</p>
+              <h2 className="font-bold text-lg mb-4">GRIT</h2>
+              <div className="mb-4 p-3 bg-gray-50 rounded-lg text-center">
+                <p className="text-sm font-semibold text-gray-600 mb-1">Kategori</p>
+                <p className={`text-xl font-bold ${getCategoryColor(getGritCategory(assessmentReport.grit.rawScore))}`}>
+                  {getGritCategory(assessmentReport.grit.rawScore)}
+                </p>
+              </div>
+              <div className="grid grid-cols-3 gap-4 text-sm">
+                <div className="text-center p-3 bg-indigo-50 rounded">
+                  <p className="font-semibold">Raw Score</p>
+                  <p className="text-2xl font-bold text-indigo-600">{assessmentReport.grit.rawScore}</p>
                 </div>
-                <div className="text-center p-3 bg-yellow-50 rounded">
-                  <p className="font-semibold">Konversi Aware</p>
-                  <p className="text-2xl font-bold text-yellow-600">{assessmentResult.awareFinal}</p>
+                <div className="text-center p-3 bg-green-50 rounded">
+                  <p className="font-semibold">Final Score</p>
+                  <p className="text-2xl font-bold text-green-600">{assessmentReport.grit.finalScore}</p>
                 </div>
                 <div className="text-center p-3 bg-pink-50 rounded">
-                  <p className="font-semibold">Konversi Grit</p>
-                  <p className="text-2xl font-bold text-pink-600">{assessmentResult.gritFinal}</p>
-                </div>
-                <div className="text-center p-3 bg-gray-100 rounded border-2 border-gray-300">
-                  <p className="font-semibold">Total Final Score</p>
-                  <p className="text-3xl font-bold text-gray-800">{assessmentResult.totalFinalScore}</p>
+                  <p className="font-semibold">Konversi Score (30%)</p>
+                  <p className="text-2xl font-bold text-pink-600">{assessmentReport.grit.konversiScore.toFixed(2)}</p>
                 </div>
               </div>
             </div>
 
             <div className="text-center">
-              <img
+              <Image
                 src="/images/logo2.png"
                 alt="Logo Perusahaan"
-                className="h-10 mx-auto"
+                width={40}
+                height={40}
+                className="h-10 w-auto mx-auto"
               />
             </div>
           </div>

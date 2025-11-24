@@ -106,7 +106,6 @@ export default function QuestionDialog({
   question,
   assessmentId,
   role,
-  categories,
 }: QuestionDialogProps) {
   const [formData, setFormData] = useState({
     questionText: "",
@@ -471,8 +470,7 @@ export default function QuestionDialog({
                 </div>
 
                 {aspectsData &&
-                  aspectsData.data &&
-                  aspectsData.data.length > 0 && (
+                  aspectsData.length > 0 && (
                     <div>
                       <Label htmlFor="aspectId" className="text-sm font-medium">
                         Aspek Penilaian
@@ -491,7 +489,7 @@ export default function QuestionDialog({
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="0">Tidak Ada Aspek</SelectItem>
-                          {aspectsData.data.map((aspect: AspectResponse) => (
+                          {aspectsData.map((aspect: AspectResponse) => (
                             <SelectItem
                               key={aspect.id}
                               value={aspect.id.toString()}
