@@ -13,10 +13,7 @@ export interface AssignmentCheckResponse {
   maxAttempts: number | null;
 }
 
-export function useCheckSeafarerAssignment(
-  seafarerCode: string,
-  assessmentTypeId: number
-) {
+export function useCheckSeafarerAssignment(seafarerCode: string, assessmentTypeId: number) {
   const response = useQuery<AssignmentCheckResponse>({
     queryKey: ["seafarer-assignment", seafarerCode, assessmentTypeId],
     enabled: !!seafarerCode && !!assessmentTypeId,

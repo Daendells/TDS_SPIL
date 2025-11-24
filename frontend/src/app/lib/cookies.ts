@@ -5,10 +5,7 @@ const cookies = new Cookies();
 // Login
 export const getToken = (): string => {
   const token = cookies.get("Authorization");
-  console.log(
-    "[COOKIE] Getting token:",
-    token ? "Token exists" : "No token found"
-  );
+  console.log("[COOKIE] Getting token:", token ? "Token exists" : "No token found");
   return token;
 };
 

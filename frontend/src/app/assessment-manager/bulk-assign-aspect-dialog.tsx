@@ -60,16 +60,12 @@ export default function BulkAssignAspectDialog({
         <DialogHeader>
           <DialogTitle>Assign Aspect ke Pertanyaan</DialogTitle>
           <DialogDescription>
-            Anda akan mengassign aspect ke {selectedCount} pertanyaan yang
-            dipilih. Pilih aspect yang ingin diassign.
+            Anda akan mengassign aspect ke {selectedCount} pertanyaan yang dipilih. Pilih aspect
+            yang ingin diassign.
           </DialogDescription>
         </DialogHeader>
         <div className="py-4">
-          <Select
-            value={selectedAspectId}
-            onValueChange={setSelectedAspectId}
-            disabled={loading}
-          >
+          <Select value={selectedAspectId} onValueChange={setSelectedAspectId} disabled={loading}>
             <SelectTrigger className="w-full">
               <SelectValue placeholder="Pilih Aspect">
                 {selectedAspect ? (

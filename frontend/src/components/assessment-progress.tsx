@@ -38,9 +38,7 @@ export default function AssessmentProgress({
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>
-              Progres: {stepNames[currentStep - 1] || "Tidak diketahui"}
-            </span>
+            <span>Progres: {stepNames[currentStep - 1] || "Tidak diketahui"}</span>
             <span>{progress}%</span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -66,10 +64,7 @@ export default function AssessmentProgress({
 
         {/* Info Text */}
         <div className="text-xs text-gray-500">
-          <p>
-            * Data akan otomatis tersimpan di browser dan akan hilang jika cache
-            dibersihkan.
-          </p>
+          <p>* Data akan otomatis tersimpan di browser dan akan hilang jika cache dibersihkan.</p>
         </div>
       </CardContent>
     </Card>

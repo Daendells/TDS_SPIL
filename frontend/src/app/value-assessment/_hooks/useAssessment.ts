@@ -22,9 +22,7 @@ export function useGetAssessmentByRole(role: string) {
         // If assessment doesn't exist (404), return a default structure
         const axiosError = error as { response?: { status?: number } };
         if (axiosError?.response?.status === 404) {
-          console.log(
-            `No assessment found for role: ${role}, returning default structure`
-          );
+          console.log(`No assessment found for role: ${role}, returning default structure`);
           return {
             assessmentId: 0,
             role: role,
@@ -57,11 +55,7 @@ interface AssessmentResultResponse {
 }
 
 export function usePostAssessmentResults(onSuccess?: () => void) {
-  const mutation = useMutation<
-    AssessmentResultResponse,
-    Error,
-    AssessmentResultSubmit
-  >({
+  const mutation = useMutation<AssessmentResultResponse, Error, AssessmentResultSubmit>({
     mutationFn: async (data: AssessmentResultSubmit) => {
       try {
         const response = await api.post<ApiReturn<AssessmentResultResponse>>(
@@ -80,8 +74,6 @@ export function usePostAssessmentResults(onSuccess?: () => void) {
       }
     },
     onSuccess: () => {
-      
-      
       if (onSuccess) {
         onSuccess();
       }

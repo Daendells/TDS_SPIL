@@ -24,12 +24,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Search, Loader2, Filter } from "lucide-react";
 import { AspectResponse } from "@/types/aspect";
 import { QuestionOptionResponse } from "@/types/assessment";
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 interface AspectQuestionAssignmentDialogProps {
   open: boolean;
@@ -178,12 +173,8 @@ export function AspectQuestionAssignmentDialog({
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">
-                      Semua Questions ({questions.length})
-                    </SelectItem>
-                    <SelectItem value="unassigned">
-                      Belum Di-assign ({unassignedCount})
-                    </SelectItem>
+                    <SelectItem value="all">Semua Questions ({questions.length})</SelectItem>
+                    <SelectItem value="unassigned">Belum Di-assign ({unassignedCount})</SelectItem>
                     {aspects.map((aspect) => (
                       <SelectItem key={aspect.id} value={aspect.id.toString()}>
                         {aspect.name} ({getAspectQuestionCount(aspect.id)})
@@ -219,10 +210,7 @@ export function AspectQuestionAssignmentDialog({
                   </span>
                 </div>
                 {selectedQuestionIds.length > 0 && (
-                  <Button
-                    size="sm"
-                    onClick={() => setActiveTab("assign")}
-                  >
+                  <Button size="sm" onClick={() => setActiveTab("assign")}>
                     Lanjut ke Assign →
                   </Button>
                 )}
@@ -292,9 +280,7 @@ export function AspectQuestionAssignmentDialog({
               </div>
 
               <div className="space-y-3">
-                <label className="text-sm font-medium">
-                  Pilih Aspect Target
-                </label>
+                <label className="text-sm font-medium">Pilih Aspect Target</label>
                 <Select value={targetAspectId} onValueChange={setTargetAspectId}>
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Pilih aspect...">

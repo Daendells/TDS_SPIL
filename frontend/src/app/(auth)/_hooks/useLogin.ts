@@ -76,8 +76,7 @@ export function useLogin() {
     },
     onError: (error) => {
       // Handle login error
-      const errorMessage =
-        error.response?.data?.error || error.message || "Login gagal";
+      const errorMessage = error.response?.data?.error || error.message || "Login gagal";
       toast.error(errorMessage);
     },
   });
@@ -110,8 +109,7 @@ export function useLogout() {
     },
     onError: (error) => {
       // Handle logout error
-      const errorMessage =
-        error.response?.data?.error || error.message || "Logout gagal";
+      const errorMessage = error.response?.data?.error || error.message || "Logout gagal";
       toast.error(errorMessage);
 
       // Even if logout fails on server, clear local state

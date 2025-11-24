@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect } from "react";
 
 export function useSessionStorage<T>(key: string, initialValue: T) {
   // Get from sessionStorage then parse stored json or return initialValue
   const [storedValue, setStoredValue] = useState<T>(() => {
     try {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         const item = window.sessionStorage.getItem(key);
         return item ? JSON.parse(item) : initialValue;
       }
@@ -21,9 +21,9 @@ export function useSessionStorage<T>(key: string, initialValue: T) {
       // Allow value to be a function so we have the same API as useState
       const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
-      
+
       // Save to sessionStorage
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         window.sessionStorage.setItem(key, JSON.stringify(valueToStore));
       }
     } catch (error) {
@@ -35,7 +35,7 @@ export function useSessionStorage<T>(key: string, initialValue: T) {
   const removeValue = () => {
     try {
       setStoredValue(initialValue);
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         window.sessionStorage.removeItem(key);
       }
     } catch (error) {
@@ -70,7 +70,7 @@ export function useCountdown(startTime: string | undefined, totalMinutes: number
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   return { timeLeft, formatTime };

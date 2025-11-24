@@ -45,9 +45,7 @@ export async function middleware(request: NextRequest) {
     "/report-mentoring",
   ];
 
-  const isProtectedRoute = protectedRoutes.some((route) =>
-    url.pathname.startsWith(route)
-  );
+  const isProtectedRoute = protectedRoutes.some((route) => url.pathname.startsWith(route));
 
   if (isProtectedRoute) {
     if (!token) {

@@ -34,11 +34,7 @@ const FormSchema = z.object({
   assessmentTypeName: z.string().min(3, { message: "Minimal 3 karakter" }),
   startTime: z.string().optional().nullable(),
   endTime: z.string().optional().nullable(),
-  maxAttempts: z
-    .number()
-    .min(1, { message: "Minimal 1 attempt" })
-    .optional()
-    .nullable(),
+  maxAttempts: z.number().min(1, { message: "Minimal 1 attempt" }).optional().nullable(),
 });
 
 interface AssessmentTypeEditDialogProps {
@@ -72,12 +68,8 @@ export default function AssessmentTypeEditDialog({
     if (assessmentType && open) {
       form.reset({
         assessmentTypeName: assessmentType.assessmentTypeName,
-        startTime: assessmentType.startTime
-          ? assessmentType.startTime.split("T")[0]
-          : "",
-        endTime: assessmentType.endTime
-          ? assessmentType.endTime.split("T")[0]
-          : "",
+        startTime: assessmentType.startTime ? assessmentType.startTime.split("T")[0] : "",
+        endTime: assessmentType.endTime ? assessmentType.endTime.split("T")[0] : "",
         maxAttempts: assessmentType.maxAttempts || undefined,
       });
     }
@@ -91,12 +83,8 @@ export default function AssessmentTypeEditDialog({
       const payload: AssessmentTypeUpdateRequest = {
         id: assessmentType.id,
         assessmentTypeName: data.assessmentTypeName,
-        startTime: data.startTime
-          ? new Date(data.startTime).toISOString()
-          : undefined,
-        endTime: data.endTime
-          ? new Date(data.endTime).toISOString()
-          : undefined,
+        startTime: data.startTime ? new Date(data.startTime).toISOString() : undefined,
+        endTime: data.endTime ? new Date(data.endTime).toISOString() : undefined,
         maxAttempts: data.maxAttempts || undefined,
       };
 
@@ -119,9 +107,7 @@ export default function AssessmentTypeEditDialog({
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>Edit Assessment Type</DialogTitle>
-          <DialogDescription>
-            Ubah informasi assessment type berikut
-          </DialogDescription>
+          <DialogDescription>Ubah informasi assessment type berikut</DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -185,9 +171,7 @@ export default function AssessmentTypeEditDialog({
                       {...field}
                       value={field.value || ""}
                       onChange={(e) =>
-                        field.onChange(
-                          e.target.value ? parseInt(e.target.value) : null
-                        )
+                        field.onChange(e.target.value ? parseInt(e.target.value) : null)
                       }
                     />
                   </FormControl>
@@ -197,11 +181,7 @@ export default function AssessmentTypeEditDialog({
             />
 
             <DialogFooter>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onOpenChange(false)}
-              >
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
                 Batal
               </Button>
               <Button type="submit" disabled={isLoading}>

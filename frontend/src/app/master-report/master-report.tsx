@@ -15,11 +15,7 @@ import {
   CommandInput,
   CommandEmpty,
 } from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
 import {
   Table,
@@ -42,11 +38,7 @@ import {
   AlertTriangle,
   Loader2,
 } from "lucide-react";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-} from "@/components/ui/pagination";
+import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
 import {
   Dialog,
   DialogTrigger,
@@ -155,9 +147,7 @@ export default function MasterPage() {
   ];
 
   // Add assessment type columns dynamically
-  const assessmentTypeColumns = assessmentTypes.map(
-    (type) => type.assessmentTypeName
-  );
+  const assessmentTypeColumns = assessmentTypes.map((type) => type.assessmentTypeName);
 
   const TABLE_COLUMNS = [...STATIC_COLUMNS, ...assessmentTypeColumns];
 
@@ -181,13 +171,10 @@ export default function MasterPage() {
     fetchCompetencyTypes();
   }, [fetchCompetencyTypes]);
 
-  const isFormValid = () =>
-    form.nama.trim() && form.seamanCode.trim() && form.seafarerCode.trim();
+  const isFormValid = () => form.nama.trim() && form.seamanCode.trim() && form.seafarerCode.trim();
 
   const isEditFormValid = () =>
-    editingRow?.nama?.trim() && 
-    editingRow?.seamanCode?.trim() && 
-    editingRow?.seafarerCode?.trim();
+    editingRow?.nama?.trim() && editingRow?.seamanCode?.trim() && editingRow?.seafarerCode?.trim();
 
   const navigatePage = (page: "prev" | "next") => {
     if (!paginationData) return;
@@ -208,7 +195,7 @@ export default function MasterPage() {
       toast.error("Please fill in all required fields!");
       return;
     }
-    
+
     try {
       await createReport(form);
       setForm({ nama: "", seamanCode: "", seafarerCode: "" });
@@ -237,8 +224,8 @@ export default function MasterPage() {
 
       // Add competencies if they were modified
       if (selectedCompetencies.length > 0) {
-        updatePayload.competencies = selectedCompetencies.map(typeId => ({
-          competencyTypeId: typeId
+        updatePayload.competencies = selectedCompetencies.map((typeId) => ({
+          competencyTypeId: typeId,
         }));
       } else {
         // Send empty array to clear competencies
@@ -310,18 +297,21 @@ export default function MasterPage() {
     setEditingRow({ ...row });
 
     // Set selected competencies from row data
-    const competencyIds = row.competencies?.map((c) => c.competencyTypeId).filter((id): id is number => id !== undefined) || [];
+    const competencyIds =
+      row.competencies
+        ?.map((c) => c.competencyTypeId)
+        .filter((id): id is number => id !== undefined) || [];
     setSelectedCompetencies(competencyIds);
-    
+
     console.log("Editing row:", row);
     console.log("Existing competencies:", competencyIds);
     setOpenEditDialog(true);
   };
 
   const toggleCompetencySelection = (typeId: number) => {
-    setSelectedCompetencies(prev => {
+    setSelectedCompetencies((prev) => {
       if (prev.includes(typeId)) {
-        return prev.filter(id => id !== typeId);
+        return prev.filter((id) => id !== typeId);
       } else {
         return [...prev, typeId];
       }
@@ -329,11 +319,10 @@ export default function MasterPage() {
   };
 
   const removeCompetency = (typeId: number) => {
-    setSelectedCompetencies(prev => prev.filter(id => id !== typeId));
+    setSelectedCompetencies((prev) => prev.filter((id) => id !== typeId));
   };
 
-  const getRowNumber = (i: number) =>
-    (currentPage - 1) * paginationRequest.pageSize + i + 1;
+  const getRowNumber = (i: number) => (currentPage - 1) * paginationRequest.pageSize + i + 1;
 
   function colorFromString(str: string | undefined | null) {
     if (!str) return "hsl(200, 70%, 70%)"; // Default color if undefined
@@ -347,7 +336,9 @@ export default function MasterPage() {
 
   // Helper function to get score for assessment type
   const getScoreForAssessmentType = (
-    row: IReport & { reportScores?: Array<{ score?: number; assessmentType?: { assessmentTypeName?: string } }> },
+    row: IReport & {
+      reportScores?: Array<{ score?: number; assessmentType?: { assessmentTypeName?: string } }>;
+    },
     assessmentTypeName: string
   ): number => {
     if (!row.reportScores || !Array.isArray(row.reportScores)) {
@@ -551,7 +542,7 @@ export default function MasterPage() {
               Update report information and manage competency gap analysis.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="grid gap-4 py-2">
             <div>
               <Label htmlFor="edit-nama">Name *</Label>
@@ -572,7 +563,8 @@ export default function MasterPage() {
                 placeholder="Seaman Code"
                 value={editingRow?.seamanCode || ""}
                 onChange={(e) =>
-                  editingRow && setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })
+                  editingRow &&
+                  setEditingRow({ ...editingRow, seamanCode: e.target.value.toUpperCase() })
                 }
               />
             </div>
@@ -584,21 +576,22 @@ export default function MasterPage() {
                 placeholder="Seafarer Code"
                 value={editingRow?.seafarerCode || ""}
                 onChange={(e) =>
-                  editingRow && setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })
+                  editingRow &&
+                  setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })
                 }
               />
             </div>
 
             <div className="space-y-2">
               <Label>Competency Gap Analysis</Label>
-              
+
               {/* Selected Competencies */}
               <div className="flex flex-wrap gap-2 min-h-[60px] p-3 border rounded-md bg-gray-50">
                 {selectedCompetencies.length === 0 ? (
                   <span className="text-sm text-gray-400">No competencies selected</span>
                 ) : (
-                  selectedCompetencies.map(typeId => {
-                    const comp = competencyTypes.find(ct => ct.id === typeId);
+                  selectedCompetencies.map((typeId) => {
+                    const comp = competencyTypes.find((ct) => ct.id === typeId);
                     if (!comp) return null;
                     return (
                       <Badge
@@ -661,9 +654,7 @@ export default function MasterPage() {
                             <CheckIcon
                               className={cn(
                                 "mr-2 h-4 w-4",
-                                selectedCompetencies.includes(type.id)
-                                  ? "opacity-100"
-                                  : "opacity-0"
+                                selectedCompetencies.includes(type.id) ? "opacity-100" : "opacity-0"
                               )}
                             />
                             <div className="flex flex-col">
@@ -906,7 +897,8 @@ export default function MasterPage() {
         </Pagination>
 
         <span className="text-sm text-gray-600">
-          Page {currentPage} | Showing {paginationData?.results?.length || 0} of {paginationRequest.pageSize} rows
+          Page {currentPage} | Showing {paginationData?.results?.length || 0} of{" "}
+          {paginationRequest.pageSize} rows
         </span>
       </div>
     </div>

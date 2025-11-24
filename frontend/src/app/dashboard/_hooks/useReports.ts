@@ -17,8 +17,7 @@ interface IdpCountData {
 export const reportKeys = {
   all: ["reports"] as const,
   list: () => [...reportKeys.all, "list"] as const,
-  paginated: (request: IPaginationRequest) =>
-    [...reportKeys.list(), request] as const,
+  paginated: (request: IPaginationRequest) => [...reportKeys.list(), request] as const,
   idpCount: () => [...reportKeys.all, "idp-count"] as const,
 };
 
@@ -27,9 +26,7 @@ export function useGetIdpCount() {
   const response = useQuery<IdpCountData, Error>({
     queryKey: reportKeys.idpCount(),
     queryFn: async () => {
-      const response = await api.get<ApiResponse<IdpCountData>>(
-        "/reports/idp-count"
-      );
+      const response = await api.get<ApiResponse<IdpCountData>>("/reports/idp-count");
 
       if (!response.data) {
         throw new Error("Failed to fetch IDP count data");
@@ -43,10 +40,7 @@ export function useGetIdpCount() {
       // Don't retry on 404 or authentication errors
       if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as { response: { status: number } };
-        if (
-          axiosError.response?.status === 404 ||
-          axiosError.response?.status === 401
-        ) {
+        if (axiosError.response?.status === 404 || axiosError.response?.status === 401) {
           return false;
         }
       }
@@ -64,17 +58,14 @@ export function useGetReports(paginationRequest: IPaginationRequest) {
     queryKey: reportKeys.paginated(paginationRequest),
     queryFn: async () => {
       try {
-        const response = await api.get<ApiResponse<IPaginationData<IReport>>>(
-          `/reports`,
-          {
-            params: {
-              anchor_id: (paginationRequest.anchorId ?? 0).toString(),
-              page: paginationRequest.page,
-              page_size: paginationRequest.pageSize,
-              filter: paginationRequest.filter,
-            },
-          }
-        );
+        const response = await api.get<ApiResponse<IPaginationData<IReport>>>(`/reports`, {
+          params: {
+            anchor_id: (paginationRequest.anchorId ?? 0).toString(),
+            page: paginationRequest.page,
+            page_size: paginationRequest.pageSize,
+            filter: paginationRequest.filter,
+          },
+        });
 
         if (!response.data) {
           console.error("Response data is empty");

@@ -1,18 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  ChevronDownIcon,
-  ChevronRightIcon,
-  SearchIcon,
-  FilterIcon,
-} from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ChevronDownIcon, ChevronRightIcon, SearchIcon, FilterIcon } from "lucide-react";
 import { useApi } from "@/hooks/use-api";
 import Image from "next/image";
 
@@ -66,11 +56,7 @@ export default function MentoringListDialog({
     try {
       const response = await api.get(`/mentoring-reports/reports/${reportId}`);
 
-      if (
-        response.data.code === 200 &&
-        response.data.data &&
-        response.data.data.data
-      ) {
+      if (response.data.code === 200 && response.data.data && response.data.data.data) {
         setMentoringData(response.data.data.data);
       } else {
         setMentoringData([]);
@@ -107,8 +93,7 @@ export default function MentoringListDialog({
     let filtered = mentoringData;
     if (selectedProgram !== "all") {
       filtered = filtered.filter(
-        (session) =>
-          session.program.toLowerCase() === selectedProgram.toLowerCase()
+        (session) => session.program.toLowerCase() === selectedProgram.toLowerCase()
       );
     }
     if (searchTerm.trim()) {
@@ -188,11 +173,10 @@ export default function MentoringListDialog({
             <div className="text-sm text-gray-600">
               {searchTerm || selectedProgram !== "all" ? (
                 <p>
-                  Menampilkan {filteredMentoringData.length} dari{" "}
-                  {mentoringData.length} data mentoring
+                  Menampilkan {filteredMentoringData.length} dari {mentoringData.length} data
+                  mentoring
                   {searchTerm && ` untuk pencarian "${searchTerm}"`}
-                  {selectedProgram !== "all" &&
-                    ` dengan program ${selectedProgram.toUpperCase()}`}
+                  {selectedProgram !== "all" && ` dengan program ${selectedProgram.toUpperCase()}`}
                 </p>
               ) : (
                 <p>Menampilkan {mentoringData.length} data mentoring</p>
@@ -239,10 +223,8 @@ export default function MentoringListDialog({
                         </h3>
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">
-                            <span className="font-medium">Mentor:</span>{" "}
-                            {session.mentorName} |
-                            <span className="font-medium"> Sesi:</span>{" "}
-                            {session.sessionNumber} |
+                            <span className="font-medium">Mentor:</span> {session.mentorName} |
+                            <span className="font-medium"> Sesi:</span> {session.sessionNumber} |
                             <span className="font-medium"> Tanggal:</span>{" "}
                             {formatDate(session.date)}
                           </p>
@@ -272,68 +254,38 @@ export default function MentoringListDialog({
                             </h4>
                             <div className="space-y-2 text-sm">
                               <p>
-                                <span className="font-medium text-gray-700">
-                                  Nama Mentor:
-                                </span>{" "}
-                                <span className="text-gray-600">
-                                  {session.mentorName}
-                                </span>
+                                <span className="font-medium text-gray-700">Nama Mentor:</span>{" "}
+                                <span className="text-gray-600">{session.mentorName}</span>
                               </p>
                               <p>
-                                <span className="font-medium text-gray-700">
-                                  Periode:
-                                </span>{" "}
-                                <span className="text-gray-600">
-                                  {session.period}
-                                </span>
+                                <span className="font-medium text-gray-700">Periode:</span>{" "}
+                                <span className="text-gray-600">{session.period}</span>
                               </p>
                               <p>
-                                <span className="font-medium text-gray-700">
-                                  Nama Mentee:
-                                </span>{" "}
+                                <span className="font-medium text-gray-700">Nama Mentee:</span>{" "}
                                 <span className="text-gray-600">
                                   {session.menteeNames.join(", ")}
                                 </span>
                               </p>
                               <p>
-                                <span className="font-medium text-gray-700">
-                                  Departemen:
-                                </span>{" "}
-                                <span className="text-gray-600">
-                                  {session.department}
-                                </span>
+                                <span className="font-medium text-gray-700">Departemen:</span>{" "}
+                                <span className="text-gray-600">{session.department}</span>
                               </p>
                               <p>
-                                <span className="font-medium text-gray-700">
-                                  Program:
-                                </span>{" "}
-                                <span className="text-gray-600">
-                                  {session.program}
-                                </span>
+                                <span className="font-medium text-gray-700">Program:</span>{" "}
+                                <span className="text-gray-600">{session.program}</span>
                               </p>
                               <p>
-                                <span className="font-medium text-gray-700">
-                                  Sesi ke:
-                                </span>{" "}
-                                <span className="text-gray-600">
-                                  {session.sessionNumber}
-                                </span>
+                                <span className="font-medium text-gray-700">Sesi ke:</span>{" "}
+                                <span className="text-gray-600">{session.sessionNumber}</span>
                               </p>
                               <p>
-                                <span className="font-medium text-gray-700">
-                                  Tanggal:
-                                </span>{" "}
-                                <span className="text-gray-600">
-                                  {formatDate(session.date)}
-                                </span>
+                                <span className="font-medium text-gray-700">Tanggal:</span>{" "}
+                                <span className="text-gray-600">{formatDate(session.date)}</span>
                               </p>
                               <p>
-                                <span className="font-medium text-gray-700">
-                                  Durasi:
-                                </span>{" "}
-                                <span className="text-gray-600">
-                                  {session.duration}
-                                </span>
+                                <span className="font-medium text-gray-700">Durasi:</span>{" "}
+                                <span className="text-gray-600">{session.duration}</span>
                               </p>
                               {/* <p><span className="font-medium text-gray-700">Report IDs:</span> <span className="text-gray-600">{session.reportIds.join(", ")}</span></p> */}
                             </div>
@@ -397,25 +349,22 @@ export default function MentoringListDialog({
             </div>
           )}
 
-          {!loading &&
-            !error &&
-            mentoringData.length > 0 &&
-            filteredMentoringData.length === 0 && (
-              <div className="flex flex-col items-center justify-center h-full space-y-4">
-                <p className="text-gray-500 text-center">
-                  Tidak ada data yang cocok dengan kriteria Anda
-                </p>
-                <button
-                  onClick={() => {
-                    setSearchTerm("");
-                    setSelectedProgram("all");
-                  }}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-                >
-                  Reset Filter
-                </button>
-              </div>
-            )}
+          {!loading && !error && mentoringData.length > 0 && filteredMentoringData.length === 0 && (
+            <div className="flex flex-col items-center justify-center h-full space-y-4">
+              <p className="text-gray-500 text-center">
+                Tidak ada data yang cocok dengan kriteria Anda
+              </p>
+              <button
+                onClick={() => {
+                  setSearchTerm("");
+                  setSelectedProgram("all");
+                }}
+                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+              >
+                Reset Filter
+              </button>
+            </div>
+          )}
         </div>
       </DialogContent>
     </Dialog>

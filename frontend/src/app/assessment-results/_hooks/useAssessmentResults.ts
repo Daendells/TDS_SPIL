@@ -47,8 +47,7 @@ interface ApiResponse<T> {
 // Query key factory for assessment queries
 export const assessmentKeys = {
   all: ["assessments"] as const,
-  report: (seafarerCode: string) =>
-    [...assessmentKeys.all, "report", seafarerCode] as const,
+  report: (seafarerCode: string) => [...assessmentKeys.all, "report", seafarerCode] as const,
   bySeafarerCode: (seafarerCode: string) =>
     [...assessmentKeys.all, "seafarer", seafarerCode] as const,
 };
@@ -93,10 +92,7 @@ export function useGetAssessmentReport(seafarerCode: string) {
       // Don't retry on 404 or authentication errors
       if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as { response: { status: number } };
-        if (
-          axiosError.response?.status === 404 ||
-          axiosError.response?.status === 401
-        ) {
+        if (axiosError.response?.status === 404 || axiosError.response?.status === 401) {
           return false;
         }
       }

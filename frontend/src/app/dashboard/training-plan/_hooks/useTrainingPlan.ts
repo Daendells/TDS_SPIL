@@ -8,18 +8,18 @@ export interface TrainingPlanParticipant {
   vesselName: string;
   seamanCode: string;
   name: string;
-  position: string;  // Added position field for jabatan
+  position: string; // Added position field for jabatan
   gaps: { [key: string]: string | number }; // Will contain gap values (1, X, or empty)
   total: number;
   readiness: string;
 }
 
 export interface TrainingPlanSummary {
-  total: { [key: string]: number };           
-  percentageGap: { [key: string]: number };   
-  category: { [key: string]: string };        
-  trainingMateri1: { [key: string]: string }; 
-  trainingMateri2: { [key: string]: string }; 
+  total: { [key: string]: number };
+  percentageGap: { [key: string]: number };
+  category: { [key: string]: string };
+  trainingMateri1: { [key: string]: string };
+  trainingMateri2: { [key: string]: string };
   scheduleIds: { [competencyCode: string]: { [materialType: string]: number } };
 }
 
@@ -48,7 +48,8 @@ export const trainingPlanKeys = {
   all: ["training-plan"] as const,
   list: () => [...trainingPlanKeys.all, "list"] as const,
   byProgram: (program: string) => [...trainingPlanKeys.list(), program] as const,
-  competencyMapping: (program: string) => [...trainingPlanKeys.all, "competency-mapping", program] as const,
+  competencyMapping: (program: string) =>
+    [...trainingPlanKeys.all, "competency-mapping", program] as const,
   programs: () => [...trainingPlanKeys.all, "programs"] as const,
 };
 
@@ -57,12 +58,9 @@ export function useGetTrainingPlan(program: string = "SDP") {
   const response = useQuery<TrainingPlanResponse, Error>({
     queryKey: trainingPlanKeys.byProgram(program),
     queryFn: async () => {
-      const response = await api.get<ApiResponse<TrainingPlanResponse>>(
-        `/api/training-plan`,
-        {
-          params: { program }
-        }
-      );
+      const response = await api.get<ApiResponse<TrainingPlanResponse>>(`/api/training-plan`, {
+        params: { program },
+      });
 
       if (!response.data || !response.data.success) {
         throw new Error("Failed to fetch training plan data");
@@ -76,10 +74,7 @@ export function useGetTrainingPlan(program: string = "SDP") {
       // Don't retry on 404 or authentication errors
       if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as { response: { status: number } };
-        if (
-          axiosError.response?.status === 404 ||
-          axiosError.response?.status === 401
-        ) {
+        if (axiosError.response?.status === 404 || axiosError.response?.status === 401) {
           return false;
         }
       }
@@ -99,7 +94,7 @@ export function useGetCompetencyMapping(program: string = "SDP") {
       const response = await api.get<ApiResponse<{ program: string; mapping: CompetencyMapping }>>(
         `/api/training-plan/competency-mapping`,
         {
-          params: { program }
+          params: { program },
         }
       );
 
@@ -121,9 +116,7 @@ export function useGetPrograms() {
   const response = useQuery<ProgramInfo[], Error>({
     queryKey: trainingPlanKeys.programs(),
     queryFn: async () => {
-      const response = await api.get<ApiResponse<ProgramInfo[]>>(
-        `/api/training-plan/programs`
-      );
+      const response = await api.get<ApiResponse<ProgramInfo[]>>(`/api/training-plan/programs`);
 
       if (!response.data || !response.data.success) {
         throw new Error("Failed to fetch programs");
@@ -156,7 +149,7 @@ export function useGenerateSchedules() {
     onSuccess: (_, variables) => {
       // Invalidate and refetch training plan data after successful generation
       queryClient.invalidateQueries({
-        queryKey: trainingPlanKeys.byProgram(variables.program)
+        queryKey: trainingPlanKeys.byProgram(variables.program),
       });
     },
   });
@@ -165,7 +158,11 @@ export function useGenerateSchedules() {
 export function useSwapSchedules() {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, { swaps: { id: number; scheduledDate: string }[]; program: string }>({
+  return useMutation<
+    void,
+    Error,
+    { swaps: { id: number; scheduledDate: string }[]; program: string }
+  >({
     mutationFn: async ({ swaps }) => {
       const response = await api.put<ApiResponse<{ message: string }>>(
         `/api/training-plan/swap-schedules`,
@@ -178,7 +175,7 @@ export function useSwapSchedules() {
     },
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
-        queryKey: trainingPlanKeys.byProgram(variables.program)
+        queryKey: trainingPlanKeys.byProgram(variables.program),
       });
     },
   });

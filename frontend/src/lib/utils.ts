@@ -80,8 +80,7 @@ export function parsePaginationData<T>(
   response: Record<string, unknown>,
   parser: (data: Record<string, unknown>[]) => T[]
 ): IPaginationData<T> {
-  const { first_id, first_page, has_more, last_id, page_size, results } =
-    response;
+  const { first_id, first_page, has_more, last_id, page_size, results } = response;
   return {
     results: parser((results as Record<string, unknown>[]) ?? []),
     first_id: (first_id as number) ?? null,

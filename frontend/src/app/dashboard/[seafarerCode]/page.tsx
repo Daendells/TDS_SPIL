@@ -29,11 +29,7 @@ export default function TalentProfilePage({ params }: PageProps) {
   const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
 
   // Fetch report data using React Query hook
-  const {
-    data: report,
-    isLoading,
-    error,
-  } = useGetReportBySeafarerCode(seafarerCode);
+  const { data: report, isLoading, error } = useGetReportBySeafarerCode(seafarerCode);
 
   // Show loading while waiting for seafarerCode to be set or while fetching
   if (!seafarerCode || isLoading) {
@@ -83,9 +79,7 @@ export default function TalentProfilePage({ params }: PageProps) {
             height={48}
             className="h-12 w-auto"
           />
-          <h1 className="text-2xl md:text-3xl font-bold uppercase text-center">
-            Talent Profile
-          </h1>
+          <h1 className="text-2xl md:text-3xl font-bold uppercase text-center">Talent Profile</h1>
           <Image
             src="/images/logo2.png"
             alt="Logo Kanan"
@@ -102,9 +96,7 @@ export default function TalentProfilePage({ params }: PageProps) {
         <div className="lg:col-span-1 flex flex-col gap-6">
           {/* DATA PRIBADI */}
           <div className="border rounded-lg shadow-sm p-4 bg-white">
-            <h2 className="font-bold text-lg mb-4 pb-2 border-b">
-              DATA PRIBADI
-            </h2>
+            <h2 className="font-bold text-lg mb-4 pb-2 border-b">DATA PRIBADI</h2>
             <div className="flex flex-col md:flex-row lg:flex-col gap-4">
               {/* Informasi teks */}
               <div className="flex-1 space-y-2 text-sm">
@@ -152,16 +144,13 @@ export default function TalentProfilePage({ params }: PageProps) {
 
           {/* Catatan indisipliner */}
           <div className="border rounded-lg shadow-sm p-4 bg-white">
-            <h2 className="font-bold text-lg mb-4 pb-2 border-b">
-              CATATAN INDISIPLINER
-            </h2>
+            <h2 className="font-bold text-lg mb-4 pb-2 border-b">CATATAN INDISIPLINER</h2>
             <div className="space-y-2 text-sm">
               <p>
                 <strong>Surat Peringatan:</strong> {report.warningLetter}
               </p>
               <p>
-                <strong>Kasus yang Pernah Dilakukan:</strong>{" "}
-                {report.caseHistory}
+                <strong>Kasus yang Pernah Dilakukan:</strong> {report.caseHistory}
               </p>
               <p>
                 <strong>Tahun SP/Kasus:</strong> {report.yearOfCase}
@@ -174,9 +163,7 @@ export default function TalentProfilePage({ params }: PageProps) {
         <div className="lg:col-span-1 flex flex-col gap-6">
           {/* Data history vessel */}
           <div className="border rounded-lg shadow-sm p-4 bg-white">
-            <h2 className="font-bold text-lg mb-4 pb-2 border-b">
-              DATA HISTORY VESSEL
-            </h2>
+            <h2 className="font-bold text-lg mb-4 pb-2 border-b">DATA HISTORY VESSEL</h2>
             <div className="overflow-x-auto">
               <table className="w-full border text-sm">
                 <thead>
@@ -186,21 +173,15 @@ export default function TalentProfilePage({ params }: PageProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {report.vesselHistory
-                    ?.split(";")
-                    .map((entry: string, idx: number) => {
-                      const [vessel, rank] = entry.split("|");
-                      return (
-                        <tr key={idx} className="hover:bg-gray-50">
-                          <td className="border px-3 py-2">
-                            {vessel?.trim() || "-"}
-                          </td>
-                          <td className="border px-3 py-2">
-                            {rank?.trim() || "-"}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                  {report.vesselHistory?.split(";").map((entry: string, idx: number) => {
+                    const [vessel, rank] = entry.split("|");
+                    return (
+                      <tr key={idx} className="hover:bg-gray-50">
+                        <td className="border px-3 py-2">{vessel?.trim() || "-"}</td>
+                        <td className="border px-3 py-2">{rank?.trim() || "-"}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -219,25 +200,15 @@ export default function TalentProfilePage({ params }: PageProps) {
 
           {/* Training Data Table */}
           <div className="border rounded-lg shadow-sm p-4 bg-white">
-            <h2 className="font-bold text-lg mb-4 pb-2 border-b">
-              DATA TRAINING
-            </h2>
+            <h2 className="font-bold text-lg mb-4 pb-2 border-b">DATA TRAINING</h2>
             <div className="overflow-x-auto">
               <table className="w-full border-collapse text-sm whitespace-nowrap">
                 <thead>
                   <tr className="bg-gray-100">
-                    <th className="border px-3 py-2 text-left font-semibold">
-                      Category
-                    </th>
-                    <th className="border px-3 py-2 text-center font-semibold">
-                      Completed
-                    </th>
-                    <th className="border px-3 py-2 text-center font-semibold">
-                      Not Completed
-                    </th>
-                    <th className="border px-3 py-2 text-center font-semibold">
-                      Percentage
-                    </th>
+                    <th className="border px-3 py-2 text-left font-semibold">Category</th>
+                    <th className="border px-3 py-2 text-center font-semibold">Completed</th>
+                    <th className="border px-3 py-2 text-center font-semibold">Not Completed</th>
+                    <th className="border px-3 py-2 text-center font-semibold">Percentage</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -261,9 +232,7 @@ export default function TalentProfilePage({ params }: PageProps) {
                     <td className="border px-3 py-2">Total</td>
                     <td className="border px-3 py-2 text-center">8</td>
                     <td className="border px-3 py-2 text-center">3</td>
-                    <td className="border px-3 py-2 text-center text-blue-600">
-                      72.7%
-                    </td>
+                    <td className="border px-3 py-2 text-center text-blue-600">72.7%</td>
                   </tr>
                 </tbody>
               </table>
@@ -291,9 +260,7 @@ export default function TalentProfilePage({ params }: PageProps) {
 
           {/* Coaching */}
           <div className="border rounded-lg shadow-sm p-4 bg-white">
-            <h2 className="font-bold text-lg mb-4 pb-2 border-b">
-              DATA COACHING
-            </h2>
+            <h2 className="font-bold text-lg mb-4 pb-2 border-b">DATA COACHING</h2>
             <div className="space-y-2 text-sm">
               <p>
                 <strong>Sudah diikuti:</strong> {report.coachingCompleted}
@@ -309,9 +276,7 @@ export default function TalentProfilePage({ params }: PageProps) {
         <div className="lg:col-span-1">
           {/* Informasi kinerja */}
           <div className="border rounded-lg shadow-sm p-4 bg-white h-full flex flex-col">
-            <h2 className="font-bold text-lg mb-4 pb-2 border-b">
-              INFORMASI KINERJA
-            </h2>
+            <h2 className="font-bold text-lg mb-4 pb-2 border-b">INFORMASI KINERJA</h2>
 
             {/* Tabel scores */}
             <div className="mb-4 overflow-x-auto">
@@ -387,9 +352,7 @@ export default function TalentProfilePage({ params }: PageProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Succession Plan */}
         <div className="border rounded-lg shadow-sm p-4 bg-white">
-          <h2 className="font-bold text-lg mb-4 pb-2 border-b">
-            SUCCESSION PLAN
-          </h2>
+          <h2 className="font-bold text-lg mb-4 pb-2 border-b">SUCCESSION PLAN</h2>
           <div className="space-y-2 text-sm">
             <p>
               <strong>Data Incumbent:</strong> {report.dataIncumbent}

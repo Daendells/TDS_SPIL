@@ -4,11 +4,7 @@ import { useEffect, useRef, useCallback } from "react";
  * Pause saat tab hidden ATAU window kehilangan fokus.
  * Koaleskan event (visibility/focus/blur) → 1 sinkronisasi per frame.
  */
-export function useTimerPauseResume(
-  isActive: boolean,
-  onPause: () => void,
-  onResume: () => void
-) {
+export function useTimerPauseResume(isActive: boolean, onPause: () => void, onResume: () => void) {
   const isPausedRef = useRef(false);
   const rafRef = useRef<number | null>(null);
 

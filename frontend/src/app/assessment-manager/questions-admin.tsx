@@ -9,24 +9,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Plus,
-  Edit,
-  Trash2,
-  Trash,
-  FileText,
-  Settings,
-} from "lucide-react";
+import { Plus, Edit, Trash2, Trash, FileText, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -50,13 +37,7 @@ import Image from "next/image";
 import { BASE_URL } from "../lib/api";
 import { AspectResponse } from "@/types/aspect";
 
-const VA_1_CATEGORIES = [
-  "Integrity",
-  "Customer Oriented",
-  "Competitive",
-  "Team Work",
-  "Visioner",
-];
+const VA_1_CATEGORIES = ["Integrity", "Customer Oriented", "Competitive", "Team Work", "Visioner"];
 
 export default function QuestionsAdmin() {
   const queryClient = useQueryClient();
@@ -66,20 +47,17 @@ export default function QuestionsAdmin() {
   const [questions, setQuestions] = useState<QuestionOptionResponse[]>([]);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [questionToDelete, setQuestionToDelete] =
-    useState<QuestionOptionResponse | null>(null);
+  const [questionToDelete, setQuestionToDelete] = useState<QuestionOptionResponse | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
   const [selectedQuestions, setSelectedQuestions] = useState<number[]>([]);
   const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
   const [bulkDeleteDialogOpen, setBulkDeleteDialogOpen] = useState(false);
-  const [bulkAssignAspectDialogOpen, setBulkAssignAspectDialogOpen] =
-    useState(false);
+  const [bulkAssignAspectDialogOpen, setBulkAssignAspectDialogOpen] = useState(false);
   const [bulkAssignAspectLoading, setBulkAssignAspectLoading] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [addAssessmentDialogOpen, setAddAssessmentDialogOpen] = useState(false);
 
-  const [editingQuestion, setEditingQuestion] =
-    useState<QuestionOptionResponse | null>(null);
+  const [editingQuestion, setEditingQuestion] = useState<QuestionOptionResponse | null>(null);
 
   const deleteQuestionMutation = useDeleteQuestion();
   const bulkDeleteMutation = useBulkDeleteQuestions();
@@ -94,8 +72,7 @@ export default function QuestionsAdmin() {
     refetch,
   } = useGetQuestionsByAssessmentId(selectedAssessmentId);
 
-  const { data: aspectsData } =
-    useGetAspectsByAssessmentId(selectedAssessmentId);
+  const { data: aspectsData } = useGetAspectsByAssessmentId(selectedAssessmentId);
 
   useEffect(() => {
     if (questionsData && questionsData.data) {
@@ -207,7 +184,6 @@ export default function QuestionsAdmin() {
     setBulkDeleteDialogOpen(false);
   };
 
-
   const handleConfirmBulkAssignAspect = async (aspectId: number | null) => {
     setBulkAssignAspectLoading(true);
     try {
@@ -215,9 +191,7 @@ export default function QuestionsAdmin() {
         questionIds: selectedQuestions,
         aspectId,
       });
-      toast.success(
-        `Aspect berhasil diassign ke ${selectedQuestions.length} pertanyaan`
-      );
+      toast.success(`Aspect berhasil diassign ke ${selectedQuestions.length} pertanyaan`);
       setSelectedQuestions([]);
       setBulkAssignAspectDialogOpen(false);
     } catch (error) {
@@ -248,9 +222,7 @@ export default function QuestionsAdmin() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">
-            Assessment Manager
-          </h1>
+          <h1 className="text-3xl font-bold tracking-tight">Assessment Manager</h1>
         </div>
         <Button
           onClick={() => setAddAssessmentDialogOpen(true)}
@@ -272,9 +244,7 @@ export default function QuestionsAdmin() {
               onValueChange={(value) => {
                 const assessmentId = parseInt(value);
                 setSelectedAssessmentId(assessmentId);
-                const assessment = assessments?.find(
-                  (a) => a.assessmentId === assessmentId
-                );
+                const assessment = assessments?.find((a) => a.assessmentId === assessmentId);
                 if (assessment) {
                   setSelectedRole(assessment.role);
                 }
@@ -297,10 +267,7 @@ export default function QuestionsAdmin() {
 
             {selectedAssessmentId > 0 && (
               <>
-                <Button
-                  onClick={handleAddQuestion}
-                  className="flex items-center gap-2"
-                >
+                <Button onClick={handleAddQuestion} className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
                   Tambah Pertanyaan
                 </Button>
@@ -314,26 +281,24 @@ export default function QuestionsAdmin() {
                 </Button>
               </>
             )}
-            {selectedRole &&
-              ["va_1", "va_2", "va_3"].includes(selectedRole) && (
-                <Button
-                  onClick={handleValueAssessmentForm}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <FileText className="h-4 w-4" />
-                  Value Assessment Form
-                </Button>
-              )}
-            {selectedRole &&
-              !["va_1", "va_2", "va_3"].includes(selectedRole) && (
-                <Button
-                  onClick={handleCrewEvaluationForm}
-                  className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
-                >
-                  <FileText className="h-4 w-4" />
-                  Crew Evaluation Form
-                </Button>
-              )}
+            {selectedRole && ["va_1", "va_2", "va_3"].includes(selectedRole) && (
+              <Button
+                onClick={handleValueAssessmentForm}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+              >
+                <FileText className="h-4 w-4" />
+                Value Assessment Form
+              </Button>
+            )}
+            {selectedRole && !["va_1", "va_2", "va_3"].includes(selectedRole) && (
+              <Button
+                onClick={handleCrewEvaluationForm}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
+              >
+                <FileText className="h-4 w-4" />
+                Crew Evaluation Form
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -342,8 +307,8 @@ export default function QuestionsAdmin() {
         <AspectManager
           assessmentId={selectedAssessmentId}
           assessmentName={
-            assessments?.find((a) => a.assessmentId === selectedAssessmentId)
-              ?.assessmentName || "Assessment"
+            assessments?.find((a) => a.assessmentId === selectedAssessmentId)?.assessmentName ||
+            "Assessment"
           }
         />
       )}
@@ -355,25 +320,19 @@ export default function QuestionsAdmin() {
               <div>
                 <CardTitle>
                   Pertanyaan untuk{" "}
-                  {assessments?.find(
-                    (a) => a.assessmentId === selectedAssessmentId
-                  )?.assessmentName || "Assessment"}
+                  {assessments?.find((a) => a.assessmentId === selectedAssessmentId)
+                    ?.assessmentName || "Assessment"}
                 </CardTitle>
-                <CardDescription>
-                  {questions.length} question ditemukan
-                </CardDescription>
+                <CardDescription>{questions.length} question ditemukan</CardDescription>
               </div>
               {questions.length > 0 && (
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2">
                     <Checkbox
                       checked={
-                        selectedQuestions.length === questions.length &&
-                        questions.length > 0
+                        selectedQuestions.length === questions.length && questions.length > 0
                       }
-                      onCheckedChange={(checked) =>
-                        handleSelectAll(checked as boolean)
-                      }
+                      onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
                     />
                     <span className="text-sm font-medium">Pilih Semua</span>
                   </div>
@@ -410,37 +369,25 @@ export default function QuestionsAdmin() {
             ) : (
               <div className="space-y-6">
                 {questions.map((question, index) => (
-                  <div
-                    key={question.questionId}
-                    className="border rounded-lg p-4"
-                  >
+                  <div key={question.questionId} className="border rounded-lg p-4">
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex items-center gap-3 flex-1">
                         <Checkbox
-                          checked={selectedQuestions.includes(
-                            question.questionId
-                          )}
+                          checked={selectedQuestions.includes(question.questionId)}
                           onCheckedChange={(checked) =>
-                            handleSelectQuestion(
-                              question.questionId,
-                              checked as boolean
-                            )
+                            handleSelectQuestion(question.questionId, checked as boolean)
                           }
                         />
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">
-                            <Badge variant="outline">
-                              Pertanyaan {index + 1}
-                            </Badge>
+                            <Badge variant="outline">Pertanyaan {index + 1}</Badge>
 
                             {getAspectName(question.aspectId) && (
                               <Badge variant="default" className="bg-blue-600">
                                 {getAspectName(question.aspectId)}
                               </Badge>
                             )}
-                            {question.isImage === 1 && (
-                              <Badge variant="outline">Ada Gambar</Badge>
-                            )}
+                            {question.isImage === 1 && <Badge variant="outline">Ada Gambar</Badge>}
                           </div>
                           {question.imageUrl && (
                             <Image
@@ -451,13 +398,9 @@ export default function QuestionsAdmin() {
                               className="mb-2 rounded"
                             />
                           )}
-                          <p className="text-sm font-medium mb-2">
-                            {question.questionText}
-                          </p>
+                          <p className="text-sm font-medium mb-2">{question.questionText}</p>
                           <div className="mt-2 flex gap-2 items-center">
-                            <span className="text-xs text-muted-foreground mr-2">
-                              Aspect:
-                            </span>
+                            <span className="text-xs text-muted-foreground mr-2">Aspect:</span>
                             <QuestionAspectSelector
                               questionId={question.questionId}
                               currentAspectId={question.aspectId}
@@ -491,9 +434,7 @@ export default function QuestionsAdmin() {
                     <div className="space-y-2">
                       <h4 className="text-sm font-medium">Opsi:</h4>
                       {question.options.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">
-                          Tidak ada opsi tersedia
-                        </p>
+                        <p className="text-sm text-muted-foreground">Tidak ada opsi tersedia</p>
                       ) : (
                         <div className="grid gap-2">
                           {question.options.map((option) => (
@@ -515,9 +456,7 @@ export default function QuestionsAdmin() {
                                       className="rounded"
                                     />
                                   )}
-                                  <span className="text-sm">
-                                    {option.optionText}
-                                  </span>
+                                  <span className="text-sm">{option.optionText}</span>
                                 </div>
                               </div>
                               <Badge variant="secondary" className="text-xs">
