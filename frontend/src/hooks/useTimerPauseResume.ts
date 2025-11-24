@@ -47,7 +47,11 @@ export function useTimerPauseResume(
           } hasFocus=${document.hasFocus()} → shouldPause=${shouldPause}`,
           "color: purple; font-size: 12px;"
         );
-        shouldPause ? stablePause() : stableResume();
+        if (shouldPause) {
+          stablePause();
+        } else {
+          stableResume();
+        }
       });
     };
 

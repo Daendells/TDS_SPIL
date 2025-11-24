@@ -31,8 +31,8 @@ export default function CESAssessmentPage() {
     pauseTimestamp: undefined,
   });
 
-  const [timeLeft, setTimeLeft] = useState<number>(0);
-  const [showTimeWarning, setShowTimeWarning] = useState(false);
+  // const [timeLeft, setTimeLeft] = useState<number>(0);
+  // const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [lastWarningTime, setLastWarningTime] = useState<number>(0);
   const [assessmentStatus, setAssessmentStatus] = useState<{
     isOpen: boolean;
@@ -47,8 +47,7 @@ export default function CESAssessmentPage() {
   });
 
   // Check assessment type status (using ID 2 for CES, adjust as needed)
-  const { data: statusData, isLoading: statusLoading } =
-    useCheckAssessmentTypeStatus(2);
+  const { data: statusData } = useCheckAssessmentTypeStatus(2);
 
   // localStorage key untuk menyimpan assessment data dengan expiry 3 hari
   const STORAGE_KEY = `cesAssessmentFormData_${role}`;
@@ -86,9 +85,9 @@ export default function CESAssessmentPage() {
               setAssessmentData(data.assessmentData);
               setCurrentStep(data.currentStep);
 
-              if (data.assessmentData.sisaWaktu !== undefined) {
-                setTimeLeft(data.assessmentData.sisaWaktu);
-              }
+              // if (data.assessmentData.sisaWaktu !== undefined) {
+              //   setTimeLeft(data.assessmentData.sisaWaktu);
+              // }
             }
           } else {
             window.localStorage.removeItem(STORAGE_KEY);
@@ -166,7 +165,7 @@ export default function CESAssessmentPage() {
 
     // Reset timer state saat pindah ke questions step
     if (nextStep === 3) {
-      setTimeLeft(0);
+      // setTimeLeft(0);
       updateAssessmentData({
         sisaWaktu: 0,
         pauseTimestamp: undefined,
@@ -231,7 +230,7 @@ export default function CESAssessmentPage() {
         sectionTimeRemaining = Math.max(0, totalSeconds - elapsedSeconds);
       }
 
-      setTimeLeft(sectionTimeRemaining);
+      // setTimeLeft(sectionTimeRemaining);
 
       // Show warning modal at specific intervals
       if (
@@ -242,7 +241,7 @@ export default function CESAssessmentPage() {
         !sectionPauseTimestamp &&
         sectionTimeRemaining > 0
       ) {
-        setShowTimeWarning(true);
+        // setShowTimeWarning(true);
         setLastWarningTime(sectionTimeRemaining);
         toast.warning(
           `Perhatian! Sisa waktu tinggal ${Math.floor(
@@ -361,7 +360,7 @@ export default function CESAssessmentPage() {
   const handleClearStoredData = () => {
     try {
       window.localStorage.removeItem(STORAGE_KEY);
-      setTimeLeft(0);
+      // setTimeLeft(0);
     } catch (error) {
       console.warn("Error clearing stored data:", error);
     }

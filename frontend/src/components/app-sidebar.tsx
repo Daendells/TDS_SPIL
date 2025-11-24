@@ -5,7 +5,6 @@ import {
   ChevronUp,
   Inbox,
   User2,
-  FileText,
   Settings,
   Calendar,
 } from "lucide-react";

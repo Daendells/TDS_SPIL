@@ -9,13 +9,19 @@ import {
 } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
 
+interface QuestionOption {
+  id: number;
+  text: string;
+  value?: string;
+}
+
 interface QuestionWithOptions {
   questionId: number;
   questionText: string;
   category?: string;
   isImage?: string;
   imageUrl?: string;
-  options?: any[];
+  options?: QuestionOption[];
 }
 
 interface DeleteConfirmationDialogProps {

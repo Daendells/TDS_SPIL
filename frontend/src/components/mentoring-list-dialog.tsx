@@ -1,9 +1,20 @@
 "use client";
 
 import { useState, useEffect, useMemo } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { ChevronDownIcon, ChevronRightIcon, SearchIcon, FilterIcon } from "lucide-react";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  ChevronDownIcon,
+  ChevronRightIcon,
+  SearchIcon,
+  FilterIcon,
+} from "lucide-react";
 import { useApi } from "@/hooks/use-api";
+import Image from "next/image";
 
 interface MentoringSession {
   id: number;
@@ -48,21 +59,25 @@ export default function MentoringListDialog({
 
   const fetchMentoringReports = async () => {
     if (!reportId) return;
-    
+
     setLoading(true);
     setError(null);
-    
+
     try {
       const response = await api.get(`/mentoring-reports/reports/${reportId}`);
-      
-      if (response.data.code === 200 && response.data.data && response.data.data.data) {
+
+      if (
+        response.data.code === 200 &&
+        response.data.data &&
+        response.data.data.data
+      ) {
         setMentoringData(response.data.data.data);
       } else {
         setMentoringData([]);
       }
     } catch (err) {
-      console.error('Error fetching mentoring reports:', err);
-      setError('Gagal memuat data mentoring. Silakan coba lagi.');
+      console.error("Error fetching mentoring reports:", err);
+      setError("Gagal memuat data mentoring. Silakan coba lagi.");
       setMentoringData([]);
     } finally {
       setLoading(false);
@@ -73,6 +88,7 @@ export default function MentoringListDialog({
     if (open && reportId) {
       fetchMentoringReports();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, reportId]);
 
   const toggleExpanded = (sessionId: string) => {
@@ -81,7 +97,7 @@ export default function MentoringListDialog({
 
   const formatDate = (dateString: string) => {
     try {
-      return new Date(dateString).toLocaleDateString('id-ID');
+      return new Date(dateString).toLocaleDateString("id-ID");
     } catch {
       return dateString;
     }
@@ -90,15 +106,17 @@ export default function MentoringListDialog({
   const filteredMentoringData = useMemo(() => {
     let filtered = mentoringData;
     if (selectedProgram !== "all") {
-      filtered = filtered.filter(session => 
-        session.program.toLowerCase() === selectedProgram.toLowerCase()
+      filtered = filtered.filter(
+        (session) =>
+          session.program.toLowerCase() === selectedProgram.toLowerCase()
       );
     }
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(session =>
-        session.mentorName.toLowerCase().includes(searchLower) ||
-        session.purpose.toLowerCase().includes(searchLower)
+      filtered = filtered.filter(
+        (session) =>
+          session.mentorName.toLowerCase().includes(searchLower) ||
+          session.purpose.toLowerCase().includes(searchLower)
       );
     }
     return filtered;
@@ -118,12 +136,24 @@ export default function MentoringListDialog({
         <DialogHeader>
           <DialogTitle className="sr-only">Data Mentoring</DialogTitle>
           <div className="flex justify-between items-center border-b pb-4">
-            <img src="/images/logo1.png" alt="Logo Kiri" className="h-12" />
+            <Image
+              width={48}
+              height={48}
+              src="/images/logo1.png"
+              alt="Logo Kiri"
+              className="h-12"
+            />
             <div className="text-center">
               <h1 className="text-2xl font-bold uppercase">Data Mentoring</h1>
               <p className="text-sm text-gray-600">{reportName}</p>
             </div>
-            <img src="/images/logo2.png" alt="Logo Kanan" className="h-12" />
+            <Image
+              width={48}
+              height={48}
+              src="/images/logo2.png"
+              alt="Logo Kanan"
+              className="h-12"
+            />
           </div>
         </DialogHeader>
 
@@ -158,9 +188,11 @@ export default function MentoringListDialog({
             <div className="text-sm text-gray-600">
               {searchTerm || selectedProgram !== "all" ? (
                 <p>
-                  Menampilkan {filteredMentoringData.length} dari {mentoringData.length} data mentoring
+                  Menampilkan {filteredMentoringData.length} dari{" "}
+                  {mentoringData.length} data mentoring
                   {searchTerm && ` untuk pencarian "${searchTerm}"`}
-                  {selectedProgram !== "all" && ` dengan program ${selectedProgram.toUpperCase()}`}
+                  {selectedProgram !== "all" &&
+                    ` dengan program ${selectedProgram.toUpperCase()}`}
                 </p>
               ) : (
                 <p>Menampilkan {mentoringData.length} data mentoring</p>
@@ -180,7 +212,7 @@ export default function MentoringListDialog({
           {error && (
             <div className="flex flex-col items-center justify-center h-full">
               <p className="text-red-500 mb-4">{error}</p>
-              <button 
+              <button
                 onClick={fetchMentoringReports}
                 className="px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
               >
@@ -192,8 +224,11 @@ export default function MentoringListDialog({
           {!loading && !error && filteredMentoringData.length > 0 && (
             <div className="flex flex-col gap-3">
               {filteredMentoringData.map((session) => (
-                <div key={session.id} className="border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow">
-                  <div 
+                <div
+                  key={session.id}
+                  className="border rounded-lg shadow-sm bg-white hover:shadow-md transition-shadow"
+                >
+                  <div
                     className="p-4 cursor-pointer hover:bg-gray-50 transition-colors"
                     onClick={() => toggleExpanded(session.id.toString())}
                   >
@@ -204,12 +239,16 @@ export default function MentoringListDialog({
                         </h3>
                         <div className="space-y-1">
                           <p className="text-sm text-gray-600">
-                            <span className="font-medium">Mentor:</span> {session.mentorName} | 
-                            <span className="font-medium"> Sesi:</span> {session.sessionNumber} | 
-                            <span className="font-medium"> Tanggal:</span> {formatDate(session.date)}
+                            <span className="font-medium">Mentor:</span>{" "}
+                            {session.mentorName} |
+                            <span className="font-medium"> Sesi:</span>{" "}
+                            {session.sessionNumber} |
+                            <span className="font-medium"> Tanggal:</span>{" "}
+                            {formatDate(session.date)}
                           </p>
                           <p className="text-sm text-gray-500">
-                            <span className="font-medium">Mentee:</span> {session.menteeNames.join(", ")}
+                            <span className="font-medium">Mentee:</span>{" "}
+                            {session.menteeNames.join(", ")}
                           </p>
                         </div>
                       </div>
@@ -228,41 +267,119 @@ export default function MentoringListDialog({
                       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
                         <div className="space-y-4">
                           <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <h4 className="font-semibold text-gray-800 mb-3 text-base">Informasi Dasar</h4>
+                            <h4 className="font-semibold text-gray-800 mb-3 text-base">
+                              Informasi Dasar
+                            </h4>
                             <div className="space-y-2 text-sm">
-                              <p><span className="font-medium text-gray-700">Nama Mentor:</span> <span className="text-gray-600">{session.mentorName}</span></p>
-                              <p><span className="font-medium text-gray-700">Periode:</span> <span className="text-gray-600">{session.period}</span></p>
-                              <p><span className="font-medium text-gray-700">Nama Mentee:</span> <span className="text-gray-600">{session.menteeNames.join(", ")}</span></p>
-                              <p><span className="font-medium text-gray-700">Departemen:</span> <span className="text-gray-600">{session.department}</span></p>
-                              <p><span className="font-medium text-gray-700">Program:</span> <span className="text-gray-600">{session.program}</span></p>
-                              <p><span className="font-medium text-gray-700">Sesi ke:</span> <span className="text-gray-600">{session.sessionNumber}</span></p>
-                              <p><span className="font-medium text-gray-700">Tanggal:</span> <span className="text-gray-600">{formatDate(session.date)}</span></p>
-                              <p><span className="font-medium text-gray-700">Durasi:</span> <span className="text-gray-600">{session.duration}</span></p>
+                              <p>
+                                <span className="font-medium text-gray-700">
+                                  Nama Mentor:
+                                </span>{" "}
+                                <span className="text-gray-600">
+                                  {session.mentorName}
+                                </span>
+                              </p>
+                              <p>
+                                <span className="font-medium text-gray-700">
+                                  Periode:
+                                </span>{" "}
+                                <span className="text-gray-600">
+                                  {session.period}
+                                </span>
+                              </p>
+                              <p>
+                                <span className="font-medium text-gray-700">
+                                  Nama Mentee:
+                                </span>{" "}
+                                <span className="text-gray-600">
+                                  {session.menteeNames.join(", ")}
+                                </span>
+                              </p>
+                              <p>
+                                <span className="font-medium text-gray-700">
+                                  Departemen:
+                                </span>{" "}
+                                <span className="text-gray-600">
+                                  {session.department}
+                                </span>
+                              </p>
+                              <p>
+                                <span className="font-medium text-gray-700">
+                                  Program:
+                                </span>{" "}
+                                <span className="text-gray-600">
+                                  {session.program}
+                                </span>
+                              </p>
+                              <p>
+                                <span className="font-medium text-gray-700">
+                                  Sesi ke:
+                                </span>{" "}
+                                <span className="text-gray-600">
+                                  {session.sessionNumber}
+                                </span>
+                              </p>
+                              <p>
+                                <span className="font-medium text-gray-700">
+                                  Tanggal:
+                                </span>{" "}
+                                <span className="text-gray-600">
+                                  {formatDate(session.date)}
+                                </span>
+                              </p>
+                              <p>
+                                <span className="font-medium text-gray-700">
+                                  Durasi:
+                                </span>{" "}
+                                <span className="text-gray-600">
+                                  {session.duration}
+                                </span>
+                              </p>
                               {/* <p><span className="font-medium text-gray-700">Report IDs:</span> <span className="text-gray-600">{session.reportIds.join(", ")}</span></p> */}
                             </div>
                           </div>
                           <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <h4 className="font-semibold text-gray-800 mb-3 text-base">Tujuan/Isu yang Dibahas</h4>
-                            <p className="text-sm text-gray-700 leading-relaxed">{session.purpose}</p>
+                            <h4 className="font-semibold text-gray-800 mb-3 text-base">
+                              Tujuan/Isu yang Dibahas
+                            </h4>
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {session.purpose}
+                            </p>
                           </div>
                         </div>
                         <div className="space-y-4">
                           <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <h4 className="font-semibold text-gray-800 mb-3 text-base">Observasi Terhadap Mentee</h4>
-                            <p className="text-sm text-gray-700 leading-relaxed">{session.observation}</p>
+                            <h4 className="font-semibold text-gray-800 mb-3 text-base">
+                              Observasi Terhadap Mentee
+                            </h4>
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {session.observation}
+                            </p>
                           </div>
                           <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <h4 className="font-semibold text-gray-800 mb-3 text-base">Refleksi Mentor</h4>
-                            <p className="text-sm text-gray-700 leading-relaxed">{session.reflection}</p>
+                            <h4 className="font-semibold text-gray-800 mb-3 text-base">
+                              Refleksi Mentor
+                            </h4>
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {session.reflection}
+                            </p>
                           </div>
                           <div className="bg-white rounded-lg p-4 shadow-sm">
-                            <h4 className="font-semibold text-gray-800 mb-3 text-base">Rencana Aksi</h4>
-                            <p className="text-sm text-gray-700 leading-relaxed">{session.actionPlan}</p>
+                            <h4 className="font-semibold text-gray-800 mb-3 text-base">
+                              Rencana Aksi
+                            </h4>
+                            <p className="text-sm text-gray-700 leading-relaxed">
+                              {session.actionPlan}
+                            </p>
                           </div>
                           {session.additionalNotes && (
                             <div className="bg-white rounded-lg p-4 shadow-sm">
-                              <h4 className="font-semibold text-gray-800 mb-3 text-base">Catatan Tambahan</h4>
-                              <p className="text-sm text-gray-700 leading-relaxed">{session.additionalNotes}</p>
+                              <h4 className="font-semibold text-gray-800 mb-3 text-base">
+                                Catatan Tambahan
+                              </h4>
+                              <p className="text-sm text-gray-700 leading-relaxed">
+                                {session.additionalNotes}
+                              </p>
                             </div>
                           )}
                         </div>
@@ -280,20 +397,25 @@ export default function MentoringListDialog({
             </div>
           )}
 
-          {!loading && !error && mentoringData.length > 0 && filteredMentoringData.length === 0 && (
-            <div className="flex flex-col items-center justify-center h-full space-y-4">
-              <p className="text-gray-500 text-center">Tidak ada data yang cocok dengan kriteria Anda</p>
-              <button
-                onClick={() => {
-                  setSearchTerm("");
-                  setSelectedProgram("all");
-                }}
-                className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
-              >
-                Reset Filter
-              </button>
-            </div>
-          )}
+          {!loading &&
+            !error &&
+            mentoringData.length > 0 &&
+            filteredMentoringData.length === 0 && (
+              <div className="flex flex-col items-center justify-center h-full space-y-4">
+                <p className="text-gray-500 text-center">
+                  Tidak ada data yang cocok dengan kriteria Anda
+                </p>
+                <button
+                  onClick={() => {
+                    setSearchTerm("");
+                    setSelectedProgram("all");
+                  }}
+                  className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors text-sm"
+                >
+                  Reset Filter
+                </button>
+              </div>
+            )}
         </div>
       </DialogContent>
     </Dialog>

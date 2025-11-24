@@ -55,7 +55,8 @@ export default function Excel() {
       toast.success("File uploaded successfully!");
       console.log("Upload response:", data);
     } catch (err) {
-      toast.error((err as any).response?.data.error);
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Upload failed");
       console.error(err);
     }
   };

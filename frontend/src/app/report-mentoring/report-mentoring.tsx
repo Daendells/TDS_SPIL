@@ -581,7 +581,7 @@ export default function ReportMentoring() {
                                 if (!el) return;
                                 try {
                                   // Chromium (Chrome/Edge)
-                                  const anyEl = el as any;
+                                  const anyEl = el as HTMLInputElement & { showPicker?: () => void };
                                   if (typeof anyEl.showPicker === "function") {
                                     anyEl.showPicker();
                                   } else {

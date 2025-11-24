@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, User, AlertCircle } from "lucide-react";
+import { User } from "lucide-react";
 import { ValueAssessmentData } from "@/app/value-assessment/page";
 import { ValueAssessmentStorage } from "@/lib/assessment-storage";
 import { Progress } from "@/components/ui/progress";
@@ -25,19 +25,6 @@ export default function AssessmentProgress({
     "Section 3",
     "Selesai",
   ];
-
-  const isPaused =
-    (currentStep === 3 && assessmentData.section1PauseTimestamp) ||
-    (currentStep === 4 && assessmentData.section2PauseTimestamp) ||
-    (currentStep === 5 && assessmentData.section3PauseTimestamp);
-
-  const formatPausedTime = (milliseconds: number | undefined) => {
-    if (!milliseconds || milliseconds === 0) return "0s";
-    const seconds = Math.round(milliseconds / 1000);
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins > 0 ? mins + "m " : ""}${secs}s`;
-  };
 
   return (
     <Card className="mb-4">

@@ -9,7 +9,7 @@ export interface TrainingPlanParticipant {
   seamanCode: string;
   name: string;
   position: string;  // Added position field for jabatan
-  gaps: { [key: string]: any }; // Will contain gap values (1, X, or empty)
+  gaps: { [key: string]: string | number }; // Will contain gap values (1, X, or empty)
   total: number;
   readiness: string;
 }

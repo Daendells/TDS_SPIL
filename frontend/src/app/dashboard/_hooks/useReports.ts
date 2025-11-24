@@ -7,21 +7,6 @@ import type {
   ApiResponse,
 } from "@/types/global-types";
 
-interface SuccessResponse<T> {
-  status: string;
-  code: number;
-  data: T;
-}
-
-interface PaginationResponse {
-  results: IReport[];
-  first_id: number | null;
-  last_id: number | null;
-  page_size: number;
-  has_more: boolean;
-  first_page: boolean;
-}
-
 interface IdpCountData {
   mdp: number;
   fdp: number;

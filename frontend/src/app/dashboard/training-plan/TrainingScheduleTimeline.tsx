@@ -138,6 +138,7 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
     const parsedSchedules = parseSchedules();
     setSchedules(parsedSchedules);
     setOriginalSchedules(parsedSchedules.map(s => ({ ...s, scheduledDate: new Date(s.scheduledDate) })));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [summary]);
 
   const generateMonthsToDisplay = (schedulesData: ScheduleItem[]): Date[] => {
@@ -215,7 +216,7 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
 
   const handleSave = async () => {
     const swaps = schedules
-      .filter((schedule, index) => {
+      .filter((schedule) => {
         const original = originalSchedules.find(o => o.id === schedule.id);
         return original && original.scheduledDate.getTime() !== schedule.scheduledDate.getTime();
       })
@@ -323,8 +324,8 @@ export default function TrainingScheduleTimeline({ summary, program, competencyM
                       {monthSchedules.length > 0 ? (
                         monthSchedules
                           .sort((a, b) => a.scheduledDate.getDate() - b.scheduledDate.getDate())
-                          .map((schedule, index) => (
-                            <div 
+                          .map((schedule) => (
+                            <div
                               key={schedule.id}
                               draggable={editMode}
                               onDragStart={(e) => editMode && handleDragStart(e, schedule)}
