@@ -45,9 +45,7 @@ export function useGetAssessmentByRole(role: string) {
       } catch (error: unknown) {
         const axiosError = error as { response?: { status?: number } };
         if (axiosError?.response?.status === 404) {
-          console.log(
-            `No assessment found for role: ${role}, returning default structure`
-          );
+          console.log(`No assessment found for role: ${role}, returning default structure`);
           return {
             assessmentId: 0,
             role: role,

@@ -9,13 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Select,
   SelectContent,
@@ -51,11 +45,17 @@ import TrainingMaterialTab from "./TrainingMaterialTab";
 
 export default function TrainingPlanClient() {
   const [selectedProgram, setSelectedProgram] = useState("SDP");
-  const [selectedParticipant, setSelectedParticipant] = useState<TrainingPlanParticipant | null>(null);
+  const [selectedParticipant, setSelectedParticipant] = useState<TrainingPlanParticipant | null>(
+    null
+  );
 
   // React Query hooks
   const { data: programs, isLoading: programsLoading } = useGetPrograms();
-  const { data: trainingPlan, isLoading: planLoading, error: planError } = useGetTrainingPlan(selectedProgram);
+  const {
+    data: trainingPlan,
+    isLoading: planLoading,
+    error: planError,
+  } = useGetTrainingPlan(selectedProgram);
   const { data: competencyMapping } = useGetCompetencyMapping(selectedProgram);
   const generateSchedules = useGenerateSchedules();
 
@@ -172,9 +172,7 @@ export default function TrainingPlanClient() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{trainingPlan?.participants?.length || 0}</div>
-              <p className="text-xs text-muted-foreground">
-                Active seafarers in {selectedProgram}
-              </p>
+              <p className="text-xs text-muted-foreground">Active seafarers in {selectedProgram}</p>
             </CardContent>
           </Card>
 
@@ -186,9 +184,9 @@ export default function TrainingPlanClient() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {trainingPlan?.summary?.category && competencyMapping
-                  ? Object.entries(trainingPlan.summary.category)
-                      .filter(([code, cat]) => cat === "M" && competencyMapping[code]) // Filter hanya competencies di program ini
-                      .length
+                  ? Object.entries(trainingPlan.summary.category).filter(
+                      ([code, cat]) => cat === "M" && competencyMapping[code]
+                    ).length // Filter hanya competencies di program ini
                   : 0}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -205,9 +203,9 @@ export default function TrainingPlanClient() {
             <CardContent>
               <div className="text-2xl font-bold">
                 {trainingPlan?.summary?.category && competencyMapping
-                  ? Object.entries(trainingPlan.summary.category)
-                      .filter(([code, cat]) => cat === "NM" && competencyMapping[code]) // Filter hanya competencies di program ini
-                      .length
+                  ? Object.entries(trainingPlan.summary.category).filter(
+                      ([code, cat]) => cat === "NM" && competencyMapping[code]
+                    ).length // Filter hanya competencies di program ini
                   : 0}
               </div>
               <p className="text-xs text-muted-foreground">
@@ -225,16 +223,12 @@ export default function TrainingPlanClient() {
               <div className="text-2xl font-bold">
                 {trainingPlan?.participants && trainingPlan.participants.length > 0
                   ? (
-                      (
-                        trainingPlan.participants.reduce((sum, p) => sum + p.total, 0) /
-                        trainingPlan.participants.length
-                      ).toFixed(2)
-                    )
+                      trainingPlan.participants.reduce((sum, p) => sum + p.total, 0) /
+                      trainingPlan.participants.length
+                    ).toFixed(2)
                   : "0.00"}
               </div>
-              <p className="text-xs text-muted-foreground">
-                Average competency gaps
-              </p>
+              <p className="text-xs text-muted-foreground">Average competency gaps</p>
             </CardContent>
           </Card>
 
@@ -245,11 +239,10 @@ export default function TrainingPlanClient() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">
-                {trainingPlan?.minDeadlineMonths || 0} {trainingPlan?.minDeadlineMonths === 1 ? "month" : "months"}
+                {trainingPlan?.minDeadlineMonths || 0}{" "}
+                {trainingPlan?.minDeadlineMonths === 1 ? "month" : "months"}
               </div>
-              <p className="text-xs text-muted-foreground">
-                All mandatory training must complete
-              </p>
+              <p className="text-xs text-muted-foreground">All mandatory training must complete</p>
             </CardContent>
           </Card>
         </div>
@@ -259,7 +252,7 @@ export default function TrainingPlanClient() {
       <Tabs defaultValue="participants" className="space-y-4">
         <TabsList>
           <TabsTrigger value="participants">Participants</TabsTrigger>
-          <TabsTrigger value="summary">Gap Summary</TabsTrigger>          
+          <TabsTrigger value="summary">Gap Summary</TabsTrigger>
           <TabsTrigger value="materials">Training Materials</TabsTrigger>
           <TabsTrigger value="mapping">Competency Mapping</TabsTrigger>
           <TabsTrigger value="schedules">Schedules</TabsTrigger>
@@ -291,11 +284,9 @@ export default function TrainingPlanClient() {
                   <TableBody>
                     {trainingPlan?.participants?.map((participant) => (
                       <TableRow key={participant.no}>
-                        <TableCell className="font-medium">
-                          {participant.seamanCode}
-                        </TableCell>
+                        <TableCell className="font-medium">{participant.seamanCode}</TableCell>
                         <TableCell>{participant.name}</TableCell>
-                        <TableCell>{participant.position || '-'}</TableCell>
+                        <TableCell>{participant.position || "-"}</TableCell>
                         <TableCell>{participant.vesselName}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{participant.total}</Badge>
@@ -318,12 +309,8 @@ export default function TrainingPlanClient() {
                             </DialogTrigger>
                             <DialogContent className="max-w-2xl">
                               <DialogHeader>
-                                <DialogTitle>
-                                  {participant.name}
-                                </DialogTitle>
-                                <DialogDescription>
-                                  {participant.seamanCode}
-                                </DialogDescription>
+                                <DialogTitle>{participant.name}</DialogTitle>
+                                <DialogDescription>{participant.seamanCode}</DialogDescription>
                               </DialogHeader>
                               {selectedParticipant && (
                                 <div className="space-y-4">
@@ -345,7 +332,10 @@ export default function TrainingPlanClient() {
                                     <p className="text-sm font-medium">Competency Gaps</p>
                                     <div className="grid grid-cols-3 gap-2">
                                       {Object.entries(selectedParticipant.gaps)
-                                        .filter(([, value]) => value === "1" || value === "X" || value === 1)
+                                        .filter(
+                                          ([, value]) =>
+                                            value === "1" || value === "X" || value === 1
+                                        )
                                         .map(([key]) => (
                                           <Badge key={key} variant="secondary" className="text-xs">
                                             {key.toUpperCase()}
@@ -369,8 +359,6 @@ export default function TrainingPlanClient() {
 
         {/* Summary Tab */}
         <TabsContent value="summary" className="space-y-4">
-          
-
           <Card>
             <CardHeader>
               <CardTitle>Competency Gap Summary</CardTitle>
@@ -380,7 +368,8 @@ export default function TrainingPlanClient() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {trainingPlan?.summary?.total && competencyMapping && 
+                {trainingPlan?.summary?.total &&
+                  competencyMapping &&
                   Object.entries(trainingPlan.summary.total)
                     .filter(([competencyCode]) => competencyMapping[competencyCode]) // Filter hanya competencies di program ini
                     .sort((a, b) => {
@@ -391,8 +380,11 @@ export default function TrainingPlanClient() {
                     })
                     .map(([competencyCode, totalParticipants]) => {
                       // Get participants with this gap
-                      const participantsWithGap = trainingPlan.participants.filter(p => 
-                        p.gaps[competencyCode] === "1" || p.gaps[competencyCode] === "X" || p.gaps[competencyCode] === 1
+                      const participantsWithGap = trainingPlan.participants.filter(
+                        (p) =>
+                          p.gaps[competencyCode] === "1" ||
+                          p.gaps[competencyCode] === "X" ||
+                          p.gaps[competencyCode] === 1
                       );
 
                       return (
@@ -400,25 +392,39 @@ export default function TrainingPlanClient() {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{competencyCode}</span>
-                              <span className="text-sm text-muted-foreground">- {competencyMapping[competencyCode]?.name || competencyCode}</span>
+                              <span className="text-sm text-muted-foreground">
+                                - {competencyMapping[competencyCode]?.name || competencyCode}
+                              </span>
                               <Badge
-                                variant={getCompetencyBadgeColor(trainingPlan.summary.category?.[competencyCode] || "")}
-                                className={trainingPlan.summary.category?.[competencyCode] === "NM" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+                                variant={getCompetencyBadgeColor(
+                                  trainingPlan.summary.category?.[competencyCode] || ""
+                                )}
+                                className={
+                                  trainingPlan.summary.category?.[competencyCode] === "NM"
+                                    ? "bg-blue-500 text-white hover:bg-blue-600"
+                                    : ""
+                                }
                               >
-                                {trainingPlan.summary.category?.[competencyCode] === "M" ? "Mandatory" : "Non-Mandatory"}
+                                {trainingPlan.summary.category?.[competencyCode] === "M"
+                                  ? "Mandatory"
+                                  : "Non-Mandatory"}
                               </Badge>
                             </div>
                             <div className="flex items-center gap-2">
                               <Dialog>
                                 <DialogTrigger asChild>
-                                  <Button variant="link" className="text-sm text-muted-foreground hover:text-primary p-0">
+                                  <Button
+                                    variant="link"
+                                    className="text-sm text-muted-foreground hover:text-primary p-0"
+                                  >
                                     {totalParticipants} participants
                                   </Button>
                                 </DialogTrigger>
                                 <DialogContent className="max-w-3xl">
                                   <DialogHeader>
                                     <DialogTitle>
-                                      {competencyCode} - {competencyMapping[competencyCode]?.name || competencyCode}
+                                      {competencyCode} -{" "}
+                                      {competencyMapping[competencyCode]?.name || competencyCode}
                                     </DialogTitle>
                                     <DialogDescription>
                                       Participants with this competency gap
@@ -437,9 +443,11 @@ export default function TrainingPlanClient() {
                                       <TableBody>
                                         {participantsWithGap.map((participant) => (
                                           <TableRow key={participant.no}>
-                                            <TableCell className="font-medium">{participant.seamanCode}</TableCell>
+                                            <TableCell className="font-medium">
+                                              {participant.seamanCode}
+                                            </TableCell>
                                             <TableCell>{participant.name}</TableCell>
-                                            <TableCell>{participant.position || '-'}</TableCell>
+                                            <TableCell>{participant.position || "-"}</TableCell>
                                             <TableCell>{participant.vesselName}</TableCell>
                                           </TableRow>
                                         ))}
@@ -449,11 +457,16 @@ export default function TrainingPlanClient() {
                                 </DialogContent>
                               </Dialog>
                               <span className="text-sm font-medium">
-                                {trainingPlan.summary.percentageGap?.[competencyCode]?.toFixed(1) || 0}%
+                                {trainingPlan.summary.percentageGap?.[competencyCode]?.toFixed(1) ||
+                                  0}
+                                %
                               </span>
                             </div>
                           </div>
-                          <Progress value={trainingPlan.summary.percentageGap?.[competencyCode] || 0} className="h-2" />
+                          <Progress
+                            value={trainingPlan.summary.percentageGap?.[competencyCode] || 0}
+                            className="h-2"
+                          />
                         </div>
                       );
                     })}
@@ -464,7 +477,7 @@ export default function TrainingPlanClient() {
 
         {/* Competency Mapping Tab */}
         <TabsContent value="mapping" className="space-y-4">
-          <Card>         
+          <Card>
             <CardContent>
               <CompetencyMappingCMS program={selectedProgram} trainingPlan={trainingPlan} />
             </CardContent>
@@ -489,15 +502,12 @@ export default function TrainingPlanClient() {
         {/* Schedules Tab */}
         <TabsContent value="schedules" className="space-y-4">
           <Card>
-            
             <CardContent>
               {trainingPlan?.summary &&
-               trainingPlan.summary.trainingMateri1 &&
-               trainingPlan.summary.trainingMateri2 &&
-               (
-                Object.keys(trainingPlan.summary.trainingMateri1).length > 0 ||
-                Object.keys(trainingPlan.summary.trainingMateri2).length > 0
-              ) ? (
+              trainingPlan.summary.trainingMateri1 &&
+              trainingPlan.summary.trainingMateri2 &&
+              (Object.keys(trainingPlan.summary.trainingMateri1).length > 0 ||
+                Object.keys(trainingPlan.summary.trainingMateri2).length > 0) ? (
                 <TrainingScheduleTimeline
                   summary={trainingPlan.summary}
                   program={selectedProgram}
@@ -510,7 +520,8 @@ export default function TrainingPlanClient() {
                     No Schedules Generated
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Click &quot;Generate Schedules&quot; to create training schedules for this program.
+                    Click &quot;Generate Schedules&quot; to create training schedules for this
+                    program.
                   </p>
                   <Button
                     onClick={handleGenerateSchedules}

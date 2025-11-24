@@ -32,9 +32,7 @@ export default function BreadcrumbClient() {
                 <BreadcrumbItem>
                   <BreadcrumbLink
                     href={href}
-                    className={
-                      pathname === href ? "font-medium text-gray-700" : ""
-                    }
+                    className={pathname === href ? "font-medium text-gray-700" : ""}
                   >
                     {formatSegmet(segment)}
                   </BreadcrumbLink>

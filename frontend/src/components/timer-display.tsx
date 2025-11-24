@@ -57,9 +57,7 @@ const TimerDisplay: React.FC<TimerDisplayProps> = ({
       {sectionName && (
         <div className="mb-2 text-xs font-medium text-gray-600">
           {sectionName}
-          <span className="ml-2 text-gray-500">
-            (Durasi: {originalDurationMinutes} menit)
-          </span>
+          <span className="ml-2 text-gray-500">(Durasi: {originalDurationMinutes} menit)</span>
         </div>
       )}
 

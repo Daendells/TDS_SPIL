@@ -162,25 +162,21 @@ export default function QuestionDialog({
         setQuestionImageFile(null);
         setQuestionImagePreview("");
 
-        const defaultOptions: Option[] = defaults.optionLetters.map(
-          (letter, index) => ({
-            optionLetter: letter,
-            optionText: defaults.defaultTexts[index],
-            score: defaults.defaultScores[index],
-            isImage: 0,
-            action: "create" as const,
-            isNew: true,
-          })
-        );
+        const defaultOptions: Option[] = defaults.optionLetters.map((letter, index) => ({
+          optionLetter: letter,
+          optionText: defaults.defaultTexts[index],
+          score: defaults.defaultScores[index],
+          isImage: 0,
+          action: "create" as const,
+          isNew: true,
+        }));
 
         setOptions(defaultOptions);
       }
     }
   }, [open, question, role]);
 
-  const handleQuestionImageChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
+  const handleQuestionImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -237,9 +233,7 @@ export default function QuestionDialog({
       // Upload image if one was selected
       if (questionImageFile && formData.isImage === "1") {
         try {
-          const uploadResult = await uploadImageMutation.mutateAsync(
-            questionImageFile
-          );
+          const uploadResult = await uploadImageMutation.mutateAsync(questionImageFile);
           imageUrl = uploadResult.imageUrl;
         } catch {
           toast.error("Gagal mengunggah gambar");
@@ -256,14 +250,10 @@ export default function QuestionDialog({
           // If option has a new image file, upload it
           if (option.imageFile) {
             try {
-              const uploadResult = await uploadImageMutation.mutateAsync(
-                option.imageFile
-              );
+              const uploadResult = await uploadImageMutation.mutateAsync(option.imageFile);
               optionImageUrl = uploadResult.imageUrl;
             } catch (error) {
-              toast.error(
-                `Gagal mengunggah gambar untuk opsi ${option.optionLetter}`
-              );
+              toast.error(`Gagal mengunggah gambar untuk opsi ${option.optionLetter}`);
               throw error;
             }
           }
@@ -306,10 +296,7 @@ export default function QuestionDialog({
           }),
         };
 
-        await api.put(
-          `/api/questions-with-options/${question.questionId}`,
-          updateData
-        );
+        await api.put(`/api/questions-with-options/${question.questionId}`, updateData);
         toast.success("Pertanyaan berhasil diperbarui");
       } else {
         // Create new question using combined endpoint
@@ -338,8 +325,8 @@ export default function QuestionDialog({
     } catch (error) {
       console.error("Error saving question:", error);
       const errorMessage =
-        (error as { response?: { data?: { error?: string } } })?.response?.data
-          ?.error || "Gagal menyimpan pertanyaan";
+        (error as { response?: { data?: { error?: string } } })?.response?.data?.error ||
+        "Gagal menyimpan pertanyaan";
       toast.error(errorMessage);
     } finally {
       setLoading(false);
@@ -374,20 +361,13 @@ export default function QuestionDialog({
     }
   };
 
-  const updateOption = (
-    index: number,
-    field: keyof Option,
-    value: string | boolean | number
-  ) => {
+  const updateOption = (index: number, field: keyof Option, value: string | boolean | number) => {
     const updatedOptions = [...options];
     updatedOptions[index] = { ...updatedOptions[index], [field]: value };
     setOptions(updatedOptions);
   };
 
-  const handleOptionImageChange = (
-    e: React.ChangeEvent<HTMLInputElement>,
-    index: number
-  ) => {
+  const handleOptionImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
@@ -435,15 +415,11 @@ export default function QuestionDialog({
       <DialogContent className="!w-[95vw] !max-w-[1400px] !h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="sr-only">
-            {question?.questionId
-              ? "Perbarui Pertanyaan"
-              : "Buat Pertanyaan Baru"}
+            {question?.questionId ? "Perbarui Pertanyaan" : "Buat Pertanyaan Baru"}
           </DialogTitle>
           <div className="flex justify-center items-center mb-6">
             <h1 className="text-2xl font-bold uppercase">
-              {question?.questionId
-                ? "Perbarui Pertanyaan"
-                : "Buat Pertanyaan Baru"}
+              {question?.questionId ? "Perbarui Pertanyaan" : "Buat Pertanyaan Baru"}
             </h1>
           </div>
         </DialogHeader>
@@ -461,46 +437,40 @@ export default function QuestionDialog({
                   <Textarea
                     id="questionText"
                     value={formData.questionText}
-                    onChange={(e) =>
-                      setFormData({ ...formData, questionText: e.target.value })
-                    }
+                    onChange={(e) => setFormData({ ...formData, questionText: e.target.value })}
                     placeholder="Masukkan teks pertanyaan..."
                     className="min-h-[120px] mt-2"
                   />
                 </div>
 
-                {aspectsData &&
-                  aspectsData.length > 0 && (
-                    <div>
-                      <Label htmlFor="aspectId" className="text-sm font-medium">
-                        Aspek Penilaian
-                      </Label>
-                      <Select
-                        value={formData.aspectId.toString()}
-                        onValueChange={(value) =>
-                          setFormData({
-                            ...formData,
-                            aspectId: parseInt(value),
-                          })
-                        }
-                      >
-                        <SelectTrigger className="mt-2">
-                          <SelectValue placeholder="Pilih aspek..." />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="0">Tidak Ada Aspek</SelectItem>
-                          {aspectsData.map((aspect: AspectResponse) => (
-                            <SelectItem
-                              key={aspect.id}
-                              value={aspect.id.toString()}
-                            >
-                              {aspect.name} ({aspect.weight}%)
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  )}
+                {aspectsData && aspectsData.length > 0 && (
+                  <div>
+                    <Label htmlFor="aspectId" className="text-sm font-medium">
+                      Aspek Penilaian
+                    </Label>
+                    <Select
+                      value={formData.aspectId.toString()}
+                      onValueChange={(value) =>
+                        setFormData({
+                          ...formData,
+                          aspectId: parseInt(value),
+                        })
+                      }
+                    >
+                      <SelectTrigger className="mt-2">
+                        <SelectValue placeholder="Pilih aspek..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="0">Tidak Ada Aspek</SelectItem>
+                        {aspectsData.map((aspect: AspectResponse) => (
+                          <SelectItem key={aspect.id} value={aspect.id.toString()}>
+                            {aspect.name} ({aspect.weight}%)
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
 
                 <div className="grid grid-cols-2 gap-4">
                   <div>
@@ -509,9 +479,7 @@ export default function QuestionDialog({
                     </Label>
                     <Select
                       value={formData.isImage}
-                      onValueChange={(value) =>
-                        setFormData({ ...formData, isImage: value })
-                      }
+                      onValueChange={(value) => setFormData({ ...formData, isImage: value })}
                     >
                       <SelectTrigger className="mt-2">
                         <SelectValue />
@@ -525,9 +493,7 @@ export default function QuestionDialog({
 
                   {formData.isImage === "1" && (
                     <div className="col-span-2 gap-2">
-                      <Label className="text-sm font-medium">
-                        Upload Gambar
-                      </Label>
+                      <Label className="text-sm font-medium">Upload Gambar</Label>
 
                       {questionImagePreview && (
                         <div className="relative w-full h-40 bg-gray-100 rounded-lg overflow-hidden mt-2 mb-3">
@@ -555,9 +521,7 @@ export default function QuestionDialog({
                         >
                           <div className="flex flex-col items-center justify-center pt-5 pb-6">
                             <Upload className="h-6 w-6 text-gray-400 mb-2" />
-                            <p className="text-sm text-gray-500">
-                              Klik untuk upload (Max 10MB)
-                            </p>
+                            <p className="text-sm text-gray-500">Klik untuk upload (Max 10MB)</p>
                           </div>
                           <Input
                             id="questionImage"
@@ -569,9 +533,7 @@ export default function QuestionDialog({
                           />
                         </label>
                       </div>
-                      <p className="text-xs text-gray-500 mt-2">
-                        Format: JPEG, PNG, GIF, WebP
-                      </p>
+                      <p className="text-xs text-gray-500 mt-2">Format: JPEG, PNG, GIF, WebP</p>
                     </div>
                   )}
                 </div>
@@ -620,9 +582,7 @@ export default function QuestionDialog({
                         <Label className="text-sm font-medium">Teks Opsi</Label>
                         <Input
                           value={option.optionText}
-                          onChange={(e) =>
-                            updateOption(index, "optionText", e.target.value)
-                          }
+                          onChange={(e) => updateOption(index, "optionText", e.target.value)}
                           placeholder="Masukkan teks opsi..."
                           className="mt-1"
                         />
@@ -633,11 +593,7 @@ export default function QuestionDialog({
                           type="number"
                           value={option.score}
                           onChange={(e) =>
-                            updateOption(
-                              index,
-                              "score",
-                              parseInt(e.target.value) || 0
-                            )
+                            updateOption(index, "score", parseInt(e.target.value) || 0)
                           }
                           placeholder="0"
                           className="mt-1"
@@ -675,9 +631,7 @@ export default function QuestionDialog({
                         >
                           <div className="flex flex-col items-center justify-center pt-3 pb-3">
                             <Upload className="h-5 w-5 text-gray-400 mb-1" />
-                            <p className="text-xs text-gray-500">
-                              Klik untuk upload
-                            </p>
+                            <p className="text-xs text-gray-500">Klik untuk upload</p>
                           </div>
                           <Input
                             id={`optionImage-${index}`}
@@ -706,8 +660,8 @@ export default function QuestionDialog({
               {loading
                 ? "Menyimpan..."
                 : question?.questionId
-                ? "Perbarui Pertanyaan"
-                : "Buat Pertanyaan"}
+                  ? "Perbarui Pertanyaan"
+                  : "Buat Pertanyaan"}
             </Button>
           </div>
         </DialogFooter>

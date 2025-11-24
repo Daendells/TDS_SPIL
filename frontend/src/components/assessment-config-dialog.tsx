@@ -6,7 +6,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Save } from "lucide-react";
@@ -73,7 +79,7 @@ export default function AssessmentConfigDialog({
         // Fetch all assessments
         response = await api.get("/api/assessments");
       }
-      
+
       // Handle response structure - backend returns { code, status, data }
       if (response.data.code === 200) {
         if (selectedRole) {
@@ -91,19 +97,21 @@ export default function AssessmentConfigDialog({
           setIsCreating(false);
         } else {
           // For multiple assessments, map the data
-          const mappedAssessments = (response.data.data || []).map((item: {
-            assessmentId: number;
-            role: string;
-            assessmentName: string;
-            usingTimer: boolean;
-            timerLimitMinutes: number;
-          }) => ({
-            id: item.assessmentId,
-            role: item.role,
-            assessmentName: item.assessmentName,
-            usingTimer: item.usingTimer,
-            timerLimitMinutes: item.timerLimitMinutes,
-          }));
+          const mappedAssessments = (response.data.data || []).map(
+            (item: {
+              assessmentId: number;
+              role: string;
+              assessmentName: string;
+              usingTimer: boolean;
+              timerLimitMinutes: number;
+            }) => ({
+              id: item.assessmentId,
+              role: item.role,
+              assessmentName: item.assessmentName,
+              usingTimer: item.usingTimer,
+              timerLimitMinutes: item.timerLimitMinutes,
+            })
+          );
           setAssessments(mappedAssessments);
         }
       } else {
@@ -111,11 +119,11 @@ export default function AssessmentConfigDialog({
           // No assessment found for this role, show create form
           setAssessments([]);
           setIsCreating(true);
-          setFormData({ 
-            role: selectedRole, 
+          setFormData({
+            role: selectedRole,
             assessmentName: "",
-            usingTimer: false, 
-            timerLimitMinutes: 0 
+            usingTimer: false,
+            timerLimitMinutes: 0,
           });
         } else {
           toast.error("Gagal memuat konfigurasi assessment");
@@ -128,11 +136,11 @@ export default function AssessmentConfigDialog({
         // No assessment found for this role, show create form
         setAssessments([]);
         setIsCreating(true);
-        setFormData({ 
-          role: selectedRole, 
+        setFormData({
+          role: selectedRole,
           assessmentName: "",
-          usingTimer: false, 
-          timerLimitMinutes: 0 
+          usingTimer: false,
+          timerLimitMinutes: 0,
         });
       } else {
         toast.error("Terjadi kesalahan saat memuat data");
@@ -217,7 +225,7 @@ export default function AssessmentConfigDialog({
   // Set default role when selectedRole is provided
   useEffect(() => {
     if (selectedRole && isCreating && formData.role === "") {
-      setFormData(prev => ({ ...prev, role: selectedRole }));
+      setFormData((prev) => ({ ...prev, role: selectedRole }));
     }
   }, [selectedRole, isCreating, formData.role]);
 
@@ -233,20 +241,20 @@ export default function AssessmentConfigDialog({
 
   const handleCreateClick = () => {
     setIsCreating(true);
-    setFormData({ 
-      role: selectedRole || "", 
+    setFormData({
+      role: selectedRole || "",
       assessmentName: "",
-      usingTimer: false, 
-      timerLimitMinutes: 0 
+      usingTimer: false,
+      timerLimitMinutes: 0,
     });
   };
 
   const getRoleLabel = (roleValue: string) => {
-    return ROLES.find(role => role.value === roleValue)?.label || roleValue;
+    return ROLES.find((role) => role.value === roleValue)?.label || roleValue;
   };
 
   // Check if selected role exists in assessments
-  const roleExists = selectedRole && assessments.some(a => a.role === selectedRole);
+  const roleExists = selectedRole && assessments.some((a) => a.role === selectedRole);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -265,14 +273,18 @@ export default function AssessmentConfigDialog({
               <CardContent className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="role">Role</Label>
-                  <Select value={formData.role} onValueChange={(value) => setFormData({ ...formData, role: value })}>
+                  <Select
+                    value={formData.role}
+                    onValueChange={(value) => setFormData({ ...formData, role: value })}
+                  >
                     <SelectTrigger>
                       <SelectValue placeholder="Pilih role..." />
                     </SelectTrigger>
                     <SelectContent>
-                      {ROLES.filter(role => 
-                        !assessments.some(a => a.role === role.value) || 
-                        role.value === selectedRole
+                      {ROLES.filter(
+                        (role) =>
+                          !assessments.some((a) => a.role === role.value) ||
+                          role.value === selectedRole
                       ).map((role) => (
                         <SelectItem key={role.value} value={role.value}>
                           {role.label}
@@ -298,7 +310,9 @@ export default function AssessmentConfigDialog({
                   <Switch
                     id="using-timer"
                     checked={formData.usingTimer}
-                    onCheckedChange={(checked: boolean) => setFormData({ ...formData, usingTimer: checked })}
+                    onCheckedChange={(checked: boolean) =>
+                      setFormData({ ...formData, usingTimer: checked })
+                    }
                   />
                   <Label htmlFor="using-timer">Gunakan Timer</Label>
                 </div>
@@ -311,7 +325,12 @@ export default function AssessmentConfigDialog({
                       type="number"
                       min="1"
                       value={formData.timerLimitMinutes}
-                      onChange={(e) => setFormData({ ...formData, timerLimitMinutes: parseInt(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setFormData({
+                          ...formData,
+                          timerLimitMinutes: parseInt(e.target.value) || 0,
+                        })
+                      }
                       placeholder="Masukkan batas waktu dalam menit"
                     />
                   </div>
@@ -343,7 +362,8 @@ export default function AssessmentConfigDialog({
               <div className="text-center py-8">Memuat konfigurasi...</div>
             ) : assessments.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                Belum ada konfigurasi assessment. Klik &quot;Tambah Konfigurasi&quot; untuk membuat yang baru.
+                Belum ada konfigurasi assessment. Klik &quot;Tambah Konfigurasi&quot; untuk membuat
+                yang baru.
               </div>
             ) : (
               assessments.map((assessment) => (
@@ -364,10 +384,10 @@ export default function AssessmentConfigDialog({
                           <Input
                             type="text"
                             value={editingAssessment.assessmentName}
-                            onChange={(e) => 
-                              setEditingAssessment({ 
-                                ...editingAssessment, 
-                                assessmentName: e.target.value 
+                            onChange={(e) =>
+                              setEditingAssessment({
+                                ...editingAssessment,
+                                assessmentName: e.target.value,
                               })
                             }
                             placeholder="Masukkan nama assessment"
@@ -378,7 +398,7 @@ export default function AssessmentConfigDialog({
                         <div className="flex items-center space-x-2">
                           <Switch
                             checked={editingAssessment.usingTimer}
-                            onCheckedChange={(checked: boolean) => 
+                            onCheckedChange={(checked: boolean) =>
                               setEditingAssessment({ ...editingAssessment, usingTimer: checked })
                             }
                           />
@@ -392,10 +412,10 @@ export default function AssessmentConfigDialog({
                               type="number"
                               min="1"
                               value={editingAssessment.timerLimitMinutes || 0}
-                              onChange={(e) => 
-                                setEditingAssessment({ 
-                                  ...editingAssessment, 
-                                  timerLimitMinutes: parseInt(e.target.value) || 0 
+                              onChange={(e) =>
+                                setEditingAssessment({
+                                  ...editingAssessment,
+                                  timerLimitMinutes: parseInt(e.target.value) || 0,
                                 })
                               }
                             />
@@ -403,7 +423,11 @@ export default function AssessmentConfigDialog({
                         )}
 
                         <div className="flex gap-2">
-                          <Button onClick={handleSaveEdit} size="sm" className="flex items-center gap-2">
+                          <Button
+                            onClick={handleSaveEdit}
+                            size="sm"
+                            className="flex items-center gap-2"
+                          >
                             <Save className="h-4 w-4" />
                             Simpan
                           </Button>

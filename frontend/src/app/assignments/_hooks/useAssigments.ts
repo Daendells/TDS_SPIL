@@ -25,31 +25,29 @@ export function useAssignments() {
     try {
       const res = await api.get("/api/assignments");
 
-      const raw =
-        res.data?.results ??
-        res.data?.data?.results ??
-        res.data?.data ??
-        [];
+      const raw = res.data?.results ?? res.data?.data?.results ?? res.data?.data ?? [];
 
       const parsed: IAssignmentFlat[] = Array.isArray(raw)
-        ? raw.map((a: {
-            id: number;
-            seafarerCode: string;
-            nama: string;
-            assessmentTypeId: number;
-            assessmentType: string;
-            attempts?: number;
-            Attempts?: number;
-            status?: string;
-          }) => ({
-            id: a.id,
-            seafarerCode: a.seafarerCode,
-            nama: a.nama,
-            assessmentTypeId: a.assessmentTypeId,
-            assessmentType: a.assessmentType,
-            attempts: a.attempts ?? a.Attempts ?? 0,
-            status: (a.status ?? "ASSIGNED").toUpperCase(),
-          }))
+        ? raw.map(
+            (a: {
+              id: number;
+              seafarerCode: string;
+              nama: string;
+              assessmentTypeId: number;
+              assessmentType: string;
+              attempts?: number;
+              Attempts?: number;
+              status?: string;
+            }) => ({
+              id: a.id,
+              seafarerCode: a.seafarerCode,
+              nama: a.nama,
+              assessmentTypeId: a.assessmentTypeId,
+              assessmentType: a.assessmentType,
+              attempts: a.attempts ?? a.Attempts ?? 0,
+              status: (a.status ?? "ASSIGNED").toUpperCase(),
+            })
+          )
         : [];
 
       startTransition(() => {

@@ -2,11 +2,7 @@
 
 import { useApi } from "@/hooks/use-api";
 import { ApiReturn } from "@/app/types/api";
-import {
-  AspectResponse,
-  AspectCreatePayload,
-  AspectUpdatePayload,
-} from "@/types/aspect";
+import { AspectResponse, AspectCreatePayload, AspectUpdatePayload } from "@/types/aspect";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useGetAspectsByAssessmentId(assessmentId: number) {
@@ -30,9 +26,7 @@ export function useGetAllAspects() {
   return useQuery({
     queryKey: ["aspects"],
     queryFn: async () => {
-      const response = await api.get<ApiReturn<AspectResponse[]>>(
-        "/api/aspects"
-      );
+      const response = await api.get<ApiReturn<AspectResponse[]>>("/api/aspects");
       return response.data.data;
     },
   });
@@ -44,10 +38,7 @@ export function useCreateAspect() {
 
   return useMutation({
     mutationFn: async (payload: AspectCreatePayload) => {
-      const response = await api.post<ApiReturn<AspectResponse>>(
-        "/api/aspects",
-        payload
-      );
+      const response = await api.post<ApiReturn<AspectResponse>>("/api/aspects", payload);
       return response.data.data;
     },
     onSuccess: () => {
@@ -61,17 +52,8 @@ export function useUpdateAspect() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      payload,
-    }: {
-      id: number;
-      payload: AspectUpdatePayload;
-    }) => {
-      const response = await api.put<ApiReturn<AspectResponse>>(
-        `/api/aspects/${id}`,
-        payload
-      );
+    mutationFn: async ({ id, payload }: { id: number; payload: AspectUpdatePayload }) => {
+      const response = await api.put<ApiReturn<AspectResponse>>(`/api/aspects/${id}`, payload);
       return response.data.data;
     },
     onSuccess: () => {
@@ -107,10 +89,9 @@ export function useAssignAspectToQuestion() {
       questionId: number;
       aspectId: number | null;
     }) => {
-      const response = await api.put<ApiReturn<null>>(
-        `/api/questions/${questionId}/aspect`,
-        { aspectId }
-      );
+      const response = await api.put<ApiReturn<null>>(`/api/questions/${questionId}/aspect`, {
+        aspectId,
+      });
       return response.data;
     },
     onSuccess: () => {

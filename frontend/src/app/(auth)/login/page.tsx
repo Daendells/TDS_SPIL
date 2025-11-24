@@ -93,11 +93,7 @@ export default function Page() {
                       <FormItem>
                         <FormLabel>Password</FormLabel>
                         <FormControl>
-                          <Input
-                            placeholder="******"
-                            type="password"
-                            {...field}
-                          />
+                          <Input placeholder="******" type="password" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -107,11 +103,7 @@ export default function Page() {
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-2 mt-4">
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={loginMutation.isPending}
-              >
+              <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                 {loginMutation.isPending ? "Loading..." : "Login"}
               </Button>
             </CardFooter>

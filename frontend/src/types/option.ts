@@ -7,4 +7,3 @@ export type OptionResponse = {
   isImage: number;
   imageUrl: string;
 };
-

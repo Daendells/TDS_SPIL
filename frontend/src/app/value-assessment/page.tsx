@@ -135,10 +135,7 @@ export default function ValueAssessmentPage() {
           const now = new Date().getTime();
           if (now <= parsed.expiresAt) {
             const data = parsed.value;
-            if (
-              data.assessmentData &&
-              (data.assessmentData.email || data.currentStep > 1)
-            ) {
+            if (data.assessmentData && (data.assessmentData.email || data.currentStep > 1)) {
               setAssessmentData(data.assessmentData);
               setCurrentStep(data.currentStep);
 
@@ -187,10 +184,7 @@ export default function ValueAssessmentPage() {
 
   // Save data ke localStorage dengan expiry 3 hari setiap kali assessmentData atau currentStep berubah
   useEffect(() => {
-    if (
-      isClient &&
-      (assessmentData.email || assessmentData.fullName || currentStep > 1)
-    ) {
+    if (isClient && (assessmentData.email || assessmentData.fullName || currentStep > 1)) {
       try {
         const now = new Date().getTime();
         const expiryTime = now + EXPIRY_MINUTES * 60 * 1000; // Convert minutes to ms
@@ -251,23 +245,20 @@ export default function ValueAssessmentPage() {
     setCurrentStep((prev) => prev - 1);
   };
 
-  const updateAssessmentData = useCallback(
-    (data: Partial<ValueAssessmentData>) => {
-      console.log(`[updateAssessmentData] Called with:`, data);
-      setAssessmentData((prev) => {
-        const updated = { ...prev, ...data };
+  const updateAssessmentData = useCallback((data: Partial<ValueAssessmentData>) => {
+    console.log(`[updateAssessmentData] Called with:`, data);
+    setAssessmentData((prev) => {
+      const updated = { ...prev, ...data };
 
-        // Set overall start time when user first provides consent
-        if (data.consent && !prev.startTime) {
-          updated.startTime = new Date().toISOString();
-        }
+      // Set overall start time when user first provides consent
+      if (data.consent && !prev.startTime) {
+        updated.startTime = new Date().toISOString();
+      }
 
-        console.log(`[updateAssessmentData] State updated:`, updated);
-        return updated;
-      });
-    },
-    []
-  );
+      console.log(`[updateAssessmentData] State updated:`, updated);
+      return updated;
+    });
+  }, []);
 
   // Legacy timer functions - kept for backward compatibility with TimeWarningModal
   // Actual timer logic is now handled by individual section components
@@ -332,9 +323,7 @@ export default function ValueAssessmentPage() {
       if (sectionPauseTimestamp && sectionSisaWaktu !== undefined) {
         // Timer sedang dipause, gunakan sisaWaktu yang tersimpan
         sectionTimeRemaining = sectionSisaWaktu;
-        console.log(
-          `⏸️ [Section Timer] Using saved sisaWaktu: ${sectionTimeRemaining}s`
-        );
+        console.log(`⏸️ [Section Timer] Using saved sisaWaktu: ${sectionTimeRemaining}s`);
       } else {
         // Timer berjalan normal, hitung dari start time
         const start = new Date(sectionStartTime).getTime();
@@ -421,9 +410,7 @@ export default function ValueAssessmentPage() {
       const totalSeconds = sectionTimerMinutes * 60;
       const remainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
 
-      console.log(
-        `📊 [Pause Logic] Calculated sisaWaktu: ${remainingSeconds}s`
-      );
+      console.log(`📊 [Pause Logic] Calculated sisaWaktu: ${remainingSeconds}s`);
       return remainingSeconds;
     };
 
@@ -459,10 +446,7 @@ export default function ValueAssessmentPage() {
           console.log("▶️ [Global Timer] Resumed due to visibility change");
 
           // Resume dengan start time baru berdasarkan sisaWaktu yang tersimpan
-          if (
-            currentStep === 3 &&
-            assessmentData.section1SisaWaktu !== undefined
-          ) {
+          if (currentStep === 3 && assessmentData.section1SisaWaktu !== undefined) {
             const newStartTime = new Date(
               Date.now() -
                 ((assessmentData.section1TimerMinutes || 30) * 60 -
@@ -473,10 +457,7 @@ export default function ValueAssessmentPage() {
               section1PauseTimestamp: undefined,
               section1StartTime: newStartTime,
             });
-          } else if (
-            currentStep === 4 &&
-            assessmentData.section2SisaWaktu !== undefined
-          ) {
+          } else if (currentStep === 4 && assessmentData.section2SisaWaktu !== undefined) {
             const newStartTime = new Date(
               Date.now() -
                 ((assessmentData.section2TimerMinutes || 60) * 60 -
@@ -487,10 +468,7 @@ export default function ValueAssessmentPage() {
               section2PauseTimestamp: undefined,
               section2StartTime: newStartTime,
             });
-          } else if (
-            currentStep === 5 &&
-            assessmentData.section3SisaWaktu !== undefined
-          ) {
+          } else if (currentStep === 5 && assessmentData.section3SisaWaktu !== undefined) {
             const newStartTime = new Date(
               Date.now() -
                 ((assessmentData.section3TimerMinutes || 30) * 60 -
@@ -539,10 +517,7 @@ export default function ValueAssessmentPage() {
         console.log("▶️ [Global Timer] Resumed due to window focus");
 
         // Resume dengan start time baru berdasarkan sisaWaktu yang tersimpan
-        if (
-          currentStep === 3 &&
-          assessmentData.section1SisaWaktu !== undefined
-        ) {
+        if (currentStep === 3 && assessmentData.section1SisaWaktu !== undefined) {
           const newStartTime = new Date(
             Date.now() -
               ((assessmentData.section1TimerMinutes || 30) * 60 -
@@ -553,10 +528,7 @@ export default function ValueAssessmentPage() {
             section1PauseTimestamp: undefined,
             section1StartTime: newStartTime,
           });
-        } else if (
-          currentStep === 4 &&
-          assessmentData.section2SisaWaktu !== undefined
-        ) {
+        } else if (currentStep === 4 && assessmentData.section2SisaWaktu !== undefined) {
           const newStartTime = new Date(
             Date.now() -
               ((assessmentData.section2TimerMinutes || 60) * 60 -
@@ -567,10 +539,7 @@ export default function ValueAssessmentPage() {
             section2PauseTimestamp: undefined,
             section2StartTime: newStartTime,
           });
-        } else if (
-          currentStep === 5 &&
-          assessmentData.section3SisaWaktu !== undefined
-        ) {
+        } else if (currentStep === 5 && assessmentData.section3SisaWaktu !== undefined) {
           const newStartTime = new Date(
             Date.now() -
               ((assessmentData.section3TimerMinutes || 30) * 60 -
@@ -611,11 +580,7 @@ export default function ValueAssessmentPage() {
 
   // Check seafarer assignment when reaching completion step
   useEffect(() => {
-    if (
-      currentStep === 6 &&
-      assessmentData.seafarerCode &&
-      assignmentStatus.checked
-    ) {
+    if (currentStep === 6 && assessmentData.seafarerCode && assignmentStatus.checked) {
       // Only show error if checked and not assigned
       if (!assignmentStatus.isAssigned) {
         toast.error(
@@ -656,9 +621,7 @@ export default function ValueAssessmentPage() {
             onNext={handleNext}
             assessmentData={assessmentData}
             updateAssessmentData={updateAssessmentData}
-            isAssessmentClosed={
-              assessmentStatus.loaded && !assessmentStatus.isOpen
-            }
+            isAssessmentClosed={assessmentStatus.loaded && !assessmentStatus.isOpen}
             closedMessage={assessmentStatus.message}
             startTime={assessmentStatus.startTimeFormatted}
             endTime={assessmentStatus.endTimeFormatted}
@@ -702,10 +665,7 @@ export default function ValueAssessmentPage() {
         );
       case 6:
         return (
-          <Completion
-            assessmentData={assessmentData}
-            clearStoredData={handleClearStoredData}
-          />
+          <Completion assessmentData={assessmentData} clearStoredData={handleClearStoredData} />
         );
       default:
         return null;
@@ -723,63 +683,57 @@ export default function ValueAssessmentPage() {
                 currentStep === 3
                   ? "Section 1 - Assessment"
                   : currentStep === 4
-                  ? "Section 2 - Assessment"
-                  : currentStep === 5
-                  ? "Section 3 - Assessment"
-                  : undefined
+                    ? "Section 2 - Assessment"
+                    : currentStep === 5
+                      ? "Section 3 - Assessment"
+                      : undefined
               }
               startTime={
                 currentStep === 3
                   ? assessmentData.section1StartTime
                   : currentStep === 4
-                  ? assessmentData.section2StartTime
-                  : currentStep === 5
-                  ? assessmentData.section3StartTime
-                  : undefined
+                    ? assessmentData.section2StartTime
+                    : currentStep === 5
+                      ? assessmentData.section3StartTime
+                      : undefined
               }
               timerMinutes={
                 currentStep === 3
                   ? assessmentData.section1TimerMinutes
                   : currentStep === 4
-                  ? assessmentData.section2TimerMinutes
-                  : currentStep === 5
-                  ? assessmentData.section3TimerMinutes
-                  : undefined
+                    ? assessmentData.section2TimerMinutes
+                    : currentStep === 5
+                      ? assessmentData.section3TimerMinutes
+                      : undefined
               }
               pauseTimestamp={
                 currentStep === 3
                   ? assessmentData.section1PauseTimestamp
                   : currentStep === 4
-                  ? assessmentData.section2PauseTimestamp
-                  : currentStep === 5
-                  ? assessmentData.section3PauseTimestamp
-                  : undefined
+                    ? assessmentData.section2PauseTimestamp
+                    : currentStep === 5
+                      ? assessmentData.section3PauseTimestamp
+                      : undefined
               }
               sisaWaktu={
                 currentStep === 3
                   ? assessmentData.section1SisaWaktu
                   : currentStep === 4
-                  ? assessmentData.section2SisaWaktu
-                  : currentStep === 5
-                  ? assessmentData.section3SisaWaktu
-                  : undefined
+                    ? assessmentData.section2SisaWaktu
+                    : currentStep === 5
+                      ? assessmentData.section3SisaWaktu
+                      : undefined
               }
               isActive={currentStep >= 3 && currentStep <= 5}
             />
           )}
 
           {/* Progress Bar - Show only if assessment has started and on client */}
-          {isClient &&
-            (assessmentData.email ||
-              assessmentData.fullName ||
-              currentStep > 1) && (
-              <div className="max-w-4xl mx-auto px-6 pt-4">
-                <AssessmentProgress
-                  assessmentData={assessmentData}
-                  currentStep={currentStep}
-                />
-              </div>
-            )}
+          {isClient && (assessmentData.email || assessmentData.fullName || currentStep > 1) && (
+            <div className="max-w-4xl mx-auto px-6 pt-4">
+              <AssessmentProgress assessmentData={assessmentData} currentStep={currentStep} />
+            </div>
+          )}
           {renderCurrentStep()}
         </>
       )}

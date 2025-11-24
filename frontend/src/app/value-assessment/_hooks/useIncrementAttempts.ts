@@ -14,10 +14,7 @@ interface SeafarerAssessmentResponse {
 
 export function useIncrementAttempts() {
   const mutation = useMutation({
-    mutationFn: async (payload: {
-      seafarerCode: string;
-      assessmentTypeId: number;
-    }) => {
+    mutationFn: async (payload: { seafarerCode: string; assessmentTypeId: number }) => {
       const response = await api.post<ApiReturn<SeafarerAssessmentResponse>>(
         `/api/seafarer-assessments/increment-attempts/${payload.seafarerCode}/${payload.assessmentTypeId}`
       );

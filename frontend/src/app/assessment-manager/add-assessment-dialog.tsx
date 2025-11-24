@@ -76,9 +76,7 @@ export default function AddAssessmentDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <DialogTitle>Tambah Assessment Baru</DialogTitle>
-          <DialogDescription>
-            Buat assessment baru untuk posisi/role tertentu
-          </DialogDescription>
+          <DialogDescription>Buat assessment baru untuk posisi/role tertentu</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
@@ -135,9 +133,7 @@ export default function AddAssessmentDialog({
                   min="1"
                   max="480"
                   value={timerLimitMinutes}
-                  onChange={(e) =>
-                    setTimerLimitMinutes(parseInt(e.target.value))
-                  }
+                  onChange={(e) => setTimerLimitMinutes(parseInt(e.target.value))}
                   disabled={loading}
                 />
                 <p className="text-xs text-gray-500">

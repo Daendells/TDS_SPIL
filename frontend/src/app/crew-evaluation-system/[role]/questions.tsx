@@ -9,10 +9,7 @@ import { useCountdown } from "@/hooks/use-session-storage";
 import { useTimerPauseResume } from "@/hooks/useTimerPauseResume";
 import { CESAssessmentData } from "../types";
 import Image from "next/image";
-import {
-  useGetAssessmentByRole,
-  usePostCESResults,
-} from "./_hooks/useAssessment";
+import { useGetAssessmentByRole, usePostCESResults } from "./_hooks/useAssessment";
 import { BASE_URL } from "../../lib/api";
 
 interface QuestionsProps {
@@ -77,11 +74,7 @@ export default function Questions({
   }, [updateAssessmentData]);
 
   // Setup pause/resume detection
-  useTimerPauseResume(
-    assessmentData.currentStep === 3,
-    handlePause,
-    handleResume
-  );
+  useTimerPauseResume(assessmentData.currentStep === 3, handlePause, handleResume);
 
   const handleSubmit = useCallback(() => {
     if (!assessment?.questions) {
@@ -94,9 +87,7 @@ export default function Questions({
       (q) => answers[q.questionId] === undefined
     );
     if (unansweredQuestions.length > 0 && timeLeft > 0) {
-      toast.error(
-        `Masih ada ${unansweredQuestions.length} soal yang belum dijawab`
-      );
+      toast.error(`Masih ada ${unansweredQuestions.length} soal yang belum dijawab`);
       return;
     }
 
@@ -115,14 +106,7 @@ export default function Questions({
       role: role,
       answers: filteredAnswers,
     });
-  }, [
-    assessment?.questions,
-    answers,
-    assessmentData.seafarerCode,
-    mutate,
-    timeLeft,
-    role,
-  ]);
+  }, [assessment?.questions, answers, assessmentData.seafarerCode, mutate, timeLeft, role]);
 
   // Auto submit when time runs out
   const timeOutRef = useRef(false);
@@ -163,10 +147,7 @@ export default function Questions({
   };
 
   const handleNext = () => {
-    if (
-      assessment?.questions &&
-      currentQuestionIndex < assessment.questions.length - 1
-    ) {
+    if (assessment?.questions && currentQuestionIndex < assessment.questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     }
   };
@@ -196,9 +177,7 @@ export default function Questions({
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600">
-            Gagal memuat data assessment: {error.message}
-          </p>
+          <p className="text-red-600">Gagal memuat data assessment: {error.message}</p>
           <Button onClick={onBack} className="mt-4">
             Kembali
           </Button>
@@ -239,9 +218,7 @@ export default function Questions({
               <h1 className="text-lg md:text-3xl font-bold uppercase text-gray-800 mb-2">
                 Crew Evaluation System
               </h1>
-              <p className="text-sm md:text-lg text-gray-600">
-                {formatRoleName(role)}
-              </p>
+              <p className="text-sm md:text-lg text-gray-600">{formatRoleName(role)}</p>
             </div>
             <Image
               width={64}
@@ -255,24 +232,13 @@ export default function Questions({
 
         {/* Instructions */}
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-3">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Panduan Pengisian:
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Panduan Pengisian:</h2>
           <div className="space-y-3 text-gray-700">
             <p>1. Bacalah dengan cermat setiap soal yang disajikan.</p>
+            <p>2. Pilih satu jawaban yang paling sesuai dengan pengetahuan dan pengalaman Anda.</p>
+            <p>3. Kerjakan asesmen ini secara mandiri tanpa berdiskusi dengan orang lain.</p>
             <p>
-              2. Pilih satu jawaban yang paling sesuai dengan pengetahuan dan
-              pengalaman Anda.
-            </p>
-            <p>
-              3. Kerjakan asesmen ini secara mandiri tanpa berdiskusi dengan
-              orang lain.
-            </p>
-            <p>
-              4.{" "}
-              <strong>
-                Waktu pengerjaan: {assessment?.timerLimitMinutes || 60} Menit
-              </strong>
+              4. <strong>Waktu pengerjaan: {assessment?.timerLimitMinutes || 60} Menit</strong>
             </p>
           </div>
         </div>
@@ -280,16 +246,13 @@ export default function Questions({
         <div className="flex flex-col-reverse md:flex-row gap-6">
           {/* Question Navigation Sidebar */}
           <div className="w-full md:w-64 bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="font-bold text-lg mb-4 text-gray-800">
-              Navigasi Soal
-            </h3>
+            <h3 className="font-bold text-lg mb-4 text-gray-800">Navigasi Soal</h3>
 
             {/* Progress Summary */}
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-600 mb-2">Progress:</div>
               <div className="text-lg font-bold text-gray-800">
-                {Object.keys(answers).length} /{" "}
-                {assessment?.questions?.length ?? 0}
+                {Object.keys(answers).length} / {assessment?.questions?.length ?? 0}
               </div>
               <div className="text-sm text-gray-500">soal terjawab</div>
             </div>
@@ -310,8 +273,8 @@ export default function Questions({
                         isCurrent
                           ? "bg-blue-500 text-white border-blue-500"
                           : isAnswered
-                          ? "bg-gray-800 text-white border-gray-800"
-                          : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                            ? "bg-gray-800 text-white border-gray-800"
+                            : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
                       }
                     `}
                   >
@@ -344,8 +307,7 @@ export default function Questions({
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-lg font-bold text-gray-800">
-                    Soal {currentQuestionIndex + 1} dari{" "}
-                    {assessment?.questions?.length ?? 0}
+                    Soal {currentQuestionIndex + 1} dari {assessment?.questions?.length ?? 0}
                   </h3>
                 </div>
 
@@ -394,9 +356,7 @@ export default function Questions({
                           htmlFor={`option-${option.optionId}`}
                           className="flex-1 cursor-pointer text-gray-700 leading-relaxed"
                         >
-                          <span className="font-medium">
-                            {option.optionLetter}.
-                          </span>{" "}
+                          <span className="font-medium">{option.optionLetter}.</span>{" "}
                           <div className="flex flex-col gap-2">
                             {option?.imageUrl && (
                               <Image
@@ -422,14 +382,11 @@ export default function Questions({
                   variant="outline"
                   className="px-6 py-2 cursor-pointer"
                 >
-                  {currentQuestionIndex === 0
-                    ? "Kembali ke Identitas"
-                    : "Soal Sebelumnya"}
+                  {currentQuestionIndex === 0 ? "Kembali ke Identitas" : "Soal Sebelumnya"}
                 </Button>
 
                 <div className="flex gap-3">
-                  {currentQuestionIndex <
-                  (assessment?.questions?.length ?? 1) - 1 ? (
+                  {currentQuestionIndex < (assessment?.questions?.length ?? 1) - 1 ? (
                     <Button
                       onClick={handleNext}
                       className="px-6 py-2 bg-gray-800 hover:bg-gray-700 w-full cursor-pointer"

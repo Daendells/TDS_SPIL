@@ -1,13 +1,6 @@
 "use client";
 
-import {
-  LaptopMinimal,
-  ChevronUp,
-  Inbox,
-  User2,
-  Settings,
-  Calendar,
-} from "lucide-react";
+import { LaptopMinimal, ChevronUp, Inbox, User2, Settings, Calendar } from "lucide-react";
 
 import {
   Sidebar,
@@ -128,10 +121,7 @@ export function AppSidebar() {
                   <ChevronUp className="ml-auto" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
-              <DropdownMenuContent
-                side="top"
-                className="w-[--radix-popper-anchor-width]"
-              >
+              <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
                 <DropdownMenuItem className="p-0">
                   <Button
                     className="w-full"

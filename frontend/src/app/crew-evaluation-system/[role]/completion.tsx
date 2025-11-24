@@ -12,11 +12,7 @@ interface CompletionProps {
   role: string;
 }
 
-export default function Completion({
-  assessmentData,
-  clearStoredData,
-  role,
-}: CompletionProps) {
+export default function Completion({ assessmentData, clearStoredData, role }: CompletionProps) {
   const formatRoleName = (roleSlug: string) => {
     return roleSlug
       .split("_")
@@ -74,9 +70,7 @@ export default function Completion({
               <CheckCircle className="h-20 w-20 text-green-500 mx-auto" />
             </div>
 
-            <h2 className="text-3xl font-bold text-gray-800 mb-4">
-              Assessment Selesai!
-            </h2>
+            <h2 className="text-3xl font-bold text-gray-800 mb-4">Assessment Selesai!</h2>
 
             <div className="space-y-4 text-gray-700 max-w-2xl mx-auto">
               <p className="text-lg">
@@ -84,19 +78,15 @@ export default function Completion({
               </p>
 
               <p>
-                Anda telah berhasil menyelesaikan{" "}
-                <strong>Crew Evaluation System Assessment</strong> untuk role{" "}
-                <strong>{formatRoleName(role)}</strong>.
+                Anda telah berhasil menyelesaikan <strong>Crew Evaluation System Assessment</strong>{" "}
+                untuk role <strong>{formatRoleName(role)}</strong>.
               </p>
 
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-6 my-6">
-                <h3 className="font-bold text-blue-800 mb-3">
-                  Informasi Submission
-                </h3>
+                <h3 className="font-bold text-blue-800 mb-3">Informasi Submission</h3>
                 <div className="text-left space-y-2 text-sm">
                   <p>
-                    <strong>Seafarer Code:</strong>{" "}
-                    {assessmentData.seafarerCode}
+                    <strong>Seafarer Code:</strong> {assessmentData.seafarerCode}
                   </p>
                   <p>
                     <strong>Role:</strong> {formatRoleName(role)}
@@ -119,19 +109,15 @@ export default function Completion({
               </div>
 
               <p className="text-gray-600">
-                Hasil assessment Anda telah tersimpan dan akan diproses oleh tim
-                kami. Anda akan menerima notifikasi lebih lanjut mengenai hasil
-                assessment melalui email yang terdaftar.
+                Hasil assessment Anda telah tersimpan dan akan diproses oleh tim kami. Anda akan
+                menerima notifikasi lebih lanjut mengenai hasil assessment melalui email yang
+                terdaftar.
               </p>
 
-              <p className="text-gray-600 mt-4">
-                Jika ada pertanyaan, silakan hubungi:
-              </p>
+              <p className="text-gray-600 mt-4">Jika ada pertanyaan, silakan hubungi:</p>
 
               <div className="bg-gray-50 border border-gray-200 rounded-lg p-4">
-                <p className="font-medium text-gray-800">
-                  shiplearningdevelopment.spil@gmail.com
-                </p>
+                <p className="font-medium text-gray-800">shiplearningdevelopment.spil@gmail.com</p>
               </div>
             </div>
 

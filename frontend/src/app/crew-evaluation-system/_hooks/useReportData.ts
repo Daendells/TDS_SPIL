@@ -31,10 +31,7 @@ export function useGetReportByIdentityNumber(identityNumber: string) {
       // Don't retry on 404 or authentication errors
       if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as { response: { status: number } };
-        if (
-          axiosError.response?.status === 404 ||
-          axiosError.response?.status === 401
-        ) {
+        if (axiosError.response?.status === 404 || axiosError.response?.status === 401) {
           return false;
         }
       }

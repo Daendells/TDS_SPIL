@@ -71,9 +71,7 @@ export default function CESLandingPage() {
               <h1 className="text-3xl font-bold uppercase text-gray-800 mb-2">
                 Crew Evaluation System
               </h1>
-              <p className="text-gray-600">
-                Pilih role untuk memulai assessment
-              </p>
+              <p className="text-gray-600">Pilih role untuk memulai assessment</p>
             </div>
             <Image
               width={64}
@@ -87,9 +85,7 @@ export default function CESLandingPage() {
 
         {/* Role Selection Grid */}
         <div className="bg-white rounded-lg shadow-sm border p-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Pilih Role Assessment
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Pilih Role Assessment</h2>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {roleOptions.map((role) => (
@@ -99,9 +95,7 @@ export default function CESLandingPage() {
                 onClick={() => handleSelectRole(role.value)}
               >
                 <div className="flex-1">
-                  <h3 className="font-bold text-lg text-gray-800 mb-1">
-                    {role.label}
-                  </h3>
+                  <h3 className="font-bold text-lg text-gray-800 mb-1">{role.label}</h3>
                   <p className="text-sm text-gray-600">{role.description}</p>
                 </div>
                 <Button
@@ -119,9 +113,8 @@ export default function CESLandingPage() {
 
           <div className="mt-8 p-4 bg-blue-50 border border-blue-200 rounded-lg">
             <p className="text-sm text-blue-800">
-              <strong>Catatan:</strong> Pastikan Anda memilih role yang sesuai
-              dengan posisi Anda. Assessment akan menggunakan soal-soal yang
-              spesifik untuk role yang dipilih.
+              <strong>Catatan:</strong> Pastikan Anda memilih role yang sesuai dengan posisi Anda.
+              Assessment akan menggunakan soal-soal yang spesifik untuk role yang dipilih.
             </p>
           </div>
         </div>

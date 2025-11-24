@@ -42,8 +42,7 @@ export default function PersonalIdentity({
   const [isVerifying, setIsVerifying] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [verificationError, setVerificationError] = useState("");
-  const [lastVerifiedSeafarerCode, setLastVerifiedSeafarerCode] =
-    useState<string>("");
+  const [lastVerifiedSeafarerCode, setLastVerifiedSeafarerCode] = useState<string>("");
 
   // Mutation for incrementing attempts
   const incrementAttemptsMutation = useIncrementAttempts();
@@ -62,10 +61,7 @@ export default function PersonalIdentity({
   const [querySeafarerCode, setQuerySeafarerCode] = useState<string>("");
   const [queryAssessmentTypeId, setQueryAssessmentTypeId] = useState<number>(0);
 
-  const assignmentQuery = useCheckSeafarerAssignment(
-    querySeafarerCode,
-    queryAssessmentTypeId
-  );
+  const assignmentQuery = useCheckSeafarerAssignment(querySeafarerCode, queryAssessmentTypeId);
 
   const verifySeafarerCode = async (seafarerCode: string) => {
     if (!seafarerCode.trim()) {
@@ -88,8 +84,7 @@ export default function PersonalIdentity({
 
       if (!data.isAssigned) {
         setVerificationError(
-          data.message ||
-            "Anda tidak diassign untuk assessment ini. Silakan hubungi administrator."
+          data.message || "Anda tidak diassign untuk assessment ini. Silakan hubungi administrator."
         );
         // Clear the auto-populated fields
         form.setValue("fullName", "");
@@ -191,9 +186,7 @@ export default function PersonalIdentity({
       onNext();
     } catch (error) {
       console.error("Error incrementing attempts:", error);
-      setVerificationError(
-        "Terjadi kesalahan saat memulai test. Silakan coba lagi."
-      );
+      setVerificationError("Terjadi kesalahan saat memulai test. Silakan coba lagi.");
     }
   };
 
@@ -229,9 +222,7 @@ export default function PersonalIdentity({
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             {/* Personal Information */}
             <div className="bg-white rounded-lg shadow-sm border p-8">
-              <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
-                Identitas Diri
-              </h2>
+              <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">Identitas Diri</h2>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <FormField
@@ -247,9 +238,7 @@ export default function PersonalIdentity({
                           <Input
                             placeholder="Masukkan seafarer code"
                             {...field}
-                            onChange={(e) =>
-                              handleSeafarerCodeChange(e.target.value)
-                            }
+                            onChange={(e) => handleSeafarerCodeChange(e.target.value)}
                             className="border-gray-300 focus:border-gray-500 focus:ring-gray-500"
                           />
                         </FormControl>
@@ -325,8 +314,7 @@ export default function PersonalIdentity({
                   render={({ field }) => (
                     <FormItem>
                       <FormLabel className="font-medium text-gray-700">
-                        Nama Vessel / Nama Akademi Pelayaran{" "}
-                        <span className="text-red-500">*</span>
+                        Nama Vessel / Nama Akademi Pelayaran <span className="text-red-500">*</span>
                       </FormLabel>
                       <FormControl>
                         <Input

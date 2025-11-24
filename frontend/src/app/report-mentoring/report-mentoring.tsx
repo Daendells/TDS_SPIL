@@ -35,25 +35,17 @@ const FormSchema = z.object({
   period: z.string().min(1, { message: "Periode harus diisi" }),
   program: z.string().min(1, { message: "Program harus diisi" }),
   programTitle: z.string().min(1, { message: "Judul Program harus diisi" }),
-  menteeNames: z
-    .array(z.string())
-    .min(1, { message: "Minimal satu mentee harus dipilih" }),
+  menteeNames: z.array(z.string()).min(1, { message: "Minimal satu mentee harus dipilih" }),
   department: z.string().min(1, { message: "Departemen harus diisi" }),
   sessionNumber: z.number().min(1, { message: "Sesi ke harus diisi" }),
   date: z.string().min(1, { message: "Tanggal harus diisi" }),
   duration: z.number().min(1, { message: "Durasi harus diisi" }),
-  purpose: z
-    .string()
-    .min(1, { message: "Tujuan/Isu yang Dibahas harus diisi" }),
-  observation: z
-    .string()
-    .min(1, { message: "Observasi Terhadap Coachee harus diisi" }),
+  purpose: z.string().min(1, { message: "Tujuan/Isu yang Dibahas harus diisi" }),
+  observation: z.string().min(1, { message: "Observasi Terhadap Coachee harus diisi" }),
   reflection: z.string().min(1, { message: "Refleksi Mentor harus diisi" }),
   actionPlan: z.string().min(1, { message: "Rencana Aksi harus diisi" }),
   additionalNotes: z.string().optional(),
-  reportIds: z
-    .array(z.number())
-    .min(1, { message: "Minimal satu report harus dipilih" }),
+  reportIds: z.array(z.number()).min(1, { message: "Minimal satu report harus dipilih" }),
 });
 
 export default function ReportMentoring() {
@@ -109,10 +101,7 @@ export default function ReportMentoring() {
 
         const response = await api.get(`/reports?${params.toString()}`);
         if (response.data && response.data.data) {
-          const paginationData = parsePaginationData<IReport>(
-            response.data.data,
-            parseReports
-          );
+          const paginationData = parsePaginationData<IReport>(response.data.data, parseReports);
           const fetchedReports = paginationData.results;
           setReports(fetchedReports);
 
@@ -138,9 +127,7 @@ export default function ReportMentoring() {
   // Filter reports based on selected mentees
   useEffect(() => {
     if (selectedMentees.length > 0) {
-      const filtered = reports.filter((report) =>
-        selectedMentees.includes(report.nama)
-      );
+      const filtered = reports.filter((report) => selectedMentees.includes(report.nama));
       const reportIds = filtered.map((report) => report.id);
       form.setValue("reportIds", reportIds);
     } else {
@@ -182,8 +169,7 @@ export default function ReportMentoring() {
       console.error("Error submitting form:", error);
       const errorMessage =
         error instanceof Error && "response" in error
-          ? (error as { response?: { data?: { error?: string } } }).response
-              ?.data?.error
+          ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
           : "Gagal menyimpan laporan mentoring";
       toast.error(errorMessage || "Gagal menyimpan laporan mentoring");
     } finally {
@@ -209,9 +195,7 @@ export default function ReportMentoring() {
     if (checked) {
       newSelectedMentees = [...selectedMentees, menteeName];
     } else {
-      newSelectedMentees = selectedMentees.filter(
-        (name) => name !== menteeName
-      );
+      newSelectedMentees = selectedMentees.filter((name) => name !== menteeName);
     }
     setSelectedMentees(newSelectedMentees);
     form.setValue("menteeNames", newSelectedMentees);
@@ -236,9 +220,7 @@ export default function ReportMentoring() {
               <h1 className="text-3xl font-bold uppercase text-gray-800 mb-2">
                 Form Report Mentoring
               </h1>
-              <p className="text-lg text-gray-600 font-medium">
-                Monthly Mentoring Report
-              </p>
+              <p className="text-lg text-gray-600 font-medium">Monthly Mentoring Report</p>
             </div>
             <Image
               width={64}
@@ -307,10 +289,7 @@ export default function ReportMentoring() {
                       <FormLabel className="font-medium text-gray-700">
                         Pilih Program <span className="text-red-500">*</span>
                       </FormLabel>
-                      <Select
-                        onValueChange={handleProgramChange}
-                        value={selectedProgram}
-                      >
+                      <Select onValueChange={handleProgramChange} value={selectedProgram}>
                         <FormControl>
                           <SelectTrigger className="border-gray-300 focus:border-gray-500 focus:ring-gray-500">
                             <SelectValue placeholder="Pilih Program Terlebih Dahulu" />
@@ -344,9 +323,7 @@ export default function ReportMentoring() {
                               <Input
                                 placeholder="Cari nama mentee..."
                                 value={menteeSearchTerm}
-                                onChange={(e) =>
-                                  setMenteeSearchTerm(e.target.value)
-                                }
+                                onChange={(e) => setMenteeSearchTerm(e.target.value)}
                                 className="border-gray-300 focus:border-gray-500 focus:ring-gray-500"
                                 disabled={loadingReports}
                               />
@@ -369,14 +346,9 @@ export default function ReportMentoring() {
                                           <Checkbox
                                             id={`mentee-${menteeName}`}
                                             onCheckedChange={(checked) =>
-                                              handleMenteeSelection(
-                                                menteeName,
-                                                checked as boolean
-                                              )
+                                              handleMenteeSelection(menteeName, checked as boolean)
                                             }
-                                            checked={selectedMentees.includes(
-                                              menteeName
-                                            )}
+                                            checked={selectedMentees.includes(menteeName)}
                                           />
                                           <label
                                             htmlFor={`mentee-${menteeName}`}
@@ -413,9 +385,7 @@ export default function ReportMentoring() {
                                   </div>
                                   <div className="grid grid-cols-1 gap-4 max-h-60 overflow-y-auto border rounded-lg p-4 bg-green-50">
                                     {reports
-                                      .filter((report) =>
-                                        selectedMentees.includes(report.nama)
-                                      )
+                                      .filter((report) => selectedMentees.includes(report.nama))
                                       .map((report) => (
                                         <div
                                           key={report.id}
@@ -439,8 +409,7 @@ export default function ReportMentoring() {
                                               {report.nama}
                                             </div>
                                             <div className="text-sm text-gray-600">
-                                              {report.seamanCode} -{" "}
-                                              {report.jabatan} -{" "}
+                                              {report.seamanCode} - {report.jabatan} -{" "}
                                               {report.idpProgram}
                                             </div>
                                           </div>
@@ -456,8 +425,8 @@ export default function ReportMentoring() {
                                 Pilih Program Terlebih Dahulu
                               </div>
                               <div className="text-sm">
-                                Silakan pilih program di atas untuk melihat
-                                daftar mentee yang tersedia
+                                Silakan pilih program di atas untuk melihat daftar mentee yang
+                                tersedia
                               </div>
                             </div>
                           )}
@@ -530,9 +499,7 @@ export default function ReportMentoring() {
                           type="number"
                           min="1"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || 0)
-                          }
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                           value={field.value || ""}
                           className="border-gray-300 focus:border-gray-500 focus:ring-gray-500"
                         />
@@ -581,7 +548,9 @@ export default function ReportMentoring() {
                                 if (!el) return;
                                 try {
                                   // Chromium (Chrome/Edge)
-                                  const anyEl = el as HTMLInputElement & { showPicker?: () => void };
+                                  const anyEl = el as HTMLInputElement & {
+                                    showPicker?: () => void;
+                                  };
                                   if (typeof anyEl.showPicker === "function") {
                                     anyEl.showPicker();
                                   } else {
@@ -617,9 +586,7 @@ export default function ReportMentoring() {
                           type="number"
                           min="1"
                           {...field}
-                          onChange={(e) =>
-                            field.onChange(parseInt(e.target.value) || 0)
-                          }
+                          onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                           value={field.value || ""}
                           className="border-gray-300 focus:border-gray-500 focus:ring-gray-500"
                         />
@@ -653,9 +620,7 @@ export default function ReportMentoring() {
 
             {/* Observasi */}
             <div className="bg-white rounded-lg shadow-sm border p-8">
-              <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">
-                Observasi
-              </h2>
+              <h2 className="font-bold text-xl mb-6 text-gray-800 border-b pb-3">Observasi</h2>
               <div className="space-y-6">
                 <FormField
                   control={form.control}
@@ -777,12 +742,8 @@ export default function ReportMentoring() {
                     className="h-12 w-auto"
                   />
                   <div className="text-center">
-                    <p className="text-sm text-gray-600 font-medium">
-                      Talent Development System
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      Monthly Mentoring Report
-                    </p>
+                    <p className="text-sm text-gray-600 font-medium">Talent Development System</p>
+                    <p className="text-xs text-gray-500">Monthly Mentoring Report</p>
                   </div>
                   <Image
                     width={48}

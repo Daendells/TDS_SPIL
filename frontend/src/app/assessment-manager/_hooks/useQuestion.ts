@@ -114,10 +114,10 @@ export function useBulkUpdateAspect() {
 
   return useMutation<void, Error, { questionIds: number[]; aspectId: number | null }>({
     mutationFn: async ({ questionIds, aspectId }) => {
-      const response = await api.put<ApiReturn<void>>(
-        `/api/questions/bulk/aspect`,
-        { questionIds, aspectId }
-      );
+      const response = await api.put<ApiReturn<void>>(`/api/questions/bulk/aspect`, {
+        questionIds,
+        aspectId,
+      });
 
       if (!response.data) {
         throw new Error("Failed to bulk update aspect");
@@ -160,17 +160,13 @@ export const useGetQuestionsByAssessmentId = (assessmentId: number) => {
     queryFn: async () => {
       if (assessmentId === 0) return null;
 
-      const baseURL =
-        process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8080";
-      const response = await fetch(
-        `${baseURL}/api/questions/assessment/${assessmentId}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const baseURL = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8080";
+      const response = await fetch(`${baseURL}/api/questions/assessment/${assessmentId}`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
 
       if (!response.ok) {
         throw new Error("Failed to fetch questions by assessment ID");

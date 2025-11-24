@@ -10,10 +10,7 @@ interface CompletionProps {
   clearStoredData?: () => void;
 }
 
-export default function Completion({
-  assessmentData,
-  clearStoredData,
-}: CompletionProps) {
+export default function Completion({ assessmentData, clearStoredData }: CompletionProps) {
   // Clear stored data when component mounts (assessment completed)
   useEffect(() => {
     if (clearStoredData) {
@@ -35,9 +32,7 @@ export default function Completion({
               className="h-16"
             />
             <div className="text-center">
-              <h1 className="text-3xl font-bold uppercase text-gray-800 mb-2">
-                Value Assessment
-              </h1>
+              <h1 className="text-3xl font-bold uppercase text-gray-800 mb-2">Value Assessment</h1>
             </div>
             <Image
               width={64}
@@ -61,8 +56,7 @@ export default function Completion({
             </h2>
 
             <p className="text-lg text-gray-600 mb-8">
-              Terima kasih telah menyelesaikan Value Assessment dengan
-              sungguh-sungguh.
+              Terima kasih telah menyelesaikan Value Assessment dengan sungguh-sungguh.
             </p>
           </div>
         </div>
@@ -81,9 +75,7 @@ export default function Completion({
               </div>
               <div className="flex justify-between">
                 <span className="font-medium text-gray-700">Kode Pelaut:</span>
-                <span className="text-gray-600">
-                  {assessmentData.seafarerCode}
-                </span>
+                <span className="text-gray-600">{assessmentData.seafarerCode}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium text-gray-700">Pangkat:</span>
@@ -94,9 +86,7 @@ export default function Completion({
             <div className="space-y-3">
               <div className="flex justify-between">
                 <span className="font-medium text-gray-700">Nama Kapal:</span>
-                <span className="text-gray-600">
-                  {assessmentData.vesselName}
-                </span>
+                <span className="text-gray-600">{assessmentData.vesselName}</span>
               </div>
               <div className="flex justify-between">
                 <span className="font-medium text-gray-700">Email:</span>
@@ -118,8 +108,8 @@ export default function Completion({
                 <span className="text-blue-600 text-sm font-medium">1</span>
               </div>
               <p>
-                Hasil assessment Anda akan diproses dan dianalisis oleh tim HR
-                dalam waktu 3-5 hari kerja.
+                Hasil assessment Anda akan diproses dan dianalisis oleh tim HR dalam waktu 3-5 hari
+                kerja.
               </p>
             </div>
 
@@ -128,8 +118,8 @@ export default function Completion({
                 <span className="text-blue-600 text-sm font-medium">2</span>
               </div>
               <p>
-                Anda akan menerima notifikasi melalui email mengenai hasil
-                assessment dan langkah selanjutnya.
+                Anda akan menerima notifikasi melalui email mengenai hasil assessment dan langkah
+                selanjutnya.
               </p>
             </div>
 
@@ -139,10 +129,7 @@ export default function Completion({
               </div>
               <p>
                 Jika ada pertanyaan, silakan hubungi tim recruitment di
-                <span className="font-medium text-blue-600">
-                  {" "}
-                  recruitment.crewspil@gmail.com
-                </span>
+                <span className="font-medium text-blue-600"> recruitment.crewspil@gmail.com</span>
               </p>
             </div>
           </div>

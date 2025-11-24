@@ -1,0 +1,42 @@
+# Dependencies
+node_modules
+package-lock.json
+
+# Build outputs
+.next
+out
+dist
+build
+
+# Logs
+*.log
+npm-debug.log*
+
+# Cache
+.turbo
+.swc
+.cache
+
+# Environment
+.env
+.env.local
+.env.production
+
+# IDE
+.vscode
+.idea
+
+# Git
+.git
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage
+
+# Misc
+*.min.js
+*.min.css
+public/

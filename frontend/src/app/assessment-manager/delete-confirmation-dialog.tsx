@@ -1,12 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
 
 interface QuestionOption {
@@ -37,7 +32,7 @@ export default function DeleteConfirmationDialog({
   onCancel,
   onConfirm,
   question,
-  loading = false
+  loading = false,
 }: DeleteConfirmationDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onCancel}>
@@ -45,9 +40,7 @@ export default function DeleteConfirmationDialog({
         <DialogHeader>
           <DialogTitle className="sr-only">Hapus Pertanyaan</DialogTitle>
           <div className="flex justify-center items-center mb-6">
-            <h1 className="text-2xl font-bold uppercase text-red-600">
-              Hapus Pertanyaan
-            </h1>
+            <h1 className="text-2xl font-bold uppercase text-red-600">Hapus Pertanyaan</h1>
           </div>
         </DialogHeader>
 
@@ -56,12 +49,11 @@ export default function DeleteConfirmationDialog({
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
               <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
-            
+
             <div className="space-y-2">
               <h2 className="text-lg font-semibold text-gray-900">
                 Apakah Anda yakin ingin menghapus pertanyaan ini?
               </h2>
-              
             </div>
 
             <div className="bg-gray-50 rounded-lg p-4 w-full">
@@ -72,16 +64,16 @@ export default function DeleteConfirmationDialog({
             </div>
 
             <div className="flex justify-center gap-3 w-full pt-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={onCancel}
                 disabled={loading}
                 className="flex-1 max-w-[120px]"
               >
                 Batal
               </Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={onConfirm}
                 disabled={loading}
                 className="flex-1 max-w-[120px]"
