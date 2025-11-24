@@ -331,7 +331,7 @@ await updateAssignment(editing.id || 0, {
                       <input
                         type="checkbox"
                         checked={form.seafarer_codes.includes(u.seafarerCode!)}
-                        onChange={(e) => {
+                        onChange={() => {
                           const selected = form.seafarer_codes.includes(
                             u.seafarerCode!
                           );

@@ -9,7 +9,7 @@ import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Edit, Trash2, Save, X } from "lucide-react";
+import { Plus, Edit, Save } from "lucide-react";
 import { toast } from "sonner";
 import { useApi } from "@/hooks/use-api";
 
@@ -91,7 +91,13 @@ export default function AssessmentConfigDialog({
           setIsCreating(false);
         } else {
           // For multiple assessments, map the data
-          const mappedAssessments = (response.data.data || []).map((item: any) => ({
+          const mappedAssessments = (response.data.data || []).map((item: {
+            assessmentId: number;
+            role: string;
+            assessmentName: string;
+            usingTimer: boolean;
+            timerLimitMinutes: number;
+          }) => ({
             id: item.assessmentId,
             role: item.role,
             assessmentName: item.assessmentName,
@@ -115,9 +121,10 @@ export default function AssessmentConfigDialog({
           toast.error("Gagal memuat konfigurasi assessment");
         }
       }
-    } catch (error: any) {
+    } catch (error) {
       console.error("Error fetching assessments:", error);
-      if (selectedRole && (error.response?.status === 500 || error.response?.status === 404)) {
+      const err = error as { response?: { status?: number } };
+      if (selectedRole && (err.response?.status === 500 || err.response?.status === 404)) {
         // No assessment found for this role, show create form
         setAssessments([]);
         setIsCreating(true);
@@ -204,6 +211,7 @@ export default function AssessmentConfigDialog({
     if (open) {
       fetchAssessments();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
   // Set default role when selectedRole is provided
@@ -335,7 +343,7 @@ export default function AssessmentConfigDialog({
               <div className="text-center py-8">Memuat konfigurasi...</div>
             ) : assessments.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
-                Belum ada konfigurasi assessment. Klik "Tambah Konfigurasi" untuk membuat yang baru.
+                Belum ada konfigurasi assessment. Klik &quot;Tambah Konfigurasi&quot; untuk membuat yang baru.
               </div>
             ) : (
               assessments.map((assessment) => (

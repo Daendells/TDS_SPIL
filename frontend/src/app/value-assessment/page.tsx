@@ -66,8 +66,6 @@ export default function ValueAssessmentPage() {
     isTimerActive: false,
   });
 
-  const [timeLeft, setTimeLeft] = useState<number>(0);
-  const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [lastWarningTime, setLastWarningTime] = useState<number>(0);
   const [assessmentStatus, setAssessmentStatus] = useState<{
     isOpen: boolean;
@@ -91,12 +89,10 @@ export default function ValueAssessmentPage() {
   });
 
   // Check assessment type status
-  const { data: statusData, isLoading: statusLoading } =
-    useCheckAssessmentTypeStatus(1);
+  const { data: statusData } = useCheckAssessmentTypeStatus(1);
 
   // Check seafarer assignment - only check when we have seafarer code
-  const { data: assignmentData, isLoading: assignmentLoading } =
-    useCheckSeafarerAssignment(assessmentData.seafarerCode || "", 1);
+  const { data: assignmentData } = useCheckSeafarerAssignment(assessmentData.seafarerCode || "", 1);
 
   // localStorage key untuk menyimpan assessment data dengan expiry 3 hari
   const STORAGE_KEY = "valueAssessmentFormData";
@@ -147,10 +143,10 @@ export default function ValueAssessmentPage() {
               setCurrentStep(data.currentStep);
 
               // Set timer state dari stored data
-              if (data.assessmentData.sisaWaktu !== undefined) {
-                setTimeLeft(data.assessmentData.sisaWaktu);
-                // Timer state will be managed by section components
-              }
+              // if (data.assessmentData.sisaWaktu !== undefined) {
+              //   setTimeLeft(data.assessmentData.sisaWaktu);
+              //   // Timer state will be managed by section components
+              // }
             }
           } else {
             // Data expired, hapus dari localStorage
@@ -234,7 +230,7 @@ export default function ValueAssessmentPage() {
     // Reset timer state saat pindah step (akan diatur oleh section component)
     if (nextStep >= 3 && nextStep <= 5) {
       // Reset to default, akan diupdate oleh section component setelah API load
-      setTimeLeft(0);
+      // setTimeLeft(0);
       updateAssessmentData({
         sisaWaktu: 0,
         isTimerActive: false,
@@ -242,7 +238,7 @@ export default function ValueAssessmentPage() {
       });
     } else {
       // Non-assessment steps
-      setTimeLeft(0);
+      // setTimeLeft(0);
       updateAssessmentData({
         sisaWaktu: 0,
         isTimerActive: false,
@@ -290,13 +286,13 @@ export default function ValueAssessmentPage() {
   }, [currentStep, updateAssessmentData]);
 
   // Format waktu untuk display
-  const formatTime = useCallback((seconds: number) => {
-    const minutes = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${minutes.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
-  }, []);
+  // const formatTime = useCallback((seconds: number) => {
+  //   const minutes = Math.floor(seconds / 60);
+  //   const secs = seconds % 60;
+  //   return `${minutes.toString().padStart(2, "0")}:${secs
+  //     .toString()
+  //     .padStart(2, "0")}`;
+  // }, []);
 
   // Legacy timer state is now managed by the timer warnings useEffect below
 
@@ -350,7 +346,7 @@ export default function ValueAssessmentPage() {
       }
 
       // Update global timer state for warning modal compatibility
-      setTimeLeft(sectionTimeRemaining);
+      // setTimeLeft(sectionTimeRemaining);
 
       // Show warning modal at specific intervals
       if (
@@ -361,7 +357,7 @@ export default function ValueAssessmentPage() {
         !sectionPauseTimestamp &&
         sectionTimeRemaining > 0
       ) {
-        setShowTimeWarning(true);
+        // setShowTimeWarning(true);
         setLastWarningTime(sectionTimeRemaining);
         console.log(`⚠️ [Section Timer] Warning at ${sectionTimeRemaining}s`);
       }
@@ -646,7 +642,7 @@ export default function ValueAssessmentPage() {
     try {
       window.localStorage.removeItem(STORAGE_KEY);
       // Reset timer state
-      setTimeLeft(0);
+      // setTimeLeft(0);
     } catch (error) {
       console.warn("Error clearing stored data:", error);
     }

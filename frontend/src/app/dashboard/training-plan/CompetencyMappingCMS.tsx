@@ -18,7 +18,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -46,7 +45,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Pencil, Trash2, Plus, Loader2, MoreVertical } from "lucide-react";
-import { toast } from "sonner";
 import {
   useGetCompetencyMappings,
   useGetAllTrainings,
@@ -55,7 +53,6 @@ import {
   useDeleteCompetencyMapping,
   type CompetencyMappingFormData,
   type CompetencyMappingItem,
-  type Training,
 } from "./_hooks/useCompetencyMappingCMS";
 import type { TrainingPlanResponse } from "./_hooks/useTrainingPlan";
 

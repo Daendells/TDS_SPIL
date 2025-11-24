@@ -67,7 +67,7 @@ export function useMasterReports(initialPageSize = 10) {
         console.log("Parsed reports:", parsedReports);
 
         // Extract pagination metadata safely
-        let apiMeta = response.data?.data;
+        const apiMeta = response.data?.data;
 
         // Build pagination object using backend data
         const paginationResult: IPaginationData<IReport> = {
@@ -93,10 +93,11 @@ export function useMasterReports(initialPageSize = 10) {
         startTransition(() => {
           setPaginationData(paginationResult);
         });
-      } catch (err: any) {
+      } catch (err) {
         if (!axios.isCancel(err)) {
           console.error("Fetch error:", err);
-          toast.error(err.response?.data?.error || err.message);
+          const error = err as { response?: { data?: { error?: string } }; message?: string };
+          toast.error(error.response?.data?.error || error.message || "Failed to fetch data");
         }
       } finally {
         setOnCallApi(false);
@@ -110,6 +111,7 @@ export function useMasterReports(initialPageSize = 10) {
         clearTimeout(pendingTimeoutRef.current);
       }
     };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginationRequest, debouncedName]);
 
   useEffect(() => {
@@ -135,9 +137,10 @@ export function useMasterReports(initialPageSize = 10) {
         }));
       });
       return res.data;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to create report:", err);
-      toast.error(err.response?.data?.error || "Failed to add report");
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to add report");
       throw err;
     } finally {
       setOnCallApi(false);
@@ -159,9 +162,10 @@ export function useMasterReports(initialPageSize = 10) {
       });
 
       return res.data;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to delete report:", err);
-      toast.error(err.response?.data?.error || "Failed to delete report");
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to delete report");
       throw err;
     } finally {
       setOnCallApi(false);
@@ -183,9 +187,10 @@ export function useMasterReports(initialPageSize = 10) {
       });
 
       return res.data;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to update report:", err);
-      toast.error(err.response?.data?.error || "Failed to update report");
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to update report");
       throw err;
     } finally {
       setOnCallApi(false);

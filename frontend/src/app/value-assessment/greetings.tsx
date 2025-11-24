@@ -1,12 +1,10 @@
 "use client";
 
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { ValueAssessmentData } from "./page";
 import { Mail } from "lucide-react";
-import z from "zod";
 import { useForm } from "react-hook-form";
 import { GreetingsData, GreetingsSchema } from "@/schemas/value-assesment";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -34,7 +32,6 @@ interface GreetingsProps {
 
 export default function Greetings({
   onNext,
-  assessmentData,
   updateAssessmentData,
   isAssessmentClosed = false,
   closedMessage = "",

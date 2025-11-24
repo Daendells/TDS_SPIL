@@ -26,7 +26,6 @@ interface QuestionAspectSelectorProps {
 export function QuestionAspectSelector({
   questionId,
   currentAspectId,
-  assessmentId,
   aspects,
   onSuccess,
 }: QuestionAspectSelectorProps) {

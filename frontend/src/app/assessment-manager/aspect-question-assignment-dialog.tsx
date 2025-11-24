@@ -150,7 +150,7 @@ export function AspectQuestionAssignmentDialog({
           </DialogDescription>
         </DialogHeader>
 
-        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as any)}>
+        <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "filter" | "assign")}>
           <TabsList className="grid w-full grid-cols-2">
             <TabsTrigger value="filter">
               1. Filter & Pilih Questions
@@ -235,7 +235,7 @@ export function AspectQuestionAssignmentDialog({
                       Tidak ada pertanyaan yang sesuai dengan filter
                     </div>
                   ) : (
-                    filteredQuestions.map((question, index) => {
+                    filteredQuestions.map((question) => {
                       const originalIndex = questions.findIndex(
                         (q) => q.questionId === question.questionId
                       );

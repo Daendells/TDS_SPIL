@@ -35,7 +35,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Users, TrendingUp, Calendar, Download } from "lucide-react";
+import { Loader2, Users, TrendingUp, Calendar } from "lucide-react";
 import { toast } from "sonner";
 import { SkeletonCard } from "@/components/skeleton-card";
 import {
@@ -44,7 +44,6 @@ import {
   useGetPrograms,
   useGenerateSchedules,
   type TrainingPlanParticipant,
-  type TrainingPlanSummary,
 } from "./_hooks/useTrainingPlan";
 import TrainingScheduleTimeline from "./TrainingScheduleTimeline";
 import CompetencyMappingCMS from "./CompetencyMappingCMS";
@@ -57,7 +56,7 @@ export default function TrainingPlanClient() {
   // React Query hooks
   const { data: programs, isLoading: programsLoading } = useGetPrograms();
   const { data: trainingPlan, isLoading: planLoading, error: planError } = useGetTrainingPlan(selectedProgram);
-  const { data: competencyMapping, isLoading: mappingLoading } = useGetCompetencyMapping(selectedProgram);
+  const { data: competencyMapping } = useGetCompetencyMapping(selectedProgram);
   const generateSchedules = useGenerateSchedules();
 
   // Handle program change
@@ -346,7 +345,7 @@ export default function TrainingPlanClient() {
                                     <p className="text-sm font-medium">Competency Gaps</p>
                                     <div className="grid grid-cols-3 gap-2">
                                       {Object.entries(selectedParticipant.gaps)
-                                        .filter(([key, value]) => value === "1" || value === "X" || value === 1)
+                                        .filter(([, value]) => value === "1" || value === "X" || value === 1)
                                         .map(([key]) => (
                                           <Badge key={key} variant="secondary" className="text-xs">
                                             {key.toUpperCase()}
@@ -492,11 +491,14 @@ export default function TrainingPlanClient() {
           <Card>
             
             <CardContent>
-              {trainingPlan?.summary && (
-                Object.keys(trainingPlan.summary.trainingMateri1).length > 0 || 
+              {trainingPlan?.summary &&
+               trainingPlan.summary.trainingMateri1 &&
+               trainingPlan.summary.trainingMateri2 &&
+               (
+                Object.keys(trainingPlan.summary.trainingMateri1).length > 0 ||
                 Object.keys(trainingPlan.summary.trainingMateri2).length > 0
               ) ? (
-                <TrainingScheduleTimeline 
+                <TrainingScheduleTimeline
                   summary={trainingPlan.summary}
                   program={selectedProgram}
                   competencyMapping={competencyMapping}
@@ -508,7 +510,7 @@ export default function TrainingPlanClient() {
                     No Schedules Generated
                   </h3>
                   <p className="text-sm text-muted-foreground mb-4">
-                    Click "Generate Schedules" to create training schedules for this program.
+                    Click &quot;Generate Schedules&quot; to create training schedules for this program.
                   </p>
                   <Button
                     onClick={handleGenerateSchedules}
