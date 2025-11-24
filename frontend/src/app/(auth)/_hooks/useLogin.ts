@@ -1,5 +1,4 @@
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import api from "@/app/lib/api";
 import { ApiReturn } from "@/app/types/api";
@@ -27,7 +26,6 @@ export type LoginError = {
 
 // Hook for login functionality
 export function useLogin() {
-  const router = useRouter();
   const { setUser } = useAuth();
 
   return useMutation<LoginResponse, LoginError, LoginRequest>({
@@ -73,7 +71,6 @@ export function useLogin() {
 
 // Hook for logout functionality
 export function useLogout() {
-  const router = useRouter();
   const { setUser } = useAuth();
 
   return useMutation<void, LoginError, void>({
@@ -91,8 +88,8 @@ export function useLogout() {
       // Show success message
       toast.success("Logout berhasil!");
 
-      // Navigate to login
-      router.replace("/login");
+      // Navigate to login with window.location to ensure full page reload
+      window.location.href = "/login";
     },
     onError: (error) => {
       // Handle logout error
@@ -102,7 +99,7 @@ export function useLogout() {
 
       // Even if logout fails on server, clear local state
       setUser(null);
-      router.replace("/login");
+      window.location.href = "/login";
     },
   });
 }

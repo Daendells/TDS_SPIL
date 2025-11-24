@@ -34,7 +34,22 @@ export async function middleware(request: NextRequest) {
   }
 
   // TODO: Handle Protected Routes
-  if (url.pathname.startsWith("/dashboard")||url.pathname.startsWith("/master-report")) {
+  const protectedRoutes = [
+    "/dashboard",
+    "/master-report",
+    "/assessment-manager",
+    "/assessment-type-manager",
+    "/crew-evaluation-system",
+    "/assignments",
+    "/value-assessment",
+    "/report-mentoring",
+  ];
+
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    url.pathname.startsWith(route)
+  );
+
+  if (isProtectedRoute) {
     if (!token) {
       return NextResponse.redirect(new URL("/login", request.url));
     }
@@ -57,7 +72,13 @@ export const config = {
   matcher: [
     "/",
     "/login",
-    "/dashboard/:path*", // Match all dashboard routes
-    "/master-report/:path*", // Match all master-report routes
+    "/dashboard/:path*",
+    "/master-report/:path*",
+    "/assessment-manager/:path*",
+    "/assessment-type-manager/:path*",
+    "/crew-evaluation-system/:path*",
+    "/assignments/:path*",
+    "/value-assessment/:path*",
+    "/report-mentoring/:path*",
   ],
 };
