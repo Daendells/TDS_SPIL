@@ -4,7 +4,7 @@ const cookies = new Cookies();
 
 // Login
 export const getToken = (): string => {
-  const token = cookies.get("@tds/token");
+  const token = cookies.get("Authorization");
   console.log(
     "[COOKIE] Getting token:",
     token ? "Token exists" : "No token found"
@@ -13,9 +13,9 @@ export const getToken = (): string => {
 };
 
 export const setToken = (token: string) => {
-  cookies.set("@tds/token", token, { path: "/" });
+  cookies.set("Authorization", token, { path: "/" });
 };
 
 export const removeToken = () => {
-  cookies.remove("@tds/token", { path: "/" });
+  cookies.remove("Authorization", { path: "/" });
 };
