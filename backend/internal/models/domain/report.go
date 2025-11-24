@@ -1,5 +1,7 @@
 package domain
 
+import "time"
+
 type Report struct {
 	ID           int    `json:"id" gorm:"column:id;primaryKey"`
 	SeamanCode   string `json:"seamanCode" gorm:"column:seaman_code"`
@@ -11,7 +13,7 @@ type Report struct {
 	Certificate  string `json:"certificate" gorm:"column:certificate"`
 	Age          string `json:"age" gorm:"column:age"`
 	TanggalLahir string `json:"tanggalLahir" gorm:"column:tanggal_lahir"`
-	StartDate    string `json:"startDate" gorm:"column:start_date"`
+	StartDate    *time.Time `json:"startDate" gorm:"column:start_date;type:date"`
 
 	// Catatan Indisipliner
 	WarningLetter string `json:"warningLetter" gorm:"column:warning_letter"`
@@ -58,8 +60,8 @@ type Report struct {
 	IDPMentor string `json:"idpMentor" gorm:"column:idp_mentor"`
 	IDPCoach  string `json:"idpCoach" gorm:"column:idp_coach"`
 
-	CreatedAt                  string `json:"createdAt" gorm:"column:created_at"`
-	UpdatedAt                  string `json:"updatedAt" gorm:"column:updated_at"`
+	CreatedAt                  *time.Time `json:"createdAt" gorm:"column:created_at"`
+	UpdatedAt                  *time.Time `json:"updatedAt" gorm:"column:updated_at"`
 	User                       string `json:"user" gorm:"column:user"`
 	ReadinessMonth             *int   `json:"readinessMonth" gorm:"column:readiness_month"`
 	EducationFulfillmentMonths *int   `json:"educationFulfillmentMonths" gorm:"column:education_fulfillment_months"`

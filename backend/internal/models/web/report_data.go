@@ -1,4 +1,5 @@
 package web
+import "time"
 
 type IDPCountData struct {
 	MDP int `json:"mdp"`
@@ -17,7 +18,7 @@ type ReportData struct {
 	Certificate  string `json:"certificate" gorm:"column:certificate"`
 	Age          string `json:"age" gorm:"column:age"`
 	TanggalLahir string `json:"tanggalLahir" gorm:"column:tanggal_lahir"`
-	StartDate    string `json:"startDate" gorm:"column:start_date"`
+	StartDate    *time.Time `json:"startDate" gorm:"column:start_date"`
 
 	// Catatan Indisipliner
 	WarningLetter string `json:"warningLetter" gorm:"column:warning_letter"`
