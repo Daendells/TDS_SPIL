@@ -2,7 +2,6 @@ import axios, { AxiosError } from "axios";
 import { GetServerSidePropsContext } from "next";
 import Cookies from "universal-cookie";
 
-import { getToken } from "./cookies";
 import { UninterceptedApiError } from "../types/api";
 
 export const BASE_URL =
