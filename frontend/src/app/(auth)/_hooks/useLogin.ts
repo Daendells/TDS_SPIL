@@ -3,6 +3,9 @@ import { toast } from "sonner";
 import api from "@/app/lib/api";
 import { ApiReturn } from "@/app/types/api";
 import { useAuth } from "@/context/AuthContext";
+import Cookies from "universal-cookie";
+
+const cookies = new Cookies();
 
 // Types for login
 export type LoginRequest = {
@@ -13,6 +16,7 @@ export type LoginRequest = {
 export type LoginResponse = {
   id: number;
   username: string;
+  token: string;
 };
 
 export type LoginError = {
@@ -50,8 +54,18 @@ export function useLogin() {
       return response.data.data;
     },
     onSuccess: (userData) => {
-      // Set user data in auth context
-      setUser(userData);
+      // Store token in cookie (manually from frontend)
+      cookies.set("Authorization", userData.token, {
+        path: "/",
+        maxAge: 3600 * 6, // 6 hours
+        sameSite: "lax",
+      });
+
+      // Set user data in auth context (without token)
+      setUser({
+        id: userData.id,
+        username: userData.username,
+      });
 
       // Show success message
       toast.success("Login berhasil!");
@@ -82,6 +96,9 @@ export function useLogout() {
       }
     },
     onSuccess: () => {
+      // Remove token cookie
+      cookies.remove("Authorization", { path: "/" });
+
       // Clear user data
       setUser(null);
 
@@ -98,6 +115,7 @@ export function useLogout() {
       toast.error(errorMessage);
 
       // Even if logout fails on server, clear local state
+      cookies.remove("Authorization", { path: "/" });
       setUser(null);
       window.location.href = "/login";
     },

@@ -75,12 +75,23 @@ func (c *UserController) Login(ctx *gin.Context) {
 		return
 	}
 
-	// TODO: Create HTTP Only Cookie
+	// TODO: Create HTTP Only Cookie (optional, frontend will handle it)
 	ctx.SetSameSite(http.SameSiteNoneMode)
-	ctx.SetCookie(middlewares.TOKEN_COOKIE, tokenString, 3600*6, "/", "", true, true)
+	ctx.SetCookie(middlewares.TOKEN_COOKIE, tokenString, 3600*6, "/", "", false, true)
 
-	// ctx.Header("Authorization", tokenString)
-	ctx.JSON(http.StatusOK, response)
+	// Send token in response body for frontend to store
+	userData := response.Data.(web.UserData)
+	loginResponse := web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data: web.UserLoginResponse{
+			ID:       userData.ID,
+			Username: userData.Username,
+			Token:    tokenString,
+		},
+	}
+
+	ctx.JSON(http.StatusOK, loginResponse)
 }
 
 func (c *UserController) Logout(ctx *gin.Context) {
