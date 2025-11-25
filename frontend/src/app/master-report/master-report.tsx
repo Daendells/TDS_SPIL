@@ -706,8 +706,8 @@ export default function MasterPage() {
         }`}
       >
         <Table className="min-w-[2000px] border-collapse">
-          <TableHeader className="sticky top-0 bg-background z-50">
-            <TableRow>
+          <TableHeader className="sticky top-0 bg-background z-50 shadow-sm">
+            <TableRow className="bg-background">
               {isEditMode && (
                 <TableHead className="text-center sticky left-0 z-40 bg-background w-[50px]">
                   <button
