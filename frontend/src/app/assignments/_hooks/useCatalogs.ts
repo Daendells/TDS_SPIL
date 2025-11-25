@@ -1,11 +1,10 @@
 "use client";
 import { useEffect, useState, startTransition } from "react";
 import { toast } from "sonner";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import { IAssessment, IUser } from "@/types/global-types";
 
 export function useCatalogs() {
-  const api = useApi();
   const [assessments, setAssessments] = useState<IAssessment[]>([]);
   const [users, setUsers] = useState<IUser[]>([]);
 
@@ -57,7 +56,6 @@ export function useCatalogs() {
   useEffect(() => {
     fetchAssessments();
     fetchUsers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return {

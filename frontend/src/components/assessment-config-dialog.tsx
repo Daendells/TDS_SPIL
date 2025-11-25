@@ -17,7 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Edit, Save } from "lucide-react";
 import { toast } from "sonner";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 
 interface Assessment {
   id: number;
@@ -64,8 +64,6 @@ export default function AssessmentConfigDialog({
     usingTimer: false,
     timerLimitMinutes: 0,
   });
-
-  const api = useApi();
 
   // Fetch assessment by role or all assessments
   const fetchAssessments = async () => {

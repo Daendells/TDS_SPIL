@@ -24,7 +24,7 @@ import { toast } from "sonner";
 import { z } from "zod";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import { IReport } from "@/types/global-types";
 import { parseReports, parsePaginationData } from "@/lib/utils";
 import Image from "next/image";
@@ -57,7 +57,6 @@ export default function ReportMentoring() {
   const [loadingReports, setLoadingReports] = useState(false);
   const [availableMentees, setAvailableMentees] = useState<string[]>([]);
   const ref = useRef<HTMLInputElement>(null);
-  const api = useApi();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -122,7 +121,7 @@ export default function ReportMentoring() {
     };
 
     fetchReports();
-  }, [api, selectedProgram]);
+  }, [selectedProgram]);
 
   // Filter reports based on selected mentees
   useEffect(() => {

@@ -1,13 +1,12 @@
 "use client";
 import { useEffect, useState, useRef, startTransition, useDeferredValue } from "react";
 import { toast } from "sonner";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import { IPaginationData, IPaginationRequest, IReport } from "@/types/global-types";
 import { useDebounce } from "use-debounce";
 import axios from "axios";
 
 export function useMasterReports(initialPageSize = 10) {
-  const api = useApi();
   const [onCallApi, setOnCallApi] = useState(false);
   const [paginationData, setPaginationData] = useState<IPaginationData<IReport> | null>(null);
   const [pageSize, setPageSize] = useState(initialPageSize);
@@ -109,7 +108,6 @@ export function useMasterReports(initialPageSize = 10) {
         clearTimeout(pendingTimeoutRef.current);
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginationRequest, debouncedName]);
 
   useEffect(() => {

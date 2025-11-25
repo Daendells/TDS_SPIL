@@ -1,12 +1,10 @@
 "use client";
 import { useState, useEffect, useDeferredValue, startTransition } from "react";
 import { toast } from "sonner";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import { IAssignmentFlat, IAssignmentCreate, IAssignmentUpdate } from "@/types/global-types";
 
 export function useAssignments() {
-  const api = useApi();
-
   const [assignments, setAssignments] = useState<IAssignmentFlat[]>([]);
   const [allAssignments, setAllAssignments] = useState<IAssignmentFlat[]>([]);
   const [loading, setLoading] = useState(false);
@@ -144,7 +142,6 @@ export function useAssignments() {
   // Load initial
   useEffect(() => {
     fetchAll();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   /** Exports */
