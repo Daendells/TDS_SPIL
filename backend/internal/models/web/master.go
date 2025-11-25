@@ -61,7 +61,7 @@ type MasterReportData struct {
 	EducationFulfillmentMonths *int                `json:"educationFulfillmentMonths"`
 	TotalReadinessUpdateMonths *int                `json:"totalReadinessUpdateMonths"`
 	Keterangan                 string              `json:"keterangan"`
-	TmNm                       int                 `json:"tmNm"`
+	TmNm                       string                 `json:"tmNm"`
 	Competencies               []GapCompetencyData `json:"competencies,omitempty"`
 	ReportScores               []ReportScoreData   `json:"reportScores,omitempty"`
 }
