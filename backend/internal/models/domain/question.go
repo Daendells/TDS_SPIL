@@ -4,7 +4,7 @@ type Question struct {
 	QuestionID   int     `json:"questionId" gorm:"column:question_id;primaryKey;autoIncrement"`
 	Role         string  `json:"role" gorm:"column:role;type:text;not null"`
 	QuestionText string  `json:"questionText" gorm:"column:question_text;type:text;not null"`
-	Category     *string `json:"category" gorm:"column:category;size:100"`
+	Category     *string `json:"category" gorm:"column:category;type:text"`
 	IsImage      *string `json:"isImage" gorm:"column:is_image;type:text"`
 	ImageURL     *string `json:"imageUrl" gorm:"column:image_url;size:500"`
 	AssessmentID *uint64 `json:"assessmentId" gorm:"column:assessment_id"`

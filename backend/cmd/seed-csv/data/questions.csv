@@ -1,0 +1,416 @@
+"question_id","role","question_text","category","is_image","image_url","assessment_id","aspect_id"
+"1","kkm","Mengapa petugas yang memiliki kualifikasi yang memadai harus mengawasi operasi apa pun yang berpotensi menimbulkan polusi?",NULL,NULL,NULL,"4",NULL
+"2","kkm","Entalpi adalah ekspresi jumlah energi yang terikat dalam satu kilogram suatu zat. Total energi suatu zat terdiri dari:",NULL,NULL,NULL,"4",NULL
+"3","kkm","Sebuah tangki berlapis menampung 400 ton air laut saat terisi penuh. Berapa ton cairan dengan berat 0,9300 liter yang dapat ditampungnya saat terisi penuh hingga 90%?",NULL,NULL,NULL,"4",NULL
+"4","kkm","Rangkaian ini terdiri dari sumber tegangan V, sakelar pengubah S, resistor R, dan kapasitor C. Gambar tegangan/waktu 1 hingga 4 menunjukkan perubahan tegangan V (C) ketika sakelar S tiba-tiba dipindahkan dari posisi 1 ke 2 pada waktu t = 0. Hanya satu diagram yang benar. Manakah yang benar?",NULL,NULL,NULL,"4",NULL
+"5","kkm","Mengapa semua kapal penumpang RoRo dibagi menjadi “zona” vertikal?",NULL,NULL,NULL,"4",NULL
+"6","kkm","Apa nama kimia yang tepat untuk Soda Kaustik dalam bentuk cair?",NULL,NULL,NULL,"4",NULL
+"7","kkm","Manual Pelatihan harus berisi instruksi dan informasi tentang peralatan penyelamat jiwa dan metode terbaik untuk bertahan hidup. Manual pelatihan harus berisi penjelasan rinci tentang tugas kru terkait situasi darurat. Manakah dari tugas atau kewajiban berikut yang harus dimasukkan dalam manual sesuai dengan peraturan yang berlaku?",NULL,NULL,NULL,"4",NULL
+"8","kkm","Pada interval kalender berapakah peralatan pengangkat di atas kapal harus diuji secara tepat oleh orang yang berkompeten?",NULL,NULL,NULL,"4",NULL
+"9","kkm","Menurut Peraturan SOLAS, semua tangki pemberat air laut khusus pada kapal tanker minyak harus memiliki sistem pencegahan korosi yang efisien seperti lapisan pelindung keras atau yang setara. Mengenai lapisan, apakah SOLAS menetapkan persyaratan warna?",NULL,NULL,NULL,"4",NULL
+"10","kkm","Rangkaian ini terdiri dari dua induktor, L(1) = 6 H dan L(2) = 12 H, yang dihubungkan secara paralel. Hitunglah nilai L(S) ekivalen dari kedua induktor tersebut:",NULL,NULL,NULL,"4",NULL
+"11","kkm","Peralatan/derek kargo harus diperiksa secara menyeluruh dan diuji bebannya secara berkala oleh perusahaan/galangan yang diakui. Seberapa sering pemeriksaan/uji beban tersebut harus dilakukan?",NULL,NULL,NULL,"4",NULL
+"12","kkm","Manakah dari persyaratan yang tercantum mengenai sekoci penyelamat tahan api yang tidak sesuai dengan peraturan saat ini? Sistem semprotan air harus",NULL,NULL,NULL,"4",NULL
+"13","kkm","Berapakah tekanan yang diperlukan saat menguji bagian-bagian sistem pemindahan oli (selang, lengan pemuatan, dll.) jika pengujian tersebut dimaksudkan untuk memenuhi peraturan Penjaga Pantai AS?",NULL,NULL,NULL,"4",NULL
+"14","kkm","Rangkaian ini terdiri dari dua induktor, L(1) = 6 H dan L(2) = 12 H, yang dihubungkan seri. Hitung induktansi total ekuivalen L(S)",NULL,NULL,NULL,"4",NULL
+"15","kkm","Mengingat banyaknya cairan kimia sensitif yang secara rutin memerlukan pencucian dinding sebelum dimasukkan, produk apa yang terutama digunakan sebagai bahan pembilas dalam pencucian dinding?",NULL,NULL,NULL,"4",NULL
+"16","kkm","Perubahan signifikan apa pada persyaratan pengangkutan Minyak Nabati dalam kapal tanker yang diperkenalkan oleh amandemen MARPOL dan Kode IBC pada tanggal 1 Januari 2007?",NULL,NULL,NULL,"4",NULL
+"17","kkm","Yang manakah “PANAMA LEAD” pada gambar?",NULL,NULL,NULL,"4",NULL
+"18","kkm","Apa yang dimaksud dengan pencucian basah?",NULL,NULL,NULL,"4",NULL
+"19","kkm","Wilayah laut A4 berada di wilayah laut lalu lintas radio maritim.",NULL,NULL,NULL,"4",NULL
+"20","kkm","Dengan mengurangi daya pancar yang dimaksudkan dalam VHF adalah daya antara",NULL,NULL,NULL,"4",NULL
+"21","kkm","Selama mode dupleks Anda dapat:",NULL,NULL,NULL,"4",NULL
+"22","kkm","Frekuensi 121,5 MHz digunakan untuk:",NULL,NULL,NULL,"4",NULL
+"23","kkm","Baterai EPIRB harus diganti:",NULL,NULL,NULL,"4",NULL
+"24","kkm","Pada kapal RoRo, saat memuat kontainer bertumpuk ganda pada Trailer Maffi, berapa banyak kunci putar yang harus digunakan di antara 2 kontainer?",NULL,NULL,NULL,"4",NULL
+"25","kkm","Sebagian besar kargo buah yang diangkut dengan pendingin memerlukan udara segar yang dimasukkan ke dalam ruang kargo untuk menghilangkan kelebihan karbon dioksida dan etilen yang dihasilkan oleh respirasi kargo, dan sensor dipasang untuk mendeteksi gas-gas ini. Instruksi pengirim sering kali menyatakan ""pergantian udara konstan"" sebagai persyaratan untuk kargo. Mengapa, meskipun ini merupakan metode sederhana untuk mengendalikan atmosfer ruang kargo, instruksi semacam ini diberikan?",NULL,NULL,NULL,"4",NULL
+"26","kkm","Jenis kompresor apa yang digunakan sebagai kompresor kargo di atas kapal pengangkut gas?",NULL,NULL,NULL,"4",NULL
+"27","kkm","Apakah perlu membuat rencana lintasan (atau rencana pelayaran) untuk melintasi kanal atau sungai saat menggunakan pilot?",NULL,NULL,NULL,"4",NULL
+"28","kkm","Apakah Health & Safety Executive (HSE) memiliki wewenang dalam menangani masalah pengiriman?",NULL,NULL,NULL,"4",NULL
+"29","kkm","Apa yang harus Anda lakukan jika suhu Larutan Hidrogen Peroksida 65% naik 2°C setiap 5 jam dan suhunya di atas 40 °C?",NULL,NULL,NULL,"4",NULL
+"30","kkm","Lampu sorot wajib disediakan untuk navigasi malam di Terusan Suez. Manakah dari persyaratan berikut yang benar?",NULL,NULL,NULL,"4",NULL
+"31","kkm","Jika kapal Anda hendak memuat gula, situasi manakah yang akan mengakibatkan ruang kargo gagal diperiksa?",NULL,NULL,NULL,"4",NULL
+"32","kkm","Komponen elektronik manakah yang diwakili oleh simbol grafis ini?",NULL,NULL,NULL,"4",NULL
+"33","kkm","Apakah nakhoda berkewajiban melakukan penyelidikan maritim jika seorang awak kapal menderita cedera parah di atas kapal dan meninggal setelah seminggu dirawat di rumah sakit di darat?",NULL,NULL,NULL,"4",NULL
+"34","kkm","Bila terdapat keraguan mengenai kesegaran udara di ruang tertutup atau terbatas, tindakan apa yang harus diambil?",NULL,NULL,NULL,"4",NULL
+"35","kkm","Anda berada di area dengan jarak pandang terbatas dan mendengar sinyal ini. Sinyal ini berulang dengan interval dua menit. Apa artinya?",NULL,NULL,NULL,"4",NULL
+"36","kkm","Apa arti simbol berikut?",NULL,NULL,NULL,"4",NULL
+"37","kkm","Kapan irisan sambungan silang penutup palka perlu diganti?",NULL,NULL,NULL,"4",NULL
+"38","kkm","Pada kapal kontainer, apa yang menentukan bagaimana kontainer harus diikat?",NULL,NULL,NULL,"4",NULL
+"39","kkm","Apa tujuan penambahan inhibitor pada setiap muatan?",NULL,NULL,NULL,"4",NULL
+"40","kkm","Apa praktik yang baik saat melakukan lineblowing/pigging dari pantai?",NULL,NULL,NULL,"4",NULL
+"41","kkm","Apa tujuan inspektur tak terjadwal di atas kapal?",NULL,NULL,NULL,"4",NULL
+"42","kkm","Jika terjadi kematian penumpang di dalam kapal, tindakan hukum apa yang harus dilakukan oleh Nakhoda?",NULL,NULL,NULL,"4",NULL
+"43","kkm","Warna suar apa yang digunakan untuk menandakan tempat pendaratan yang sangat berbahaya?",NULL,NULL,NULL,"4",NULL
+"44","kkm","Apa definisi MARPOL untuk “zat dengan viskositas tinggi”?",NULL,NULL,NULL,"4",NULL
+"45","kkm","Ketika membahas tentang sifat-sifat muatan minyak, apa yang dimaksud dengan “kandungan lilin”?",NULL,NULL,NULL,"4",NULL
+"46","kkm","Berdasarkan aturan GMDSS, kapal dilengkapi dengan perangkat komunikasi radio tertentu tergantung pada:",NULL,NULL,NULL,"4",NULL
+"47","kkm","Apa itu polimerisasi?",NULL,NULL,NULL,"4",NULL
+"48","kkm","Dalam kasus ketika suhu udara sekitar sama dengan 10 °C dan angin bertiup dengan kecepatan 10 m/detik, orang yang terdampar di kapal harus memperhitungkan bahwa efek udara pada tubuhnya setara dengan efek udara yang suhunya kira-kira:",NULL,NULL,NULL,"4",NULL
+"49","kkm","Apa yang harus dilakukan sebelum memasuki ruang pompa?",NULL,NULL,NULL,"4",NULL
+"50","kkm","Apa tujuan “Kotak Lumpur” pada kapal tanker?",NULL,NULL,NULL,"4",NULL
+"51","masinis_2","Menurut Anda, gejala apa yang menunjukkan bahwa filter pengering freon tersumbat?",NULL,NULL,NULL,"5",NULL
+"52","masinis_2","Jika kapasitas perpindahan panas dalam penukar panas menurun, tindakan berikut harus diambil:",NULL,NULL,NULL,"5",NULL
+"53","masinis_2","Tindakan apa yang harus diambil jika kapasitas perpindahan panas dari penukar panas yang beroperasi sebagai pendingin oli pelumas berkurang?",NULL,NULL,NULL,"5",NULL
+"54","masinis_2","Tindakan apa yang akan Anda ambil jika kinerja penukar panas tipe pelat menurun meskipun laju aliran dan tekanan fluida primer dan sekunder normal?",NULL,NULL,NULL,"5",NULL
+"55","masinis_2","Apa yang akan Anda lakukan jika kapasitas perpindahan panas menurun, dan kita tahu bahwa aliran dan energi panas sesuai dengan spesifikasi?",NULL,NULL,NULL,"5",NULL
+"56","masinis_2","Untuk pompa pemadam kebakaran bertenaga diesel, berapa lama kapasitas tangki bahan bakar memungkinkan pompa beroperasi dengan kapasitas penuh? (SOLAS II2/4.3.3.2.3)",NULL,NULL,NULL,"5",NULL
+"57","masinis_2","Berapa kapasitas minimum tangki portabel aplikator busa portabel?",NULL,NULL,NULL,"5",NULL
+"58","masinis_2","Jika Anda menggunakan bahan kimia untuk membersihkan tumpahan minyak di air, apa yang akan terjadi dengan bahan kimia tersebut?",NULL,NULL,NULL,"5",NULL
+"59","masinis_2","Anda berada di kapal 10 mil laut lepas pantai Nigeria, Afrika Barat. Apakah Anda diizinkan membuang botol kaca kosong ke laut?",NULL,NULL,NULL,"5",NULL
+"60","masinis_2","Pada jenis sistem lampu fluoresens yang diperlihatkan dalam ilustrasi, peran starter adalah untuk melakukan hal berikut yang mana?",NULL,NULL,NULL,"5",NULL
+"61","masinis_2","Metode manakah yang disukai untuk menghidupkan kompresor pendingin AC yang telah dimatikan selama beberapa waktu?",NULL,NULL,NULL,"5",NULL
+"62","masinis_2","Ruang manakah berikut ini yang dapat dilindungi oleh sistem pemadam kebakaran karbon dioksida (CO2) tetap?",NULL,NULL,NULL,"5",NULL
+"63","masinis_2","Kabel Tegangan Tinggi (HV) lebih kecil daripada kabel tegangan rendah untuk peringkat daya tertentu. Mengapa demikian?",NULL,NULL,NULL,"5",NULL
+"64","masinis_2","Kapan tangki gas bebas?",NULL,NULL,NULL,"5",NULL
+"65","masinis_2","Pada kapal kargo umum, di manakah hidran kebakaran akan ditempatkan?",NULL,NULL,NULL,"5",NULL
+"66","masinis_2","Apa saja kemungkinan penyebab mesin berbunyi ketukan?",NULL,NULL,NULL,"5",NULL
+"67","masinis_2","Apa yang paling berkontribusi terhadap pembentukan karat pada kendaraan/unit Ro-Ro?",NULL,NULL,NULL,"5",NULL
+"68","masinis_2","Kapan wajib menggunakan kabel darurat/kabel kebakaran untuk menambatkan kapal?",NULL,NULL,NULL,"5",NULL
+"69","masinis_2","Rangkaian ini terdiri dari dua resistansi, R1 = 6 ohm dan R2 = 12 ohm, yang dihubungkan secara seri. Hitung resistansi ekivalen R(S) dari kedua resistansi tersebut.",NULL,NULL,NULL,"5",NULL
+"70","masinis_2","Saat mengikat muatan umum, mengapa ikatan pendek lebih disukai daripada yang panjang?",NULL,NULL,NULL,"5",NULL
+"71","masinis_2","Kapan kapal ro-ro akan bergoyang keras?",NULL,NULL,NULL,"5",NULL
+"72","masinis_2","Jaket pelampung dibuat sedemikian rupa sehingga seseorang dapat memakainya dengan benar dalam jangka waktu:",NULL,NULL,NULL,"5",NULL
+"73","masinis_2","Pernyataan berikut manakah yang mencirikan perbedaan paling signifikan antara boiler tabung air dan boiler tabung api selama pengoperasiannya?",NULL,NULL,NULL,"5",NULL
+"74","masinis_2","Manakah dari berikut ini merupakan bahan kimia yang umum ditambahkan ke zat pembersih yang digunakan untuk membersihkan area dapur?",NULL,NULL,NULL,"5",NULL
+"75","masinis_2","Anda adalah Perwira yang Bertanggung Jawab saat pemuatan tanker di terminal di Teluk Persia. Penjaga dek melaporkan, ""Ada banyak minyak di air di sisi kanan"". Apa tindakan PERTAMA yang harus Anda lakukan?",NULL,NULL,NULL,"5",NULL
+"76","masinis_2","Ketika alternator 3 fase beroperasi secara paralel, sangat penting bahwa beban reaktif dibagi secara merata sehingga total beban alternator terbagi secara merata. Jika total beban alternator merupakan penjumlahan vektor dari beban aktif dan reaktif, sisi mana dari diagram vektor (segitiga daya) yang ditunjukkan yang mewakili beban reaktif?",NULL,NULL,NULL,"5",NULL
+"77","masinis_2","Pada gambar, terdapat kemungkinan definisi untuk istilah ""TINGGI"". Manakah yang benar?",NULL,NULL,NULL,"5",NULL
+"78","masinis_2","Instruksi darurat dalam bahasa yang sesuai harus ditempel di kabin penumpang. Informasi apa saja yang minimal harus dicantumkan dalam instruksi darurat tersebut?",NULL,NULL,NULL,"5",NULL
+"79","masinis_2","Manakah dari persyaratan yang tercantum mengenai penutup sekoci penyelamat yang tertutup sepenuhnya yang tidak sesuai dengan peraturan saat ini? Penutup tersebut harus dilengkapi dengan:",NULL,NULL,NULL,"5",NULL
+"80","masinis_2","Apa saja kompresor yang dipasang sebagai bagian dari sistem kargo di atas kapal pengangkut LNG yang biasanya digunakan?",NULL,NULL,NULL,"5",NULL
+"81","masinis_2","Bagian permukaan luar bak mesin kompresor pendingin dan saluran balik refrigeran di dekat kompresor membeku secara berlebihan selama operasi normal. Manakah dari pilihan yang diberikan yang paling mungkin menjadi penyebab masalah ini?",NULL,NULL,NULL,"5",NULL
+"82","masinis_2","Berapa banyak pelampung penyelamat yang dapat Anda temukan di atas kapal kargo sepanjang 190 meter (termasuk pelampung sistem pelepas cepat)?",NULL,NULL,NULL,"5",NULL
+"83","masinis_2","DSC berikut diterima (pada jam berapa diterima?) 27.05.1997 23:23 DISEBUT VHF CH70 FORMAT: DISTRESS DIST-ID: 367449000 N OF: UNDESG POSISI DISTRESS: N 52,43 E04.maj DISTUTC: 00:00 TELECOM: G3E SIMP TEL EOS: EOS",NULL,NULL,NULL,"5",NULL
+"84","masinis_2","Kapten bertanggung jawab agar seluruh awak kapal berpartisipasi dalam latihan tanggap darurat bulanan. Jika 25% awak kapal (atau lebih) tidak berpartisipasi dalam latihan tersebut selama sebulan terakhir, berapa batas waktu pelaksanaan latihan tersebut setelah kapal meninggalkan pelabuhan?",NULL,NULL,NULL,"5",NULL
+"85","masinis_2","Sebuah kapal pengangkut barang curah sedang melakukan pemuatan hingga selesai pada draft musim panas 10,00 m ketika berada di air asin; kapal tersebut melakukan pemuatan di air sungai; Kelonggaran air dermaga adalah 80 mm; Draft maksimum saat pemuatan selesai adalah:",NULL,NULL,NULL,"5",NULL
+"86","masinis_2","Informasi apa saja yang harus disertakan dalam serangan pembajakan?",NULL,NULL,NULL,"5",NULL
+"87","masinis_2","Apa kemungkinan penyebab mesin yang mengetuk?",NULL,NULL,NULL,"5",NULL
+"88","masinis_2","Manakah dari opsi yang diberikan ciri mesin diesel 2-tak?",NULL,NULL,NULL,"5",NULL
+"89","masinis_2","Sebuah nampan menetes mengandung minyak yang mudah terbakar. Satu-satunya peralatan pemadam kebakaran yang tersedia adalah selang air dengan semprotan jet / nozzle semprot. Bagaimana, jika Anda harus berusaha untuk memadamkan api dengan menggunakan air?",NULL,NULL,NULL,"5",NULL
+"90","masinis_2","Dalam menggambarkan kargo minyak, apa itu (pour point) ""titik tuang""?",NULL,NULL,NULL,"5",NULL
+"91","masinis_2","Apa yang harus dilakukan sebelum memasuki ruang pompa?",NULL,NULL,NULL,"5",NULL
+"92","masinis_2","Menurut pedoman industri dalam Panduan ISGOTT dan dengan asumsi peraturan terminal tidak mensyaratkan sebaliknya, tindakan apa yang harus diambil untuk menguras air yang terkumpul dari dek selama operasi penanganan kargo dalam kondisi hujan?",NULL,NULL,NULL,"5",NULL
+"93","masinis_2","Apa itu polimerisasi?",NULL,NULL,NULL,"5",NULL
+"94","masinis_2","1 GHz setara dengan:",NULL,NULL,NULL,"5",NULL
+"95","masinis_2","Ketika membahas tentang sifat-sifat muatan minyak, apa yang dimaksud dengan “kandungan lilin”?",NULL,NULL,NULL,"5",NULL
+"96","masinis_2","Apa definisi MARPOL untuk “zat dengan viskositas tinggi”?",NULL,NULL,NULL,"5",NULL
+"97","masinis_2","Biasanya kipas ventilasi di ruang ro-ro tertutup harus dijalankan terus-menerus setiap kali ada kendaraan di dalamnya, mengapa?",NULL,NULL,NULL,"5",NULL
+"98","masinis_2","Warna suar apa yang digunakan untuk menandakan tempat pendaratan yang sangat berbahaya?",NULL,NULL,NULL,"5",NULL
+"99","masinis_2","Jika terjadi kematian penumpang di dalam kapal, tindakan hukum apa yang harus dilakukan oleh Nakhoda?",NULL,NULL,NULL,"5",NULL
+"100","masinis_2","Apa tujuan inspeksi tak terjadwal di atas kapal?",NULL,NULL,NULL,"5",NULL
+"101","masinis_3","Peraturan internasional apa yang mengatur pembuangan bahan limbah, termasuk limbah dapur, dari kapal?",NULL,NULL,NULL,"6",NULL
+"102","masinis_3","Singkatan ""NPSH"" sering dikaitkan dengan efisiensi pompa kargo pada kapal tanker minyak. Apa arti singkatan ini?",NULL,NULL,NULL,"6",NULL
+"103","masinis_3","Setidaknya seberapa sering perahu penyelamat akan diluncurkan beserta awak yang ditugaskan dan bermanuver di air?",NULL,NULL,NULL,"6",NULL
+"104","masinis_3","Katup periksa umpan untuk keperluan utama dan tambahan biasanya bertipe double shut-off, seperti yang ditunjukkan pada diagram. Apa fungsi utama katup satu arah?",NULL,NULL,NULL,"6",NULL
+"105","masinis_3","Baki tetesan berisi minyak terbakar. Satu-satunya peralatan pemadam kebakaran yang tersedia adalah selang air dengan semprotan air. Bagaimana, jika memang ada, sebaiknya Anda mencoba memadamkan api ini menggunakan air?",NULL,NULL,NULL,"6",NULL
+"106","masinis_3","Jika minyak keluar dari mangkuk selubung pembuangan pemisah pengeluaran padatan, apa masalah yang paling mungkin terjadi?",NULL,NULL,NULL,"6",NULL
+"107","masinis_3","Di lorong yang penuh asap, di manakah udara terbersih dapat ditemukan, dan bagaimana Anda harus keluar?",NULL,NULL,NULL,"6",NULL
+"108","masinis_3","Dengan dua alternator yang beroperasi paralel pada kapasitas beban 75%, salah satunya mati tanpa peringatan. Apa tindakan pertama yang harus diambil?",NULL,NULL,NULL,"6",NULL
+"109","masinis_3","Apa warna sinyal asap yang digunakan oleh stasiun penyelamatan atau unit penyelamat yang menunjukkan bahwa sinyal marabahaya diamati di siang hari?",NULL,NULL,NULL,"6",NULL
+"110","masinis_3","Apa nama yang benar dari alat yang ditunjukkan dalam sketsa?",NULL,NULL,NULL,"6",NULL
+"111","masinis_3","Apa yang dimaksud dengan istilah “memegang kendali”?",NULL,NULL,NULL,"6",NULL
+"112","masinis_3","Selama operasi tambatan, di tempat manakah yang aman untuk berada?",NULL,NULL,NULL,"6",NULL
+"113","masinis_3","Manakah dari item berikut yang harus disertakan dalam latihan “meninggalkan kapal”?",NULL,NULL,NULL,"6",NULL
+"114","masinis_3","Apa tanggung jawab utama seorang penjaga jembatan di malam hari?",NULL,NULL,NULL,"6",NULL
+"115","masinis_3","Apa syarat utama didirikannya pos pengintaian di jembatan?",NULL,NULL,NULL,"6",NULL
+"116","masinis_3","Ketika Anda melakukan “ullage” pada tangki kargo di kapal tanker minyak, apa yang sebenarnya Anda lakukan?",NULL,NULL,NULL,"6",NULL
+"117","masinis_3","Kapal Anda bertabrakan dengan kapal lain. Anda kemasukan air dan harus bersiap untuk meninggalkan kapal. Bagaimana Anda akan bertindak?",NULL,NULL,NULL,"6",NULL
+"118","masinis_3","Sebuah triac digunakan untuk mengontrol suhu pada oven. dapur yang mengeluhkan bahwa oven hanya mencapai sekitar 50% dari suhu yang seharusnya. Manakah dari berikut ini adalah kemungkinan penyebab?",NULL,NULL,NULL,"6",NULL
+"119","masinis_3","High Voltage (HV) kabel lebih kecil dari kabel tegangan rendah untuk power rating yang diberikan. Mengapa demikian?",NULL,NULL,NULL,"6",NULL
+"120","masinis_3","Pada kapal kontainer, di mana pemandu tengah teluk harus diposisikan?",NULL,NULL,NULL,"6",NULL
+"121","masinis_3","Apa yang harus dilakukan sebelum memasuki ruang pompa?",NULL,NULL,NULL,"6",NULL
+"122","masinis_3","Dalam menggambarkan kargo minyak, apa itu (pour point) ""titik tuang""?",NULL,NULL,NULL,"6",NULL
+"123","masinis_3","Sebuah nampan menetes mengandung minyak yang mudah terbakar. Satu-satunya peralatan pemadam kebakaran yang tersedia adalah selang air dengan semprotan jet / nozzle semprot. Bagaimana, jika Anda harus berusaha untuk memadamkan api dengan menggunakan air?",NULL,NULL,NULL,"6",NULL
+"124","masinis_3","Apa yang harus Anda lakukan jika suhu Hidrogen Peroksida Solusi 65% meningkat 2 °C per 5 jam dan suhu di atas 40 °C?",NULL,NULL,NULL,"6",NULL
+"125","masinis_3","Manakah dari opsi yang diberikan ciri mesin diesel 2-tak?",NULL,NULL,NULL,"6",NULL
+"126","masinis_3","Apa kemungkinan penyebab mesin yang mengetuk?",NULL,NULL,NULL,"6",NULL
+"127","masinis_3","Berdasarkan aturan GMDSS, kapal dilengkapi dengan perangkat komunikasi radio tertentu tergantung pada:",NULL,NULL,NULL,"6",NULL
+"128","masinis_3","Yang manakah “Fairlead” pada gambar?",NULL,NULL,NULL,"6",NULL
+"129","masinis_3","Apa itu polimerisasi?",NULL,NULL,NULL,"6",NULL
+"130","masinis_3","Dalam kasus ketika suhu udara sekitar sama dengan 10 °C dan angin bertiup dengan kecepatan 10 m/detik, orang yang terdampar di kapal harus memperhitungkan bahwa efek udara pada tubuhnya setara dengan efek udara yang suhunya kira-kira:",NULL,NULL,NULL,"6",NULL
+"131","masinis_3","Ketika membahas tentang sifat-sifat muatan minyak, apa yang dimaksud dengan “kandungan lilin”?",NULL,NULL,NULL,"6",NULL
+"132","masinis_3","1 GHz setara dengan:",NULL,NULL,NULL,"6",NULL
+"133","masinis_3","Pada beberapa perdagangan, kargo buah mungkin mengalami ""perlakuan dingin dalam perjalanan"" yang juga dikenal sebagai ""perlakuan dingin"". Dari pilihan yang diberikan, apa tujuan utama perlakuan dingin ini?",NULL,NULL,NULL,"6",NULL
+"134","masinis_3","Di atas kapal, panggilan DSC harus dilakukan jika terjadi OBS. Pilih kategori",NULL,NULL,NULL,"6",NULL
+"135","masinis_3","Untuk membuat “permintaan panggilan” seseorang harus",NULL,NULL,NULL,"6",NULL
+"136","masinis_3","Apa definisi MARPOL untuk “zat dengan viskositas tinggi”?",NULL,NULL,NULL,"6",NULL
+"137","masinis_3","Warna suar apa yang digunakan untuk menandakan tempat pendaratan yang sangat berbahaya?",NULL,NULL,NULL,"6",NULL
+"138","masinis_3","Berapa ketebalan normal penghalang primer (membran) pada sistem tipe penahanan membran seperti yang digunakan pada kapal pengangkut LNG?",NULL,NULL,NULL,"6",NULL
+"139","masinis_3","Anda berada di perairan terbuka dan kondisinya jernih. Anda sedang mendekati stasiun pilot ketika mendengar sinyal ini dari kapal di depan Anda. Apa artinya?",NULL,NULL,NULL,"6",NULL
+"140","masinis_3","Bagaimana cuaca yang berhubungan dengan berada di pusat Antisiklon (wilayah Bertekanan Tinggi)?",NULL,NULL,NULL,"6",NULL
+"141","masinis_3","Apa tujuan inspeksi tak terjadwal di atas kapal?",NULL,NULL,NULL,"6",NULL
+"142","masinis_3","Anda sedang melakukan inertisasi tangki kargo di atas kapal tanker minyak, sebelum gasfreeing untuk masuk. Berapa kadar oksigen maksimum yang diizinkan dalam pipa gas inert sebagaimana disyaratkan oleh SOLAS 1974?",NULL,NULL,NULL,"6",NULL
+"143","masinis_3","Apa praktik yang baik saat melakukan lineblowing/pigging dari pantai?",NULL,NULL,NULL,"6",NULL
+"144","masinis_3","Pada kapal kontainer, apa yang menentukan bagaimana kontainer harus diikat?",NULL,NULL,NULL,"6",NULL
+"145","masinis_3","Apa batasan pengisian nominal yang berlaku berdasarkan Kode IBC untuk satu tangki pada kapal tanker kimia tipe 3? Batasan ini tidak termasuk batasan struktural, kapasitas, atau kargo.",NULL,NULL,NULL,"6",NULL
+"146","masinis_3","Apa tujuan “Kotak Lumpur” pada kapal tanker?",NULL,NULL,NULL,"6",NULL
+"147","masinis_3","Apa saja persyaratan mengenai kapasitas tangki miring pada kapal induk kombinasi dengan sekat dinding halus?",NULL,NULL,NULL,"6",NULL
+"148","masinis_3","Pada kapal RoRo yang mengangkut tidak lebih dari 36 penumpang, berapakah kapasitas minimum sistem ventilasi yang melindungi ruang kargo standar yang ditujukan untuk pengangkutan kendaraan bermotor dengan bahan bakar di tangki mereka untuk penggeraknya sendiri?",NULL,NULL,NULL,"6",NULL
+"149","masinis_3","Berapa kapasitas minimum sistem ventilasi yang melindungi ruang kargo, selain ruang kategori khusus, yang ditujukan untuk pengangkutan kendaraan bermotor dengan bahan bakar sebagai penggeraknya sendiri pada kapal yang mengangkut tidak lebih dari 36 penumpang atau pada kapal barang?",NULL,NULL,NULL,"6",NULL
+"150","masinis_3","Apa tujuan penambahan inhibitor pada setiap muatan?",NULL,NULL,NULL,"6",NULL
+"151","mualim_1","Manakah dari berikut ini yang merupakan Cairan Mudah Terbakar, menurut IMDG Code?",NULL,NULL,NULL,"8",NULL
+"152","mualim_1","Jika sebuah twist lock ditemukan retak di bagian dasarnya, maka seharusnya:",NULL,NULL,NULL,"8",NULL
+"153","mualim_1","Ketika kapal (dilengkapi dengan winch auto-tension yang menyimpan sendiri) sedang sandar di dermaga untuk bongkar muat, maka disarankan bahwa:",NULL,NULL,NULL,"8",NULL
+"154","mualim_1","Berapa periode oleng yang diantisipasi pada kapal dengan Tinggi Metasentris Melintang (GM) awal yang besar, dan apakah ada bahaya yang perlu diperhatikan?",NULL,NULL,NULL,"8",NULL
+"155","mualim_1","Setelah Safety Management System diverifikasi dan bekerja secara efektif, dokumen apa yang dikeluarkan ke kapal?",NULL,NULL,NULL,"8",NULL
+"156","mualim_1","Apa yang Anda pahami dari istilah “luffing”?",NULL,NULL,NULL,"8",NULL
+"157","mualim_1","Apa arti dari singkatan “TPC”?",NULL,NULL,NULL,"8",NULL
+"158","mualim_1","Sebagai perwira di geladak tambat, kapan Anda akan melapor ke anjungan bahwa kapal tunda yang membantu sudah “clear” (bebas)?",NULL,NULL,NULL,"8",NULL
+"159","mualim_1","“Parametric Rolling” pada kapal peti kemas menghasilkan:",NULL,NULL,NULL,"8",NULL
+"160","mualim_1","Bahaya terbesar yang terkait dengan bahan kimia yang mengeluarkan hidrogen di dalam kontainer tertutup karena kontak dengan air adalah:",NULL,NULL,NULL,"8",NULL
+"161","mualim_1","Manakah dari area berikut yang mungkin termasuk area terbatas? Tinjau semua jawaban.",NULL,NULL,NULL,"8",NULL
+"162","mualim_1","Tujuan dari fondasi ekor burung (dovetail foundation) pada kapal kontainer adalah:",NULL,NULL,NULL,"8",NULL
+"163","mualim_1","Keterbatasan dari Cargo Securing Manual kapal kontainer dapat mencakup fakta bahwa:",NULL,NULL,NULL,"8",NULL
+"164","mualim_1","Natrium, ketika dibawa dalam kontainer, jika terkena air dalam kondisi atmosfer normal akan:",NULL,NULL,NULL,"8",NULL
+"165","mualim_1","Tingkat Keamanan (Security Level) mana yang membutuhkan kewaspadaan keamanan tertinggi?",NULL,NULL,NULL,"8",NULL
+"166","mualim_1","Fitur apa dari lambung kapal, peralatan, dan muatan yang menyebabkan kesalahan pada kompas magnetik standar kapal?",NULL,NULL,NULL,"8",NULL
+"167","mualim_1","Fitur desain kapal kontainer dengan haluan lebar yang mencolok, buritan datar yang lebar, dan bagian tengah kapal yang berdinding lurus berkontribusi terhadap:",NULL,NULL,NULL,"8",NULL
+"168","mualim_1","Jika peluit dipasang pada kapal dengan jarak lebih dari 100 meter, apakah sinyal manuver dan peringatan sesuai dengan Aturan 34 dari Peraturan Internasional untuk Mencegah Tabrakan di Laut, harus diberikan dengan satu peluit atau kedua peluit?",NULL,NULL,NULL,"8",NULL
+"169","mualim_1","Apa fungsi dari double stacking cones?",NULL,NULL,NULL,"8",NULL
+"170","mualim_1","Tanggung jawab atas keselamatan dan keamanan berada pada semua orang di atas kapal. Aturan kebersihan umum harus diikuti. Manakah dari aturan yang tercantum yang paling penting?",NULL,NULL,NULL,"8",NULL
+"171","mualim_1","Apa definisi clean ballast menurut MARPOL Annex I?",NULL,NULL,NULL,"8",NULL
+"172","mualim_1","Sebuah kontainer yang dimuat di atas kapal kemungkinan akan mengalami gaya sebesar 100% dari beratnya:",NULL,NULL,NULL,"8",NULL
+"173","mualim_1","Ketika batang baja tulangan dimuat dalam kontainer terbuka (open-top), klaim terhadap kapal kemungkinan besar muncul karena:",NULL,NULL,NULL,"8",NULL
+"174","mualim_1","Sekat api (fire bulkhead) kelas ""C"" harus dibuat dari:",NULL,NULL,NULL,"8",NULL
+"175","mualim_1","Dalam konteks kapal kontainer, istilah TEU merujuk pada:",NULL,NULL,NULL,"8",NULL
+"176","mualim_1","Pengaturan yang benar untuk kontrol “Anti sea clutter” pada radar adalah:",NULL,NULL,NULL,"8",NULL
+"177","mualim_1","Pengulangan panggilan marabahaya (distress-call) oleh RCC untuk stasiun pantai dimulai dengan:",NULL,NULL,NULL,"8",NULL
+"178","mualim_1","Menurut prinsip dasar perlindungan kebakaran, kapal harus dibagi dalam zona berdasarkan batas struktural dan termal (SOLAS II-2/2.2.1):",NULL,NULL,NULL,"8",NULL
+"179","mualim_1","Dianggap penting bahwa kapal kontainer memiliki kapasitas ballast yang besar dan pompa ballast bertenaga tinggi, karena:",NULL,NULL,NULL,"8",NULL
+"180","mualim_1","Fungsi dari double stacking cones pada kapal kontainer adalah:",NULL,NULL,NULL,"8",NULL
+"181","mualim_1","Apa kesamaan yang dimiliki oleh kru, pengunjung, dan kontraktor?",NULL,NULL,NULL,"8",NULL
+"182","mualim_1","Prosedur rutin apa yang harus dilakukan sebelum pekerjaan dingin (cold work) dimulai?",NULL,NULL,NULL,"8",NULL
+"183","mualim_1","Kapal kontainer tanpa penutup palka dianggap memenuhi Konvensi Internasional tentang Garis Muat setelah:",NULL,NULL,NULL,"8",NULL
+"184","mualim_1","Setelah kapal (yang dilengkapi dengan winch auto-tension penyimpanan otomatis) ditambatkan di sisi dermaga untuk bongkar atau muat, direkomendasikan bahwa:",NULL,NULL,NULL,"8",NULL
+"185","mualim_1","Twist lock lebih disukai dibandingkan sistem pengikat berbasis cone pada kapal kontainer karena:",NULL,NULL,NULL,"8",NULL
+"186","mualim_1","Sejak tahun 2006, label IMDG Code untuk Kelas 5.2 (Peroksida Organik) diberi warna:",NULL,NULL,NULL,"8",NULL
+"187","mualim_1","Keterbatasan dari Manual Pengamanan Muatan (Cargo Securing Manual) pada kapal kontainer dapat mencakup fakta bahwa:",NULL,NULL,NULL,"8",NULL
+"188","mualim_1","Apa saja kondisi ideal yang diperlukan untuk melakukan Eksperimen Kemiringan (Inclining Experiment) dengan baik?",NULL,NULL,NULL,"8",NULL
+"189","mualim_1","Manakah dari daftar berikut yang secara khusus dibutuhkan untuk sekoci tertutup penuh?",NULL,NULL,NULL,"8",NULL
+"190","mualim_1","Ketika gaya-gaya pada muatan kontainer sedang dihitung, gerakan yang tidak diperhitungkan adalah:",NULL,NULL,NULL,"8",NULL
+"191","mualim_1","Berikan arti dari simbol berikut:",NULL,NULL,NULL,"8",NULL
+"192","mualim_1","Tanda peringatan yang membutuhkan tindakan wajib tertentu (misalnya: mengenakan sabuk pengaman saat mengerjakan tugas kerja tertentu), harus memiliki latar belakang warna:",NULL,NULL,NULL,"8",NULL
+"193","mualim_1","Mendeklarasikan muatan berbahaya sebagai Kelas 3 (Sub risiko Kelas 6) menunjukkan bahwa:",NULL,NULL,NULL,"8",NULL
+"194","mualim_1","Jika batang baja tulangan dimuat dalam kontainer terbuka, klaim terhadap kapal kemungkinan besar akan timbul karena:",NULL,NULL,NULL,"8",NULL
+"195","mualim_1","Fasilitas apa yang tersedia dalam Kode ISM untuk penyediaan pengendalian individu terhadap tugas kerja tertentu?",NULL,NULL,NULL,"8",NULL
+"196","mualim_1","Gerakan utama yang dialami kapal kontainer, yang akan menciptakan gaya terbesar pada rangka dan pengikat kontainer, adalah:",NULL,NULL,NULL,"8",NULL
+"197","mualim_1","Berapa kelembapan ideal dalam lingkungan kerja?",NULL,NULL,NULL,"8",NULL
+"198","mualim_1","Pada kapal kontainer, berdasarkan Kode IMDG, apa kesamaan dari Calcium Oxide (UN No. 1910), Magnetized Material (UN No. 2807), Sodium Aluminate (UN No. 2812), dan Peralatan Bertenaga Baterai (UN No. 3171)?",NULL,NULL,NULL,"8",NULL
+"199","mualim_1","Ketika Anda bergabung dengan kapal baru, bagaimana Anda diberi informasi mengenai aturan keselamatan, instruksi alarm, dan tugas Anda sendiri dalam keadaan darurat?",NULL,NULL,NULL,"8",NULL
+"200","mualim_1","Apa yang dimaksud dengan sekat kelas ""C""?",NULL,NULL,NULL,"8",NULL
+"201","mualim_2","Suar warna apa yang digunakan untuk memberi sinyal tempat pendaratan yang aman bagi perahu kecil?",NULL,NULL,NULL,"9",NULL
+"202","mualim_2","Apa kelemahan dari penggunaan High Tensile Steel (HTS) dalam konstruksi kapal?",NULL,NULL,NULL,"9",NULL
+"203","mualim_2","Walkie talkie portabel yang wajib dibawa sesuai regulasi GMDSS harus memiliki saluran minimal:",NULL,NULL,NULL,"9",NULL
+"204","mualim_2","Apa yang harus Anda lakukan setelah menerima panggilan VHF DSC DISTRESS?",NULL,NULL,NULL,"9",NULL
+"205","mualim_2","Muatan cair curah yang dibawa dalam kontainer flexi-tank dianggap berbahaya:",NULL,NULL,NULL,"9",NULL
+"206","mualim_2","Super-refraction memengaruhi kinerja beberapa perangkat di anjungan kapal. Apa yang harus diperhatikan oleh petugas jaga di anjungan?",NULL,NULL,NULL,"9",NULL
+"207","mualim_2","Traffic list dari stasiun pantai (coast-station) adalah daftar dari:",NULL,NULL,NULL,"9",NULL
+"208","mualim_2","Apa arti dari tanda bendera sinyal ini?",NULL,NULL,NULL,"9",NULL
+"209","mualim_2","Komunikasi MF Distress seharusnya dijalankan:",NULL,NULL,NULL,"9",NULL
+"210","mualim_2","Cara terbaik untuk mengidentifikasi sebuah IED (Improvised Explosive Device) adalah:",NULL,NULL,NULL,"9",NULL
+"211","mualim_2","Apa istilah untuk bangkai kapal pesiar yang mengapung di laut?",NULL,NULL,NULL,"9",NULL
+"212","mualim_2","Abdominal Thrust adalah nama teknik yang melibatkan serangkaian dorongan ke perut bagian atas untuk memaksa udara keluar dari paru-paru korban yang tersedak. Bagaimana cara melakukan teknik ini?",NULL,NULL,NULL,"9",NULL
+"213","mualim_2","Metode transmisi-penerimaan, di mana kedua stasiun dapat mentransmisikan dan menerima pada waktu yang bersamaan disebut:",NULL,NULL,NULL,"9",NULL
+"214","mualim_2","Menurut Kode IMDG, bagaimana definisi Serat Mudah Terbakar (Readily Combustible Fibres)?",NULL,NULL,NULL,"9",NULL
+"215","mualim_2","Apa jarak terpendek antara dua titik di permukaan bumi?",NULL,NULL,NULL,"9",NULL
+"216","mualim_2","Syok adalah kondisi akibat terganggunya sirkulasi darah karena tekanan atau volume darah yang turun ke tingkat berbahaya. Apa warna kulit pasien yang mengalami syok?",NULL,NULL,NULL,"9",NULL
+"217","mualim_2","Prosedur pencatatan notifikasi (OPA-90):",NULL,NULL,NULL,"9",NULL
+"218","mualim_2","Perangkat EPIRB 406 MHz Cospas-Sarsat dapat diuji apakah berfungsi dengan baik menggunakan:",NULL,NULL,NULL,"9",NULL
+"219","mualim_2","Penerimaan sinyal bahaya (distress alert) harus diucapkan sebagai berikut:",NULL,NULL,NULL,"9",NULL
+"220","mualim_2","Jika sinyal darurat DSC diterima di kapal Anda, tindakan pertama apa yang harus dilakukan?",NULL,NULL,NULL,"9",NULL
+"221","mualim_2","Data apa saja yang harus dimasukkan ke sebagian besar gyro compass untuk mengurangi kemungkinan kesalahan kompas?",NULL,NULL,NULL,"9",NULL
+"222","mualim_2","Anda ingin mengirim pesan DSC karena ada situasi orang jatuh ke laut (man overboard) dan membutuhkan bantuan dari kapal lain. Anda harus memilih kategori:",NULL,NULL,NULL,"9",NULL
+"223","mualim_2","Kode layanan Telex Inmarsat “31” dapat digunakan untuk:",NULL,NULL,NULL,"9",NULL
+"224","mualim_2","Kapan pemeriksaan operasional terhadap peralatan navigasi harus dilakukan?",NULL,NULL,NULL,"9",NULL
+"225","mualim_2","Kapal sedang berlayar dalam kabut tebal dengan jarak pandang kurang dari satu mil. Radar Arpa disetel pada jangkauan 12 mil dengan haluan 314°, dan kapal sendiri memiliki vektor seperti yang ditunjukkan. Apa mode vektor yang dipilih pada Arpa?",NULL,NULL,NULL,"9",NULL
+"226","mualim_2","Peralatan mana yang akan mendeteksi sinyal dari transponder SART?",NULL,NULL,NULL,"9",NULL
+"227","mualim_2","Opsi mana yang secara benar mengidentifikasi arti singkatan ZOC dalam kaitannya dengan ECDIS?",NULL,NULL,NULL,"9",NULL
+"228","mualim_2","Apa keuntungan utama dari sistem navigasi satelit Navstar, Glonass dan Galileo?",NULL,NULL,NULL,"9",NULL
+"229","mualim_2","Pengoperasian yang benar dari terminal Inmarsat-C dapat diuji dengan:",NULL,NULL,NULL,"9",NULL
+"230","mualim_2","Manakah dari berikut ini yang merupakan Kode Identifikasi Otoritas Akuntansi?",NULL,NULL,NULL,"9",NULL
+"231","mualim_2","Pengulangan panggilan marabahaya oleh RCC untuk stasiun pantai diawali dengan:",NULL,NULL,NULL,"9",NULL
+"232","mualim_2","Cuaca seperti apa yang biasanya terjadi di pusat Antisiklon (wilayah bertekanan tinggi)?",NULL,NULL,NULL,"9",NULL
+"233","mualim_2","""RECEIVED MAYDAY"" digunakan dalam:",NULL,NULL,NULL,"9",NULL
+"234","mualim_2","Dengan tampilan radar gerak relatif (relative motion radar display), apa arti gema dari target tanpa jejak (trail)? Catatan: ini adalah jejak target, bukan vektor.",NULL,NULL,NULL,"9",NULL
+"235","mualim_2","Sebuah satelit menerima transmisi dari 406 MHz Cospas-Sarsat EPIRB. Transmisi dari EPIRB akan:",NULL,NULL,NULL,"9",NULL
+"236","mualim_2","Langkah untuk plotting posisi pada peta dengan baringan kompas adalah ?",NULL,NULL,NULL,"9",NULL
+"237","mualim_2","Dalam suatu pelayaran, kita diwajibkan mengirimkan “noon report” ke perusahaan, Berikut informasi data yang dikirimkan, kecuali :",NULL,NULL,NULL,"9",NULL
+"238","mualim_2","Tentukan haluan sejati bila bila haluan kompas 060° Deviasi 10° E dan variasi 12° W :",NULL,NULL,NULL,"9",NULL
+"239","mualim_2","Dalam menghitung nilai “compass error” saat kita berlayar dekat dengan pulau-pulau / pantai, metode apa yang akan kita gunakan ?",NULL,NULL,NULL,"9",NULL
+"240","mualim_2","Apa arti bendera ini?",NULL,NULL,NULL,"9",NULL
+"241","mualim_2","Saat berlayar dalam jarak pandang terbatas, bagaimana perwira jaga (OOW) dapat memastikan pengawasan yang efektif tetap terjaga?",NULL,NULL,NULL,"9",NULL
+"242","mualim_2","Panggilan darurat (distress-call) melalui RCC di atas kapal hanya akan diterima jika:",NULL,NULL,NULL,"9",NULL
+"243","mualim_2","Sistem DSC menggunakan identifikasi otomatis MMSI. Identifikasi 002442000 ditetapkan untuk:",NULL,NULL,NULL,"9",NULL
+"244","mualim_2","Pengujian berkala yang ditentukan terhadap perangkat radio harus dicatat dalam:",NULL,NULL,NULL,"9",NULL
+"245","mualim_2","Opsi mana yang paling tepat menggambarkan apa itu target fusion pada ECDIS?",NULL,NULL,NULL,"9",NULL
+"246","mualim_2","Bagian mana dari kesalahan kompas magnetik yang berubah seiring perubahan arah yang dikemudikan?",NULL,NULL,NULL,"9",NULL
+"247","mualim_2","Ketika stasiun penjaga pantai ingin mengirim peringatan angin badai melalui DSC, itu akan dikirim dalam kategori:",NULL,NULL,NULL,"9",NULL
+"248","mualim_2","Apa nama titik yang menggambarkan lingkaran putar kapal?",NULL,NULL,NULL,"9",NULL
+"249","mualim_2","Dalam ISM, apa yang dimaksud dengan ""non-conformity"" (ketidaksesuaian)?",NULL,NULL,NULL,"9",NULL
+"250","mualim_2","Kemudi diputar penuh dengan mesin pada kecepatan penuh. Apakah efek belok dari kemudi akan berubah jika mesin dimatikan?",NULL,NULL,NULL,"9",NULL
+"251","nahkoda","Kapal ini ditemukan di muara sungai. Menurut Peraturan Internasional untuk Mencegah Tabrakan dan bentuk-bentuk yang ditampilkan, kapal jenis apakah ini?",NULL,NULL,NULL,"11",NULL
+"252","nahkoda","Perangkat ini dapat mendeteksi paket narkoba di dalam pengiriman besar persediaan kapal. Apa itu?",NULL,NULL,NULL,"11",NULL
+"253","nahkoda","Tindakan segera apa yang harus diambil jika kapal tiba-tiba kandas dan berhenti?",NULL,NULL,NULL,"11",NULL
+"254","nahkoda","Dua kapal berlayar dalam arah berlawanan akan saling melewati di sungai sempit, seperti ilustrasi. Jelaskan apa yang kemungkinan akan terjadi saat mereka saling melewati?",NULL,NULL,NULL,"11",NULL
+"255","nahkoda","Siapa yang dapat menghubungi Petugas yang Ditunjuk (Designated Person) terkait kekhawatiran mereka tentang keselamatan?",NULL,NULL,NULL,"11",NULL
+"256","nahkoda","Dari kode dua digit berikut, mana yang digunakan untuk mendapatkan bantuan maritim?",NULL,NULL,NULL,"11",NULL
+"257","nahkoda","Berapa lama masa berlaku dari Sertifikat Manajemen Keselamatan (Safety Management Certificate)?",NULL,NULL,NULL,"11",NULL
+"258","nahkoda","Apa tindakan yang harus diambil oleh Perwira Jaga (Officer of the Watch) ketika alat kemudi kapal mengalami kegagalan?",NULL,NULL,NULL,"11",NULL
+"259","nahkoda","Pesan berikut diterima di pengendali DSC di kapal: DOO: 245329000 CH16; S distress ack 244123000. Stasiun mana yang mengirim tanda terima tanda bahaya tersebut?",NULL,NULL,NULL,"11",NULL
+"260","nahkoda","Apa yang dimaksud dengan “UNDER KEEL CLEARANCE” dalam gambar berikut?",NULL,NULL,NULL,"11",NULL
+"261","nahkoda","Perwira yang bertugas di anjungan kapal sering disebut sebagai OOW. Apa arti sebenarnya dari OOW?",NULL,NULL,NULL,"11",NULL
+"262","nahkoda","Sinyal suara apa yang harus digunakan pada peluit kapal ketika ada orang jatuh ke laut?",NULL,NULL,NULL,"11",NULL
+"263","nahkoda","Sebuah kapal yang bergerak melalui laut yang ganas dipengaruhi oleh tekanan air di haluan yang menyebabkan efek yang dikenal sebagai “Panting”. Struktur apa di bagian depan kapal yang mengatasi efek Panting ini?",NULL,NULL,NULL,"11",NULL
+"264","nahkoda","Tindakan mana yang harus dilakukan awak kapal jika ditemukan benda mencurigakan yang kemungkinan merupakan bom saat pencarian?",NULL,NULL,NULL,"11",NULL
+"265","nahkoda","Panggilan R/T yang tersambung melalui operator dikenakan biaya:",NULL,NULL,NULL,"11",NULL
+"266","nahkoda","Apa arti dari pesan: “A yacht has capsized in heavy seas”?",NULL,NULL,NULL,"11",NULL
+"267","nahkoda","Apakah aman membawa tas peralatan di tangan Anda saat menaiki tangga vertikal? Pilih opsi terbaik:",NULL,NULL,NULL,"11",NULL
+"268","nahkoda","EGC adalah singkatan dari:",NULL,NULL,NULL,"11",NULL
+"269","nahkoda","Ketika terjadi kebakaran di ruang mesin, siapa yang bertanggung jawab atas operasi pemadaman kebakaran?",NULL,NULL,NULL,"11",NULL
+"270","nahkoda","Apa tema utama dari praktik keselamatan modern?",NULL,NULL,NULL,"11",NULL
+"271","nahkoda","Di mana posisi teoritis titik poros hidrodinamis (hydrodynamic pivot point) pada kapal yang bergerak maju dengan tingkat belok (turn rate) kecil?",NULL,NULL,NULL,"11",NULL
+"272","nahkoda","Ketika batang baja penguat dimuat di kontainer terbuka, klaim terhadap kapal kemungkinan besar muncul karena:",NULL,NULL,NULL,"11",NULL
+"273","nahkoda","Apa yang menunjukkan awal terjadinya Parametric Rolling?",NULL,NULL,NULL,"11",NULL
+"274","nahkoda","Apa perbedaan “Master’s night order” dengan “Master’s standing order” ?",NULL,NULL,NULL,"11",NULL
+"275","nahkoda","Apa yang anda ketahui tentang “Master’s night order”?",NULL,NULL,NULL,"11",NULL
+"276","nahkoda","Muatan bahan peledak yang dibawa dalam kontainer membutuhkan perlindungan maksimum terhadap:",NULL,NULL,NULL,"11",NULL
+"277","nahkoda","Bagaimana cara mendapatkan nilai pendekatan dari Tinggi Metasentris transversal awal (GM) dari Kurva Stabilitas Statis (GZ curve)?",NULL,NULL,NULL,"11",NULL
+"278","nahkoda","Bagaimana cara mendapatkan nilai pendekatan dari Tinggi Metasentris transversal awal (GM) dari Kurva Stabilitas Statis (GZ curve)?",NULL,NULL,NULL,"11",NULL
+"279","nahkoda","(C/O) Jika twist lock ditemukan retak di bagian bawah, maka harus:",NULL,NULL,NULL,"11",NULL
+"280","nahkoda","(C/O) Integritas tahan api dari setiap sekat (bulkhead) harus dipertahankan:",NULL,NULL,NULL,"11",NULL
+"281","nahkoda","“Parametric Rollin” pada kapal kontainer menghasilkan:",NULL,NULL,NULL,"11",NULL
+"282","nahkoda","Mengapa sangat penting bagi kapal kontainer untuk memiliki kapasitas ballast yang besar dan pompa ballast berkuatan tinggi?",NULL,NULL,NULL,"11",NULL
+"283","nahkoda","Jika kapal Anda dilengkapi dengan kawat pada winch ""split drum"" yang dapat menyimpan sendiri, apa keuntungan dari winch tipe ini?",NULL,NULL,NULL,"11",NULL
+"284","nahkoda","Tingkat pertama kontainer di bawah geladak, pada kapal kontainer non-seluler, biasanya dimuat:",NULL,NULL,NULL,"11",NULL
+"285","nahkoda","Pernyataan mana yang salah terkait muatan IMDG Kelas 2?",NULL,NULL,NULL,"11",NULL
+"286","nahkoda","Pengelasan dan pembakaran termasuk faktor yang memiliki risiko kebakaran tertinggi di kapal. Tindakan pencegahan harus diambil untuk menghindari risiko ini. Aturan keselamatan mana yang paling penting?",NULL,NULL,NULL,"11",NULL
+"287","nahkoda","Pernyataan mana yang paling tepat menggambarkan kerusakan pada pelat lambung kapal?",NULL,NULL,NULL,"11",NULL
+"288","nahkoda","Saat derrick atau crane kapal mengangkat beban dari dek, dari posisi manakah pusat gravitasi beban dianggap bekerja?",NULL,NULL,NULL,"11",NULL
+"289","nahkoda","Untuk menghentikan tali tambat yang keluar, dimungkinkan untuk mengatur motor ke posisi ""heave"" serta mengaktifkan rem winch sepenuhnya. Apakah ini ide yang baik atau dapat menimbulkan masalah?",NULL,NULL,NULL,"11",NULL
+"290","nahkoda","Untuk panduan dalam pengikatan kontainer di atas kapal, dokumen paling penting yang harus dirujuk adalah:",NULL,NULL,NULL,"11",NULL
+"291","nahkoda","Ketika merencanakan pemuatan kontainer, petugas perencana harus merujuk pada:",NULL,NULL,NULL,"11",NULL
+"292","nahkoda","Sebuah kontainer penuh besi tua sedang dimuat, dan Anda melihat air menetes dari kontainer tersebut. Apa yang harus Anda lakukan?",NULL,NULL,NULL,"11",NULL
+"293","nahkoda","Bahaya yang terkait dengan pengangkutan kontainer tangki kosong adalah:",NULL,NULL,NULL,"11",NULL
+"294","nahkoda","Salah satu kelompok barang berbahaya yang disorot oleh IMDG Code sebagai yang paling berbahaya untuk diangkut adalah:",NULL,NULL,NULL,"11",NULL
+"295","nahkoda","Jika tangki kontainer berisi amonia cair terbakar, apa yang disarankan?",NULL,NULL,NULL,"11",NULL
+"296","nahkoda","Kebakaran logam bekas dalam kontainer paling baik dipadamkan dengan cara:",NULL,NULL,NULL,"11",NULL
+"297","nahkoda","Di kapal kontainer, flexitanks digunakan untuk:",NULL,NULL,NULL,"11",NULL
+"298","nahkoda","Pengaruh-pengaruh oleh gerak kapal bila berlayar pada perairan dangkal, kecuali :",NULL,NULL,NULL,"11",NULL
+"299","nahkoda","Apa yang dimaksud dengan istilah muatan Heavy Lift Cargo?",NULL,NULL,NULL,"11",NULL
+"300","nahkoda","Langkah-langkah untuk mempersiapkan jangkar siap let-go ?",NULL,NULL,NULL,"11",NULL
+"301","va_1","Saat pemeriksaan rutin, Anda menemukan bahwa rekan kerja sedang sangat sibuk dan belum sempat mencatat kerusakan kecil pada suatu alat keselamatan. Kerusakan tersebut memang tidak langsung menimbulkan bahaya, namun tentu melanggar aturan. Dari situasi tersebut apa yang akan Anda lakukan?","Integrity",NULL,NULL,"1",NULL
+"302","va_1","Rekan kerja Anda sering bermalas-malasan dan tidak mengerjakan tugasnya dengan baik. Hal ini membuat beban kerja Anda lebih berat dan bisa mempengaruhi kualitas pekerjaan keseluruhan. Bagaimana Anda menyikapi hal ini?","Customer Oriented",NULL,NULL,"1",NULL
+"303","va_1","Anda menemukan bahwa dengan sedikit perubahan pada metode atau cara perawatan suatu alat akan membuat pekerjaan bisa diselesaikan lebih cepat tanpa mengurangi kualitasnya. Namun hal ini belum pernah dilakukan sebelumnya, apa yang Anda lakukan?","Competitive",NULL,NULL,"1",NULL
+"304","va_1","Anda dan rekan kerja memiliki pendapat yang berbeda tentang cara menangani muatan atau pengelolaan engine kapal. Rekan Anda lebih senior dan bersikeras menggunakan caranya. Apa yang akan Anda lakukan dalam situasi tersebut?","Team Work",NULL,NULL,"1",NULL
+"305","va_1","Pelabuhan-pelabuhan besar mulai menggunakan sistem otomatis untuk bongkar muat yang memerlukan koordinasi digital. Bagaimana Anda menyikapi perubahan ini?","Visioner",NULL,NULL,"1",NULL
+"306","va_1","Atasan atau crew lain mengkritik cara kerja Anda di depan banyak crew lainnya dengan nada yang cukup keras. Anda merasa cara kerja Anda sudah benar, tapi mungkin memang masih ada yang bisa diperbaiki. Dalam situasi tersebut apa yang Anda lakukan?","Integrity",NULL,NULL,"1",NULL
+"307","va_1","Setelah menyelesaikan penataan kontainer di dek dalam kondisi kerja yang cukup melelahkan, Anda tiba-tiba mendapat perintah bahwa ada tambahan 3 kontainer yang harus segera dimuat karena permintaan mendesak dari pelanggan. Waktu crew hanya tersisa 1 jam (One Hour Notice) untuk bersiap. Apa yang akan Anda lakukan?","Customer Oriented",NULL,NULL,"1",NULL
+"308","va_1","Anda menemukan cara mengoptimalkan konsumsi bahan bakar dengan mengatur beberapa hal, tapi untuk melakukan ini butuh pemantauan harian yang cukup intensif. Apa yang akan Anda lakukan dalam situasi tersebut?","Competitive",NULL,NULL,"1",NULL
+"309","va_1","Crew baru dalam tim Anda sangat rajin dan inisiatif, tetapi sering mengambil keputusan sendiri tanpa melakukan koordinasi, hal tersebut terkadang mengganggu alur kerja yang telah disepakati. Bagaimana Anda merespon situasi ini?","Team Work",NULL,NULL,"1",NULL
+"310","va_1","Anda mendengar bahwa cuaca ekstrem bisa makin sering terjadi di jalur pelayaran dalam beberapa waktu ke depan. Untuk saat ini memang cuaca masih normal. tapi bagaimana Anda menyikapi informasi ini?","Visioner",NULL,NULL,"1",NULL
+"311","va_1","Demi mempermudah administrasi, Anda menemukan data konsumsi bahan bakar dilaporkan sedikit berbeda dari pemakaian sebenarnya. Selisihnya kecil dan dianggap tidak akan menimbulkan masalah. Apa yang akan Anda lakukan?","Integrity",NULL,NULL,"1",NULL
+"312","va_1","Tim kerja Anda terlihat lebih lambat dari biasanya karena kondisi lingkungan yang panas dan lembab. Hal ini akan membuat waktu pengerjaan lebih panjang, walaupun keselamatan kerja tetap terjaga. Apa yang akan Anda lakukan?","Customer Oriented",NULL,NULL,"1",NULL
+"313","va_1","Crew junior mengusulkan ide untuk meningkatkan efisiensi berdasarkan dari pengalaman di kapal sebelumnya. Idenya masuk akal namun belum pernah dicoba dan belum teruji di kapal saat ini. Bagaimana respon Anda?","Competitive",NULL,NULL,"1",NULL
+"314","va_1","Dua crew terlihat bersitegang saat sedang melakukan suatu pekerjaan. Salah satunya tampak marah dan bicara dengan nada tinggi, situasi ini akan dapat memicu kekerasan fisik nantinya. Apa yang akan Anda lakukan dalam situasi tersebut?","Team Work",NULL,NULL,"1",NULL
+"315","va_1","Rencananya dalam beberapa bulan kapal akan kedatangan beberapa crew baru yang memiliki latar belakang pengalaman berlayar internasional. Tentunya mereka bisa membawa perspektif dan cara kerja yang berbeda dari kebiasaan di kapal Anda saat ini. Apa yang akan Anda lakukan dalam situasi ini?","Visioner",NULL,NULL,"1",NULL
+"316","va_1","Crew senior meminta Anda tidak melaporkan insiden kecil yang tidak menyebabkan injury karena nantinya akan mempersulit administrasi dan memang tidak ada yang terluka. Apa tindakan Anda pada situasi tersebut?","Integrity",NULL,NULL,"1",NULL
+"317","va_1","Pihak Nautika menyampaikan keluhan dari pelanggan bahwa kualitas hasil kerja terlihat kurang memuaskan dan kurang rapi, meskipun sebenarnya masih sesuai dengan standar kontrak yang ada. Apa yang akan Anda lakukan dalam situasi tersebut?","Customer Oriented",NULL,NULL,"1",NULL
+"318","va_1","Anda menemukan jadwal kerja baru yang lebih efisien dan memungkinkan kru beristirahat lebih baik, tanpa mengurangi kualitas kerja. Namun, sebagian kru merasa keberatan karena sudah terbiasa dengan jadwal lama. Bagaimana Anda menyikapi hal ini?","Competitive",NULL,NULL,"1",NULL
+"319","va_1","Tim Anda terdiri dari crew dengan pengalaman berbeda-beda. Saat melakukan briefing terkait keselamatan kerja, salah satu crew junior sering bertanya pertanyaan-pertanyaan mendasar. Salah satu crew senior mulai terlihat tidak sabar menanggapi pertanyaan crew tersebut. Dalam situasi ini apa yang akan Anda lakukan?","Team Work",NULL,NULL,"1",NULL
+"320","va_1","Anda mengetahui bahwa regulasi maritim internasional akan mengalami beberapa perubahan dalam 2-3 tahun ke depan, yang mungkin akan memengaruhi cara kerja di kapal. Saat ini, memang belum ada dampak langsung pada operasional harian. Dalam situasi ini apa yang Anda lakukan?","Visioner",NULL,NULL,"1",NULL
+"321","va_1","Beberapa crew berencana membawa beberapa inventori yang sudah tidak terpakai untuk dijual di pelabuhan berikutnya, mereka mengajak Anda untuk bergabung. Apa yang akan Anda lakukan?","Integrity",NULL,NULL,"1",NULL
+"322","va_1","Jadwal pengiriman mundur beberapa jam karena mengalami kendala teknis, sebenarnya masih dalam batas normal. Namun, pihak terminal mengungkapkan bahwa mereka memiliki jadwal yang cukup ketat, bagaimana respon Anda?","Customer Oriented",NULL,NULL,"1",NULL
+"323","va_1","Anda menyadari bahwa beberapa pekerjaan perawatan bisa digabung agar lebih efisien dan menghemat waktu. Namun, jika digabung, perlu koordinasi tambahan antar bagian, dan ada risiko pekerjaan jadi lebih rumit. Apa yang akan Anda lakukan?","Competitive",NULL,NULL,"1",NULL
+"324","va_1","Saat rapat, ada satu crew yang sangat vokal dan mendominasi diskusi. Sementara itu, beberapa crew lain justru terlihat diam dan tampak terintimidasi. Hal ini membuat ide-ide penting dari anggota lain bisa tidak tersampaikan. Apa yang akan Anda lakukan?","Team Work",NULL,NULL,"1",NULL
+"325","va_1","Beban kerja tim crew Anda saat ini sudah terdistribusi dengan baik dan semua pekerjaan dapat diselesaikan sesuai target. Namun, Anda mendengar bahwa akan ada rencana penambahan rute pelayaran yang akan meningkatkan intensitas operasional. Dalam situasi ini apa yang akan Anda lakukan?","Visioner",NULL,NULL,"1",NULL
+"326","va_1","Dalam suatu rapat, Anda diminta untuk berpendapat terkait cara memperbaiki koordinasi antar departemen. Anda memiliki ide, namun takut ide tersebut menyinggung senior Anda. Apa yang Anda lakukan?","Integrity",NULL,NULL,"1",NULL
+"327","va_1","Antrean panjang di terminal menyebabkan waktu tunggu menjadi lama. Sebenarnya, hal ini normal di terminal tersebut tapi tentunya pihak Nautica tidak mau tahu akan kondisi ini. Bagaimana Anda menangani situasi ini?","Customer Oriented",NULL,NULL,"1",NULL
+"328","va_1","Atasan Anda memberikan feedback terkait metode kerja Anda bahwa metode yang Anda lakukan saat ini terlalu lama, dan Anda diminta untuk lebih efisien. Dari masukan tersebut apa yang akan Anda lakukan?","Competitive",NULL,NULL,"1",NULL
+"329","va_1","Seorang crew sering berbicara kasar ke junior dan beberapa crew lainnya. Beberapa crew lain mulai merasa risih dan enggan bekerja sama dengannya. Dalam situasi tersebut apa yang akan Anda lakukan?","Team Work",NULL,NULL,"1",NULL
+"330","va_1","Program training dan development crew di kapal sudah berjalan sesuai jadwal mandatory yang ditetapkan tim SPM. Namun, Anda melihat ada beberapa skill yang mungkin akan semakin penting di masa depan tapi belum masuk dalam program training saat ini. Apa yang akan Anda lakukan dalam situasi tersebut?","Visioner",NULL,NULL,"1",NULL
+"331","va_1","Dalam suatu obrolan santai, seorang crew bercerita bahwa dia sering merapikan catatan operasional di log book agar terlihat lebih rapi dan memudahkan pemeriksaan. Dia bilang hal ini biasa dan sudah dilakukan sejak lama, dari situasi ini bagaimana sikap Anda?","Integrity",NULL,NULL,"1",NULL
+"332","va_1","Tim menemukan bahwa pengaturan barang di kapal saat ini masih bisa dioptimalkan, walaupun saat ini sudah sesuai dengan standar keselamatan. Kondisi ini bisa mempengaruhi efisiensi dan kelancaran proses bongkar muat selanjutnya. Apa yang akan Anda lakukan?","Customer Oriented",NULL,NULL,"1",NULL
+"333","va_1","Tim SPM (Ship Personnel Management) memberikan materi pelatihan baru tentang optimalisasi kerja. Untuk saat ini Anda belum sepenuhnya memahami isi pelatihan tersebut. Apa yang akan Anda lakukan?","Competitive",NULL,NULL,"1",NULL
+"334","va_1","Crew yang menjadi rekan kerja Anda sering kali membuat kesalahan yang berpotensi menghambat kinerja lainnya. Anda mulai kesal akan hal tersebut, tetapi pekerjaan tetap harus selesai, bagaimana sikap Anda dalam situasi tersebut?","Team Work",NULL,NULL,"1",NULL
+"335","va_1","Performa tim Anda dalam menyelesaikan tugas sudah konsisten dan memenuhi target yang ditetapkan. Namun, Anda melihat ada peluang untuk meningkatkan kualitas hasil kerja melalui penyempurnaan metode atau cara yang digunakan. Apa yang akan Anda lakukan?","Visioner",NULL,NULL,"1",NULL
+"336","va_1","Saat proses bongkar muat di pelabuhan, Anda melihat beberapa crew melakukan cara yang lebih cepat, hal tersebut sedikit menyimpang dari prosedur standar. Namun, mereka bilang bahwa hal ini sudah biasa dan aman serta selesai lebih cepat. Pada situasi tersebut bagaimana Anda akan bersikap?","Integrity",NULL,NULL,"1",NULL
+"337","va_1","Anda menemukan muatan yang harusnya kering dan bersih ternyata sedikit lembab dan ada kotoran, karena crew kurang teliti saat persiapan. Apa yang akan Anda lakukan?","Customer Oriented",NULL,NULL,"1",NULL
+"338","va_1","Anda mendengar bahwa crew sering terburu-buru saat menangani muatan, sehingga memicu timbulnya kotoran atau lembab yang seharusnya bisa dihindari. Apabila dibiarkan tentunya akan berdampak pada kualitas muatan, dari situasi tersebut apa yang akan Anda lakukan?","Competitive",NULL,NULL,"1",NULL
+"339","va_1","Dalam suasana kerja yang padat, Anda merasa hampir kehilangan kesabaran karena rekan kerja sering melakukan kesalahan meski sudah diingatkan. Dalam situasi ini apa yang akan Anda lakukan?","Team Work",NULL,NULL,"1",NULL
+"340","va_1","Tim Anda sudah bekerja dengan baik dalam menangani tugas-tugas rutin. Namun, Anda mengetahui bahwa beberapa komponen atau sistem penting akan mulai memasuki masa kritis dalam 1-2 tahun ke depan. Apa langkah yang Anda ambil?","Visioner",NULL,NULL,"1",NULL
+"341","va_2","1",NULL,NULL,NULL,"2",NULL
+"342","va_2","2",NULL,NULL,NULL,"2",NULL
+"343","va_2","3",NULL,NULL,NULL,"2",NULL
+"344","va_2","4",NULL,NULL,NULL,"2",NULL
+"345","va_2","5",NULL,NULL,NULL,"2",NULL
+"346","va_2","6",NULL,NULL,NULL,"2",NULL
+"347","va_2","7",NULL,NULL,NULL,"2",NULL
+"348","va_2","8",NULL,NULL,NULL,"2",NULL
+"349","va_2","9",NULL,NULL,NULL,"2",NULL
+"350","va_2","10",NULL,NULL,NULL,"2",NULL
+"351","va_2","11",NULL,NULL,NULL,"2",NULL
+"352","va_2","12",NULL,NULL,NULL,"2",NULL
+"353","va_2","13",NULL,NULL,NULL,"2",NULL
+"354","va_2","14",NULL,NULL,NULL,"2",NULL
+"355","va_2","15",NULL,NULL,NULL,"2",NULL
+"356","va_2","16",NULL,NULL,NULL,"2",NULL
+"357","va_2","17",NULL,NULL,NULL,"2",NULL
+"358","va_2","18",NULL,NULL,NULL,"2",NULL
+"359","va_2","19",NULL,NULL,NULL,"2",NULL
+"360","va_2","20",NULL,NULL,NULL,"2",NULL
+"361","va_2","21",NULL,NULL,NULL,"2",NULL
+"362","va_2","22",NULL,NULL,NULL,"2",NULL
+"363","va_2","23",NULL,NULL,NULL,"2",NULL
+"364","va_2","24",NULL,NULL,NULL,"2",NULL
+"365","va_2","25",NULL,NULL,NULL,"2",NULL
+"366","va_2","26",NULL,NULL,NULL,"2",NULL
+"367","va_2","27",NULL,NULL,NULL,"2",NULL
+"368","va_2","28",NULL,NULL,NULL,"2",NULL
+"369","va_2","29",NULL,NULL,NULL,"2",NULL
+"370","va_2","30",NULL,NULL,NULL,"2",NULL
+"371","va_2","31",NULL,NULL,NULL,"2",NULL
+"372","va_2","32",NULL,NULL,NULL,"2",NULL
+"373","va_2","33",NULL,NULL,NULL,"2",NULL
+"374","va_2","34",NULL,NULL,NULL,"2",NULL
+"375","va_2","35",NULL,NULL,NULL,"2",NULL
+"376","va_2","36",NULL,NULL,NULL,"2",NULL
+"377","va_2","37",NULL,NULL,NULL,"2",NULL
+"378","va_2","38",NULL,NULL,NULL,"2",NULL
+"379","va_2","39",NULL,NULL,NULL,"2",NULL
+"380","va_2","40",NULL,NULL,NULL,"2",NULL
+"381","va_2","41",NULL,NULL,NULL,"2",NULL
+"382","va_2","42",NULL,NULL,NULL,"2",NULL
+"383","va_2","43",NULL,NULL,NULL,"2",NULL
+"384","va_2","44",NULL,NULL,NULL,"2",NULL
+"385","va_2","45",NULL,NULL,NULL,"2",NULL
+"386","va_2","46",NULL,NULL,NULL,"2",NULL
+"387","va_2","47",NULL,NULL,NULL,"2",NULL
+"388","va_2","48",NULL,NULL,NULL,"2",NULL
+"389","va_2","49",NULL,NULL,NULL,"2",NULL
+"390","va_2","50",NULL,NULL,NULL,"2",NULL
+"391","va_2","51",NULL,NULL,NULL,"2",NULL
+"392","va_2","52",NULL,NULL,NULL,"2",NULL
+"393","va_2","53",NULL,NULL,NULL,"2",NULL
+"394","va_2","54",NULL,NULL,NULL,"2",NULL
+"395","va_2","55",NULL,NULL,NULL,"2",NULL
+"396","va_2","56",NULL,NULL,NULL,"2",NULL
+"397","va_2","57",NULL,NULL,NULL,"2",NULL
+"398","va_2","58",NULL,NULL,NULL,"2",NULL
+"399","va_2","59",NULL,NULL,NULL,"2",NULL
+"400","va_2","60",NULL,NULL,NULL,"2",NULL
+"401","va_3","Saya pernah mengatasi hambatan untuk menaklukkan tantangan penting.",NULL,NULL,NULL,"3",NULL
+"402","va_3","Ide dan proyek baru terkadang mengalihkan perhatian saya dari proyek sebelumnya.",NULL,NULL,NULL,"3",NULL
+"403","va_3","Minat atau ketertarikan saya sering berubah dari tahun ke tahun.",NULL,NULL,NULL,"3",NULL
+"404","va_3","Saya tidak mudah putus asa ketika menghadapi kegagalan atau hambatan.",NULL,NULL,NULL,"3",NULL
+"405","va_3","Saya sangat tertarik pada suatu hal tapi kemudian kehilangan minat setelah beberapa waktu.",NULL,NULL,NULL,"3",NULL
+"406","va_3","Saya adalah orang yang rajin dan pekerja keras.",NULL,NULL,NULL,"3",NULL
+"407","va_3","Saya sering menetapkan suatu tujuan, namun kemudian memilih untuk mengejar tujuan yang berbeda.",NULL,NULL,NULL,"3",NULL
+"408","va_3","Saya kesulitan mempertahankan fokus pada proyek yang membutuhkan waktu lama atau lebih dari beberapa bulan untuk diselesaikan.",NULL,NULL,NULL,"3",NULL
+"409","va_3","Saya akan menyelesaikan apa pun yang telah saya mulai.",NULL,NULL,NULL,"3",NULL
+"410","va_3","Saya telah atau pernah mencapai tujuan yang membutuhkan kerja keras selama bertahun-tahun.",NULL,NULL,NULL,"3",NULL
+"411","va_3","Saya tertarik pada hal baru atau mengejar hal baru setiap beberapa bulan.",NULL,NULL,NULL,"3",NULL
+"412","va_3","Saya adalah orang yang tekun.",NULL,NULL,NULL,"3",NULL
+"414","va_2","Tes",NULL,"0",NULL,"2",NULL
+"425","va_1","RESSE","Customer Oriented","0",NULL,NULL,NULL
+"426","va_1","EQESSE","Integrity","0",NULL,NULL,NULL
