@@ -1,0 +1,3 @@
+id,assessment_type_name,start_time,end_time,max_attempts
+1,Value Assessment,2025-01-01 08:00:00,2025-12-31 17:00:00,1
+2,CES,2025-02-01 08:00:00,2025-12-31 17:00:00,1

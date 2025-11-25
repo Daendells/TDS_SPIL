@@ -1,0 +1,9 @@
+id,name,weight,assessment_id,question_id
+1,Integrity,40,1,NULL
+2,Customer Oriented,25,1,NULL
+3,Competitive,15,1,NULL
+4,Team Work,10,1,NULL
+5,Visioner,10,1,NULL
+6,Awareness Score,100,2,NULL
+7,Grit Score,100,3,NULL
+8,Technical Knowledge,100,4,NULL

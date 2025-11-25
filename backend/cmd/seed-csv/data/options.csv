@@ -1,0 +1,1494 @@
+"option_id","question_id","option_letter","option_text","score","is_image","image_url"
+"1","1","a","Untuk menghindari polusi","0","0",NULL
+"2","1","b","Untuk meringankan beban sang master","0","0",NULL
+"3","1","c","Untuk memberi tahu pihak berwenang","0","0",NULL
+"4","1","d","Untuk membatasi polusi","0","0",NULL
+"5","2","a","Energi eksternal dan internal.","0","0",NULL
+"6","2","b","Energi internal","0","0",NULL
+"7","2","c","Energi laten.","0","0",NULL
+"8","2","d","Energi eksternal","0","0",NULL
+"9","3","a","390,2 juta ton","0","0",NULL
+"10","3","b","343,2 juta ton","0","0",NULL
+"11","3","c","377,6 Mt.","0","0",NULL
+"12","3","d","326,6 juta ton","0","0",NULL
+"13","4","a","Gambar 1.","0","0",NULL
+"14","4","b","Gambar 2","0","0",NULL
+"15","4","c","Gambar 3.","0","0",NULL
+"16","4","d","Gambar 4.","0","0",NULL
+"17","5","a","Zona vertikal adalah zona kebakaran yang dapat dipisahkan satu sama lain dengan pintu tahan api. Jika terjadi kebakaran, semua pintu tahan api di depan dan belakang api akan ditutup untuk mencegah penyebaran asap/api.","0","0",NULL
+"18","5","b","Zona vertikal dipisahkan dengan pintu tahan api yang akan tertutup secara otomatis saat alarm kebakaran berbunyi.","0","0",NULL
+"19","5","c","Semua zona vertikal dipisahkan dengan pintu kedap air, yang akan ditutup jika terjadi korsleting, dll.","0","0",NULL
+"20","5","d","Ada satu tim pemadam kebakaran di setiap zona.","0","0",NULL
+"21","6","a","Larutan Kalium Hidroksida","0","0",NULL
+"22","6","b","Larutan Natrium Klorat.","0","0",NULL
+"23","6","c","Larutan Natrium Hidroksida.","0","0",NULL
+"24","6","d","Larutan Natrium Hipoklorit","0","0",NULL
+"25","7","a","Penggunaan alat pelempar tali kapal.","0","0",NULL
+"26","7","b","Penggunaan rute pelarian dan metode pelarian lainnya","0","0",NULL
+"27","7","c","Penggunaan sinyal visual permukaan ke udara untuk digunakan oleh para penyintas","0","0",NULL
+"28","7","d","Penggunaan peralatan navigasi untuk kapal penyelamat","0","0",NULL
+"29","8","a","5 tahun","0","0",NULL
+"30","8","b","2 1/2 tahun.","0","0",NULL
+"31","8","c","2 tahun","0","0",NULL
+"32","8","d","Setiap tahun.","0","0",NULL
+"33","9","a","Sebaiknya berwarna terang.","0","0",NULL
+"34","9","b","Sebaiknya warna merah muda","0","0",NULL
+"35","9","c","Sebaiknya warna gelap","0","0",NULL
+"36","9","d","Tidak ada persyaratan","0","0",NULL
+"37","10","a","L(S) = 4 H.","0","0",NULL
+"38","10","b","L(S) = 0,667 H.","0","0",NULL
+"39","10","c","L(S) = 1,5 H","0","0",NULL
+"40","10","d","L(S) = 18 H.","0","0",NULL
+"41","11","a","Setiap 4 tahun.","0","0",NULL
+"42","11","b","Setiap 5 tahun","0","0",NULL
+"43","11","c","Setiap 2 1/2 tahun.","0","0",NULL
+"44","11","d","Setiap tahun","0","0",NULL
+"45","12","a","Miliki pompa pembuangan terpisah dengan kapasitas yang memadai.","0","0",NULL
+"46","12","b","Siapkan pembilasan dengan air bersih dan biarkan terkuras seluruhnya.","0","0",NULL
+"47","12","c","Lindungi penghuni melalui kebakaran minyak terus-menerus selama jangka waktu tidak kurang dari 8 menit.","0","0",NULL
+"48","12","d","Memiliki sarana untuk “menghidupkan/mematikan” aliran air di bagian luar sekoci penyelamat.","0","0",NULL
+"49","13","a","Tekanan uji sama dengan 1,75 kali tekanan kerja maksimum yang diizinkan.","0","0",NULL
+"50","13","b","Tekanan uji sama dengan 1,25 kali tekanan kerja maksimum yang diizinkan","0","0",NULL
+"51","13","c","Tekanan uji sama dengan 1,5 kali tekanan kerja maksimum yang diizinkan","0","0",NULL
+"52","13","d","Tekanan uji sama dengan tekanan kerja maksimum yang diizinkan.","0","0",NULL
+"53","14","a","L(S) = 18 H.","0","0",NULL
+"54","14","b","L(S) = 4 H.","0","0",NULL
+"55","14","c","L(S) = 2 H.","0","0",NULL
+"56","14","d","L(S) = 1,5 H.","0","0",NULL
+"57","15","a","Metanol","0","0",NULL
+"58","15","b","Etanol Industri","0","0",NULL
+"59","15","c","Iso-propanol","0","0",NULL
+"60","15","d","Air","0","0",NULL
+"61","16","a","Sekarang mereka harus diangkut dengan kapal tanker berlambung ganda.","0","0",NULL
+"62","16","b","Mereka sekarang harus dibawa dalam tank tipe 2","0","0",NULL
+"63","16","c","Tidak ada perubahan.","0","0",NULL
+"64","16","d","Saya tidak tahu","0","0",NULL
+"65","17","a","Timbal Panama ditunjukkan dengan A, pada gambar","0","0",NULL
+"66","17","b","Timbal Panama ditunjukkan dengan B, pada gambar","0","0",NULL
+"67","17","c","Timbal Panama ditunjukkan dengan C, pada gambar","0","0",NULL
+"68","17","d","Timbal Panama ditunjukkan dengan huruf D pada gambar.","0","0",NULL
+"69","18","a","Pencucian bawah dimulai saat masih ada sedikit muatan di dalam tangki","0","0",NULL
+"70","18","b","Pencucian bagian atas kering dan pencucian bagian bawah basah","0","0",NULL
+"71","18","c","Minyaknya terlalu “basah” untuk digunakan dalam pencucian minyak mentah.","0","0",NULL
+"72","18","d","Mulailah mencuci minyak mentah basah di dasar yang kering.","0","0",NULL
+"73","19","a","Di luar wilayah laut A1, A2 dan A3.","0","0",NULL
+"74","19","b","Kecuali wilayah laut A1, A2 dan A3, dalam jangkauan satelit Inmarsat, di mana alarm terus menerus tersedia","0","0",NULL
+"75","19","c","Hingga 12 mil daratan","0","0",NULL
+"76","19","d","Dalam jangkauan radiotelefoni VHF dari stasiun pantai, di mana alarm DSC terus-menerus tersedia.","0","0",NULL
+"77","20","a","0,5-1 watt","0","0",NULL
+"78","20","b","5-10 watt.","0","0",NULL
+"79","20","c","6-25 watt","0","0",NULL
+"80","20","d","Tidak tahu.","0","0",NULL
+"81","21","a","Mengganggu","0","0",NULL
+"82","21","b","Tidak untuk mengganggu","0","0",NULL
+"83","21","c","Berbicara dengan dua stasiun secara bersamaan.","0","0",NULL
+"84","21","d","Interupsi setelah melepaskan sakelar PTT","0","0",NULL
+"85","22","a","SARSAT-COSPAS EPIRBS","0","0",NULL
+"86","22","b","INMARSAT DAN EPIRBS","0","0",NULL
+"87","22","c","Transponder SART","0","0",NULL
+"88","22","d","Panggilan DSS VHF.","0","0",NULL
+"89","23","a","Setiap 4 tahun.","0","0",NULL
+"90","23","b","Setiap 3 tahun","0","0",NULL
+"91","23","c","Setiap 2 tahun.","0","0",NULL
+"92","23","d","Tahunan","0","0",NULL
+"93","24","a","Satu di setiap sudut, total 4","0","0",NULL
+"94","24","b","Satu di setiap ujung, total 2.","0","0",NULL
+"95","24","c","Satu di setiap ujung, total 2","0","0",NULL
+"96","24","d","Total ada tiga, 2 di ujung pintu, 1 di ujung seberangnya","0","0",NULL
+"97","25","a","Ini adalah metode standar dan selalu dilakukan dengan cara itu demi kesederhanaan","0","0",NULL
+"98","25","b","Udara segar membantu menyesuaikan muatan dengan kondisi lingkungan sekitar.","0","0",NULL
+"99","25","c","Beberapa kargo sangat sensitif terhadap tingkat etilen dan mungkin sulit untuk mengukur secara akurat tingkat rendah yang akan mempengaruhi kargo.","0","0",NULL
+"100","25","d","Udara segar sebanyak mungkin harus selalu dimasukkan ke dalam ruang kargo selama pelayaran untuk menjaga kualitas kargo","0","0",NULL
+"101","26","a","Kompresor piston bebas oli","0","0",NULL
+"102","26","b","Kompresor piston tiga tahap","0","0",NULL
+"103","26","c","Kompresor tipe piston, sekrup dan sentrifugal.","0","0",NULL
+"104","26","d","Kompresor sekrup tiga tahap.","0","0",NULL
+"105","27","a","Rencana perjalanan selalu diperlukan, terlepas dari lamanya pelayaran, atau jika kapal sedang dalam pengawasan pilot.","0","0",NULL
+"106","27","b","Rencana perjalanan hanya diperlukan apabila tidak ada pilot di dalam pesawat.","0","0",NULL
+"107","27","c","Rencana perjalanan diperlukan sejak keberangkatan dari pelabuhan hingga kedatangan di stasiun percontohan di tujuan.","0","0",NULL
+"108","27","d","Rencana lintasan diperlukan untuk semua lintasan laut dalam, tetapi tidak untuk melintasi terusan dengan pemanduan.","0","0",NULL
+"109","28","a","HSE hanya berwenang jika terdapat batas antara kapal dan pantai, misalnya melalui peraturan akses. Dalam kasus serius, mereka akan menghubungi Petugas Kelautan setempat.","0","0",NULL
+"110","28","b","Mereka dapat meminta agar tes alkohol/narkoba dilakukan setelah insiden yang melibatkan kapal atau pelayaran.","0","0",NULL
+"111","28","c","Mereka memiliki kekuasaan yang sama persis dengan seorang Perwira Marinir.","0","0",NULL
+"112","28","d","Mereka tidak memiliki tanggung jawab hukum atas kapal atau pengiriman","0","0",NULL
+"113","29","a","Tidak ada tindakan khusus yang perlu diambil","0","0",NULL
+"114","29","b","Untuk menghindari pembusukan yang tidak terkendali, muatan harus dibuang ke laut.","0","0",NULL
+"115","29","c","Kargo harus dipanaskan hingga 45 °C","0","0",NULL
+"116","29","d","Kargo harus diawasi secara ketat selama 12 jam ke depan.","0","0",NULL
+"117","30","a","Kapal dengan haluan bulat, kapal LPG dan LNG harus menyediakan proyektor sendiri.","0","0",NULL
+"118","30","b","Semua kapal harus menyediakan proyektornya sendiri.","0","0",NULL
+"119","30","c","Hanya proyektor yang disewa dari Canal Mooring and Light Company yang diizinkan.","0","0",NULL
+"120","30","d","Jika kapal memiliki proyektor sendiri, biaya tambahan akan dikenakan pada kapal.","0","0",NULL
+"121","31","a","Jejak infestasi serangga di lambung kapal","0","0",NULL
+"122","31","b","Bintik-bintik karat yang mengeras pada pelapisan cangkang","0","0",NULL
+"123","31","c","Bintik-bintik karat yang mengeras pada bangku sekat bawah dan pelat tangki hopper","0","0",NULL
+"124","31","d","Pelapisan bagian atas tangki yang terkena noda karat","0","0",NULL
+"125","32","a","Dioda.","0","0",NULL
+"126","32","b","Transistor.","0","0",NULL
+"127","32","c","Penyearah yang dikontrol silikon.","0","0",NULL
+"128","32","d","Dioda terowongan.","0","0",NULL
+"129","33","a","Ya, jika pelaut itu sedang bekerja.","0","0",NULL
+"130","33","b","Ya, karena akibatnya fatal.","0","0",NULL
+"131","33","c","TIDAK","0","0",NULL
+"132","33","d","Ya, meskipun dia tidak meninggal","0","0",NULL
+"133","34","a","Pengaturan harus dibuat untuk pengujian atmosfer untuk memastikan pemeliharaan kadar oksigen 21% dan kandungan karbon monoksida di bawah 50 ppm di atmosfer ruang.","0","0",NULL
+"134","34","b","Menyediakan masker filter untuk semua kru yang bekerja di dek ro-ro","0","0",NULL
+"135","34","c","Dek Ro-Ro selalu diberi ventilasi sebelum operasi.","0","0",NULL
+"136","34","d","Buka kedua pintu haluan dan buritan.","0","0",NULL
+"137","35","a","Bahwa ada kapal lain di dekatnya, yang sedang melaju, tetapi berhenti dan tidak bisa melewati air.","0","0",NULL
+"138","35","b","Bahwa ada kapal lain di dekatnya, tetapi sedang berlabuh.","0","0",NULL
+"139","35","c","Bahwa ada dua kapal lagi di dekatnya.","0","0",NULL
+"140","35","d","Bahwa ada kapal lain di sekitar dan dia baru saja mengubah haluan ke pelabuhan.","0","0",NULL
+"141","36","a","Tutup lubang ventilasi perahu penyelamat.","0","0",NULL
+"142","36","b","Buka palka.","0","0",NULL
+"143","36","c","Perangkat penutup kanopi rakit penolong yang aman.","0","0",NULL
+"144","36","d","Palka aman","0","0",NULL
+"145","37","a","Ketika baji berkarat.","0","0",NULL
+"146","37","b","Ketika pegas datar hilang.","0","0",NULL
+"147","37","c","Ketika pegas datar ditekuk","0","0",NULL
+"148","37","d","Ketika pegas datar berkarat.","0","0",NULL
+"149","38","a","SOLAS 74/88.","0","0",NULL
+"150","38","b","Saran dari perencana pantai.","0","0",NULL
+"151","38","c","Manual pengamanan kargo","0","0",NULL
+"152","38","d","Peraturan OSHA.","0","0",NULL
+"153","39","a","Untuk menghindari area yang mudah meledak (mudah terbakar) di tangki kargo","0","0",NULL
+"154","39","b","Untuk menghindari kelembaban di tangki kargo","0","0",NULL
+"155","39","c","Untuk memastikan semua oksigen dikeluarkan dari tangki kargo dan menghindari reaksi kimia","0","0",NULL
+"156","39","d","Untuk menghindari radikal yang menumpuk di tangki kargo.","0","0",NULL
+"157","40","a","Harus selalu ada satu orang di kantor kapal, yang mengoperasikan katup manifold untuk menghindari kenaikan tekanan yang terlalu besar di dalam tangki.","0","0",NULL
+"158","40","b","Biarkan saja semua katup terbuka dan biarkan pantai mengendalikan tiupannya.","0","0",NULL
+"159","40","c","Harus selalu ada satu orang di manifold kapal, yang mengoperasikan katup manifold untuk menghindari kenaikan tekanan yang terlalu besar di dalam tangki.","0","0",NULL
+"160","40","d","Harus selalu ada satu orang di anjungan kapal, yang mengoperasikan kemudi untuk menghindari peningkatan tekanan yang terlalu besar di dalam tangki","0","0",NULL
+"161","41","a","Untuk menentukan apakah kapal layak laut.","0","0",NULL
+"162","41","b","Untuk menerbitkan sertifikat kelaikan laut.","0","0",NULL
+"163","41","c","Untuk mengeluarkan izin perdagangan.","0","0",NULL
+"164","41","d","Terutama untuk menentukan apakah peraturan awak kapal telah dipatuhi","0","0",NULL
+"165","42","a","Aspek pertama mengonfirmasi kematian. Beri tahu perusahaan dan keluarga terdekat, dan jika ada di kapal, beri tahu dan beri penghiburan sesuai kebutuhan. Atur agar jenazah dipindahkan ke ruang pendingin. Beri tahu agen lokal dan Konsul Inggris jika berada di luar negeri. Catat dalam Catatan Kelahiran dan Kematian.","0","0",NULL
+"166","42","b","Konfirmasikan kematian. Pindahkan jenazah ke kompartemen freezer. Hubungi agen setempat dan Konsul Inggris jika diperlukan. Lengkapi bagian naratif buku catatan resmi. Buat entri di buku catatan dek yang merinci tindakan yang diambil.","0","0",NULL
+"167","42","c","Konfirmasikan kematian. Hubungi agen setempat dan atur evakuasi jenazah dari kapal. Beri tahu perusahaan. Lengkapi bagian kelahiran dan kematian di buku catatan resmi.","0","0",NULL
+"168","42","d","Konfirmasikan kematian. Beri tahu keluarga terdekat, dan jika sudah di pesawat, beri penghiburan seperlunya. Catat di bagian Kelahiran dan Kematian di OLB, dan catat di bagian narasi OLB. Beri tahu agen dan Konsul Inggris jika di luar negeri. Miliki tempat tinggal.","0","0",NULL
+"169","43","a","Kuning","0","0",NULL
+"170","43","b","Oranye","0","0",NULL
+"171","43","c","Biru","0","0",NULL
+"172","43","d","Merah","0","0",NULL
+"173","44","a","Zat cair berbahaya dari kategori apa pun dengan titik tuang lebih dari 37,8 derajat Celcius","0","0",NULL
+"174","44","b","Zat cair berbahaya dalam kategori “X” atau “Y” dengan viskositas sama dengan atau lebih besar dari 50 mPas pada suhu pembongkaran","0","0",NULL
+"175","44","c","Setiap zat cair berbahaya yang residunya tidak dapat dikeluarkan dari kompartemen kargo dan sistem perpipaan dan pemompaan terkait hingga sama dengan atau kurang dari 75 liter","0","0",NULL
+"176","44","d","Zat cair berbahaya dalam kategori “Y” dengan viskositas sama dengan atau lebih besar dari 100 mPas pada suhu 37,8 derajat Celcius.","0","0",NULL
+"177","45","a","Persentase lilin parafin berdasarkan volume, berdasarkan sampel representatif minyak mentah","0","0",NULL
+"178","45","b","Jumlah aditif dalam produk minyak, dinyatakan dalam ppm, yang dirancang untuk menghambat pemadatan pada suhu yang lebih rendah","0","0",NULL
+"179","45","c","Persentase volume endapan lilin yang diamati ditemukan di tangki kargo setelah pembongkaran dalam kaitannya dengan total volume","0","0",NULL
+"180","45","d","kargo yang diangkut sebelumnya.","0","0",NULL
+"181","46","a","Jenis kapal.","0","0",NULL
+"182","46","b","Tonase mereka","0","0",NULL
+"183","46","c","Wilayah laut.","0","0",NULL
+"184","46","d","Tidak tahu.","0","0",NULL
+"185","47","a","Proses di mana senyawa kimia tak jenuh dipanaskan di bawah tekanan, menyebabkan molekul-molekulnya bereaksi satu sama lain dan membentuk molekul yang lebih besar.","0","0",NULL
+"186","47","b","Proses dimana molekul-molekul dalam senyawa kimia tak jenuh bereaksi satu sama lain selama pendinginan, membentuk molekul yang lebih besar","0","0",NULL
+"187","47","c","Proses di mana senyawa kimia jenuh dipanaskan di bawah tekanan, menyebabkan molekul-molekulnya bereaksi satu sama lain dan membentuk molekul yang lebih kecil.","0","0",NULL
+"188","47","d","Proses dimana senyawa kimia jenuh bereaksi ketika tekanan dilepaskan selama","0","0",NULL
+"189","48","a","-6 °C.","0","0",NULL
+"190","48","b","0 derajat celcius","0","0",NULL
+"191","48","c","+6 derajat celcius","0","0",NULL
+"192","48","d","+10 derajat celcius","0","0",NULL
+"193","49","a","Langsung masuk seperti biasa","0","0",NULL
+"194","49","b","Beritahu Chief Officer atau petugas yang berjaga dan menyalakan ventilasi untuk setidaknya 15 menit","0","0",NULL
+"195","49","c","Memberitahu seluruh crew kapal 15 menit sebelumnya","0","0",NULL
+"196","49","d","Membuat working permit dan memberi tanda bahwa ada orang di dalam ruang pompa","0","0",NULL
+"197","50","a","Letaknya di ujung pipa dalam tangki dan membatasi partikel dan padatan apa pun yang masuk ke sistem pipa.","0","0",NULL
+"198","50","b","Ini adalah kotak pengumpulan sampah di gudang","0","0",NULL
+"199","50","c","Ini adalah kotak di dekat windlass untuk menyimpan lumpur dari jangkar dan kabel jangkar","0","0",NULL
+"200","50","d","Ini adalah kotak di bawah manifold untuk menangkap tumpahan saat menghubungkan selang pembuangan atau pemuatan","0","0",NULL
+"201","51","a","Tekanan naik sebelum pengering.","0","0",NULL
+"202","51","b","Penurunan suhu yang besar di bagian pengering.","0","0",NULL
+"203","51","c","Suara palu dari pengering","0","0",NULL
+"204","51","d","Suara palu dari kompresor","0","0",NULL
+"205","52","a","Bersihkan permukaan perpindahan panas.","0","0",NULL
+"206","52","b","Meningkatkan laju aliran","0","0",NULL
+"207","52","c","Kurangi laju aliran.","0","0",NULL
+"208","52","d","Meningkatkan tekanan.","0","0",NULL
+"209","53","a","Permukaan perpindahan panas harus dibersihkan","0","0",NULL
+"210","53","b","Tingkatkan tekanan air pendingin.","0","0",NULL
+"211","53","c","Meningkatkan laju aliran oli pelumas","0","0",NULL
+"212","54","a","Bersihkan penukar panas","0","0",NULL
+"213","54","b","Meningkatkan aliran kedua cairan","0","0",NULL
+"214","54","c","Tambahkan beberapa pelat lagi ke penukar","0","0",NULL
+"215","54","d","Meningkatkan tekanan kedua cairan","0","0",NULL
+"216","55","a","Tambahkan beberapa pelat lagi ke penukar","0","0",NULL
+"217","55","b","Gunakan pengaturan “pembersihan di tempat” untuk membuka penukar panas untuk pemeriksaan visual dan pembersihan manual","0","0",NULL
+"218","55","c","Meningkatkan tekanan","0","0",NULL
+"219","55","d","Cobalah untuk meningkatkan alirannya","0","0",NULL
+"220","56","a","1 jam.","0","0",NULL
+"221","56","b","3 jam.","0","0",NULL
+"222","56","c","6 jam.","0","0",NULL
+"223","56","d","15 jam.","0","0",NULL
+"224","57","a","1 liter","0","0",NULL
+"225","57","b","5 liter.","0","0",NULL
+"226","57","c","10 liter.","0","0",NULL
+"227","57","d","20 liter","0","0",NULL
+"228","58","a","Menahan minyak dalam area kecil","0","0",NULL
+"229","58","b","Membubarkan atau melarutkan minyak ke dalam air.","0","0",NULL
+"230","58","c","Buang minyak dari air","0","0",NULL
+"231","58","d","Menyerap minyak agar mudah dihilangkan.","0","0",NULL
+"232","59","a","Ya, botol kaca bisa dibuang ke laut","0","0",NULL
+"233","59","b","Ya, botol dapat dibuang jika digiling sehingga partikel yang dihasilkan dapat melewati saringan dengan bukaan 50 mm","0","0",NULL
+"234","59","c","Ya, botol dapat dibuang jika digiling sehingga partikel yang dihasilkan dapat melewati saringan dengan bukaan 25 mm","0","0",NULL
+"235","59","d","Tidak, botol kaca tidak bisa dibuang ke laut","0","0",NULL
+"236","60","a","Untuk mengubah ballast menjadi arus induktif tinggi dan kemudian mengalihkan arus ini melalui lampu.","0","0",NULL
+"237","60","b","Untuk menciptakan arus awal yang tinggi","0","0",NULL
+"238","61","a","Mulailah dengan katup hisap yang diatur secara otomatis untuk meminimalkan risiko menarik refrigeran cair ke dalam kompresor","0","0",NULL
+"239","61","b","Nyalakan dan matikan berulang kali hingga tekanan hisap dan tekanan oli normal.","0","0",NULL
+"240","61","c","Mulailah dengan semua katup sistem terbuka penuh","0","0",NULL
+"241","61","d","Mulailah dengan katup pembuangan yang diatur untuk mencegah tekanan kondensor berlebih","0","0",NULL
+"242","62","a","Ruang mesin kategori A","0","0",NULL
+"243","62","b","Tangki kargo kapal tanker.","0","0",NULL
+"244","62","c","Semua ruang yang disebutkan.","0","0",NULL
+"245","62","d","Ruang kategori khusus untuk kapal penumpang","0","0",NULL
+"246","63","a","Kabel HV membawa arus yang lebih kecil dan karena itu membutuhkan lebih sedikit tembaga.","0","0",NULL
+"247","63","b","Kabel HV menggunakan konduktor Aluminium dan karenanya membutuhkan luas penampang yang lebih kecil","0","0",NULL
+"248","63","c","Kabel HV menggunakan konduktor tembaga berkualitas lebih tinggi dan karenanya membutuhkan luas penampang yang lebih kecil","0","0",NULL
+"249","63","d","Kabel HV memiliki dinding yang lebih tipis dari bahan isolasi khusus","0","0",NULL
+"250","64","a","Tangki hanya dianggap bebas gas jika tidak ada jejak gas yang mudah terbakar dan/atau beracun yang terukur dan sebagai tambahan kandungan O2 terukur sebesar 21%.","0","0",NULL
+"251","64","b","Tangki hanya dianggap bebas gas jika telah dibersihkan dan kandungan O2 terukur sebesar 21%.","0","0",NULL
+"252","64","c","Suatu tangki hanya dapat dianggap bebas gas apabila telah dibersihkan, diberi ventilasi, dan tidak ada bau dalam tangki.","0","0",NULL
+"253","64","d","Suatu tangki hanya dapat dianggap bebas gas apabila telah dibersihkan dan tidak ada bau dalam tangki.","0","0",NULL
+"254","65","a","Pada lokasi seperti itu, setidaknya ada dua semburan yang tidak berasal dari hidran yang sama, yang dapat mencapai bagian kapal mana pun yang biasanya dapat diakses oleh awak kapal saat kapal sedang dilayari, salah satu semburan berasal dari satu panjang selang (semburan lainnya dapat berasal dari dua selang yang disambung).","0","0",NULL
+"255","65","b","Pada lokasi-lokasi yang memungkinkan setidaknya dua jet yang tidak berasal dari hidran yang sama dapat mencapai bagian kapal mana pun yang biasanya dapat diakses oleh awak kapal ketika kapal sedang dilayari, setiap jet tersebut berasal dari satu panjang selang","0","0",NULL
+"256","65","c","Di lokasi sedemikian rupa sehingga tidak ada bagian kapal yang biasanya dapat diakses oleh awak kapal saat kapal sedang dilayari, terletak lebih dari 20 meter dari hidran.","0","0",NULL
+"257","65","d","Pada lokasi-lokasi yang tidak ada bagian kapal yang biasanya dapat diakses oleh awak kapal ketika kapal sedang dilayari, terletak lebih dari 40 meter dari hidran","0","0",NULL
+"258","66","a","Asalah satu di bawah ini.","0","0",NULL
+"259","66","b","Kerusakan pada katup injeksi, injeksi terlalu dini.","0","0",NULL
+"260","66","c","Jarak piston terlalu besar, lapisan silinder aus.","0","0",NULL
+"261","66","d","Pin gudgeon atau bantalan ujung besar yang memiliki jarak bebas terlalu besar.","0","0",NULL
+"262","67","a","Sistem ventilasi ruang kargo dan saluran terkait","0","0",NULL
+"263","67","b","Pipa yang melewati ruang kargo.","0","0",NULL
+"264","67","c","Kendaraan bermuatan basah","0","0",NULL
+"265","67","d","Unit hidrolik di ruang kargo","0","0",NULL
+"266","68","a","Selama pemuatan/pembongkaran minyak persisten/non-persisten.","0","0",NULL
+"267","68","b","Di semua terminal yang tersedia kapal tunda","0","0",NULL
+"268","68","c","Ketika diminta oleh staf terminal","0","0",NULL
+"269","68","d","Di terminal di Kanada dan AS.","0","0",NULL
+"270","69","a","R(S) = 18 ohm","0","0",NULL
+"271","69","b","R(S) = 4 ohm","0","0",NULL
+"272","69","c","R(S) = 2 ohm","0","0",NULL
+"273","69","d","R(S) = 1,5 ohm","0","0",NULL
+"274","70","a","Karena lebih mudah dikencangkan dan ditahan dalam ketegangan.","0","0",NULL
+"275","70","b","Karena ikatan yang panjang lebih rentan terhadap getaran","0","0",NULL
+"276","70","c","Karena beberapa titik pengikat kapal mungkin tidak dirancang untuk menahan pengikat yang panjang","0","0",NULL
+"277","70","d","Karena beban kerja aman bahan pengikat berkurang seiring dengan panjangnya","0","0",NULL
+"278","71","a","Ketika panjang gelombang sama dengan panjang kapal","0","0",NULL
+"279","71","b","Ketika panjang gelombang sama dengan setengah panjang kapal","0","0",NULL
+"280","71","c","Ketika panjang gelombang sama dengan dua kali panjang kapal","0","0",NULL
+"281","71","d","Di lautan yang membingungkan","0","0",NULL
+"282","72","a","30 detik","0","0",NULL
+"283","72","b","2 menit","0","0",NULL
+"284","72","c","1 menit","0","0",NULL
+"285","72","d","10 detik.","0","0",NULL
+"286","73","a","Boiler pipa air lebih efisien dan mengandung lebih sedikit air. Boiler ini mengalami kerusakan serius jika tidak digunakan selama operasi.","0","0",NULL
+"287","73","b","Boiler tabung api tidak memerlukan katup satu arah di sirkuit saluran air umpan","0","0",NULL
+"288","73","c","Boiler tabung air dapat mentoleransi periode waktu singkat tanpa air, ketika pembakar minyak masih beraksi","0","0",NULL
+"289","73","d","Boiler tabung api memiliki kemampuan yang jauh lebih baik untuk bekerja pada tekanan uap yang lebih tinggi","0","0",NULL
+"290","74","a","Pantai","0","0",NULL
+"291","74","b","Memucat","0","0",NULL
+"292","74","c","Melanggar","0","0",NULL
+"293","74","d","Pemutih","0","0",NULL
+"294","75","a","Beritahukan kepada petugas dermaga untuk segera menghentikan pemuatan.","0","0",NULL
+"295","75","b","Panggil Sang Guru","0","0",NULL
+"296","75","c","Periksa Peralatan Pemantauan Pembuangan Minyak (ODME)","0","0",NULL
+"297","75","d","Cari tahu apakah minyak berasal dari kapal Anda","0","0",NULL
+"298","76","a","(X)","0","0",NULL
+"299","76","b","(Y)","0","0",NULL
+"300","76","c","Entah (X) atau (Y)","0","0",NULL
+"301","76","d","Tidak ada alternatif yang disebutkan","0","0",NULL
+"302","77","a","Tinggi diberikan oleh D pada gambar.","0","0",NULL
+"303","77","b","Tinggi diberikan oleh C pada gambar","0","0",NULL
+"304","77","c","Tinggi diberikan oleh B pada gambar.","0","0",NULL
+"305","78","a","Metode mengenakan jaket pelampung, rute pelarian dan sinyal alarm","0","0",NULL
+"306","78","b","Nama petugas kabin.","0","0",NULL
+"307","78","c","Rute pelarian dan sinyal alarm","0","0",NULL
+"308","78","d","Di mana menemukan alat bantu pelindung termal","0","0",NULL
+"309","79","a","Jendela di kedua sisi yang dapat ditutup kedap air dan dibuka untuk ventilasi.","0","0",NULL
+"310","79","b","Akses palka yang dapat ditutup kedap air.","0","0",NULL
+"311","79","c","Pengaturan untuk mendayung.","0","0",NULL
+"312","79","d","Palka akses yang dapat dibuka dan ditutup dari kedua sisi","0","0",NULL
+"313","80","a","Menghilangkan gas yang mendidih","0","0",NULL
+"314","80","b","Inersia dan pembebasan gas pada tangki kargo.","0","0",NULL
+"315","80","c","Membongkar muatan","0","0",NULL
+"316","80","d","Memuat kargo","0","0",NULL
+"317","81","a","Pengaturan kontrol superpanas untuk katup ekspansi termostatik diatur terlalu rendah.","0","0",NULL
+"318","81","b","Unit pengering filter pada saluran cairan tersumbat sebagian.","0","0",NULL
+"319","81","c","Katup pengontrol aliran air laut untuk kondensor rusak sehingga menyebabkan aliran air pendingin tidak mencukupi.","0","0",NULL
+"320","81","d","Pemisah oli tidak berfungsi dengan benar dan memungkinkan oli pelumas masuk ke dalam sistem.","0","0",NULL
+"321","82","a","Setidaknya 8 tersebar di kedua sisi kapal.","0","0",NULL
+"322","82","b","Setidaknya 10 didistribusikan di kedua sisi kapal","0","0",NULL
+"323","82","c","Padasetidaknya 12 didistribusikan di kedua sisi kapal","0","0",NULL
+"324","82","d","Setidaknya 14 tersebar di kedua sisi kapal.","0","0",NULL
+"325","83","a","pukul 23.23","0","0",NULL
+"326","83","b","pukul 00:00","0","0",NULL
+"327","83","c","pukul 04.05","0","0",NULL
+"328","83","d","Tidak tahu","0","0",NULL
+"329","84","a","Dalam waktu 12 jam","0","0",NULL
+"330","84","b","Dalam waktu 24 jam","0","0",NULL
+"331","84","c","Dalam waktu 30 jam","0","0",NULL
+"332","84","d","Dalam waktu 48 jam","0","0",NULL
+"333","85","a","10,80 meter","0","0",NULL
+"334","85","b","11,24 meter.","0","0",NULL
+"335","85","c","9,92 meter","0","0",NULL
+"336","85","d","10,08 meter.","0","0",NULL
+"337","86","a","peringatan?","0","0",NULL
+"338","86","b","Nama dan tanda panggilan kapal Anda","0","0",NULL
+"339","86","c","Jumlah kru di atas kapal","0","0",NULL
+"340","86","d","Jumlah bajak laut/pembajak.","0","0",NULL
+"341","86","e","Jenis senjata yang dibawa oleh bajak laut/pembajak.","0","0",NULL
+"342","87","a","Setiap dari bawah","0","0",NULL
+"343","87","b","Bahan bakar beroktan rendah","0","0",NULL
+"344","87","c","Endapan karbon","0","0",NULL
+"345","87","d","Campuran bahan bakar dan udara tidak seimbang","0","0",NULL
+"346","88","a","Bekerja lebih halus dan efisien","0","0",NULL
+"347","88","b","Menggunakan katup (klep)","0","0",NULL
+"348","88","c","Sebuah mesin 2 tak memiliki pengapian setiap kali piston mencapai posisi teratas.","0","0",NULL
+"349","88","d","Ramah lingkungan","0","0",NULL
+"350","89","a","Melihat arah angin","0","0",NULL
+"351","89","b","Segera menyemprot kesegala arah api","0","0",NULL
+"352","89","c","Air dapat diterapkan dalam penyemprotan mulai dari depan dalam gerakan menyapu.","0","0",NULL
+"353","89","d","Menampung air ke ember terlebih dulu","0","0",NULL
+"354","90","a","Suhu terendah minyak akan tetap cair","0","0",NULL
+"355","90","b","Suhu terendah untuk menuang minyak","0","0",NULL
+"356","90","c","Suhu terendah untuk membekukan minyak","0","0",NULL
+"357","90","d","Suhu tertinggi untuk menguapkan minyak","0","0",NULL
+"358","91","a","Langsung masuk seperti biasa","0","0",NULL
+"359","91","b","Beritahu Chief Officer atau petugas yang berjaga dan menyalakan ventilasi untuk setidaknya 15 menit","0","0",NULL
+"360","91","c","Memberitahu seluruh crew kapal 15 menit sebelumnya","0","0",NULL
+"361","91","d","Membuat working permit dan memberi tanda bahwa ada orang di dalam ruang pompa","0","0",NULL
+"362","92","a","Air yang terkumpul harus dikeringkan secara berkala dan sumbat scupper harus segera ditutup setelah air dialirkan. Air yang mengandung residu berminyak harus dialirkan ke tangki pembuangan atau wadah lain yang sesuai.","0","0",NULL
+"363","92","b","Sumbat scupper harus tetap tertutup dan tersegel; setiap volume air yang tidak tertampung harus dibiarkan membanjiri fishplate","0","0",NULL
+"364","92","c","Selama periode hujan deras, dianggap bijaksana dan aman untuk membiarkan air mengalir terus-menerus; oleh karena itu, sumbat scupper harus dilepas dalam kondisi seperti itu.","0","0",NULL
+"365","92","d","Air yang terkumpul akan dipindahkan ke tangki cadangan.","0","0",NULL
+"366","93","a","Proses di mana senyawa kimia tak jenuh dipanaskan di bawah tekanan, menyebabkan molekul-molekulnya bereaksi satu sama lain dan membentuk molekul yang lebih besar.","0","0",NULL
+"367","93","b","Proses dimana molekul-molekul dalam senyawa kimia tak jenuh bereaksi satu sama lain selama pendinginan, membentuk molekul yang lebih besar","0","0",NULL
+"368","93","c","Proses di mana senyawa kimia jenuh dipanaskan di bawah tekanan, menyebabkan molekul-molekulnya bereaksi satu sama lain dan membentuk molekul yang lebih kecil.","0","0",NULL
+"369","93","d","Proses dimana senyawa kimia jenuh bereaksi ketika tekanan dilepaskan selama","0","0",NULL
+"370","94","a","100.000 Hz","0","0",NULL
+"371","94","b","1.000.000.000 Hz","0","0",NULL
+"372","94","c","10.000.000.000 Hz","0","0",NULL
+"373","94","d","1.000.000 Hz","0","0",NULL
+"374","95","a","Persentase lilin parafin berdasarkan volume, berdasarkan sampel representatif minyak mentah","0","0",NULL
+"375","95","b","Jumlah aditif dalam produk minyak, dinyatakan dalam ppm, yang dirancang untuk menghambat pemadatan pada suhu yang lebih rendah","0","0",NULL
+"376","95","c","Persentase volume endapan lilin yang diamati ditemukan di tangki kargo setelah pembongkaran dalam kaitannya dengan total volume","0","0",NULL
+"377","95","d","Kargo yang diangkut sebelumnya.","0","0",NULL
+"378","96","a","Zat cair berbahaya dari kategori apa pun dengan titik tuang lebih dari 37,8 derajat Celcius","0","0",NULL
+"379","96","b","Zat cair berbahaya dalam kategori “X” atau “Y” dengan viskositas sama dengan atau lebih besar dari 50 mPas pada suhu pembongkaran","0","0",NULL
+"380","96","c","Setiap zat cair berbahaya yang residunya tidak dapat dikeluarkan dari kompartemen kargo dan sistem perpipaan dan pemompaan terkait hingga sama dengan atau kurang dari 75 liter","0","0",NULL
+"381","96","d","Zat cair berbahaya dalam kategori “Y” dengan viskositas sama dengan atau lebih besar dari 100 mPas pada suhu 37,8 derajat Celcius.","0","0",NULL
+"382","97","a","Peningkatan jumlah pergantian udara mungkin diperlukan ketika kendaraan sedang dimuat atau diturunkan, atau ketika gas atau cairan yang mudah terbakar disimpan di ruang ro-ro tertutup.","0","0",NULL
+"383","97","b","Lebih baik menyalakan kipas terus menerus daripada menguji atmosfer","0","0",NULL
+"384","97","c","Lebih mudah bagi kru, mereka tidak perlu memikirkan menyalakan dan mematikan kipas.","0","0",NULL
+"385","97","d","Produsen kipas angin menyarankan pengoperasian berkelanjutan untuk mengurangi biaya perawatan.","0","0",NULL
+"386","98","a","Kuning","0","0",NULL
+"387","98","b","Oranye","0","0",NULL
+"388","98","c","Biru","0","0",NULL
+"389","98","d","Merah","0","0",NULL
+"390","99","a","Aspek pertama mengonfirmasi kematian. Beri tahu perusahaan dan keluarga terdekat, dan jika ada di kapal, beri tahu dan beri penghiburan sesuai kebutuhan. Atur agar jenazah dipindahkan ke ruang pendingin. Beri tahu agen lokal dan Konsul Inggris jika berada di luar negeri. Catat dalam Catatan Kelahiran dan Kematian.","0","0",NULL
+"391","99","b","Konfirmasikan kematian. Pindahkan jenazah ke kompartemen freezer. Hubungi agen setempat dan Konsul Inggris jika diperlukan. Lengkapi bagian naratif buku catatan resmi. Buat entri di buku catatan dek yang merinci tindakan yang diambil.","0","0",NULL
+"392","99","c","Konfirmasikan kematian. Hubungi agen setempat dan atur evakuasi jenazah dari kapal. Beri tahu perusahaan. Lengkapi bagian kelahiran dan kematian di buku catatan resmi.","0","0",NULL
+"393","99","d","Konfirmasikan kematian. Beri tahu keluarga terdekat, dan jika sudah di pesawat, beri penghiburan seperlunya. Catat di bagian Kelahiran dan Kematian di OLB, dan catat di bagian narasi OLB. Beri tahu agen dan Konsul Inggris jika di luar negeri. Miliki tempat tinggal.","0","0",NULL
+"394","100","a","Untuk menentukan apakah kapal layak laut.","0","0",NULL
+"395","100","b","Untuk menerbitkan sertifikat kelaikan laut.","0","0",NULL
+"396","100","c","Untuk mengeluarkan izin perdagangan.","0","0",NULL
+"397","100","d","Terutama untuk menentukan apakah peraturan awak kapal telah dipatuhi","0","0",NULL
+"398","101","a","Lampiran V, MARPOL 73/78.","0","0",NULL
+"399","101","b","Bagian III, Kode ISPS","0","0",NULL
+"400","101","c","Bab II, SOLAS 1974","0","0",NULL
+"401","101","d","Panduan Praktik Terbaik Industri untuk Manajemen Restoran","0","0",NULL
+"402","102","a","Kepala Hisap Tekanan Nominal.","0","0",NULL
+"403","102","b","Tinggi Standar Pemompaan Alami.","0","0",NULL
+"404","102","c","Bahaya Hisap Pompa yang Diperlukan","0","0",NULL
+"405","102","d","Kepala Hisap Tekanan Bersih.","0","0",NULL
+"406","103","a","Setiap 2 minggu","0","0",NULL
+"407","103","b","Setiap 3 bulan.","0","0",NULL
+"408","103","c","Setiap 6 bulan","0","0",NULL
+"409","103","d","Setiap minggu","0","0",NULL
+"410","104","a","Untuk mencegah uap dan air dalam boiler keluar melalui saluran umpan, jika terjadi fraktur saluran umpan atau sambungan pada saluran putus","0","0",NULL
+"411","104","b","Untuk menambah beban kerja staf saat melakukan perbaikan boiler","0","0",NULL
+"412","104","c","Untuk memungkinkan perbaikan katup sekrup bawah ketika katup satu arah ditutup dan boiler mengeluarkan uap","0","0",NULL
+"413","104","d","Untuk memungkinkan penyetelan halus aliran air umpan ke boiler.","0","0",NULL
+"414","105","a","Air harus disemprotkan ke bagian belakang api","0","0",NULL
+"415","105","b","Air sebaiknya disemprotkan ke minyak hanya dengan satu semprotan saja.","0","0",NULL
+"416","105","c","Air tidak boleh digunakan pada semua jenis kebakaran minyak.","0","0",NULL
+"417","105","d","Air dapat disemprotkan secara halus dimulai dari depan dengan gerakan menyapu.","0","0",NULL
+"418","106","a","Oli telah dialirkan ke pemisah sebelum kecepatan penuh.","0","0",NULL
+"419","106","b","Jumlah air penutup mangkuk tidak mencukupi","0","0",NULL
+"420","106","c","Tangki lumpur sudah penuh","0","0",NULL
+"421","106","d","Laju alirannya terlalu tinggi","0","0",NULL
+"422","107","a","Saat mendekati dek, merangkaklah keluar sambil menjaga wajah Anda sedekat mungkin dengan dek.","0","0",NULL
+"423","107","b","Duduk dan tunggu tim penyelamat","0","0",NULL
+"424","107","c","Akan sama di semua bagian, oleh karena itu saya akan pergi secepat mungkin","0","0",NULL
+"425","107","d","Ke arah bagian atas, berdirilah setinggi mungkin dan berjalan keluar","0","0",NULL
+"426","108","a","Periksa pemutus arus alternator yang tersandung","0","0",NULL
+"427","108","b","Nyalakan dan hubungkan alternator darurat.","0","0",NULL
+"428","108","c","Trip/hentikan semua beban tidak penting yang terhubung ke panel listrik","0","0",NULL
+"429","108","d","Segera nyalakan kembali alternator yang tersandung","0","0",NULL
+"430","109","a","Oranye","0","0",NULL
+"431","109","b","Biru","0","0",NULL
+"432","109","c","Kuning","0","0",NULL
+"433","109","d","Hijau","0","0",NULL
+"434","110","a","Mesin gerinda","0","0",NULL
+"435","110","b","Berkas datar","0","0",NULL
+"436","110","c","Pahat","0","0",NULL
+"437","110","d","Tang","0","0",NULL
+"438","111","a","Ambil alih kemudi kapal.","0","0",NULL
+"439","111","b","Sampaikan pesan ke petugas lain","0","0",NULL
+"440","111","c","Mengambil alih pengangkatan tali","0","0",NULL
+"441","111","d","Ubah tempat di mana pos pengamatan berdiri","0","0",NULL
+"442","112","a","Di luar zona berwarna","0","0",NULL
+"443","112","b","Di belakang “titik pengekangan” tetapi di dalam zona.","0","0",NULL
+"444","112","c","Antara “titik putus” dan “titik pengekangan”","0","0",NULL
+"445","112","d","Di mana pun Anda merasa aman","0","0",NULL
+"446","113","a","Memeriksa apakah penumpang dan awak berpakaian dengan benar dan jaket pelampung dikenakan dengan benar","0","0",NULL
+"447","113","b","Memeriksa apakah semua kru dan penumpang hadir","0","0",NULL
+"448","113","c","Memeriksa roket sinyal marabahaya dan sinyal marabahaya lainnya","0","0",NULL
+"449","113","d","Memeriksa perlengkapan dan perlengkapan sekoci penyelamat","0","0",NULL
+"450","114","a","Beritahukan kepada anjungan mengenai lampu baru yang muncul di atas cakrawala atau hal-hal lain yang diamati yang dapat mempengaruhi kapal","0","0",NULL
+"451","114","b","Menginformasikan jembatan tentang perubahan pola cuaca","0","0",NULL
+"452","114","c","Beritahukan jembatan tentang lampu apa pun saat lampu itu muncul di cakrawala.","0","0",NULL
+"453","114","d","Beritahukan anjungan kapal tentang kapal lain yang terlihat, yang nampak semakin dekat dengan kapal Anda.","0","0",NULL
+"454","115","a","Penglihatan bagus dan mampu berkomunikasi dengan OOW (petugas jaga).","0","0",NULL
+"455","115","b","Untuk melihat perubahan pola cuaca","0","0",NULL
+"456","115","c","Untuk menilai jenis kapal","0","0",NULL
+"457","115","d","Untuk mendeteksi target baru saat mereka melewati garis horizon.","0","0",NULL
+"458","116","a","Mengukur jarak dari permukaan kargo ke titik referensi ullage","0","0",NULL
+"459","116","b","Mengukur jarak dari dasar tangki ke titik referensi ullage.","0","0",NULL
+"460","116","c","Mengukur jarak dari dasar tangki ke permukaan muatan","0","0",NULL
+"461","116","d","Mengukur jarak dari permukaan kargo ke bagian bawah dek utama.","0","0",NULL
+"462","117","a","Kirim pesan darurat dan kumpulkan pakaian bertahan hidup/tas termal.","0","0",NULL
+"463","117","b","Kumpulkan barang-barang pribadi Anda sendiri.","0","0",NULL
+"464","117","c","Langsung saja melompat ke atas papan dan bersiap.","0","0",NULL
+"465","117","d","Bantu teman Anda mengumpulkan barang-barang pribadi mereka","0","0",NULL
+"466","118","a","Konduksi arus lemah","0","0",NULL
+"467","118","b","Arus kurang kuat","0","0",NULL
+"468","118","c","Salah satu unsur switching utama di triac telah gagal.","0","0",NULL
+"469","118","d","Triac kotor","0","0",NULL
+"470","119","a","Untuk mengurangi panas dan kehilangan daya","0","0",NULL
+"471","119","b","Kabel HV membawa arus yang lebih kecil dan karena itu memerlukan sedikit tembaga.","0","0",NULL
+"472","119","c","Untuk efisiensi penghantar arus daya","0","0",NULL
+"473","119","d","Agar panas yg muncul lebih sedikit","0","0",NULL
+"474","120","a","Pada bagian tengah atas tangki terdapat pemandu 40' untuk mencegah pergerakan melintang pada kontainer 20'.","0","0",NULL
+"475","120","b","Di atas tangki di ujung-ujung ruang kontainer berukuran 40'.","0","0",NULL
+"476","120","c","Di dasar pemandu sel.","0","0",NULL
+"477","120","d","Di antara teluk kontainer 20' di dek","0","0",NULL
+"478","121","a","Langsung masuk seperti biasa","0","0",NULL
+"479","121","b","Beritahu Chief Officer atau petugas yang berjaga dan menyalakan ventilasi untuk setidaknya 15 menit","0","0",NULL
+"480","121","c","Memberitahu seluruh crew kapal 15 menit sebelumnya","0","0",NULL
+"481","121","d","Membuat working permit dan memberi tanda bahwa ada orang di dalam ruang pompa","0","0",NULL
+"482","122","a","Suhu terendah minyak akan tetap cair","0","0",NULL
+"483","122","b","Suhu terendah untuk menuang minyak","0","0",NULL
+"484","122","c","Suhu terendah untuk membekukan minyak","0","0",NULL
+"485","122","d","Suhu tertinggi untuk menguapkan minyak","0","0",NULL
+"486","123","a","Melihat arah angin","0","0",NULL
+"487","123","b","Segera menyemprot kesegala arah api","0","0",NULL
+"488","123","c","Air dapat diterapkan dalam penyemprotan mulai dari depan dalam gerakan menyapu.","0","0",NULL
+"489","123","d","Menampung air ke ember terlebih dulu","0","0",NULL
+"490","124","a","Dinginkan tangki","0","0",NULL
+"491","124","b","Buka ventilasi tangki","0","0",NULL
+"492","124","c","Hindari kontak langsung dengan tangki","0","0",NULL
+"493","124","d","Untuk menghindari dekomposisi yang tidak terkendali, maka kargo harus dibuang ke laut.","0","0",NULL
+"494","125","a","Bekerja lebih halus dan efisien","0","0",NULL
+"495","125","b","Menggunakan katup (klep)","0","0",NULL
+"496","125","c","Sebuah mesin 2 tak memiliki pengapian setiap kali piston mencapai posisi teratas.","0","0",NULL
+"497","125","d","Ramah lingkungan","0","0",NULL
+"498","126","a","Setiap dari bawah","0","0",NULL
+"499","126","b","Bahan bakar beroktan rendah","0","0",NULL
+"500","126","c","Endapan karbon","0","0",NULL
+"501","126","d","Campuran bahan bakar dan udara tidak seimbang","0","0",NULL
+"502","127","a","Jenis kapal.","0","0",NULL
+"503","127","b","Tonase mereka","0","0",NULL
+"504","127","c","Wilayah laut.","0","0",NULL
+"505","127","d","Tidak tahu.","0","0",NULL
+"506","128","a","Fairlead ditandai dengan C pada gambar.","0","0",NULL
+"507","128","b","Fairlead ditandai dengan D, pada gambar","0","0",NULL
+"508","128","c","Fairlead ditunjukkan dengan B, pada gambar","0","0",NULL
+"509","128","d","Fairlead ditandai dengan A pada gambar.","0","0",NULL
+"510","129","a","Proses di mana senyawa kimia tak jenuh dipanaskan di bawah tekanan, menyebabkan molekul-molekulnya bereaksi satu sama lain dan membentuk molekul yang lebih besar.","0","0",NULL
+"511","129","b","Proses dimana molekul-molekul dalam senyawa kimia tak jenuh bereaksi satu sama lain selama pendinginan, membentuk molekul yang lebih besar","0","0",NULL
+"512","129","c","Proses di mana senyawa kimia jenuh dipanaskan di bawah tekanan, menyebabkan molekul-molekulnya bereaksi satu sama lain dan membentuk molekul yang lebih kecil.","0","0",NULL
+"513","129","d","Proses dimana senyawa kimia jenuh bereaksi ketika tekanan dilepaskan selama","0","0",NULL
+"514","130","a","-6 °C.","0","0",NULL
+"515","130","b","0 derajat celcius","0","0",NULL
+"516","130","c","+6 derajat celcius","0","0",NULL
+"517","130","d","+10 derajat celcius","0","0",NULL
+"518","131","a","Persentase lilin parafin berdasarkan volume, berdasarkan sampel representatif minyak mentah","0","0",NULL
+"519","131","b","Jumlah aditif dalam produk minyak, dinyatakan dalam ppm, yang dirancang untuk menghambat pemadatan pada suhu yang lebih rendah","0","0",NULL
+"520","131","c","Persentase volume endapan lilin yang diamati ditemukan di tangki kargo setelah pembongkaran dalam kaitannya dengan total volume","0","0",NULL
+"521","131","d","kargo yang diangkut sebelumnya.","0","0",NULL
+"522","132","a","100.000 Hz","0","0",NULL
+"523","132","b","1.000.000.000 Hz","0","0",NULL
+"524","132","c","10.000.000.000 Hz","0","0",NULL
+"525","132","d","1.000.000 Hz","0","0",NULL
+"526","133","a","Untuk mempertahankan suhu minimum tertentu selama jangka waktu tertentu guna membunuh lalat buah yang mungkin ada saat memuat kargo.","0","0",NULL
+"527","133","b","Untuk menjaga suhu buah dalam toleransi yang sangat ketat","0","0",NULL
+"528","133","c","Untuk memastikan buah dibawa sedingin mungkin tanpa merusak buah.","0","0",NULL
+"529","133","d","Untuk mencapai kualitas buah yang seragam saat dikeluarkan","0","0",NULL
+"530","134","a","Bisnis kapal","0","0",NULL
+"531","134","b","Rutin","0","0",NULL
+"532","134","c","Keamanan","0","0",NULL
+"533","134","d","Tidak tahu","0","0",NULL
+"534","135","a","Pilih telex pada posisi on-line","0","0",NULL
+"535","135","b","Pilih ID NCS","0","0",NULL
+"536","135","c","Pilih telex dalam posisi offline","0","0",NULL
+"537","135","d","Tidak tahu.","0","0",NULL
+"538","136","a","Zat cair berbahaya dari kategori apa pun dengan titik tuang lebih dari 37,8 derajat Celcius","0","0",NULL
+"539","136","b","Zat cair berbahaya dalam kategori “X” atau “Y” dengan viskositas sama dengan atau lebih besar dari 50 mPas pada suhu pembongkaran","0","0",NULL
+"540","136","c","Setiap zat cair berbahaya yang residunya tidak dapat dikeluarkan dari kompartemen kargo dan sistem perpipaan dan pemompaan terkait hingga sama dengan atau kurang dari 75 liter","0","0",NULL
+"541","136","d","Zat cair berbahaya dalam kategori “Y” dengan viskositas sama dengan atau lebih besar dari 100 mPas pada suhu 37,8 derajat Celcius.","0","0",NULL
+"542","137","a","Kuning","0","0",NULL
+"543","137","b","Oranye","0","0",NULL
+"544","137","c","Biru","0","0",NULL
+"545","137","d","Merah","0","0",NULL
+"546","138","a","0,7-1,5 mm.","0","0",NULL
+"547","138","b","1,5-2,0 mm.","0","0",NULL
+"548","138","c","2,0-2,5 mm.","0","0",NULL
+"549","138","d","0,2-0,5 mm.","0","0",NULL
+"550","139","a","Bahwa kapal tersebut mengoperasikan propulsi buritan.","0","0",NULL
+"551","139","b","Bahwa kapal tersebut sedang menghidupkan mesinnya dan melanjutkan pelayarannya","0","0",NULL
+"552","139","c","Bahwa kapal tersebut sedang menjemput pilotnya","0","0",NULL
+"553","139","d","Bahwa kapal tersebut mengubah arahnya ke kanan.","0","0",NULL
+"554","140","a","Angin sepoi-sepoi dan cuaca cerah, terkadang berkabut","0","0",NULL
+"555","140","b","Angin kencang namun hujannya sangat sedikit.","0","0",NULL
+"556","140","c","Angin kencang dan hujan lebat","0","0",NULL
+"557","140","d","Hujan terus-menerus dan cuaca sangat lembab","0","0",NULL
+"558","141","a","Untuk menentukan apakah kapal layak laut.","0","0",NULL
+"559","141","b","Untuk menerbitkan sertifikat kelaikan laut.","0","0",NULL
+"560","141","c","Untuk mengeluarkan izin perdagangan.","0","0",NULL
+"561","141","d","Terutama untuk menentukan apakah peraturan awak kapal telah dipatuhi","0","0",NULL
+"562","142","a","12% berdasarkan volume","0","0",NULL
+"563","142","b","8% berdasarkan volume","0","0",NULL
+"564","142","c","5% berdasarkan volume","0","0",NULL
+"565","142","d","2% berdasarkan volume","0","0",NULL
+"566","143","a","Harus selalu ada satu orang di kantor kapal, yang mengoperasikan katup manifold untuk menghindari kenaikan tekanan yang terlalu besar di dalam tangki.","0","0",NULL
+"567","143","b","Biarkan saja semua katup terbuka dan biarkan pantai mengendalikan tiupannya.","0","0",NULL
+"568","143","c","Harus selalu ada satu orang di manifold kapal, yang mengoperasikan katup manifold untuk menghindari kenaikan tekanan yang terlalu besar di dalam tangki.","0","0",NULL
+"569","143","d","Harus selalu ada satu orang di anjungan kapal, yang mengoperasikan kemudi untuk menghindari peningkatan tekanan yang terlalu besar di dalam tangki.","0","0",NULL
+"570","144","a","SOLAS 74/88.","0","0",NULL
+"571","144","b","Saran dari perencana pantai.","0","0",NULL
+"572","144","c","Manual pengamanan kargo","0","0",NULL
+"573","144","d","Peraturan OSHA.","0","0",NULL
+"574","145","a","1.250 meter kubik.","0","0",NULL
+"575","145","b","Tidak ada batasan pengisian untuk kapal tanker kimia tipe 3.","0","0",NULL
+"576","145","c","1.750 meter kubik","0","0",NULL
+"577","145","d","3.000 meter kubik.","0","0",NULL
+"578","146","a","Letaknya di ujung pipa dalam tangki dan membatasi partikel dan padatan apa pun yang masuk ke sistem pipa.","0","0",NULL
+"579","146","b","Ini adalah kotak pengumpulan sampah di gudang","0","0",NULL
+"580","146","c","Ini adalah kotak di dekat windlass untuk menyimpan lumpur dari jangkar dan kabel jangkar","0","0",NULL
+"581","146","d","Ini adalah kotak di bawah manifold untuk menangkap tumpahan saat menghubungkan selang pembuangan atau pemuatan","0","0",NULL
+"582","147","a","Tidak kurang dari 3% dari kapasitas pengangkutan minyak kapal","0","0",NULL
+"583","147","b","Tidak kurang dari 1% dari kapasitas pengangkutan minyak kapal.","0","0",NULL
+"584","147","c","Tidak kurang dari 1,5% dari kapasitas pengangkutan minyak kapal.","0","0",NULL
+"585","147","d","Tidak kurang dari 2% dari kapasitas pengangkutan minyak kapal","0","0",NULL
+"586","148","a","12 pergantian udara per jam","0","0",NULL
+"587","148","b","20 pergantian udara per jam","0","0",NULL
+"588","148","c","6 pergantian udara per jam","0","0",NULL
+"589","148","d","2 pergantian udara per jam.","0","0",NULL
+"590","149","a","6 pergantian udara per jam","0","0",NULL
+"591","149","b","12 pergantian udara per jam","0","0",NULL
+"592","149","c","20 pergantian udara per jam","0","0",NULL
+"593","149","d","2 pergantian udara per jam","0","0",NULL
+"594","150","a","Untuk menghindari area yang mudah meledak (mudah terbakar) di tangki kargo","0","0",NULL
+"595","150","b","Untuk menghindari kelembaban di tangki kargo","0","0",NULL
+"596","150","c","Untuk memastikan semua oksigen dikeluarkan dari tangki kargo dan menghindari reaksi kimia","0","0",NULL
+"597","150","d","Untuk menghindari radikal yang menumpuk di tangki kargo.","0","0",NULL
+"598","151","a","Cat, yang mengeluarkan uap mudah terbakar pada uji cawan tertutup 60 °C.","0","0",NULL
+"599","151","b","Cairan apa pun dengan titik nyala di atas 63 °C pada uji cawan tertutup.","0","0",NULL
+"600","151","c","Cairan apa pun dengan titik nyala antara 60 °C dan 70 °C pada uji cawan tertutup.","0","0",NULL
+"601","151","d","Saya tidak tahu.","0","0",NULL
+"602","152","a","Tidak digunakan lagi.","0","0",NULL
+"603","152","b","Diperbaiki di kapal dan digunakan kembali.","0","0",NULL
+"604","152","c","Digunakan hanya di tingkat paling bawah di geladak.","0","0",NULL
+"605","152","d","Digunakan hanya untuk mengunci penumpukan kontainer di bawah geladak.","0","0",NULL
+"606","153","a","Semua winch dibiarkan dalam kondisi rem manual aktif dan tidak dalam posisi gigi (gear).","0","0",NULL
+"607","153","b","Winch “spring” dibiarkan dalam mode auto-tension dan semua winch lainnya dalam rem manual.","0","0",NULL
+"608","153","c","Semua tambatan dibiarkan dalam mode “auto-tension.”","0","0",NULL
+"609","153","d","Winch “breastline” dan “headline” dibiarkan dalam mode auto-tension, sedangkan winch “spring” dalam rem manual.","0","0",NULL
+"610","154","a","Periode oleng pendek dan tajam yang berhubungan dengan rusaknya pengikatan dan pergeseran muatan.","0","0",NULL
+"611","154","b","Periode oleng pendek, namun kapal sangat stabil dan tidak ada bahaya.","0","0",NULL
+"612","154","c","Periode oleng panjang dengan efek permukaan bebas pada titik maksimum.","0","0",NULL
+"613","154","d","Periode oleng lambat dan panjang tanpa bahaya khusus.","0","0",NULL
+"614","155","a","Dokumen Kepatuhan (The Document of Compliance).","0","0",NULL
+"615","155","b","Dokumen Kesesuaian (The Document of Conformance).","0","0",NULL
+"616","155","c","Sertifikat Sistem Manajemen Keselamatan.","0","0",NULL
+"617","155","d","Sertifikat ISM.","0","0",NULL
+"618","156","a","Mengangkat atau menurunkan jib derek, menggerakkan kepala derek dan dengan demikian memindahkan beban gantung secara horizontal ke atau dari arah derek.","0","0",NULL
+"619","156","b","Fase awal pengangkatan muatan, di mana kawat dan struktur derek menahan beban muatan gantung.","0","0",NULL
+"620","156","c","Perputaran jib kapal dalam gerakan melingkar mengelilingi derek.","0","0",NULL
+"621","156","d","Gerakan gabungan mengangkat muatan dan memutar derek, digunakan saat mengangkat muatan dari dermaga ke dalam palka kapal, atau sebaliknya.","0","0",NULL
+"622","157","a","Titik Tumpu.","0","0",NULL
+"623","157","b","Trim per Sentimeter.","0","0",NULL
+"624","157","c","Ton per Sentimeter.","0","0",NULL
+"625","157","d","Ton per Sentimeter Perendaman.","0","0",NULL
+"626","158","a","Ketika tali tunda dilepaskan dari set bitts tambat di geladak.","0","0",NULL
+"627","158","b","Ketika tali tunda telah ditarik dan kapal tunda sudah bebas dari lambung kapal.","0","0",NULL
+"628","158","c","Ketika kapal tunda berada setidaknya 100 meter dari kapal.","0","0",NULL
+"629","158","d","Ketika tali tunda sudah diikat dan kapal tunda siap menarik.","0","0",NULL
+"630","159","a","Terjadinya oleng besar secara tak terduga pada gelombang dari samping.","0","0",NULL
+"631","159","b","Bertambahnya gerakan oleng secara bertahap pada gelombang dari depan.","0","0",NULL
+"632","159","c","Gerakan oleng tak terduga dengan sudut kemiringan besar karena gelombang dari samping.","0","0",NULL
+"633","159","d","Gerakan oleng besar yang tidak stabil secara tiba-tiba pada bagian depan atau buritan kapal.","0","0",NULL
+"634","160","a","Munculnya api.","0","0",NULL
+"635","160","b","Reaksi dengan wadah pembawa.","0","0",NULL
+"636","160","c","Ledakan hebat.","0","0",NULL
+"637","160","d","Kerusakan muatan.","0","0",NULL
+"638","161","a","Ruang kendali mesin.","0","0",NULL
+"639","161","b","Semua alternatif.","0","0",NULL
+"640","161","c","Ruang kendali kargo.","0","0",NULL
+"641","161","d","Anjungan.","0","0",NULL
+"642","162","a","Untuk mengamankan kerucut tumpuk ganda.","0","0",NULL
+"643","162","b","Untuk mengamankan satu kerucut tumpuk.","0","0",NULL
+"644","162","c","Bertindak sebagai alas geser untuk twistlocks.","0","0",NULL
+"645","162","d","Untuk mengunci kontainer yang berdekatan.","0","0",NULL
+"646","163","a","Manual disusun saat kapal masih dalam tahap konstruksi dan perlu diperiksa ulang berdasarkan kondisi kapal ""seperti selesai"" agar dapat diandalkan sepenuhnya.","0","0",NULL
+"647","163","b","Beberapa Cargo Securing Manual mencakup seluruh varian kapal sejenis.","0","0",NULL
+"648","163","c","Pengaturan pengikatan muatan dalam manual mungkin tidak cocok untuk kondisi cuaca buruk.","0","0",NULL
+"649","163","d","Manual tersebut tidak selalu disetujui oleh lembaga klasifikasi.","0","0",NULL
+"650","164","a","Meledak.","0","0",NULL
+"651","164","b","Menyala sendiri (otomatis terbakar).","0","0",NULL
+"652","164","c","Terurai.","0","0",NULL
+"653","164","d","Runtuh ke dalam (implode).","0","0",NULL
+"654","165","a","Security Level 4.","0","0",NULL
+"655","165","b","Security Level 1.","0","0",NULL
+"656","165","c","Security Level 3.","0","0",NULL
+"657","165","d","Security Level 2.","0","0",NULL
+"658","166","a","Deviasi dan Variasi.","0","0",NULL
+"659","166","b","Magnet permanen dan terinduksi yang terdapat pada baja atau besi di kapal.","0","0",NULL
+"660","166","c","Perubahan posisi kutub magnet yang menyebabkan perubahan variasi tahunan.","0","0",NULL
+"661","166","d","Perubahan arah haluan kapal yang dilakukan secara terus-menerus.","0","0",NULL
+"662","167","a","Parametric Rolling.","0","0",NULL
+"663","167","b","Sudut kemiringan besar dengan GM besar.","0","0",NULL
+"664","167","c","Excessive pitching (gerakan naik-turun berlebihan).","0","0",NULL
+"665","167","d","Kemampuan membuang air dengan sangat cepat dari geladak.","0","0",NULL
+"666","168","a","Pertama diberikan di peluit depan, lalu peluit belakang, dengan jeda 5 detik di antaranya.","0","0",NULL
+"667","168","b","Sinyal manuver hanya dengan peluit depan; sinyal peringatan dengan kedua peluit secara bersamaan.","0","0",NULL
+"668","168","c","Harus diberikan dengan kedua peluit secara bersamaan.","0","0",NULL
+"669","168","d","Harus diberikan dengan satu peluit saja.","0","0",NULL
+"670","169","a","Menghubungkan tumpukan kontainer yang berdekatan, terutama yang sejajar dengan penyangga.","0","0",NULL
+"671","169","b","Menghubungkan tumpukan kontainer out-of-gauge.","0","0",NULL
+"672","169","c","Mengunci tumpukan kontainer yang berdekatan.","0","0",NULL
+"673","169","d","Mengunci kontainer secara horizontal.","0","0",NULL
+"674","170","a","Selalu menggunakan sarung tangan saat menggunakan mesin gerinda.","0","0",NULL
+"675","170","b","Tidak membawa korek api atau pemantik saat bekerja di luar ruangan.","0","0",NULL
+"676","170","c","Menjaga area kerja tetap bersih dan rapi.","0","0",NULL
+"677","170","d","Menjaga alat dalam jangkauan saat bekerja.","0","0",NULL
+"678","171","a","Ballast dengan kandungan minyak kurang dari 45 ppm.","0","0",NULL
+"679","171","b","Ballast dengan kandungan minyak kurang dari 15 ppm.","0","0",NULL
+"680","171","c","Ballast dengan kandungan minyak kurang dari 1%.","0","0",NULL
+"681","171","d","Tidak ada definisi untuk clean ballast.","0","0",NULL
+"682","172","a","Saat kapal naik-turun secara vertikal (heaving).","0","0",NULL
+"683","172","b","Saat kapal rolling dan pitching.","0","0",NULL
+"684","172","c","Saat kapal menggelinding (rolling).","0","0",NULL
+"685","172","d","Saat kapal mengangguk (pitching).","0","0",NULL
+"686","173","a","Kotoran pada muatan akibat karat, oli hidrolik, atau gemuk.","0","0",NULL
+"687","173","b","Kerusakan kontainer.","0","0",NULL
+"688","173","c","Muatan dimuat tidak sampai penuh ke atas kontainer.","0","0",NULL
+"689","173","d","Kerusakan fisik pada muatan.","0","0",NULL
+"690","174","a","Bahan dengan penyebaran api rendah.","0","0",NULL
+"691","174","b","Baja atau bahan setara.","0","0",NULL
+"692","174","c","Bahan yang tidak mudah terbakar.","0","0",NULL
+"693","174","d","Bahan tahan nyala.","0","0",NULL
+"694","175","a","Unit Efisien Transportasi Truk.","0","0",NULL
+"695","175","b","Unit Dua Puluh Kaki.","0","0",NULL
+"696","175","c","Unit Efektif Tonase.","0","0",NULL
+"697","175","d","Twenty Foot Equivalent Unit (Unit Setara Dua Puluh Kaki).","0","0",NULL
+"698","176","a","Tidak ada pantulan laut di layar, yang bisa membingungkan dengan gema target kecil di dekat kapal.","0","0",NULL
+"699","176","b","Beberapa pantulan laut tetap terlihat di layar.","0","0",NULL
+"700","176","c","Menghapus semua pantulan laut hingga sekitar satu mil dari kapal sendiri.","0","0",NULL
+"701","176","d","Semua jawaban yang disarankan.","0","0",NULL
+"702","177","a","PAN-PAN (3x).","0","0",NULL
+"703","177","b","MAYDAY RELAY (3x).","0","0",NULL
+"704","177","c","MAYDAY (3x).","0","0",NULL
+"705","177","d","DISTRESS (3x).","0","0",NULL
+"706","178","a","Dalam zona utama sesuai dengan penggunaannya (Akomodasi, Mesin, Kargo).","0","0",NULL
+"707","178","b","Dalam zona vertikal utama.","0","0",NULL
+"708","178","c","Dalam zona horizontal utama.","0","0",NULL
+"709","178","d","Zona kebakaran utama sesuai sistem pemadam kebakaran kapal.","0","0",NULL
+"710","179","a","Diperlukan agar kapal tetap tegak selama pelayaran berbeban.","0","0",NULL
+"711","179","b","Diperlukan untuk menyeimbangkan kapal dan mengimbangi momen lentur memanjang.","0","0",NULL
+"712","179","c","Penting untuk menjaga kapal tetap sesuai dengan persyaratan garis muat internasional.","0","0",NULL
+"713","179","d","Diperlukan untuk memuat ballast selama bongkar muat.","0","0",NULL
+"714","180","a","Untuk menghubungkan tumpukan kontainer yang berdekatan, terutama yang sejajar dengan penyangga (buttresses).","0","0",NULL
+"715","180","b","Untuk menghubungkan tumpukan kontainer out-of-gauge.","0","0",NULL
+"716","180","c","Untuk menghubungkan tumpukan kontainer yang berdekatan.","0","0",NULL
+"717","180","d","Untuk mengunci kontainer secara horizontal.","0","0",NULL
+"718","181","a","Mereka semua adalah karyawan kapal.","0","0",NULL
+"719","181","b","Mereka semua memiliki kesempatan untuk menyelundupkan narkoba.","0","0",NULL
+"720","181","c","Mereka semua berada di atas kapal selama pelayaran.","0","0",NULL
+"721","181","d","Mereka semua dilatih dalam prosedur darurat kapal.","0","0",NULL
+"722","182","a","Laksanakan prosedur sesuai instruksi untuk pekerjaan dingin termasuk mengisi formulir dan menandatanganinya.","0","0",NULL
+"723","182","b","Bunyi alarm umum.","0","0",NULL
+"724","182","c","Siapkan alat bantu pernapasan.","0","0",NULL
+"725","182","d","Bunyi alarm umum dan laksanakan prosedur untuk pekerjaan dingin termasuk mengisi formulir dan menandatanganinya.","0","0",NULL
+"726","183","a","Penutup palka portabel cadangan telah ditempatkan di atas kapal untuk digunakan hanya saat cuaca buruk.","0","0",NULL
+"727","183","b","Kedap air ditunjukkan dengan menggunakan penutup portabel untuk bukaan palka.","0","0",NULL
+"728","183","c","Sertifikat pembebasan garis muat internasional (International Load Line Exemption Certificate) dikeluarkan sesuai Pasal 6.","0","0",NULL
+"729","183","d","Dek bergerak khusus dipasang untuk memastikan kedap air.","0","0",NULL
+"730","184","a","Winch ""spring"" dibiarkan dalam mode auto-tension dan semua winch lainnya dengan rem manual aktif.","0","0",NULL
+"731","184","b","Semua winch dibiarkan dalam kondisi rem manual aktif dan tidak dihubungkan (out of gear).","0","0",NULL
+"732","184","c","Semua winch tambat dibiarkan dalam mode ""auto-tension"".","0","0",NULL
+"733","184","d","Winch “breastline” dan “headline” dibiarkan dalam mode auto-tension dan winch spring dengan rem manual aktif.","0","0",NULL
+"734","185","a","Manual pengamanan kargo tidak memperbolehkan sistem berbasis cone.","0","0",NULL
+"735","185","b","Sistem pengikat berbasis cone lebih rentan terhadap kegagalan dibandingkan twistlock.","0","0",NULL
+"736","185","c","Sistem pengikat berbasis cone tidak disetujui oleh badan klasifikasi.","0","0",NULL
+"737","185","d","Twistlock memberikan tahanan ke atas dan tahanan horizontal, membantu mencegah kontainer jatuh ke laut saat cuaca buruk.","0","0",NULL
+"738","186","a","Kuning dan merah.","0","0",NULL
+"739","186","b","Kuning dan ungu.","0","0",NULL
+"740","186","c","Kuning dan hijau.","0","0",NULL
+"741","186","d","Hijau dan merah.","0","0",NULL
+"742","187","a","Beberapa manual pengamanan muatan mencakup berbagai jenis kapal sejenis.","0","0",NULL
+"743","187","b","Manual disusun ketika kapal masih dalam tahap konstruksi dan perlu dicek kembali terhadap kondisi kapal yang telah ""selesai dibangun"" untuk dapat dinilai sepenuhnya dapat diandalkan.","0","0",NULL
+"744","187","c","Pengaturan pengamanan dalam manual mungkin tidak cocok untuk kondisi cuaca buruk.","0","0",NULL
+"745","187","d","Manual tersebut tidak selalu disetujui oleh badan klasifikasi","0","0",NULL
+"746","188","a","Ballast dan tangki bahan bakar penuh dan ditekan.","0","0",NULL
+"747","188","b","Tali tambat longgar, haluan menghadap angin, dan jumlah kru minimum di atas kapal.","0","0",NULL
+"748","188","c","Semua derek diturunkan dan tidak ada barang yang bergerak di dek maupun gudang.","0","0",NULL
+"749","188","d","Semua jawaban yang disebutkan.","0","0",NULL
+"750","189","a","Penutup (hatch) ditempatkan sedemikian rupa agar peluncuran dan pengangkatan bisa dilakukan tanpa penumpang perlu meninggalkan tempat.","0","0",NULL
+"751","189","b","Pegangan tangan di dalam untuk penumpang saat menuju ke tempat duduk.","0","0",NULL
+"752","189","c","Sistem penguras otomatis (self-bailing).","0","0",NULL
+"753","189","d","Jendela di kedua sisi dapat ditutup rapat kedap air dan dibuka untuk ventilasi","0","0",NULL
+"754","190","a","Rolling.","0","0",NULL
+"755","190","b","Pitching.","0","0",NULL
+"756","190","c","Surging.","0","0",NULL
+"757","190","d","Heaving","0","0",NULL
+"758","191","a","Menutup ventilasi perahu penyelamat.","0","0",NULL
+"759","191","b","Membuka palka.","0","0",NULL
+"760","191","c","Mengamankan palka (Secure hatches).","0","0",NULL
+"761","191","d","Mengamankan pintu di pelat sisi kapal","0","0",NULL
+"762","192","a","Merah.","0","0",NULL
+"763","192","b","Kuning.","0","0",NULL
+"764","192","c","Hijau.","0","0",NULL
+"765","192","d","Biru","0","0",NULL
+"766","193","a","Bahaya utamanya adalah mudah terbakar dan bahaya sekundernya adalah toksisitas.","0","0",NULL
+"767","193","b","Bahaya sekundernya adalah mudah terbakar dan toksik.","0","0",NULL
+"768","193","c","Bahaya utamanya adalah toksik dan sekunder adalah mudah terbakar.","0","0",NULL
+"769","193","d","Bahaya utamanya adalah mudah terbakar dan toksik.","0","0",NULL
+"770","194","a","Kerusakan fisik pada muatan.","0","0",NULL
+"771","194","b","Muatan dimuat kurang dari tinggi penuh kontainer.","0","0",NULL
+"772","194","c","Muatan ternoda oleh karat, oli hidrolik, atau gemuk.","0","0",NULL
+"773","194","d","Kerusakan pada kontainer.","0","0",NULL
+"774","195","a","Definisi tanggung jawab pengawas.","0","0",NULL
+"775","195","b","Sistem Izin Kerja (Permit to Work system).","0","0",NULL
+"776","195","c","Klausul due diligence.","0","0",NULL
+"777","195","d","Dokumentasi deskripsi pekerjaan individual.","0","0",NULL
+"778","196","a","Rolling, Pitching dan Heaving.","0","0",NULL
+"779","196","b","Rolling, Swaying dan Yawing.","0","0",NULL
+"780","196","c","Surging, Yawing dan Rolling.","0","0",NULL
+"781","196","d","Rolling, Heaving dan Swaying.","0","0",NULL
+"782","197","a","10-30%.","0","0",NULL
+"783","197","b","103-119%.","0","0",NULL
+"784","197","c","70-85%.","0","0",NULL
+"785","197","d","40-60%.","0","0",NULL
+"786","198","a","Mereka tidak tunduk pada ketentuan dari Kode IMDG, tetapi mungkin tunduk pada ketentuan yang mengatur pengangkutan barang berbahaya dengan moda lain.","0","0",NULL
+"787","198","b","Harus dikirim dalam kontainer terbuka, karena karakteristik khususnya.","0","0",NULL
+"788","198","c","Tercantum sebagai Zat Korosif – Kode IMDG Kelas 8.","0","0",NULL
+"789","198","d","Tidak tercantum dalam Kode IMDG.","0","0",NULL
+"790","199","a","Melalui instruksi alarm di semua kabin kru.","0","0",NULL
+"791","199","b","Melalui daftar muster yang dipasang di tempat-tempat mencolok.","0","0",NULL
+"792","199","c","Melalui instruksi lisan dari Kapten.","0","0",NULL
+"793","199","d","Melalui berkas yang dibagikan ke setiap awak kapal.","0","0",NULL
+"794","200","a","Sekat yang terbuat dari bahan tidak mudah terbakar yang disetujui dan dapat menahan uji kebakaran standar selama 45 menit.","0","0",NULL
+"795","200","b","Sekat yang terbuat dari bahan tidak mudah terbakar yang disetujui dan dapat menahan uji kebakaran standar selama 15 menit.","0","0",NULL
+"796","200","c","Sekat yang terbuat dari bahan tidak mudah terbakar yang disetujui dan dapat menahan uji kebakaran standar selama 30 menit.","0","0",NULL
+"797","200","d","Sekat yang terbuat dari bahan tidak mudah terbakar yang disetujui, namun tidak memenuhi persyaratan apa pun terkait asap dan batas nyala api atau kenaikan suhu.","0","0",NULL
+"798","201","a","Hijau (Green).","0","0",NULL
+"799","201","b","Putih.","0","0",NULL
+"800","201","c","Biru.","0","0",NULL
+"801","201","d","Kuning.","0","0",NULL
+"802","202","a","Getaran tinggi di area HTS.","0","0",NULL
+"803","202","b","Elastisitas rendah.","0","0",NULL
+"804","202","c","Kegagalan tanpa peringatan.","0","0",NULL
+"805","202","d","Saya tidak tahu.","0","0",NULL
+"806","203","a","Hanya saluran 16.","0","0",NULL
+"807","203","b","Saluran 6 & 16.","0","0",NULL
+"808","203","c","Saluran 6, 13 & 16.","0","0",NULL
+"809","203","d","Saluran 13 & 16.","0","0",NULL
+"810","204","a","Mengatur pengawasan pada saluran VHF channel 16.","0","0",NULL
+"811","204","b","Mengatur pengawasan pada saluran 13.","0","0",NULL
+"812","204","c","Segera mengirimkan panggilan DSC DISTRESS RELAY.","0","0",NULL
+"813","204","d","Segera mengirimkan panggilan DSC DISTRESS ACKNOWLEDGEMENT.","0","0",NULL
+"814","205","a","Ketika pengirim menyatakan bahwa kontainer hanya boleh diangkut di atas geladak.","0","0",NULL
+"815","205","b","Ketika lembar data keselamatan material menunjukkan adanya kandungan yang terdaftar dalam IMDG Code.","0","0",NULL
+"816","205","c","Ketika dinyatakan sebagai bahan kimia yang tidak berbahaya.","0","0",NULL
+"817","205","d","Ketika dinyatakan sebagai bahan makanan cair curah.","0","0",NULL
+"818","206","a","Komunikasi satelit akan terganggu parah.","0","0",NULL
+"819","206","b","GPS dapat memberikan kesalahan posisi karena gangguan sinyal satelit.","0","0",NULL
+"820","206","c","Jangkauan abnormal dari radio VHF dan deteksi radar jarak jauh.","0","0",NULL
+"821","206","d","Radar akan menunjukkan clutter laut yang abnormal karena pulsa terperangkap dalam lapisan atmosfer.","0","0",NULL
+"822","207","a","Tanda panggil kapal yang ditujukan untuk panggilan radio-telepon, telegram, atau jenis panggilan lainnya.","0","0",NULL
+"823","207","b","Nama kapal yang atas nama keselamatan laut sedang diarahkan oleh sistem kontrol lalu lintas.","0","0",NULL
+"824","207","c","Nama kapal yang dijadwalkan untuk sandar.","0","0",NULL
+"825","207","d","Informasi navigasi dan cuaca yang relevan.","0","0",NULL
+"826","208","a","Apakah Anda memerlukan bantuan?","0","0",NULL
+"827","208","b","Saya membutuhkan bantuan segera.","0","0",NULL
+"828","208","c","Tetaplah di tempat untuk membantu saya.","0","0",NULL
+"829","208","d","Saya memerlukan bantuan medis.","0","0",NULL
+"830","209","a","Dalam mode G3E – secara basis duplex.","0","0",NULL
+"831","209","b","Dalam mode G3E – secara basis simplex.","0","0",NULL
+"832","209","c","Dalam mode J3E – secara basis duplex.","0","0",NULL
+"833","209","d","Dalam mode J3E – secara basis simplex.","0","0",NULL
+"834","210","a","Menggoyangkan objek tersebut.","0","0",NULL
+"835","210","b","Menimbang objek. Jika beratnya lebih dari normal, maka itu dicurigai sebagai IED.","0","0",NULL
+"836","210","c","IED dapat terlihat seperti objek apa pun, oleh karena itu penting agar kru yang paling akrab dengan area tertentu yang melakukan pencarian.","0","0",NULL
+"837","210","d","Mengukur ukuran objek tersebut.","0","0",NULL
+"838","211","a","Sampah.","0","0",NULL
+"839","211","b","Puing-puing.","0","0",NULL
+"840","211","c","Flotsam.","0","0",NULL
+"841","211","d","Polusi.","0","0",NULL
+"842","212","a","Keluarkan sumbatan dan pulihkan pernapasan normal.","0","0",NULL
+"843","212","b","Baringkan korban di permukaan keras (misalnya geladak) dan tekan dengan kuat dan cepat pada bagian tengah bawah tulang dada.","0","0",NULL
+"844","212","c","Berdiri di belakang korban. Kepalkan tangan dengan ibu jari mengarah ke dalam di tengah perut bagian atas. Pegang kepalan tangan Anda dengan tangan lainnya dan tarik dengan cepat ke dalam.","0","0",NULL
+"845","212","d","Biarkan korban menggantungkan tubuhnya ke bawah selama minimal 5 menit.","0","0",NULL
+"846","213","a","Tidak satupun dari yang disebutkan.","0","0",NULL
+"847","213","b","Semi-duplex.","0","0",NULL
+"848","213","c","Duplex.","0","0",NULL
+"849","213","d","Simplex.","0","0",NULL
+"850","214","a","Serat, zat berbentuk bubuk, granular, atau pasta yang dapat menyala sendiri.","0","0",NULL
+"851","214","b","Serat, zat berbentuk bubuk, granular, atau pasta yang berbahaya jika mudah menyala saat kontak singkat dengan sumber api dan jika nyalanya cepat menyebar.","0","0",NULL
+"852","214","c","Zat padat apa pun yang dapat menyala sendiri.","0","0",NULL
+"853","214","d","Zat yang akan memanas dan menyala akibat penyalaan zat lain.","0","0",NULL
+"854","215","a","Lingkaran kecil.","0","0",NULL
+"855","215","b","Komposit lingkaran besar.","0","0",NULL
+"856","215","c","Garis Rhumb (Rhumb line).","0","0",NULL
+"857","215","d","Lingkaran besar (Great Circle).","0","0",NULL
+"858","216","a","Biru tua.","0","0",NULL
+"859","216","b","Biru muda.","0","0",NULL
+"860","216","c","Pucat atau abu-abu.","0","0",NULL
+"861","216","d","Hijau atau ungu.","0","0",NULL
+"862","217","a","Hanya komunikasi dengan USCG.","0","0",NULL
+"863","217","b","Hanya laporan lisan untuk dokumentasi.","0","0",NULL
+"864","217","c","Setiap laporan atau pesan harus dicatat termasuk waktu dan tanggal.","0","0",NULL
+"865","217","d","Hanya laporan awal yang perlu dicatat.","0","0",NULL
+"866","218","a","Meminta RCC untuk melakukan uji coba.","0","0",NULL
+"867","218","b","Fungsi uji coba perangkat itu sendiri (testing function of the device).","0","0",NULL
+"868","218","c","Uji transmisi dari satelit Cospas-Sarsat.","0","0",NULL
+"869","218","d","Pengujian bulanan oleh RCC sesuai regulasi.","0","0",NULL
+"870","219","a","Mayday (1x), tanda panggil kapal dalam bahaya (3x) / ini adalah / tanda panggil sendiri (3x) / received mayday.","0","0",NULL
+"871","219","b","Mayday (3x) / ini adalah / tanda panggil sendiri (3x) / received mayday / tanda panggil kapal dalam bahaya (1x).","0","0",NULL
+"872","219","c","Mayday (1x) / ini adalah / tanda panggil sendiri (3x) / received mayday.","0","0",NULL
+"873","219","d","Mayday (1x) / distress alert / tanda panggil kapal sendiri.","0","0",NULL
+"874","220","a","Hubungi otoritas SAR melalui stasiun radio pantai terdekat.","0","0",NULL
+"875","220","b","Tentukan seberapa dekat kapal Anda dengan kapal dalam bahaya.","0","0",NULL
+"876","220","c","Dengarkan pesan darurat pada frekuensi radio yang sesuai selama 5 menit.","0","0",NULL
+"877","220","d","Segera jawab pesan darurat pada frekuensi radio yang benar.","0","0",NULL
+"878","221","a","Sudut kemudi maksimum dan periode olengan.","0","0",NULL
+"879","221","b","Lintang dan Kecepatan.","0","0",NULL
+"880","221","c","Semua data dari pilihan jawaban.","0","0",NULL
+"881","221","d","Deviasi dan Variasi","0","0",NULL
+"882","222","a","Keselamatan.","0","0",NULL
+"883","222","b","Mendesak.","0","0",NULL
+"884","222","c","Individual.","0","0",NULL
+"885","222","d","Darurat.","0","0",NULL
+"886","223","a","Meminta bantuan medis.","0","0",NULL
+"887","223","b","Ketika ada masalah teknis pada terminal Inmarsat.","0","0",NULL
+"888","223","c","Ketika stasiun pantai tidak berfungsi.","0","0",NULL
+"889","223","d","Meminta informasi maritim.","0","0",NULL
+"890","224","a","Ketika dicurigai ada kerusakan pada peralatan.","0","0",NULL
+"891","224","b","Sesering mungkin.","0","0",NULL
+"892","224","c","Saat mempersiapkan keberangkatan dan memasuki pelabuhan serta secara berkala selama pelayaran.","0","0",NULL
+"893","224","d","Ketika ada kesempatan dan waktu memungkinkan.","0","0",NULL
+"894","225","a","Relative vectors (Vektor relatif).","0","0",NULL
+"895","225","b","True vectors (Vektor sejati).","0","0",NULL
+"896","225","c","Relative vectors, sea stabilised (Vektor relatif, stabil laut).","0","0",NULL
+"897","225","d","Relative vectors, ground stabilised (Vektor relatif, stabil tanah).","0","0",NULL
+"898","226","a","Pendeteksi arah radio (Radio Direction Finder).","0","0",NULL
+"899","226","b","Radar pita X (X-band radar).","0","0",NULL
+"900","226","c","Penerima DSC (DSC receiver).","0","0",NULL
+"901","226","d","Radar pita S (S-band radar).","0","0",NULL
+"902","227","a","Zone of Confusion (Zona Kebingungan).","0","0",NULL
+"903","227","b","Zone of Communications (Zona Komunikasi).","0","0",NULL
+"904","227","c","Zero on Carbon (Nol Karbon).","0","0",NULL
+"905","227","d","Zone of Confidence (Zona Kepercayaan).","0","0",NULL
+"906","228","a","Sistem ini semuanya dibuat khusus untuk kapal dan operasi kelautan.","0","0",NULL
+"907","228","b","Jika kapal menggunakan salah satu dari sistem ini, maka tidak perlu.","0","0",NULL
+"908","228","c","Sistem satelit ini memberikan cakupan global 24 jam sehari.","0","0",NULL
+"909","228","d","Sistem navigasi satelit juga memberikan informasi tentang kondisi cuaca dan gelombang.","0","0",NULL
+"910","229","a","Melakukan ""link test"".","0","0",NULL
+"911","229","b","Mengirim pesan ke MF DSC.","0","0",NULL
+"912","229","c","Melakukan ""recommissioning test"".","0","0",NULL
+"913","229","d","Meminta ""self test"".","0","0",NULL
+"914","230","a","FR01.","0","0",NULL
+"915","230","b","2187.5.","0","0",NULL
+"916","230","c","227909850.","0","0",NULL
+"917","230","d","F1B.","0","0",NULL
+"918","231","a","PAN-PAN (3x).","0","0",NULL
+"919","231","b","MAYDAY RELAY (3x).","0","0",NULL
+"920","231","c","MAYDAY (3x).","0","0",NULL
+"921","231","d","ISTRESS (3x).","0","0",NULL
+"922","232","a","Angin kencang tapi hujan sangat sedikit.","0","0",NULL
+"923","232","b","Hujan terus menerus dan cuaca sangat lembap.","0","0",NULL
+"924","232","c","Angin kencang dan hujan deras.","0","0",NULL
+"925","232","d","Angin ringan dan cuaca cerah, kadang berkabut.","0","0",NULL
+"926","233","a","Penerimaan peringatan marabahaya (distress alert).","0","0",NULL
+"927","233","b","Saat menerima laporan cuaca.","0","0",NULL
+"928","233","c","Laporan tambahan terhadap sinyal marabahaya.","0","0",NULL
+"929","233","d","Sinyal marabahaya.","0","0",NULL
+"930","234","a","Target berhenti dan tidak bergerak di air.","0","0",NULL
+"931","234","b","Target berada pada jalur tabrakan dengan kapal sendiri.","0","0",NULL
+"932","234","c","Target berada pada arah tetap dan semakin mendekati kapal sendiri.","0","0",NULL
+"933","234","d","Target berada pada jalur dan kecepatan yang sama dengan kapal sendiri.","0","0",NULL
+"934","235","a","Diteruskan ketika satelit melintasi khatulistiwa.","0","0",NULL
+"935","235","b","Hanya diteruskan ke LUT jika satelit melihat baik EPIRB maupun LUT.","0","0",NULL
+"936","235","c","Selalu diteruskan ke LUT.","0","0",NULL
+"937","235","d","Hanya diteruskan ke LUT di antara lintang 70° Utara dan 70° Selatan.","0","0",NULL
+"938","236","a","Baringan kompas target, dikoreksi deviasi, plotting pada peta","0","0",NULL
+"939","236","b","Baringan kompas target, dikoreksi variasi, plotting pada peta","0","0",NULL
+"940","236","c","Baringan kompas target, dikoreksi sembir, plotting pada peta","0","0",NULL
+"941","236","d","Baringan kompas target, plotting pada peta","0","0",NULL
+"942","237","a","Posisi kapal","0","0",NULL
+"943","237","b","Konsumsi bahan bakar dan air tawar","0","0",NULL
+"944","237","c","Konsumsi provision","0","0",NULL
+"945","237","d","Kecepatan rata-rata dan perkiraan waktu tiba","0","0",NULL
+"946","238","a","048°","0","0",NULL
+"947","238","b","056°","0","0",NULL
+"948","238","c","058°","0","0",NULL
+"949","238","d","068°","0","0",NULL
+"950","239","a","Transit bearing / membaring 2 benda menjadi satu","0","0",NULL
+"951","239","b","Azimuth matahari","0","0",NULL
+"952","239","c","Azimuth benda-benda angkasa","0","0",NULL
+"953","239","d","Membaring benda / target yang dikenal di peta","0","0",NULL
+"954","240","a","Ya (affirmative).","0","0",NULL
+"955","240","b","Saya memiliki penyelam di bawah air; hindari dan jaga kecepatan rendah.","0","0",NULL
+"956","240","c","Kapal saya berhenti dan tidak bergerak di air.","0","0",NULL
+"957","240","d","Saya ingin berkomunikasi dengan Anda.","0","0",NULL
+"958","241","a","Membunyikan sinyal kabut, menyiapkan mesin untuk manuver.","0","0",NULL
+"959","241","b","Semua jawaban yang disarankan.","0","0",NULL
+"960","241","c","Memantau radar secara terus-menerus, menambah pengamat untuk suara maupun penglihatan.","0","0",NULL
+"961","241","d","Memantau informasi target AIS dan mendengarkan radio.","0","0",NULL
+"962","242","a","Manajer memberikan perintah.","0","0",NULL
+"963","242","b","Perwira jaga (OOW) menganggap perlu.","0","0",NULL
+"964","242","c","OSC dari RCC yang bersangkutan mengundang kapal.","0","0",NULL
+"965","242","d","Kapten memberikan perintah.","0","0",NULL
+"966","243","a","Stasiun pantai atau stasiun penjaga pantai.","0","0",NULL
+"967","243","b","Sekelompok kapal.","0","0",NULL
+"968","243","c","Jenis kapal.","0","0",NULL
+"969","243","d","Sebuah kapal.","0","0",NULL
+"970","244","a","Komunikasi radio maritim manual.","0","0",NULL
+"971","244","b","Buku catatan dek kapal.","0","0",NULL
+"972","244","c","Manual peralatan.","0","0",NULL
+"973","244","d","Buku Catatan Radio (Radio Log).","0","0",NULL
+"974","245","a","Saat sinyal AIS dari suatu target memiliki kesalahan besar.","0","0",NULL
+"975","245","b","Saat dua target AIS berdekatan.","0","0",NULL
+"976","245","c","Menggabungkan tampilan pantulan radar dan target AIS.","0","0",NULL
+"977","245","d","Perbedaan antara radar dan posisi tampilan AIS.","0","0",NULL
+"978","246","a","Deviation.","0","0",NULL
+"979","246","b","Variation.","0","0",NULL
+"980","246","c","Induced magnetism.","0","0",NULL
+"981","246","d","Semua jawaban yang disarankan.","0","0",NULL
+"982","247","a","Keselamatan.","0","0",NULL
+"983","247","b","Rutin.","0","0",NULL
+"984","247","c","Keamanan (Security).","0","0",NULL
+"985","247","d","Mendesak.","0","0",NULL
+"986","248","a","Titik Pivot Hidrodinamis (Hydrodynamic Pivot Point).","0","0",NULL
+"987","248","b","Pusat Flotasi.","0","0",NULL
+"988","248","c","Titik Pusat Putaran.","0","0",NULL
+"989","248","d","Titik Pivot Berat.","0","0",NULL
+"990","249","a","Situasi yang diamati di mana terdapat bukti objektif bahwa suatu persyaratan tertentu tidak terpenuhi.","0","0",NULL
+"991","249","b","Penggunaan alat pelindung diri yang tidak standar.","0","0",NULL
+"992","249","c","Entri buku log resmi yang tidak diisi dengan benar.","0","0",NULL
+"993","249","d","Petugas keselamatan tidak ditunjuk untuk kapal.","0","0",NULL
+"994","250","a","Ya, gaya belok akan berkurang sekitar 50% dari gaya aslinya ketika mesin dimatikan.","0","0",NULL
+"995","250","b","Tidak, gaya belok dari kemudi akan tetap sekitar 90% seperti saat melaju penuh.","0","0",NULL
+"996","250","c","Tidak, gaya belok tidak terpengaruh oleh kecepatan baling-baling.","0","0",NULL
+"997","250","d","Ya, gaya belok akan berkurang drastis ketika mesin dimatikan.","0","0",NULL
+"998","251","a","Ini adalah kapal yang melakukan pengerukan atau operasi bawah air. Dua bola dalam garis vertikal menunjukkan sisi aman untuk dilewati; dua belah ketupat dalam garis vertikal menunjukkan sisi yang memiliki halangan; bola/belah ketupat/bola menunjukkan kapal dibatasi dalam kemampuannya untuk bermanuver.","0","0",NULL
+"999","251","b","Ini adalah kapal yang bertugas keamanan pelabuhan. Dua bola dalam garis vertikal menunjukkan pelabuhan ditutup; dua belah ketupat dalam garis vertikal menunjukkan pelabuhan sedang melakukan operasi pembersihan ranjau; bola/belah ketupat/bola menunjukkan kapal tersebut dibatasi dalam kemampuannya untuk bermanuver.","0","0",NULL
+"1000","251","c","Ini adalah kapal yang melakukan pengerukan atau operasi bawah air. Dua bola dalam garis vertikal menunjukkan sisi di mana terdapat halangan; dua belah ketupat dalam garis vertikal menunjukkan sisi yang aman untuk dilewati; kombinasi bola/belah ketupat/bola secara vertikal menunjukkan bahwa kapal tersebut dibatasi dalam kemampuannya untuk bermanuver.","0","0",NULL
+"1001","251","d","Ini adalah kapal yang melakukan operasi pembersihan ranjau. Dua bola dalam garis vertikal menunjukkan alat penyapu aktif; dua belah ketupat dalam garis vertikal menunjukkan bahwa kapal harus diberi jarak minimal 1.000 meter; bola/belah ketupat/bola menunjukkan kapal tersebut dibatasi dalam kemampuannya untuk bermanuver.","0","0",NULL
+"1002","252","a","Pemeriksa palet (Pallet scanner)","0","0",NULL
+"1003","252","b","Detektor uap (Vapour detector)","0","0",NULL
+"1004","252","c","Sistem kontrol akses","0","0",NULL
+"1005","252","d","Kontainer keamanan","0","0",NULL
+"1006","253","a","Kibarkan dua bola hitam.","0","0",NULL
+"1007","253","b","Bunyi Alarm Umum.","0","0",NULL
+"1008","253","c","Mundur penuh (ring full astern).","0","0",NULL
+"1009","253","d","Matikan mesin.","0","0",NULL
+"1010","254","a","Karena interaksi, haluan kapal akan saling tarik saat mendekat, lalu akan saling tolak saat sejajar dan buritan akan saling tarik saat kapal menjauh.","0","0",NULL
+"1011","254","b","Saat mendekat, kemudi harus segera digerakkan untuk menghindari membelok ke jalur kapal lain. Kemudian saat sejajar buritan akan saling tarik dan akhirnya saling tolak saat menjauh.","0","0",NULL
+"1012","254","c","Karena interaksi, haluan kapal akan saling tolak, lalu saat sejajar kedua kapal akan tersedot saling mendekat, dan akhirnya buritan akan saling tolak saat mulai menjauh.","0","0",NULL
+"1013","254","d","Akan sangat sedikit pengaruh antara kedua kapal saat mereka saling melewati.","0","0",NULL
+"1014","255","a","Hanya staf darat perusahaan","0","0",NULL
+"1015","255","b","Hanya perwira senior","0","0",NULL
+"1016","255","c","Hanya nakhoda","0","0",NULL
+"1017","255","d","Semua anggota awak kapal","0","0",NULL
+"1018","256","a","42","0","0",NULL
+"1019","256","b","26","0","0",NULL
+"1020","256","c","32","0","0",NULL
+"1021","256","d","39","0","0",NULL
+"1022","257","a","1 tahun.","0","0",NULL
+"1023","257","b","2 tahun.","0","0",NULL
+"1024","257","c","6 bulan.","0","0",NULL
+"1025","257","d","5 tahun","0","0",NULL
+"1026","258","a","Menampilkan sinyal NUC (Not Under Command) dan mempertimbangkan untuk menghentikan mesin.","0","0",NULL
+"1027","258","b","Menghubungi Nakhoda dan memberitahukan situasi.","0","0",NULL
+"1028","258","c","Semua jawaban yang disebutkan.","0","0",NULL
+"1029","258","d","Meminta ruang mesin untuk memeriksa alat kemudi","0","0",NULL
+"1030","259","a","244123000.","0","0",NULL
+"1031","259","b","002453290.","0","0",NULL
+"1032","259","c","245329000.","0","0",NULL
+"1033","259","d","Tidak ada yang disebutkan.","0","0",NULL
+"1034","260","a","Under Keel Clearance ditunjukkan oleh huruf A dalam gambar.","0","0",NULL
+"1035","260","b","Under Keel Clearance ditunjukkan oleh huruf B dalam gambar.","0","0",NULL
+"1036","260","c","Under Keel Clearance ditunjukkan oleh huruf D dalam gambar.","0","0",NULL
+"1037","260","d","Under Keel Clearance ditunjukkan oleh huruf C dalam gambar.","0","0",NULL
+"1038","261","a","On official watch.","0","0",NULL
+"1039","261","b","Officer of the Watch.","0","0",NULL
+"1040","261","c","Operator of the watch.","0","0",NULL
+"1041","261","d","On official watchkeeping","0","0",NULL
+"1042","262","a","6 ledakan panjang berulang kali.","0","0",NULL
+"1043","262","b","3 ledakan panjang berulang kali.","0","0",NULL
+"1044","262","c","5 ledakan panjang berulang kali.","0","0",NULL
+"1045","262","d","4 ledakan panjang berulang kali.","0","0",NULL
+"1046","263","a","Sekat tabrakan dan geladak.","0","0",NULL
+"1047","263","b","Sekat tengah.","0","0",NULL
+"1048","263","c","Tangki dan lantai bagian bawah ganda.","0","0",NULL
+"1049","263","d","Balok dan stringer anti-panting.","0","0",NULL
+"1050","264","a","Letakkan benda tersebut di dalam laci atau lemari arsip.","0","0",NULL
+"1051","264","b","Konfirmasi dengan rekan pencari bahwa objek tersebut mencurigakan.","0","0",NULL
+"1052","264","c","Buang benda tersebut ke laut.","0","0",NULL
+"1053","264","d","Tutupi benda mencurigakan tersebut dengan kotak atau selimut.","0","0",NULL
+"1054","265","a","Berdasarkan biaya minimum enam detik dengan kenaikan per detik.","0","0",NULL
+"1055","265","b","Berdasarkan biaya minimum enam detik dengan kenaikan enam detik.","0","0",NULL
+"1056","265","c","Berdasarkan biaya minimum tiga menit dengan kenaikan per menit.","0","0",NULL
+"1057","265","d","Berdasarkan biaya minimum satu menit dengan kenaikan per menit.","0","0",NULL
+"1058","266","a","Pesan ini berarti kapal pesiar sedang kemasukan air.","0","0",NULL
+"1059","266","b","Pesan ini berarti kapal pesiar sedang mengalami gelombang besar dan mungkin butuh bantuan.","0","0",NULL
+"1060","266","c","Pesan ini berarti kapal pesiar telah terbalik di laut ganas.","0","0",NULL
+"1061","266","d","Pesan ini berarti kapal pesiar kehilangan kaptennya di laut ganas.","0","0",NULL
+"1062","267","a","Ya, aman jika tali tas dibungkuskan pada tangga.","0","0",NULL
+"1063","267","b","Ya, aman jika kapal tidak terlalu bergoyang.","0","0",NULL
+"1064","267","c","Tidak aman kedua tangan seharusnya selalu digunakan untuk memanjat tangga.","0","0",NULL
+"1065","267","d","Ya, aman asalkan tetap mempertahankan tiga titik kontak.","0","0",NULL
+"1066","268","a","Emergency General Ship Call.","0","0",NULL
+"1067","268","b","Enhanced Group Call.","0","0",NULL
+"1068","268","c","Exchange Geographic Call.","0","0",NULL
+"1069","268","d","Exchange Group Call.","0","0",NULL
+"1070","269","a","Nahkoda (Captain).","0","0",NULL
+"1071","269","b","Kepala Kamar Mesin (Chief Engineer).","0","0",NULL
+"1072","269","c","Teknisi kapal yang bertugas.","0","0",NULL
+"1073","269","d","Orang pertama yang tiba di lokasi.","0","0",NULL
+"1074","270","a","Undang-undang Keselamatan dan Kesehatan Kerja.","0","0",NULL
+"1075","270","b","Berkonsultasi dengan petugas kepala sebelum mulai bekerja.","0","0",NULL
+"1076","270","c","Menggunakan praktik yang sama yang telah berlaku selama beberapa waktu.","0","0",NULL
+"1077","270","d","Memanfaatkan Penilaian Risiko (Risk Assessment) sebagai sarana peningkatan keselamatan.","0","0",NULL
+"1078","271","a","Di posisi dekat buritan kapal.","0","0",NULL
+"1079","271","b","Sekitar 1/3 panjang kapal dari buritan (stern).","0","0",NULL
+"1080","271","c","Di tengah-tengah kapal (amidships).","0","0",NULL
+"1081","271","d","Sekitar 1/3 panjang kapal dari haluan (bow).","0","0",NULL
+"1082","272","a","Kerusakan pada kontainer.","0","0",NULL
+"1083","272","b","Kerusakan fisik pada muatan.","0","0",NULL
+"1084","272","c","Muatan ternoda oleh karat, oli hidrolik, atau gemuk.","0","0",NULL
+"1085","272","d","Muatan tidak dimuat hingga penuh sesuai tinggi kontainer.","0","0",NULL
+"1086","273","a","Ketika dua kali periode pertemuan gelombang mendekati periode menggelinding alami kapal.","0","0",NULL
+"1087","273","b","Ketika tinggi gelombang dari haluan melebihi 6 meter.","0","0",NULL
+"1088","273","c","Ketika periode pertemuan gelombang mendekati periode menggelinding alami kapal.","0","0",NULL
+"1089","273","d","Ketika tinggi gelombang dari kuarter kiri atau kanan melebihi 6 meter.","0","0",NULL
+"1090","274","a","Perintah nakhoda bersifat sesuai situasi (berubah), dengan perintah nakhoda bersifat tetap","0","0",NULL
+"1091","274","b","Perintah nakhoda yang sifat sesuai situasi (berubah), dengan perintah nakhoda yang wajib dilaksanakan","0","0",NULL
+"1092","274","c","Perintah nakhoda yang bersifat tetap, dengan perintah nakhoda yang wajib dilaksanakan","0","0",NULL
+"1093","274","d","Perintah nakhoda bersifat sementara, dengan perintah nakhoda yang tidak tetap","0","0",NULL
+"1094","275","a","Perintah nakhoda kepada petugas dinas jaga anjungan setiap malamnya","0","0",NULL
+"1095","275","b","Perintah nakhoda kepada petugas dinas jaga anjungan setiap saat","0","0",NULL
+"1096","275","c","Perintah nakhoda kepada petugas dinas jaga anjungan selama dalam pelayaran","0","0",NULL
+"1097","275","d","Perintah nakhoda kepada petugas dinas jaga anjungan nakhoda tersebut diatas kapal","0","0",NULL
+"1098","276","a","Bahan peledak lain di sekitarnya.","0","0",NULL
+"1099","276","b","Zat korosif.","0","0",NULL
+"1100","276","c","Sambaran petir.","0","0",NULL
+"1101","276","d","Gas beracun","0","0",NULL
+"1102","277","a","Menggambar garis singgung dari titik tertinggi kurva ke sumbu X dan mengukurnya dalam meter.","0","0",NULL
+"1103","277","b","Nilai dalam meter dari sumbu X pada titik di mana kurva berubah dari cekung menjadi cembung.","0","0",NULL
+"1104","277","c","Dengan menggambar garis singgung pada kurva yang melewati titik asal dan membuat garis tegak lurus melalui sudut kemiringan 57,3 derajat.","0","0",NULL
+"1105","277","d","Tidak mungkin menentukan nilai GM dari kurva tuas pemulih (righting levers).","0","0",NULL
+"1106","278","a","Dengan menggambar garis singgung pada kurva yang melewati titik asal dan membuat garis tegak lurus melalui sudut kemiringan 57,3 derajat.","0","0",NULL
+"1107","278","b","Dengan menggambar garis singgung dari titik tertinggi kurva ke sumbu X dan mengukurnya dalam satuan meter.","0","0",NULL
+"1108","278","c","Nilai dalam meter dari titik X di mana kurva berubah dari bentuk cekung ke cembung.","0","0",NULL
+"1109","278","d","Tidak mungkin menentukan nilai GM dari kurva momen pemulih (righting levers).","0","0",NULL
+"1110","279","a","Dikeluarkan dari layanan.","0","0",NULL
+"1111","279","b","Diperbaiki di kapal dan digunakan kembali.","0","0",NULL
+"1112","279","c","Hanya digunakan pada lapisan terbawah di geladak.","0","0",NULL
+"1113","279","d","Hanya digunakan untuk penyimpanan kontainer bawah deck.","0","0",NULL
+"1114","280","a","Hanya pada bagian sekat yang padat dan berkesinambungan.","0","0",NULL
+"1115","280","b","Hingga 5 meter di bawah permukaan geladak.","0","0",NULL
+"1116","280","c","Hingga 5 meter di atas permukaan geladak.","0","0",NULL
+"1117","280","d","Pada bukaan dan penetrasi.","0","0",NULL
+"1118","281","a","Peningkatan sudut olengan secara bertahap di laut hadap (head sea).","0","0",NULL
+"1119","281","b","Terjadinya sudut kemiringan besar yang tidak terduga akibat laut samping.","0","0",NULL
+"1120","281","c","Terjadinya secara tiba-tiba sudut olengan besar di laut samping (beam seas).","0","0",NULL
+"1121","281","d","Gerakan oleng tidak stabil besar yang tiba-tiba terjadi di laut hadap atau buritan.","0","0",NULL
+"1122","282","a","Karena penting untuk menjaga kapal sesuai dengan ketentuan pemuatan internasional.","0","0",NULL
+"1123","282","b","Karena penting untuk menjaga posisi kapal tetap tegak selama perjalanan muatan.","0","0",NULL
+"1124","282","c","Karena dibutuhkan untuk memuat ballast saat bongkar muat.","0","0",NULL
+"1125","282","d","Diperlukan untuk melakukan trim kapal dan mengimbangi pembengkokan memanjang.","0","0",NULL
+"1126","283","a","Semua alternatif yang disebutkan.","0","0",NULL
+"1127","283","b","Peningkatan daya rem karena kawat bisa dililitkan dalam satu lapisan pada drum.","0","0",NULL
+"1128","283","c","Mengurangi kemungkinan kawat tersangkut di gulungan.","0","0",NULL
+"1129","283","d","Tidak menyebabkan kawat terjepit atau hancur.","0","0",NULL
+"1130","284","a","Di atas bantalan (dunnage) yang diletakkan langsung di bawah rel bagian bawah kontainer.","0","0",NULL
+"1131","284","b","Langsung di atas tangki.","0","0",NULL
+"1132","284","c","Di atas bantalan (dunnage) yang diletakkan melintang di atas tangki.","0","0",NULL
+"1133","284","d","Di atas bantalan (dunnage) yang diletakkan secara membujur di atas tangki.","0","0",NULL
+"1134","285","a","Barang-barang ini memerlukan perlindungan dari panas.","0","0",NULL
+"1135","285","b","Barang-barang ini harus disimpan di lokasi yang terlindungi.","0","0",NULL
+"1136","285","c","Barang-barang ini memerlukan perlindungan terhadap akumulasi uap berbahaya.","0","0",NULL
+"1137","285","d","Barang-barang ini memerlukan perlindungan terhadap kelembaban.","0","0",NULL
+"1138","286","a","Hanya menggunakan elektroda dari produsen terkenal.","0","0",NULL
+"1139","286","b","Hanya pemegang sertifikat las yang diizinkan melakukan pengelasan di kapal.","0","0",NULL
+"1140","286","c","Tukang las harus mendapat pelatihan dalam penggunaan peralatan las kapal.","0","0",NULL
+"1141","286","d","Peralatan las listrik harus dikendalikan oleh insinyur yang bertanggung jawab sebelum digunakan.","0","0",NULL
+"1142","287","a","Kapal saya mengalami kerusakan pada pelat lambung di bawah garis air di area ruang muat No. 3 sisi kanan (starboard).","0","0",NULL
+"1143","287","b","Kapal saya mengalami kerusakan pada pelat lambung di area ruang muat No. 3.","0","0",NULL
+"1144","287","c","Kapal saya mengalami kerusakan pada pelat lambung di bawah garis air.","0","0",NULL
+"1145","287","d","Kapal saya mengalami kerusakan pada pelat lambung di atas garis air.","0","0",NULL
+"1146","288","a","Dari posisi di deck tempat beban diangkat.","0","0",NULL
+"1147","288","b","Dari kepala derrick atau crane.","0","0",NULL
+"1148","288","c","Dari pusat beban yang diangkat.","0","0",NULL
+"1149","288","d","Dari posisi di deck di dasar derrick atau crane.","0","0",NULL
+"1150","289","a","Kekuatan pengereman yang meningkat dari winch dapat melebihi kekuatan putus tali.","0","0",NULL
+"1151","289","b","Semua alternatif yang disebutkan.","0","0",NULL
+"1152","289","c","Kerusakan pada winch karena poros menjadi bengkok.","0","0",NULL
+"1153","289","d","Tegangan pada fairleads dan roller yang melebihi Beban Kerja Aman (SWL) mereka.","0","0",NULL
+"1154","290","a","Cargo Securing Manual (CSM).","0","0",NULL
+"1155","290","b","Stability Manual.","0","0",NULL
+"1156","290","c","The Code for the Safe Practice for Cargo Stowage and Securing.","0","0",NULL
+"1157","290","d","Buku pedoman ISM perusahaan.","0","0",NULL
+"1158","291","a","Safety of Life at Sea Convention (SOLAS).","0","0",NULL
+"1159","291","b","Cargo Securing Manual (CSM).","0","0",NULL
+"1160","291","c","MARPOL 73/78 Annex IV.","0","0",NULL
+"1161","291","d","Cargo Stowage and Security (CSS) Code.","0","0",NULL
+"1162","292","a","Pastikan kontainer disimpan di atas dek.","0","0",NULL
+"1163","292","b","Tolak kontainernya.","0","0",NULL
+"1164","292","c","Pastikan kontainer disimpan di bawah dek.","0","0",NULL
+"1165","292","d","Muat kontainernya dan buat catatan protes.","0","0",NULL
+"1166","293","a","Mungkin tidak dinyatakan sebagai kosong.","0","0",NULL
+"1167","293","b","Rentan ambruk.","0","0",NULL
+"1168","293","c","Mungkin masih mengandung sisa muatan yang mudah terbakar.","0","0",NULL
+"1169","293","d","Bisa meledak jika ventilasinya tertutup.","0","0",NULL
+"1170","294","a","Zat beracun.","0","0",NULL
+"1171","294","b","Gas cair.","0","0",NULL
+"1172","294","c","Peroksida organik (Organic peroxides).","0","0",NULL
+"1173","294","d","Zat menular.","0","0",NULL
+"1174","295","a","Tidak menggunakan bahan kimia kering untuk memadamkan api.","0","0",NULL
+"1175","295","b","Membiarkan ventilasi.","0","0",NULL
+"1176","295","c","Tidak menggunakan air untuk mendinginkan kontainer.","0","0",NULL
+"1177","295","d","Saya tidak tahu.","0","0",NULL
+"1178","296","a","Mendinginkan dengan air tawar.","0","0",NULL
+"1179","296","b","Membiarkan muatan membara.","0","0",NULL
+"1180","296","c","Menutup sumber udara (smothering).","0","0",NULL
+"1181","296","d","Menyiram dengan air laut.","0","0",NULL
+"1182","297","a","Mengangkut cairan berbahaya dalam jumlah besar.","0","0",NULL
+"1183","297","b","Mengangkut cairan dengan berat jenis tertentu.","0","0",NULL
+"1184","297","c","Mengangkut muatan cair tanpa Nama Pengiriman Resmi (Proper Shipping Name).","0","0",NULL
+"1185","297","d","Mengangkut cairan tidak berbahaya dalam jumlah besar (non-hazardous liquids, in bulk).","0","0",NULL
+"1186","298","a","Kapal sulit dikendalikan","0","0",NULL
+"1187","298","b","Kemudi lebih lambat","0","0",NULL
+"1188","298","c","Kecepatan menurun pada putaran mesin yang sama","0","0",NULL
+"1189","298","d","Trim kapal berubah","0","0",NULL
+"1190","299","a","Muatan yang memiliki lebih dari satu pelabuhan bongkar dan menunggu keputusan skipper","0","0",NULL
+"1191","299","b","Muatan yang beratnya melebihi kemampuan daya angkat boom kapal","0","0",NULL
+"1192","299","c","Muatan yang peka terhadap bau-bauan","0","0",NULL
+"1193","299","d","Muatan yang memiliki berat maksimal daya tampung kapal","0","0",NULL
+"1194","300","a","Hand break dikencangkan, stopper/pengikat pada rantai dibuka, jangkar siap let-go","0","0",NULL
+"1195","300","b","Hand break dikencangkan, cluth in, stopper/pengikat rantai dibuka, hand break dibuka, jangkar di area dengan windlass hingga diatas air, hand break di kencangkan, cluth out, jangkar siap let-go","0","0",NULL
+"1196","300","c","Hand break dikencangkan, cluth in, stopper/pengikat rantai dibuka, hand break dibuka, jangkar di area dengan windlass hingga diatas air, hand break di kencangkan, jangkar siap let-go","0","0",NULL
+"1197","300","d","Hand break dikencangkan, cluth in, stopper/pengikat rantai dibuka, hand break dibuka, cluth out, jangkar siap let-go","0","0",NULL
+"1201","302","a","Menjaga kualitas kerja sambil rutin memberi pengingat agar rekan kerja lebih tanggap terhadap tugasnya.","4","0",NULL
+"1202","302","b","Tidak adil bagi saya kalau saya kerja keras sendiri, sehingga saya akan melakukan pekerjaan seperti biasa","0","0",NULL
+"1203","302","c","Tetap kerja dengan baik dan sesekali ingatkan teman untuk lebih serius dalam bekerja","2","0",NULL
+"1204","303","a","Mencoba menerapkan metode ini dan mengevaluasi dengan tim untuk bahan pertimbangan lebih lanjut.","4","0",NULL
+"1205","303","b","Mencatat ide metode baru ini dan mempertimbangkannya bersama rekan kerja agar bisa dipelajari lebih lanjut.","2","0",NULL
+"1206","303","c","Tetap memakai metode kerja lama yang sudah terbukti aman dan sering digunakan, sambil menyimpan ide baru ini untuk pertimbangan ke depannya.","0","0",NULL
+"1207","304","a","Menyampaikan pendapat secara sopan dan tetap mengikuti arahan senior untuk sementara.","2","0",NULL
+"1208","304","b","Mengikuti cara rekan senior Anda untuk menjaga keharmonisan tim dan tidak memicu konflik","0","0",NULL
+"1209","304","c","Mengajak berdiskusi merujuk pada prosedur kerja, lalu menyepakati solusi bersama dan meminta klarifikasi atasan bila perlu","4","0",NULL
+"1210","305","a","Mengandalkan prosedur manual dan berharap pelabuhan masih menyediakan alternatif non-digital.","0","0",NULL
+"1211","305","b","Mulai mempelajari dasar-dasar sistem digital yang diperlukan untuk mendukung kelancaran koordinasi.","2","0",NULL
+"1212","305","c","Mengajak tim mempersiapkan diri agar proses kerja bisa menyesuaikan dengan sistem digital pelabuhan.","4","0",NULL
+"1213","306","a","Menjelaskan posisi Anda dengan tenang sambil mengakui bahwa terbuka untuk melakukan diskusi lebih lanjut dan melakukan perbaikan.","2","0",NULL
+"1214","306","b","Tetap menerima kritik dengan baik dan langsung bertanya apa yang perlu diperbaiki.","0","0",NULL
+"1215","306","c","Tetap profesional dan mendengarkan kritik, namun meminta penjelasan detail di waktu yang tepat setelah situasi mereda.","4","0",NULL
+"1216","307","a","Menyampaikan bahwa seluruh muatan sudah ditata dan menyarankan agar tambahan kontainer dijadwalkan untuk pelayaran berikutnya.","0","0",NULL
+"1217","307","b","Menginformasikan kesediaan membantu memuat tambahan kontainer, sambil menjelaskan bahwa ini di luar rencana dan bisa mempengaruhi jadwal kerja.","2","0",NULL
+"1218","307","c","Menginformasikan kondisi situasi ke atasan dan mengusulkan pembagian tugas agar tambahan muatan dapat ditangani lebih efisien.","4","0",NULL
+"1219","308","a","Memilih untuk tetap menggunakan cara lama yang sudah terbukti aman dan lebih praktis untuk semua orang.","0","0",NULL
+"1220","308","b","Mencoba menerapkan cara baru ini saat beban kerja tidak terlalu tinggi dan ada waktu luang untuk pemantauan tambahan.","2","0",NULL
+"1221","308","c","Menyesuaikan jadwal pemantauan dengan rekan kerja agar tetap bisa dijalankan tanpa mengganggu pekerjaan lain.","4","0",NULL
+"1222","309","a","Memberikan dia sedikit waktu untuk beradaptasi sendiri, karena pada dasarnya niatnya baik.","0","0",NULL
+"1223","309","b","Mengapresiasi semangatnya dan meminta agar lebih sering berdiskusi sebelum mengambil keputusan.","2","0",NULL
+"1224","309","c","Menjelaskan dan memberi contoh padanya pentingnya koordinasi tim dengan mengapresiasi semangat dan inisiatifnya.","4","0",NULL
+"1225","310","a","Mencari tahu informasi cuaca terbaru secara berkala supaya crew lebih siap kalau ada perubahan mendadak.","2","0",NULL
+"1226","310","b","Tetap jalankan prosedur standar untuk saat ini karena memang cuaca masih normal dan belum ada gangguan.","0","0",NULL
+"1227","310","c","Mengusulkan pengecekan kesiapan alat dan membahas rute cadangan jika situasi memburuk.","4","0",NULL
+"1228","311","a","Mencari tahu dulu alasan dibalik perbedaan tersebut sebelum memutuskan apakah perlu mengambil tindakan lebih lanjut.","2","0",NULL
+"1229","311","b","Mengikuti sistem yang sudah berjalan sambil membuat catatan pribadi untuk memantau apakah perbedaan ini konsisten.","0","0",NULL
+"1230","311","c","Menyampaikan temuan ini kepada atasan untuk memastikan apakah ini memang prosedur yang disetujui dan perlu dikoreksi.","4","0",NULL
+"1231","312","a","Mengatur pergantian pekerja agar tim tetap fokus dan produktif tanpa kelelahan berlebihan","4","0",NULL
+"1232","312","b","Mengingatkan tim untuk mencoba menjaga kecepatan kerja sambil tetap berhati-hati agar tidak mengganggu keselamatan.","2","0",NULL
+"1233","312","c","Membiarkan tim bekerja sesuai kondisi karena keselamatan tetap menjadi prioritas.","0","0",NULL
+"1234","313","a","Membahas ide tersebut dengan crew lain untuk melihat kemungkinan penerapannya dalam kondisi tertentu.","2","0",NULL
+"1235","313","b","Menghargai ide crew junior tersebut tapi lebih baik menggunakan sistem yang telah berjalan dan telah terbukti agar tidak mengganggu ritme kerja.","0","0",NULL
+"1236","313","c","Mengevaluasi ide bersama crew dan merencanakan rencana uji coba untuk melihat efektivitasnya.","4","0",NULL
+"1237","314","a","Mendekat dan mengingatkan keduanya dengan tenang agar dapat menahan emosi tanpa memihak siapa pun.","2","0",NULL
+"1238","314","b","Membiarkan mereka menyelesaikan sendiri sampai tetap mengawasi dari jauh, karena campur tangan dapat memperburuk situasi.","0","0",NULL
+"1239","314","c","Memisahkan keduanya sejenak dan mengajak bicara untuk menyelesaikan permasalahan secara tenang.","4","0",NULL
+"1240","315","a","Mengamati metode kerja mereka dan mencari cara untuk saling berdiskusi dan menyesuaikan tanpa mengganggu sistem yang ada.","4","0",NULL
+"1241","315","b","Menjalankan rutinitas seperti biasa sambil melihat dulu bagaimana mereka beradaptasi dengan sistem yang ada.","0","0",NULL
+"1242","315","c","Memperhatikan cara kerja mereka dan terbuka apabila ada cara baru yang mungkin bisa bermanfaat.","2","0",NULL
+"1243","316","a","Mengikuti saran senior namun tetap membuat catatan pribadi tentang insiden tersebut untuk pembelajaran pribadi.","2","0",NULL
+"1244","316","b","Melaporkan insiden karena semua kejadian perlu dicatat, walaupun situasi dengan crew lain menjadi canggung.","4","0",NULL
+"1245","316","c","Mengikuti saran senior karena memang tidak ada konsekuensi serius dan tidak ingin membuat masalah.","0","0",NULL
+"1246","317","a","Melakukan evaluasi internal terhadap hasil kerja dan mengidentifikasi area yang bisa ditingkatkan meski sudah memenuhi standar yang ada.","0","0",NULL
+"1247","317","b","Menyampaikan permintaan maaf dan memberikan penjelasan tentang faktor-faktor yang mungkin menjadi penyebab kurang sesuainya hasil kerja dengan yang diharapkan.","4","0",NULL
+"1248","317","c","Mengkomunikasikan bahwa standar sudah terpenuhi, namun menawarkan untuk melakukan evaluasi bersama untuk memahami ekspektasi yang diharapkan.","2","0",NULL
+"1249","318","a","Membuat dua opsi jadwal yang bisa dipilih crew berdasarkan preferensi mereka, sambil memantau efektivitas masing-masing.","0","0",NULL
+"1250","318","b","Mengajak crew berdiskusi untuk memahami perubahan dan mencoba jadwal baru dalam beberapa waktu sebelum mengambil keputusan.","4","0",NULL
+"1251","318","c","Mengimplementasikan jadwal baru secara bertahap dengan periode trial dan evaluasi berkala untuk meminimalkan resistensi.","2","0",NULL
+"1252","319","a","Mengajak crew junior untuk mendengarkan dulu, dan menyampaikan bahwa pertanyaan mereka akan dibahas bersama setelah itu.","2","0",NULL
+"1253","319","b","Memutuskan untuk tidak berkomentar apa-apa dahulu karena dapat memancing emosi crew lainnya yang sudah mulai tegang.","0","0",NULL
+"1254","319","c","Menjawab poin-poin utama secara ringkas, supaya crew junior merasa terbantu dan briefing tetap berjalan baik.","4","0",NULL
+"1255","320","a","Mulai menyesuaikan prosedur kerja terkait agar lebih siap saat regulasi baru mulai berlaku.","4","0",NULL
+"1256","320","b","Mencari tahu perubahan regulasi dan mengkaji dampaknya terhadap tugas saat ini.","2","0",NULL
+"1257","320","c","Fokus pada pekerjaan saat ini dan akan mempelajari regulasi baru jika sudah diberlakukan atau jika sudah ada arahan resmi.","0","0",NULL
+"1258","321","a","Memutuskan untuk bergabung karena barang tersebut sudah sangat lama tidak terpakai dan akan dibuang nantinya.","0","0",NULL
+"1259","321","b","Menolak ikut serta dan mempertimbangkan menyampaikan secara pribadi karena bukan urusan Anda dan Anda tidak ingin memicu konflik.","2","0",NULL
+"1260","321","c","Menolak ikut serta dan mengingatkan bahwa semua barang milik kapal adalah milik perusahaan serta harus ada izin resmi untuk dipindahkan.","4","0",NULL
+"1261","322","a","Menjelaskan bahwa keterlambatan ini disebabkan oleh faktor teknis yang tidak bisa dihindari dan masih dalam batas wajar, sehingga diharapkan tidak menimbulkan masalah besar.","0","0",NULL
+"1262","322","b","Memberikan informasi terkini sambil menyarankan pengaturan alternatif agar dampaknya dapat diminimalkan.","4","0",NULL
+"1263","322","c","Memberikan update berkala tentang perkembangan terbaru dan estimasi waktu kedatangan agar pihak terminal bisa menyesuaikan jadwal mereka.","2","0",NULL
+"1264","323","a","Mengusulkan dan merancang penggabungan kerja yang disepakati bersama, agar koordinasi dapat berjalan lancar.","4","0",NULL
+"1265","323","b","Menjalankan pekerjaan perawatan sesuai jadwal biasa untuk menjaga agar proses tetap sederhana dan minim risiko.","0","0",NULL
+"1266","323","c","Menggabungkan beberapa pekerjaan yang paling mudah dikoordinasikan, sambil memantau bagaimana dampak dan hasilnya.","2","0",NULL
+"1267","324","a","Mengusulkan cara diskusi yang memungkinkan semua anggota dapat bersuara secara seimbang.","4","0",NULL
+"1268","324","b","Setelah rapat, mendekati crew yang lebih diam untuk mendengar pendapat mereka secara pribadi.","2","0",NULL
+"1269","324","c","Tidak melakukan intervensi apa pun karena umumnya crew yang lebih diam memang tidak memiliki pendapat yang ingin disampaikan, sehingga tidak mengganggu suasana.","0","0",NULL
+"1270","325","a","Mulai memikirkan area yang mungkin perlu penyesuaian dan mempersiapkan tim untuk kemungkinan peningkatan beban kerja.","2","0",NULL
+"1271","325","b","Fokus bekerja seperti biasanya terlebih dahulu, dan akan melakukan penyesuaian nanti kalau rutenya benar-benar akan ditambah.","0","0",NULL
+"1272","325","c","Menyesuaikan pembagian tugas dan mencari cara agar pekerjaan tetap efisien saat nanti rute benar-benar bertambah.","4","0",NULL
+"1273","326","a","Menyampaikan pendapat atau masukan yang tidak terlalu detail agar tidak menyinggung siapa pun.","2","0",NULL
+"1274","326","b","Memutuskan untuk tidak berbicara apa pun untuk menghindari konflik.","0","0",NULL
+"1275","326","c","Menyampaikan pendapat dengan cara yang netral dan terbuka untuk didiskusikan.","4","0",NULL
+"1276","327","a","Menyampaikan kondisi terminal kepada kantor dengan update berkala, disertai usulan solusi alternatif jika memungkinkan","4","0",NULL
+"1277","327","b","Menjelaskan bahwa situasi ini merupakan kondisi umum di terminal, sambil mengupayakan percepatan di aspek yang masih bisa dikendalikan.","2","0",NULL
+"1278","327","c","Mengoptimalkan kinerja tim di lapangan dan mendokumentasikan kondisi sebagai faktor eksternal yang mempengaruhi proses.","0","0",NULL
+"1279","328","a","Meminta penjelasan lebih detail akan feedback tersebut, sehingga Anda dan tim memahami apa saja yang harus diperbaiki ke depannya.","2","0",NULL
+"1280","328","b","Mengajak crew lainnya untuk meninjau ulang metode kerja dan mencari cara agar proses dapat berjalan lebih efisien.","4","0",NULL
+"1281","328","c","Menjelaskan bahwa pekerjaan yang Anda lakukan telah sesuai dengan standar yang ada dan juga menjelaskan dalam prosesnya membutuhkan waktu yang cenderung lama.","0","0",NULL
+"1282","329","a","Membiarkan saja karena merasa itu sudah biasa di kapal dan tidak langsung mengganggu pekerjaan.","0","0",NULL
+"1283","329","b","Memberikan pengingat ringan kepadanya supaya lebih berhati-hati dalam berbicara, agar suasana kerja tetap baik.","2","0",NULL
+"1284","329","c","Mengajak bicara secara pribadi dan menjelaskan dampak sikapnya terhadap tim.","4","0",NULL
+"1285","330","a","Program training yang ada sudah memenuhi requirement, jadi untuk sementara akan menyelesaikan training mandatory yang sudah dijadwalkan","0","0",NULL
+"1286","330","b","Mulai mengidentifikasi skill tambahan yang mungkin berguna dan mencari cara untuk mengembangkannya secara mandiri di luar jam kerja.","2","0",NULL
+"1287","330","c","Mengusulkan pelatihan tambahan atau diskusi dengan crew atau tim untuk mengembangkan skill tersebut bersama-sama.","4","0",NULL
+"1288","331","a","Menjelaskan dan meminta agar pencatatan dilakukan dengan aktual sesuai kondisi sebenarnya.","4","0",NULL
+"1289","331","b","Menyarankan agar sebaiknya data dicatat sesuai dengan kondisi sebenarnya walaupun tidak melaporkan secara langsung.","2","0",NULL
+"1290","331","c","Tidak mempermasalahkan karena Anda merasa itu hanya cara untuk mempermudah pekerjaan dan tidak akan merugikan siapa pun.","0","0",NULL
+"1291","332","a","Memastikan ulang bahwa pengaturan sudah aman sesuai standar dan sambil tetap mengamati kalau perlu perbaikan kecil nantinya.","0","0",NULL
+"1292","332","b","Mendiskusikan dengan crew lainnya apakah ada penyesuaian kecil yang bisa dilakukan tanpa mempengaruhi keselamatan dan jadwal.","2","0",NULL
+"1293","332","c","Mengusulkan evaluasi ulang pengaturan barang menjadi lebih optimal sambil tetap menjaga keselamatan dan jadwal kerja.","4","0",NULL
+"1294","333","a","Menerapkan bagian yang telah dipahami terlebih dahulu, sambil secara bertahap mempelajari sisanya di waktu kerja.","2","0",NULL
+"1295","333","b","Mengalokasikan waktu untuk mempelajari materi secara mandiri, termasuk mencari referensi tambahan bila diperlukan.","0","0",NULL
+"1296","333","c","Berkolaborasi dengan rekan yang telah memahami materi untuk mendiskusikan dan menerapkannya bersama dalam praktik kerja.","4","0",NULL
+"1297","334","a","Memberikan peringatan supaya dia lebih waspada dan tidak mengulangi kesalahan.","2","0",NULL
+"1298","334","b","Tetap fokus menyelesaikan pekerjaan dan membiarkan dia belajar sendiri karena Anda juga harus menyelesaikan pekerjaan Anda.","0","0",NULL
+"1299","334","c","Menjelaskan kesalahan yang terjadi dan memberi saran agar tidak mengulangi kesalahan.","4","0",NULL
+"1300","335","a","Mulai memperhatikan hal-hal kecil dari proses kerja yang bisa diperbaiki tanpa mengganggu ritme kerja tim.","2","0",NULL
+"1301","335","b","Mencoba perbaikan ringan di beberapa bagian proses kerja yang memiliki dampak signifikan pada hasil.","4","0",NULL
+"1302","335","c","Metode yang digunakan sudah terbukti efektif dan hasil kerja tim juga sudah sesuai target, jadi tidak perlu ada perubahan untuk saat ini.","0","0",NULL
+"1303","336","a","Tidak mengambil tindakan apa pun karena hasil akhirnya tetap baik dan Anda tidak ingin mengganggu ritme kerja mereka.","0","0",NULL
+"1304","336","b","Meski tidak langsung menghentikan mereka, Anda menyarankan agar prosedur tetap diperhatikan meski memang saat ini hasilnya masih aman.","2","0",NULL
+"1305","336","c","Mengingatkan agar prosedur harus tetap diikuti meskipun akan lebih lambat demi mencegah risiko.","4","0",NULL
+"1306","337","a","Menginstruksikan crew untuk membersihkan muatan secara cepat dan meminimalkan kelembaban agar lebih layak.","2","0",NULL
+"1307","337","b","Melakukan tindakan korektif segera dan mengevaluasi proses kerja untuk mencegah kejadian serupa di pengiriman selanjutnya.","4","0",NULL
+"1308","337","c","Menilai tingkat kerusakan dan memastikan apakah muatan masih dalam batas toleransi, sambil memperkuat prosedur kontrol kualitas.","0","0",NULL
+"1309","338","a","Memberikan arahan singkat supaya crew lebih teliti, walaupun itu sedikit melambatkan pekerjaan","2","0",NULL
+"1310","338","b","Mengajak crew untuk meninjau kebiasaan kerja dan mencari cara yang sesuai namun tetap menjaga mutu muatan.","4","0",NULL
+"1311","338","c","Membiarkan crew tetap dengan cara lama yang cepat dan praktis, sambil sesekali ingatkan agar lebih hati-hati.","0","0",NULL
+"1312","339","a","Menjelaskan kembali langkah yang benar agar kesalahannya segera diperbaiki","2","0",NULL
+"1313","339","b","Menenangkan diri dan tetap fokus menyelesaikan tugas sendiri supaya suasana tetap kondusif.","0","0",NULL
+"1314","339","c","Mengajak bicara untuk memahami kesulitannya dan membantu mencarikan solusi bersama.","4","0",NULL
+"1315","340","a","Mulai mencatat bagian yang mendekati masa kritis dan menyusun rencana penanganan awal agar tidak mengganggu operasional saat waktunya tiba.","2","0",NULL
+"1316","340","b","Meningkatkan pemantauan dan pencatatan data performa alat untuk mengetahui gejala awal kerusakan dan menentukan langkah selanjutnya.","0","0",NULL
+"1317","340","c","Menyampaikan informasi kepada atasan dan menyarankan penggantian bertahap jika memang diperlukan, sambil tetap menjalankan sistem yang ada.","4","0",NULL
+"1318","341","a","Saya bisa saja melewati beberapa prosedur teknis selama hasilnya memecahkan masalah dengan cepat dan tidak langsung merugikan pihak lain.","0","0",NULL
+"1319","341","b","Saya tetap berusaha menyelesaikannya sesuai aturan, meski itu berarti prosesnya bisa lebih lambat dan hasilnya belum tentu langsung terlihat.","1","0",NULL
+"1320","342","a","Saya fokus menyelesaikan tugas sesuai alur dan instruksi yang sudah ada.","1","0",NULL
+"1321","342","b","Dalam kondisi kerja yang longgar, saya kadang mempertimbangkan pilihan yang lebih menguntungkan bagi saya.","0","0",NULL
+"1322","343","a","Saya mudah menyesuaikan diri dengan budaya atau kebiasaan kerja tim yang ada dan dianggap biasa.","0","0",NULL
+"1323","343","b","Saya tetap memegang prinsip pribadi meskipun dianggap berbeda oleh rekan kerja.","1","0",NULL
+"1324","344","a","Saya percaya bisa mengelola situasi sulit tanpa selalu mengikuti aturan secara kaku.","0","0",NULL
+"1325","344","b","Saya cenderung waspada dan berhati-hati dalam situasi yang tidak bisa saya prediksi sepenuhnya.","1","0",NULL
+"1326","345","a","Menurut saya, reputasi masih bisa diperbaiki meskipun pernah terganggu.","0","0",NULL
+"1327","345","b","Saya percaya reputasi yang sudah rusak akan sulit dipulihkan sepenuhnya.","1","0",NULL
+"1328","346","a","Menurut saya, perusahaan sebaiknya mempertimbangkan kembali track record lengkap seseorang sebelum memutuskan melakukan perekrutan kembali.","1","0",NULL
+"1329","346","b","Menurut saya, setiap orang berhak mendapat kesempatan kedua dalam karier mereka, terlepas dari masa lalu mereka.","0","0",NULL
+"1330","347","a","Saya tidak sepenuhnya menyalahkan orang yang memilih jalan pintas karena tekanan finansial.","0","0",NULL
+"1331","347","b","Saya sulit memahami alasan seseorang mengambil jalan pintas dalam urusan finansial.","1","0",NULL
+"1332","348","a","Saya kadang memilih langkah yang lebih efisien meski tidak semua sesuai dengan prosedur.","0","0",NULL
+"1333","348","b","Saya nyaman mengikuti langkah kerja yang sudah ditentukan dan terbukti efektif.","1","0",NULL
+"1334","349","a","Saya lebih memilih menjaga kekompakan tim meskipun ada hal yang tidak sepenuhnya saya setujui.","0","0",NULL
+"1335","349","b","Saya lebih memilih menyampaikan pendapat meski tahu itu bisa menimbulkan ketegangan.","1","0",NULL
+"1336","350","a","Saya merasa cukup mampu menangani dampak dari keputusan atau tindakan yang berisiko.","0","0",NULL
+"1337","350","b","Saya cenderung berhati-hati karena tahu tidak semua akibat dari keputusan bisa saya kendalikan.","1","0",NULL
+"1338","351","a","Dalam situasi mendesak, saya cenderung segera mengambil langkah yang menurut saya paling cepat menyelesaikan masalah.","1","0",NULL
+"1339","351","b","Saya tetap berhati-hati sebelum bertindak walau dalam situasi mendesak.","0","0",NULL
+"1340","352","a","Saya menggunakan alasan sakit jika merasa kondisi kesehatan saya dapat mengganggu pekerjaan.","0","0",NULL
+"1341","352","b","Saya menggunakan alasan sakit untuk kebutuhan yang memengaruhi kesejahteraan pribadi, termasuk alasan non-medis.","1","0",NULL
+"1342","353","a","Saya cenderung mencari solusi atau jalan praktis ketika menghadapi kebutuhan keuangan yang mendesak.","0","0",NULL
+"1343","353","b","Saya sabar dalam menunggu solusi yang tepat untuk masalah keuangan.","1","0",NULL
+"1344","354","a","Saya kadang memilih cara kerja yang terasa lebih menguntungkan bagi diri saya, meskipun tidak sepenuhnya sesuai dengan prosedur.","0","0",NULL
+"1345","354","b","Saya tetap mengikuti prosedur yang berlaku, meskipun ada cara lain yang terlihat lebih cepat atau menguntungkan.","1","0",NULL
+"1346","355","a","Saya cenderung menilai dan mempertimbangkan setiap permintaan sebelum memutuskan mengikuti atau tidak.","1","0",NULL
+"1347","355","b","Saya cenderung mengikuti arahan atasan meskipun terkadang merasa itu tidak sepenuhnya benar.","0","0",NULL
+"1348","356","a","Saya merasa cukup mampu menangani dampak dari keputusan atau tindakan yang berisiko.","0","0",NULL
+"1349","356","b","Saya cenderung berhati-hati karena tahu tidak semua akibat dari keputusan bisa saya kendalikan.","1","0",NULL
+"1350","357","a","Saya cenderung bertindak cepat meski belum terpikirkan semua risikonya.","1","0",NULL
+"1351","357","b","Saya lebih memilih menunda daripada terjadi risiko yang merugikan.","0","0",NULL
+"1352","358","a","Dalam kondisi terdesak, saya akan mempertimbangkan menggunakan dana perusahaan terlebih dahulu dengan rencana segera melaporkan dan menggantinya.","1","0",NULL
+"1353","358","b","Dana perusahaan tidak seharusnya digunakan untuk keperluan pribadi, meskipun dalam situasi mendesak.","0","0",NULL
+"1354","359","a","Saya percaya standar moral seseorang tidak didasarkan dengan tingkat penghasilan individu.","0","0",NULL
+"1355","359","b","Saya memahami bahwa tekanan ekonomi dapat mempengaruhi pilihan moral seseorang.","1","0",NULL
+"1356","360","a","Saya lebih nyaman bekerja tanpa perlu banyak pengawasan sehingga saya lebih bebas mengambil keputusan sendiri.","1","0",NULL
+"1357","360","b","Saya merasa lebih tenang bekerja dengan pengawasan serta arahan yang jelas.","0","0",NULL
+"1358","361","a","Saya menyampaikan pendapat meski tahu bisa berbeda dari kebanyakan orang.","1","0",NULL
+"1359","361","b","Saya kadang menyesuaikan diri dengan kelompok agar tetap dianggap bagian dari mereka.","0","0",NULL
+"1360","362","a","Saya cenderung berhati-hati dan menilai ulang sebelum menyimpulkan situasi itu aman.","0","0",NULL
+"1361","362","b","Saya sering mengandalkan penilaian pribadi untuk menilai apakah suatu situasi aman atau tidak.","1","0",NULL
+"1362","363","a","Dalam situasi tertentu, saya cenderung langsung mengambil keputusan meskipun belum semua hal saya pertimbangkan.","1","0",NULL
+"1363","363","b","Saya cenderung menyiapkan rencana dengan jelas sebelum mengambil langkah.","0","0",NULL
+"1364","364","a","Saya lebih memilih memberi ruang kepada rekan untuk memperbaiki kesalahannya sebelum dilaporkan secara formal.","1","0",NULL
+"1365","364","b","Saya cenderung melaporkan pelanggaran jika sudah cukup jelas dan berdampak pada pekerjaan.","0","0",NULL
+"1366","365","a","Saya mempertimbangkan dampak moral dan manfaat saat membuat keputusan finansial.","1","0",NULL
+"1367","365","b","Saya cenderung mempertimbangkan untung-rugi dalam setiap keputusan finansial.","0","0",NULL
+"1368","366","a","Saya tetap mengikuti sistem yang ada meskipun terasa kurang praktis.","0","0",NULL
+"1369","366","b","Saat sistem atau aturan kerja tidak terlalu ketat, saya menyesuaikan cara kerja agar lebih fleksibel dan leluasa.","1","0",NULL
+"1370","367","a","Saya tetap berusaha menjalankan prosedur resmi, meskipun itu bisa memperlambat penyelesaian pekerjaan.","1","0",NULL
+"1371","367","b","Saya cenderung mengandalkan cara kerja tim yang sudah terbukti efektif, meskipun terkadang cara itu tidak sepenuhnya sesuai prosedur resmi.","0","0",NULL
+"1372","368","a","Saya lebih memilih menjaga kestabilan meskipun harus melewatkan peluang yang ada.","0","0",NULL
+"1373","368","b","Saya bisa mempertimbangkan risiko jika peluang yang terlihat cukup menjanjikan.","1","0",NULL
+"1374","369","a","Saya berusaha mempertimbangkan risiko sebelum bertindak, meskipun kadang membuat keputusan jadi lebih lambat.","1","0",NULL
+"1375","369","b","Saya lebih memilih bertindak langsung jika saya yakin solusinya masuk akal, walaupun belum sempat menimbang semua risiko.","0","0",NULL
+"1376","370","a","Saya percaya aturan perusahaan bisa disesuaikan dalam situasi tertentu, selama tidak mengganggu tujuan utama pekerjaan.","0","0",NULL
+"1377","370","b","Menurut saya, aturan yang sudah ditetapkan sebaiknya dijalankan secara konsisten, meskipun kadang terasa kurang sesuai dengan kondisi lapangan.","1","0",NULL
+"1378","371","a","Saya tetap berpegang pada cara-cara yang sesuai aturan, walaupun prosesnya sering kali lebih panjang.","1","0",NULL
+"1379","371","b","Saya bersedia mencoba pendekatan yang tidak biasa atau di luar prosedur resmi jika itu lebih cepat membantu menyelesaikan masalah.","0","0",NULL
+"1380","372","a","Saya cenderung mengikuti keputusan kelompok agar tidak dianggap pembangkang.","0","0",NULL
+"1381","372","b","Saya membuat keputusan berdasarkan penilaian pribadi walau berbeda dengan rekan kerja","1","0",NULL
+"1382","373","a","Saya cenderung mengikuti keputusan kelompok agar tidak dianggap pembangkang.","1","0",NULL
+"1383","373","b","Saya membuat keputusan berdasarkan penilaian pribadi walau berbeda dengan rekan kerja","0","0",NULL
+"1384","374","a","Saya cenderung fokus pada potensi risiko dalam suatu situasi.","0","0",NULL
+"1385","374","b","Saya cenderung fokus pada peluang keuntungan dalam suatu situasi.","1","0",NULL
+"1386","375","a","Saya lebih nyaman dengan solusi bertahap meski butuh waktu dan proses.","0","0",NULL
+"1387","375","b","Saya kadang lebih memilih langkah cepat daripada menunggu solusi yang lebih ideal.","1","0",NULL
+"1388","376","a","Wajar jika sesekali menggunakan fasilitas di tempat kerja untuk keperluan pribadi yang tidak mengganggu pekerjaan.","1","0",NULL
+"1389","376","b","Fasilitas di tempat kerja sebaiknya hanya digunakan untuk keperluan pekerjaan selama jam kerja.","0","0",NULL
+"1390","377","a","Saya percaya individu harus menjaga prinsip moral meski kadang situasinya tidak mudah.","0","0",NULL
+"1391","377","b","Saya mengerti jika kadang kebutuhan hidup membuat orang memilih jalan yang berbeda atau tidak seharusnya.","1","0",NULL
+"1392","378","a","Saya menyesuaikan pendekatan kerja agar tetap efisien, meskipun tidak selalu mengikuti prosedur secara ketat.","1","0",NULL
+"1393","378","b","Saya tetap berusaha menjaga kesesuaian dengan aturan, meskipun itu membuat proses kerja jadi lebih lama atau rumit.","0","0",NULL
+"1394","379","a","Saya cenderung menolak pengaruh yang saya anggap tidak sesuai dengan nilai pribadi.","0","0",NULL
+"1395","379","b","Saya cenderung dapat terbawa arus lingkungan kerja meski awalnya ragu terhadap praktiknya.","1","0",NULL
+"1396","380","a","Saya mengandalkan intuisi dalam menilai apakah suatu tindakan aman dilakukan.","1","0",NULL
+"1397","380","b","Saya lebih memilih menggunakan data atau prosedur yang pasti dalam menilai suatu risiko.","0","0",NULL
+"1398","381","a","Dalam beberapa situasi, saya lebih mengandalkan insting daripada terlalu banyak pertimbangan","1","0",NULL
+"1399","381","b","Saya biasanya mempertimbangkan dulu dampak dari setiap keputusan yang penting.","0","0",NULL
+"1400","382","a","Menyampaikan informasi dengan mempertimbangkan situasi dan dampaknya sering kali lebih efektif dalam menjaga harmoni dalam lingkungan kerja.","0","0",NULL
+"1401","382","b","Bersikap terbuka dan transparan dalam menyampaikan informasi dapat membangun kepercayaan di lingkungan kerja.","1","0",NULL
+"1402","383","a","Saya lebih memilih tetap mengikuti prosedur resmi, meskipun prosesnya lebih lama dan memerlukan dana lebih.","0","0",NULL
+"1403","383","b","Saya lebih memilih pendekatan yang lebih hemat dan efisien secara biaya, meskipun tidak sepenuhnya mengikuti prosedur.","1","0",NULL
+"1404","384","a","Saya menyimpan sisa barang yang masih layak pakai untuk digunakan lagi nanti.","1","0",NULL
+"1405","384","b","Saya kembalikan sisa barang ke tempat penyimpanan sesuai aturan.","0","0",NULL
+"1406","385","a","Saya tetap mendukung keputusan kelompok walau merasa ada yang tidak sesuai demi menjaga kekompakan kelompok.","0","0",NULL
+"1407","385","b","Saya menyampaikan dan mempertanyakan keputusan kelompok jika terlihat ada yang tidak sesuai dengan aturan.","1","0",NULL
+"1408","386","a","Saya tetap berpegang pada aturan, meskipun dalam kondisi yang terasa tidak mendukung.","1","0",NULL
+"1409","386","b","Saya kadang menyesuaikan aturan jika merasa situasinya tidak memungkinkan mengikuti prosedur secara penuh.","0","0",NULL
+"1410","387","a","Saya lebih suka segera mengambil tindakan saat merasa ada peluang, sebelum terlambat.","0","0",NULL
+"1411","387","b","Saya biasanya menunda dulu dan mempertimbangkan suatu hal, meskipun risiko kehilangan peluang atau kesempatan.","1","0",NULL
+"1412","388","a","Kejujuran adalah prinsip yang tidak boleh dikompromikan dalam situasi apa pun di tempat kerja.","1","0",NULL
+"1413","388","b","Terkadang tidak menyampaikan seluruh kebenaran diperlukan untuk melindungi tim atau menghindari konflik yang tidak perlu.","0","0",NULL
+"1414","389","a","Saya berorientasi pada hasil akhir dalam memenuhi kebutuhan finansial.","0","0",NULL
+"1415","389","b","Saya berorientasi pada proses yang saya tempuh dalam memenuhi kebutuhan finansial.","1","0",NULL
+"1416","390","a","Saya lebih memilih menunggu instruksi resmi untuk memastikan tindakan saya nantinya tidak keliru.","1","0",NULL
+"1417","390","b","Saya cenderung bertindak dulu untuk menyelesaikan masalah secepatnya, lalu akan menjelaskannya di akhir jika perlu.","0","0",NULL
+"1418","391","a","Demi menjaga solidaritas dalam situasi sulit saya tetap berusaha berpihak pada rekan kerja walaupun terdapat hal yang saya ragukan.","0","0",NULL
+"1419","391","b","Saya lebih memilih menjaga prinsip yang saya pegang meskipun membuat hubungan dengan rekan kerja menjadi renggang dan tidak nyaman.","1","0",NULL
+"1420","392","a","Saya cenderung menunggu penjelasan jika aturan dan prosedur belum pasti.","1","0",NULL
+"1421","392","b","Saya tetap melanjutkan pekerjaan meskipun aturan atau prosedur belum sepenuhnya jelas.","0","0",NULL
+"1422","393","a","Saya memilih untuk segera mengambil tindakan agar peluang tidak terlewat, selama tidak merugikan pihak lain.","0","0",NULL
+"1423","393","b","Saya lebih nyaman menunggu arahan atau kepastian terlebih dahulu, meskipun itu berarti peluang bisa terlewat.","1","0",NULL
+"1424","394","a","Saya rasa sesekali terpikir untuk mengambil barang di tempat kerja itu wajar, selama tidak benar-benar dilakukan.","0","0",NULL
+"1425","394","b","Penting untuk selalu menjaga pikiran dan niat tetap positif terhadap properti perusahaan.","1","0",NULL
+"1426","395","a","Saya bisa memahami jika seseorang merasa berhak mengambil lebih karena merasa sistem kompensasi tidak adil.","0","0",NULL
+"1427","395","b","Saya akan menyampaikan pada pihak terkait apabila terdapat sistem kompensasi yang tidak adil.","1","0",NULL
+"1428","396","a","Saya cenderung menunggu arahan atau memastikan prosedur yang tepat meskipun bisa memperlambat penyelesaian masalah.","1","0",NULL
+"1429","396","b","Saya biasanya mengambil langkah dulu yang menurut saya paling efektif dan akan menyampaikan laporan bila memang perlu.","0","0",NULL
+"1430","397","a","Saya cenderung mengikuti kebiasaan kerja yang sudah diterima kelompok meskipun meragukan keabsahannya.","0","0",NULL
+"1431","397","b","Saya berhati-hati dan memilih tidak terlibat dalam praktik kerja yang melanggar aturan meski berakhir dikucilkan kelompok.","1","0",NULL
+"1432","398","a","Saya percaya suatu aturan harus tetap diikuti meskipun dalam kondisi yang tidak menguntungkan.","1","0",NULL
+"1433","398","b","Menurut saya dalam situasi tertentu wajar jika orang menyesuaikan atau melonggarkan aturan selama tidak merugikan orang lain secara langsung.","0","0",NULL
+"1434","399","a","Saya lebih nyaman menimbang terlebih dahulu akan dampak jangka panjang meskipun akhirnya membuat proses pengambilan keputusan menjadi lebih lama.","1","0",NULL
+"1435","399","b","Saya kadang bertindak berdasarkan dorongan situasi tanpa banyak pertimbangan ke depan.","0","0",NULL
+"1436","400","a","Saya biasanya memilih tidak terlibat dalam urusan rekan kerja lain, kecuali jika hal tersebut benar-benar berdampak langsung pada pekerjaan atau diri saya.","0","0",NULL
+"1437","400","b","Jika melihat sesuatu yang kurang sesuai, saya cenderung akan menyampaikan langsung agar tidak menimbulkan permasalahan di kemudian hari.","1","0",NULL
+"1438","401","a","Sangat Tidak Menggambarkan Diri Saya","1","0",NULL
+"1439","401","b","Tidak Menggambarkan Diri Saya","2","0",NULL
+"1440","401","c","Menggambarkan Diri Saya","3","0",NULL
+"1441","401","d","Sangat Menggambarkan Diri Saya","4","0",NULL
+"1442","402","a","Sangat Tidak Menggambarkan Diri Saya","4","0",NULL
+"1443","402","b","Tidak Menggambarkan Diri Saya","3","0",NULL
+"1444","402","c","Menggambarkan Diri Saya","2","0",NULL
+"1445","402","d","Sangat Menggambarkan Diri Saya","1","0",NULL
+"1446","403","a","Sangat Tidak Menggambarkan Diri Saya","4","0",NULL
+"1447","403","b","Tidak Menggambarkan Diri Saya","3","0",NULL
+"1448","403","c","Menggambarkan Diri Saya","2","0",NULL
+"1449","403","d","Sangat Menggambarkan Diri Saya","1","0",NULL
+"1450","404","a","Sangat Tidak Menggambarkan Diri Saya","1","0",NULL
+"1451","404","b","Tidak Menggambarkan Diri Saya","2","0",NULL
+"1452","404","c","Menggambarkan Diri Saya","3","0",NULL
+"1453","404","d","Sangat Menggambarkan Diri Saya","4","0",NULL
+"1454","405","a","Sangat Tidak Menggambarkan Diri Saya","4","0",NULL
+"1455","405","b","Tidak Menggambarkan Diri Saya","3","0",NULL
+"1456","405","c","Menggambarkan Diri Saya","2","0",NULL
+"1457","405","d","Sangat Menggambarkan Diri Saya","1","0",NULL
+"1458","406","a","Sangat Tidak Menggambarkan Diri Saya","1","0",NULL
+"1459","406","b","Tidak Menggambarkan Diri Saya","2","0",NULL
+"1460","406","c","Menggambarkan Diri Saya","3","0",NULL
+"1461","406","d","Sangat Menggambarkan Diri Saya","4","0",NULL
+"1462","407","a","Sangat Tidak Menggambarkan Diri Saya","4","0",NULL
+"1463","407","b","Tidak Menggambarkan Diri Saya","3","0",NULL
+"1464","407","c","Menggambarkan Diri Saya","2","0",NULL
+"1465","407","d","Sangat Menggambarkan Diri Saya","1","0",NULL
+"1466","408","a","Sangat Tidak Menggambarkan Diri Saya","4","0",NULL
+"1467","408","b","Tidak Menggambarkan Diri Saya","3","0",NULL
+"1468","408","c","Menggambarkan Diri Saya","2","0",NULL
+"1469","408","d","Sangat Menggambarkan Diri Saya","1","0",NULL
+"1470","409","a","Sangat Tidak Menggambarkan Diri Saya","1","0",NULL
+"1471","409","b","Tidak Menggambarkan Diri Saya","2","0",NULL
+"1472","409","c","Menggambarkan Diri Saya","3","0",NULL
+"1473","409","d","Sangat Menggambarkan Diri Saya","4","0",NULL
+"1474","410","a","Sangat Tidak Menggambarkan Diri Saya","1","0",NULL
+"1475","410","b","Tidak Menggambarkan Diri Saya","2","0",NULL
+"1476","410","c","Menggambarkan Diri Saya","3","0",NULL
+"1477","410","d","Sangat Menggambarkan Diri Saya","4","0",NULL
+"1478","411","a","Sangat Tidak Menggambarkan Diri Saya","4","0",NULL
+"1479","411","b","Tidak Menggambarkan Diri Saya","3","0",NULL
+"1480","411","c","Menggambarkan Diri Saya","2","0",NULL
+"1481","411","d","Sangat Menggambarkan Diri Saya","1","0",NULL
+"1482","412","a","Sangat Tidak Menggambarkan Diri Saya","1","0",NULL
+"1483","412","b","Tidak Menggambarkan Diri Saya","2","0",NULL
+"1484","412","c","Menggambarkan Diri Saya","3","0",NULL
+"1485","412","d","Sangat Menggambarkan Diri Saya","4","0",NULL
+"1489","414","a","Benar","1","0",NULL
+"1490","414","b","Salah","0","0",NULL
+"1501","301","a","Melaporkan temuan kepada atasan, sambil mengajak berdiskusi rekan kerja tentang pentingnya pelaporan.","4","0",NULL
+"1502","301","b","Memberitahu rekan kerja tersebut secara pribadi bahwa dia harus melaporkan kerusakan tersebut tanpa ikut campur dalam proses pelaporan.","2","0",NULL
+"1503","301","c","Tidak mengambil tindakan apa pun karena percaya rekan kerja akan mencatatnya sendiri nanti saat ada waktu luang, dan Anda tidak ingin memicu konflik.","0","0",NULL
+"1530","425","a","Opsi A","4","0",NULL
+"1531","425","b","Opsi B","2","0",NULL
+"1532","425","c","Opsi C","0","0",NULL
+"1533","426","a","Opsi A","4","0",NULL
+"1534","426","b","Opsi B","2","0",NULL
+"1535","426","c","Opsi C","0","0",NULL
