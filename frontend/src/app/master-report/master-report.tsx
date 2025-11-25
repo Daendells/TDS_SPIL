@@ -51,7 +51,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useMasterReports } from "./_hooks/master-report";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import { useGetAllAssessmentTypes } from "./_hooks/useAssessmentType";
 import type { IReport } from "@/types/global-types";
 
@@ -86,7 +86,6 @@ function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pi
 }
 
 export default function MasterPage() {
-  const api = useApi();
   const {
     onCallApi,
     paginationData,
@@ -164,7 +163,7 @@ export default function MasterPage() {
     } finally {
       setLoadingCompetencies(false);
     }
-  }, [api]);
+  }, []);
 
   // Fetch competency types on mount
   useEffect(() => {

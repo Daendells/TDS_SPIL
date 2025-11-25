@@ -1,13 +1,11 @@
 "use client";
 
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import { ApiReturn } from "@/app/types/api";
 import { AspectResponse, AspectCreatePayload, AspectUpdatePayload } from "@/types/aspect";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 
 export function useGetAspectsByAssessmentId(assessmentId: number) {
-  const api = useApi();
-
   return useQuery({
     queryKey: ["aspects", "assessment", assessmentId],
     queryFn: async () => {
@@ -21,8 +19,6 @@ export function useGetAspectsByAssessmentId(assessmentId: number) {
 }
 
 export function useGetAllAspects() {
-  const api = useApi();
-
   return useQuery({
     queryKey: ["aspects"],
     queryFn: async () => {
@@ -33,7 +29,6 @@ export function useGetAllAspects() {
 }
 
 export function useCreateAspect() {
-  const api = useApi();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -48,7 +43,6 @@ export function useCreateAspect() {
 }
 
 export function useUpdateAspect() {
-  const api = useApi();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -63,7 +57,6 @@ export function useUpdateAspect() {
 }
 
 export function useDeleteAspect() {
-  const api = useApi();
   const queryClient = useQueryClient();
 
   return useMutation({
@@ -78,7 +71,6 @@ export function useDeleteAspect() {
 }
 
 export function useAssignAspectToQuestion() {
-  const api = useApi();
   const queryClient = useQueryClient();
 
   return useMutation({

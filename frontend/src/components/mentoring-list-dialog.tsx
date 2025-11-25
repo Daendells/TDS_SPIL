@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ChevronDownIcon, ChevronRightIcon, SearchIcon, FilterIcon } from "lucide-react";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import Image from "next/image";
 
 interface MentoringSession {
@@ -39,7 +39,6 @@ export default function MentoringListDialog({
   reportId,
   reportName = "Unknown",
 }: MentoringListDialogProps) {
-  const api = useApi();
   const [mentoringData, setMentoringData] = useState<MentoringSession[]>([]);
   const [expandedSession, setExpandedSession] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);

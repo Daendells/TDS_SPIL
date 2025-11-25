@@ -24,7 +24,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Upload, X } from "lucide-react";
 import Image from "next/image";
 import { toast } from "sonner";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import { useUploadAssessmentImage } from "./_hooks/useAssessment";
 import { useGetAspectsByAssessmentId } from "./_hooks/useAspect";
 import { AspectResponse } from "@/types/aspect";
@@ -120,7 +120,6 @@ export default function QuestionDialog({
   const [questionImageFile, setQuestionImageFile] = useState<File | null>(null);
   const [questionImagePreview, setQuestionImagePreview] = useState<string>("");
 
-  const api = useApi();
   const uploadImageMutation = useUploadAssessmentImage();
   const { data: aspectsData } = useGetAspectsByAssessmentId(assessmentId);
 
