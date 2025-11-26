@@ -291,7 +291,7 @@ func seedCompetencyProgramMappingsFromCSV(db *gorm.DB, filePath string) error {
 	}
 
 	for _, record := range records {
-		if len(record) < 6 {
+		if len(record) < 5 {
 			continue
 		}
 		mapping := domain.CompetencyProgramMapping{
@@ -300,7 +300,7 @@ func seedCompetencyProgramMappingsFromCSV(db *gorm.DB, filePath string) error {
 			Program:             record[2],
 			TrainingMaterial1ID: parseIntPtr(record[3]),
 			TrainingMaterial2ID: parseIntPtr(record[4]),
-			Category:            record[5],
+			Category:            "M", // Default value, will be calculated dynamically by training_plan_service
 		}
 		if err := db.FirstOrCreate(&mapping, domain.CompetencyProgramMapping{ID: mapping.ID}).Error; err != nil {
 			return err

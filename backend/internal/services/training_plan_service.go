@@ -80,7 +80,7 @@ func (s *trainingPlanService) GetCompetencyMapping(program string) map[string]do
 	if totalParticipants > 0 {
 		for code, count := range gapCounts {
 			percentage := (float64(count) / float64(totalParticipants)) * 100
-			if percentage > 60 {
+			if percentage >= 60 {
 				category[code] = "M"
 			} else {
 				category[code] = "NM"
@@ -288,7 +288,7 @@ func (s *trainingPlanService) buildSummary(gapCompetencies []domain.GapCompetenc
 		percentage := float64(count) / float64(totalParticipants) * 100
 		percentageGap[code] = percentage
 
-		if percentage > 60 {
+		if percentage >= 60 {
 			category[code] = "M" // Mandatory
 		} else {
 			category[code] = "NM" // Non-Mandatory
@@ -419,7 +419,7 @@ func (s *trainingPlanService) calculateGapStatistics(gapCompetencies []domain.Ga
 	// Determine categories
 	for code, count := range gapCounts {
 		percentage := float64(count) / float64(totalParticipants) * 100
-		if percentage > 60 {
+		if percentage >= 60 {
 			categories[code] = "M"
 		} else {
 			categories[code] = "NM"
