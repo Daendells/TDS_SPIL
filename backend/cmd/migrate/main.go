@@ -3,6 +3,7 @@ package main
 import (
 	"backend/internal/config"
 	"backend/internal/models/domain"
+	"strings"
 
 	"gorm.io/gorm"
 )
@@ -83,10 +84,11 @@ func runAutoMigrate(db *gorm.DB) error {
 }
 
 func createTriggers(db *gorm.DB) error {
-	// Drop existing triggers if they exist
 	db.Exec("DROP TRIGGER IF EXISTS calculate_readiness_before_insert")
 	db.Exec("DROP TRIGGER IF EXISTS calculate_readiness_before_update")
 	db.Exec("DROP TRIGGER IF EXISTS after_insert_report_create_report_score")
+	db.Exec("DROP TRIGGER IF EXISTS after_report_insert_populate_gaps")
+	db.Exec("DROP TRIGGER IF EXISTS after_report_update_populate_gaps")
 
 	// Create BEFORE INSERT trigger
 	triggerInsert := `
@@ -212,6 +214,102 @@ END`
 		return err
 	}
 
+	triggerPopulateGapsInsert := `
+CREATE TRIGGER after_report_insert_populate_gaps
+AFTER INSERT ON reports
+FOR EACH ROW
+BEGIN
+    DECLARE v_pos INT DEFAULT 1;
+    DECLARE v_code VARCHAR(50);
+    DECLARE v_competency_id INT;
+    DECLARE v_gap_analysis TEXT;
+    
+    SET v_gap_analysis = REPLACE(NEW.competency_gap_analysis, ';', '; ');
+    SET v_gap_analysis = REPLACE(v_gap_analysis, '  ', ' ');
+    
+    IF v_gap_analysis IS NOT NULL AND TRIM(v_gap_analysis) != '' THEN
+        WHILE v_pos > 0 DO
+            SET v_pos = LOCATE('; ', v_gap_analysis);
+            
+            IF v_pos > 0 THEN
+                SET v_code = TRIM(SUBSTRING(v_gap_analysis, 1, v_pos - 1));
+                SET v_gap_analysis = SUBSTRING(v_gap_analysis, v_pos + 2);
+            ELSE
+                SET v_code = TRIM(v_gap_analysis);
+            END IF;
+            
+            IF v_code != '' AND LENGTH(v_code) <= 10 THEN
+                SELECT id INTO v_competency_id 
+                FROM competency_types 
+                WHERE code = v_code 
+                LIMIT 1;
+                
+                IF v_competency_id IS NOT NULL THEN
+                    INSERT INTO gap_competencies (report_id, competency_type_id, gap_level, priority, created_at, updated_at)
+                    VALUES (NEW.id, v_competency_id, 'MEDIUM', 1, NOW(), NOW())
+                    ON DUPLICATE KEY UPDATE updated_at = NOW();
+                    
+                    SET v_competency_id = NULL;
+                END IF;
+            END IF;
+        END WHILE;
+    END IF;
+END`
+
+	if err := db.Exec(triggerPopulateGapsInsert).Error; err != nil {
+		return err
+	}
+
+	triggerPopulateGapsUpdate := `
+CREATE TRIGGER after_report_update_populate_gaps
+AFTER UPDATE ON reports
+FOR EACH ROW
+BEGIN
+    DECLARE v_pos INT DEFAULT 1;
+    DECLARE v_code VARCHAR(50);
+    DECLARE v_competency_id INT;
+    DECLARE v_gap_analysis TEXT;
+    
+    IF NEW.competency_gap_analysis != OLD.competency_gap_analysis THEN
+        DELETE FROM gap_competencies WHERE report_id = NEW.id;
+        
+        SET v_gap_analysis = REPLACE(NEW.competency_gap_analysis, ';', '; ');
+        SET v_gap_analysis = REPLACE(v_gap_analysis, '  ', ' ');
+        
+        IF v_gap_analysis IS NOT NULL AND TRIM(v_gap_analysis) != '' THEN
+            WHILE v_pos > 0 DO
+                SET v_pos = LOCATE('; ', v_gap_analysis);
+                
+                IF v_pos > 0 THEN
+                    SET v_code = TRIM(SUBSTRING(v_gap_analysis, 1, v_pos - 1));
+                    SET v_gap_analysis = SUBSTRING(v_gap_analysis, v_pos + 2);
+                ELSE
+                    SET v_code = TRIM(v_gap_analysis);
+                END IF;
+                
+                IF v_code != '' AND LENGTH(v_code) <= 10 THEN
+                    SELECT id INTO v_competency_id 
+                    FROM competency_types 
+                    WHERE code = v_code 
+                    LIMIT 1;
+                    
+                    IF v_competency_id IS NOT NULL THEN
+                        INSERT INTO gap_competencies (report_id, competency_type_id, gap_level, priority, created_at, updated_at)
+                        VALUES (NEW.id, v_competency_id, 'MEDIUM', 1, NOW(), NOW())
+                        ON DUPLICATE KEY UPDATE updated_at = NOW();
+                        
+                        SET v_competency_id = NULL;
+                    END IF;
+                END IF;
+            END WHILE;
+        END IF;
+    END IF;
+END`
+
+	if err := db.Exec(triggerPopulateGapsUpdate).Error; err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -271,6 +369,39 @@ WHERE total_readiness_update_months IS NULL`
 
 	if err := db.Exec(updateTotalMonths).Error; err != nil {
 		return err
+	}
+
+	type ReportGap struct {
+		ID                    int
+		CompetencyGapAnalysis string
+	}
+	
+	var reports []ReportGap
+	if err := db.Table("reports").
+		Select("id, competency_gap_analysis").
+		Where("competency_gap_analysis IS NOT NULL AND competency_gap_analysis != ''").
+		Find(&reports).Error; err != nil {
+		return err
+	}
+
+	for _, report := range reports {
+		codes := strings.Split(report.CompetencyGapAnalysis, "; ")
+		for _, code := range codes {
+			code = strings.TrimSpace(code)
+			if code == "" {
+				continue
+			}
+
+			var competency domain.CompetencyType
+			if err := db.Where("code = ?", code).First(&competency).Error; err != nil {
+				continue
+			}
+
+			db.Exec(`INSERT INTO gap_competencies (report_id, competency_type_id, gap_level, priority, created_at, updated_at)
+				VALUES (?, ?, 'MEDIUM', 1, NOW(), NOW())
+				ON DUPLICATE KEY UPDATE updated_at = NOW()`,
+				report.ID, competency.ID)
+		}
 	}
 
 	return nil
