@@ -19,6 +19,8 @@ type TrainingScheduleRepository interface {
 	Delete(id int) error
 	DeleteByProgram(program string) error
 	CreateBatch(schedules []domain.TrainingSchedule) error
+	UpdateScheduledDate(id int, newDate time.Time) error
+	GetByIDList(ids []int) ([]domain.TrainingSchedule, error)
 }
 
 type trainingScheduleRepository struct {
@@ -142,4 +144,26 @@ func (r *trainingScheduleRepository) CreateBatch(schedules []domain.TrainingSche
 	}
 
 	return nil
+}
+
+func (r *trainingScheduleRepository) UpdateScheduledDate(id int, newDate time.Time) error {
+	if err := r.db.Model(&domain.TrainingSchedule{}).Where("id = ?", id).Update("scheduled_date", newDate).Error; err != nil {
+		r.log.WithError(err).WithFields(logrus.Fields{
+			"id":       id,
+			"new_date": newDate,
+		}).Error("Failed to update scheduled date")
+		return err
+	}
+
+	return nil
+}
+
+func (r *trainingScheduleRepository) GetByIDList(ids []int) ([]domain.TrainingSchedule, error) {
+	var schedules []domain.TrainingSchedule
+	if err := r.db.Where("id IN ?", ids).Find(&schedules).Error; err != nil {
+		r.log.WithError(err).WithField("ids", ids).Error("Failed to get training schedules by ID list")
+		return nil, err
+	}
+
+	return schedules, nil
 }

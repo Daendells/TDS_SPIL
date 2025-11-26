@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { AspectResponse } from "@/types/aspect";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
 interface QuestionAspectSelectorProps {
@@ -26,12 +26,10 @@ interface QuestionAspectSelectorProps {
 export function QuestionAspectSelector({
   questionId,
   currentAspectId,
-  assessmentId,
   aspects,
   onSuccess,
 }: QuestionAspectSelectorProps) {
   const [isUpdating, setIsUpdating] = useState(false);
-  const api = useApi();
   const queryClient = useQueryClient();
 
   const updateQuestionAspectMutation = useMutation({

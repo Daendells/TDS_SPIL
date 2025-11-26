@@ -58,11 +58,12 @@ type TrainingPlanParticipant struct {
 }
 
 type TrainingPlanSummary struct {
-	Total           map[string]int     `json:"total"`           // Total participants with each gap
-	PercentageGap   map[string]float64 `json:"percentageGap"`   // Percentage of participants with each gap
-	Category        map[string]string  `json:"category"`        // M or NM for each competency
-	TrainingMateri1 map[string]string  `json:"trainingMateri1"` // Scheduled dates for Materi 1
-	TrainingMateri2 map[string]string  `json:"trainingMateri2"` // Scheduled dates for Materi 2
+	Total           map[string]int                `json:"total"`           // Total participants with each gap
+	PercentageGap   map[string]float64            `json:"percentageGap"`   // Percentage of participants with each gap
+	Category        map[string]string             `json:"category"`        // M or NM for each competency
+	TrainingMateri1 map[string]string             `json:"trainingMateri1"` // Scheduled dates for Materi 1
+	TrainingMateri2 map[string]string             `json:"trainingMateri2"` // Scheduled dates for Materi 2
+	ScheduleIDs     map[string]map[string]int     `json:"scheduleIds"`     // Map of competencyCode -> materialType -> scheduleID
 }
 
 type TrainingPlanResponse struct {

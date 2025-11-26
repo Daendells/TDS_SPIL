@@ -18,7 +18,6 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "@/components/ui/dialog";
 import {
   Select,
@@ -46,7 +45,6 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Pencil, Trash2, Plus, Loader2, MoreVertical } from "lucide-react";
-import { toast } from "sonner";
 import {
   useGetCompetencyMappings,
   useGetAllTrainings,
@@ -55,7 +53,6 @@ import {
   useDeleteCompetencyMapping,
   type CompetencyMappingFormData,
   type CompetencyMappingItem,
-  type Training,
 } from "./_hooks/useCompetencyMappingCMS";
 import type { TrainingPlanResponse } from "./_hooks/useTrainingPlan";
 
@@ -87,18 +84,27 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
   const deleteMutation = useDeleteCompetencyMapping();
 
   // Sort mappings by gap summary order and add category info
-  const sortedMappings = mappings?.map((mapping) => {
-    const competencyCode = mapping.competencyType?.code;
-    const category = competencyCode && trainingPlan?.summary?.category ? trainingPlan.summary.category[competencyCode] || "NM" : "NM";
-    const percentageGap = competencyCode && trainingPlan?.summary?.percentageGap ? trainingPlan.summary.percentageGap[competencyCode] || 0 : 0;
-    return {
-      ...mapping,
-      category,
-      percentageGap,
-    };
-  }).sort((a, b) => {
-    return (b.percentageGap || 0) - (a.percentageGap || 0);
-  }) || [];
+  const sortedMappings =
+    mappings
+      ?.map((mapping) => {
+        const competencyCode = mapping.competencyType?.code;
+        const category =
+          competencyCode && trainingPlan?.summary?.category
+            ? trainingPlan.summary.category[competencyCode] || "NM"
+            : "NM";
+        const percentageGap =
+          competencyCode && trainingPlan?.summary?.percentageGap
+            ? trainingPlan.summary.percentageGap[competencyCode] || 0
+            : 0;
+        return {
+          ...mapping,
+          category,
+          percentageGap,
+        };
+      })
+      .sort((a, b) => {
+        return (b.percentageGap || 0) - (a.percentageGap || 0);
+      }) || [];
 
   // Handle edit click
   const handleEdit = (mapping: CompetencyMappingItem) => {
@@ -206,12 +212,15 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
               sortedMappings.map((mapping) => (
                 <TableRow key={mapping.id}>
                   <TableCell className="font-medium">
-                    {mapping.competencyType?.code || "N/A"} - {mapping.competencyType?.name || "Unknown"}
+                    {mapping.competencyType?.code || "N/A"} -{" "}
+                    {mapping.competencyType?.name || "Unknown"}
                   </TableCell>
                   <TableCell>
                     <Badge
                       variant={mapping.category === "M" ? "destructive" : "secondary"}
-                      className={mapping.category === "NM" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}
+                      className={
+                        mapping.category === "NM" ? "bg-blue-500 text-white hover:bg-blue-600" : ""
+                      }
                     >
                       {mapping.category === "M" ? "Mandatory" : "Non-Mandatory"}
                     </Badge>
@@ -229,11 +238,7 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
                   <TableCell className="text-right">
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                        >
+                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                           <span className="sr-only">Open menu</span>
                           <MoreVertical className="h-4 w-4" />
                         </Button>
@@ -341,19 +346,11 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsEditDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}>
               Cancel
             </Button>
-            <Button
-              onClick={handleUpdateSubmit}
-              disabled={updateMutation.isPending}
-            >
-              {updateMutation.isPending && (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              )}
+            <Button onClick={handleUpdateSubmit} disabled={updateMutation.isPending}>
+              {updateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Save Changes
             </Button>
           </DialogFooter>
@@ -386,14 +383,17 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
                   {(() => {
                     // Extract unique competency types from trainings
                     const uniqueCompetencies = trainings
-                      ?.filter(t => t.competencyType)
-                      .reduce((acc, training) => {
-                        const ct = training.competencyType!;
-                        if (!acc.find(c => c.id === ct.id)) {
-                          acc.push(ct);
-                        }
-                        return acc;
-                      }, [] as Array<{ id: number; code: string; name: string }>)
+                      ?.filter((t) => t.competencyType)
+                      .reduce(
+                        (acc, training) => {
+                          const ct = training.competencyType!;
+                          if (!acc.find((c) => c.id === ct.id)) {
+                            acc.push(ct);
+                          }
+                          return acc;
+                        },
+                        [] as Array<{ id: number; code: string; name: string }>
+                      )
                       .sort((a, b) => a.code.localeCompare(b.code));
 
                     return uniqueCompetencies?.map((ct) => (
@@ -405,7 +405,8 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                Category (Mandatory/Non-Mandatory) is automatically calculated based on gap percentage (&gt;60% = Mandatory)
+                Category (Mandatory/Non-Mandatory) is automatically calculated based on gap
+                percentage (&gt;60% = Mandatory)
               </p>
             </div>
 
@@ -461,19 +462,14 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
           </div>
 
           <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsCreateDialogOpen(false)}
-            >
+            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
               Cancel
             </Button>
             <Button
               onClick={handleCreateSubmit}
               disabled={createMutation.isPending || formData.competencyTypeId === 0}
             >
-              {createMutation.isPending && (
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-              )}
+              {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Create Mapping
             </Button>
           </DialogFooter>
@@ -488,7 +484,7 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
             <AlertDialogDescription>
               Are you sure you want to delete this mapping for{" "}
               <span className="font-semibold">
-                {mappings?.find(m => m.id === deletingId)?.competencyType?.code}
+                {mappings?.find((m) => m.id === deletingId)?.competencyType?.code}
               </span>
               ? This action cannot be undone.
             </AlertDialogDescription>

@@ -15,6 +15,7 @@ import (
 type AssessmentResultService interface {
 	SubmitAssessment(db *gorm.DB, request *web.AssessmentSubmitRequest) (*web.AssessmentResultData, error)
 	FindBySeafarerCode(db *gorm.DB, seafarerCode string) (*web.AssessmentResultData, error)
+	GetValueAssessmentReport(db *gorm.DB, seafarerCode string) (*web.ValueAssessmentReportResponse, error)
 }
 
 type assessmentResultServiceImpl struct {
@@ -195,7 +196,123 @@ func (service *assessmentResultServiceImpl) FindBySeafarerCode(db *gorm.DB, seaf
 		return nil, err
 	}
 
-	return service.convertToAssessmentResultData(assessmentResult), nil
+	result := service.convertToAssessmentResultData(assessmentResult)
+
+	// Get value assessment from report_scores table
+	service.Log.Infof("FindBySeafarerCode: Getting value assessment for seafarer %s", seafarerCode)
+	result.ValueAssessment = service.getValueAssessmentScore(db, seafarerCode)
+	service.Log.Infof("FindBySeafarerCode: Value assessment result: %d", result.ValueAssessment)
+
+	return result, nil
+}
+
+func (service *assessmentResultServiceImpl) GetValueAssessmentReport(db *gorm.DB, seafarerCode string) (*web.ValueAssessmentReportResponse, error) {
+	// Find all assessment results for this seafarer
+	var assessmentResults []domain.AssessmentResult
+	err := db.Preload("ScoreResults.Aspect").
+		Where("seafarer_code = ? AND is_completed = ?", seafarerCode, 1).
+		Order("completed_at DESC").
+		Find(&assessmentResults).Error
+
+	if err != nil {
+		service.Log.WithError(err).Error("Error finding assessment results by seafarer code")
+		return nil, err
+	}
+
+	if len(assessmentResults) == 0 {
+		return nil, errors.New("no completed assessment found")
+	}
+
+	// Get the most recent completed assessment
+	latestAssessment := assessmentResults[0]
+
+	// Initialize response
+	response := &web.ValueAssessmentReportResponse{
+		SeafarerCode: seafarerCode,
+		CompletedAt:  latestAssessment.CompletedAt,
+		Coreva: web.CorevaReportData{
+			ScoreResult: []web.AspectScoreResult{},
+		},
+	}
+
+	// Group assessments by assessment ID (1=COREVA, 2=AWARE, 3=GRIT)
+	var corevaResults, awareResults, gritResults []domain.AssessmentResult
+	for _, result := range assessmentResults {
+		switch result.AssessmentID {
+		case 1: // COREVA
+			corevaResults = append(corevaResults, result)
+		case 2: // AWARE
+			awareResults = append(awareResults, result)
+		case 3: // GRIT
+			gritResults = append(gritResults, result)
+		}
+	}
+
+	// Process COREVA (with aspects)
+	if len(corevaResults) > 0 {
+		for _, result := range corevaResults {
+			for _, scoreResult := range result.ScoreResults {
+				response.Coreva.RawScore += scoreResult.RawScore
+				response.Coreva.FinalScore += scoreResult.FinalScore
+
+				if scoreResult.Aspect != nil {
+					response.Coreva.ScoreResult = append(response.Coreva.ScoreResult, web.AspectScoreResult{
+						AspectID:   scoreResult.AspectID,
+						AspectName: scoreResult.Aspect.Name,
+						RawScore:   scoreResult.RawScore,
+						FinalScore: scoreResult.FinalScore,
+					})
+				}
+			}
+		}
+		response.Coreva.KonversiScore = float64(response.Coreva.FinalScore) * 0.4
+	}
+
+	// Process AWARE
+	if len(awareResults) > 0 {
+		for _, result := range awareResults {
+			for _, scoreResult := range result.ScoreResults {
+				response.Aware.RawScore += scoreResult.RawScore
+				response.Aware.FinalScore += scoreResult.FinalScore
+			}
+		}
+		response.Aware.KonversiScore = float64(response.Aware.FinalScore) * 0.3
+	}
+
+	// Process GRIT
+	if len(gritResults) > 0 {
+		for _, result := range gritResults {
+			for _, scoreResult := range result.ScoreResults {
+				response.Grit.RawScore += scoreResult.RawScore
+				response.Grit.FinalScore += scoreResult.FinalScore
+			}
+		}
+		response.Grit.KonversiScore = float64(response.Grit.FinalScore) * 0.3
+	}
+
+	// Calculate total score
+	response.TotalScore = response.Coreva.KonversiScore + response.Aware.KonversiScore + response.Grit.KonversiScore
+
+	// Get value assessment score from report_scores table
+	response.ValueAssessmentScore = service.getValueAssessmentScore(db, seafarerCode)
+
+	// Keep valueAssessment for backward compatibility (sum of final scores)
+	response.ValueAssessment = response.Coreva.FinalScore + response.Aware.FinalScore + response.Grit.FinalScore
+
+	// Determine interpretation based on total score
+	// Logic based on Excel formula: =IF(J2="Low";"...";IF(J2="Fair";"...";IF(J2="Excellence";"...";"")))
+	// Assuming score ranges: Low (0-40), Fair (41-70), Excellence (71-100)
+	if response.TotalScore >= 0 && response.TotalScore <= 40 {
+		response.Interpretasi = "Menunjukkan kesenjangan signifikan antara nilai-nilai pribadi dan nilai kerja yang diharapkan."
+	} else if response.TotalScore > 40 && response.TotalScore <= 70 {
+		response.Interpretasi = "Memiliki dasar nilai kerja yang cukup baik, namun belum sepenuhnya stabil."
+	} else if response.TotalScore > 70 && response.TotalScore <= 100 {
+		response.Interpretasi = "Menunjukkan internalisasi nilai kerja yang kuat. Individu cenderung bertindak selaras dengan nilai etika, tanggung jawab, dan daya tahan psikologis jangka panjang."
+	} else {
+		response.Interpretasi = ""
+	}
+
+	return response, nil
 }
 
 func (service *assessmentResultServiceImpl) convertToAssessmentResultData(assessmentResult *domain.AssessmentResult) *web.AssessmentResultData {
@@ -395,3 +512,50 @@ func (service *assessmentResultServiceImpl) saveReportScore(db *gorm.DB, seafare
 
 	return nil
 }
+
+// getValueAssessmentScore retrieves the value assessment score from report_scores table
+func (service *assessmentResultServiceImpl) getValueAssessmentScore(db *gorm.DB, seafarerCode string) int {
+	service.Log.Infof("=== START getValueAssessmentScore for seafarer: %s ===", seafarerCode)
+
+	// First, find the report for this seafarer
+	var reportModel domain.Report
+	report, reportErr := (*service.ReportRepository).FindBySeafarerCode(db, seafarerCode, &reportModel)
+	if reportErr != nil {
+		// If report not found, return 0
+		service.Log.Warnf("❌ Report not found for seafarer %s, error: %v, returning 0", seafarerCode, reportErr)
+		return 0
+	}
+	service.Log.Infof("✅ Found report for seafarer %s: report.ID=%d, report.ValueAssessment=%d", seafarerCode, report.ID, report.ValueAssessment)
+
+	// Get Value Assessment type ID
+	var assessmentType domain.AssessmentType
+	typeErr := db.Where("assessment_type_name = ?", "Value Assessment").First(&assessmentType).Error
+	if typeErr != nil {
+		// If assessment type not found, try to get from reports table
+		service.Log.Warnf("❌ Value Assessment type not found, error: %v. Using fallback from reports table. Score: %d", typeErr, report.ValueAssessment)
+		return report.ValueAssessment
+	}
+	service.Log.Infof("✅ Found Value Assessment type: ID=%d, Name=%s", assessmentType.ID, assessmentType.AssessmentTypeName)
+
+	// Get the score from report_scores table
+	var reportScore domain.ReportScore
+	scoreErr := db.Where("report_id = ? AND assessment_type_id = ?", report.ID, assessmentType.ID).
+		First(&reportScore).Error
+	if scoreErr != nil {
+		// Fallback: use value from reports table if report_scores not found
+		service.Log.Warnf("❌ report_scores not found for report_id=%d, assessment_type_id=%d. Error: %v. Using fallback from reports table. Score: %d", report.ID, assessmentType.ID, scoreErr, report.ValueAssessment)
+
+		// Let's also check what's actually in report_scores table
+		var allReportScores []domain.ReportScore
+		db.Where("report_id = ?", report.ID).Find(&allReportScores)
+		service.Log.Infof("📊 All report_scores for report_id=%d: %+v", report.ID, allReportScores)
+
+		return report.ValueAssessment
+	}
+
+	service.Log.Infof("✅ Successfully retrieved value assessment from report_scores for seafarer %s. reportScore.ID=%d, reportScore.Score=%d (from report_scores table)", seafarerCode, reportScore.ID, reportScore.Score)
+	service.Log.Infof("=== END getValueAssessmentScore: returning %d ===", reportScore.Score)
+	return reportScore.Score
+}
+
+

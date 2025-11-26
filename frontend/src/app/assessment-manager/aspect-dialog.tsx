@@ -101,9 +101,7 @@ export function AspectDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>
-            {isEditing ? "Edit Aspect" : "Tambah Aspect"}
-          </DialogTitle>
+          <DialogTitle>{isEditing ? "Edit Aspect" : "Tambah Aspect"}</DialogTitle>
           <DialogDescription>
             {isEditing
               ? "Ubah detail aspect yang ada"
@@ -117,9 +115,7 @@ export function AspectDialog({
             <Input
               id="name"
               value={formData.name}
-              onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
-              }
+              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               placeholder="Contoh: Integrity, Customer Oriented"
             />
           </div>
@@ -132,9 +128,7 @@ export function AspectDialog({
               min={1}
               max={100}
               value={formData.weight}
-              onChange={(e) =>
-                setFormData({ ...formData, weight: parseInt(e.target.value) || 0 })
-              }
+              onChange={(e) => setFormData({ ...formData, weight: parseInt(e.target.value) || 0 })}
               placeholder="Contoh: 40"
             />
             <p className="text-xs text-muted-foreground">
@@ -144,11 +138,7 @@ export function AspectDialog({
         </div>
 
         <DialogFooter>
-          <Button
-            variant="outline"
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Batal
           </Button>
           <Button onClick={handleSubmit} disabled={isSubmitting}>

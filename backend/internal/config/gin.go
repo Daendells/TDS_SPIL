@@ -6,9 +6,6 @@ import (
 
 	"backend/internal/models/web"
 
-	// "backend/internal/middlewares"
-
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
 	"github.com/spf13/viper"
@@ -39,14 +36,26 @@ func NewGin(config *viper.Viper, log *logrus.Logger) *gin.Engine {
 	}
 
 	app := gin.Default()
-	// CORS config
-	app.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000", "http://127.0.0.1:3000", "http://tds_frontend:3000", "http://localhost:3001", "https://xh6bfsn9-3000.asse.devtunnels.ms"}, // your Next.js app
-		AllowMethods:     []string{"POST", "GET", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-	}))
+
+	// CORS config - Custom function to allow all origins with credentials
+	app.Use(func(c *gin.Context) {
+		origin := c.Request.Header.Get("Origin")
+		if origin != "" {
+			c.Writer.Header().Set("Access-Control-Allow-Origin", origin)
+			c.Writer.Header().Set("Access-Control-Allow-Credentials", "true")
+			c.Writer.Header().Set("Access-Control-Allow-Methods", "GET, POST, PUT, PATCH, DELETE, HEAD, OPTIONS")
+			c.Writer.Header().Set("Access-Control-Allow-Headers", "Origin, Content-Length, Content-Type, Accept, Authorization, X-Requested-With")
+			c.Writer.Header().Set("Access-Control-Expose-Headers", "Content-Length, Content-Type")
+			c.Writer.Header().Set("Access-Control-Max-Age", "43200") // 12 hours
+		}
+
+		if c.Request.Method == "OPTIONS" {
+			c.AbortWithStatus(204)
+			return
+		}
+
+		c.Next()
+	})
 
 	// app.Use(middlewares.PanicRecovery(log))
 	app.Use(PanicRecovery(log))

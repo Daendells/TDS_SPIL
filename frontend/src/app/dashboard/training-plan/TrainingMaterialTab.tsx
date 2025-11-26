@@ -70,13 +70,9 @@ export default function TrainingMaterialTab() {
   const [groupedData, setGroupedData] = useState<GroupedTraining[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
-  const [selectedTraining, setSelectedTraining] = useState<ITraining | null>(
-    null
-  );
+  const [selectedTraining, setSelectedTraining] = useState<ITraining | null>(null);
   const [tempReferensi, setTempReferensi] = useState("");
-  const [regenerateDialog, setRegenerateDialog] = useState<ITraining | null>(
-    null
-  );
+  const [regenerateDialog, setRegenerateDialog] = useState<ITraining | null>(null);
   const [editingTraining, setEditingTraining] = useState<ITraining | null>(null);
   const [editForm, setEditForm] = useState({
     lvl: 0,
@@ -115,12 +111,12 @@ export default function TrainingMaterialTab() {
     const grouped: { [key: string]: GroupedTraining } = {};
 
     trainings.forEach((training) => {
-      const competencyCode = training.competencyType?.code || 'UNKNOWN';
-      
+      const competencyCode = training.competencyType?.code || "UNKNOWN";
+
       if (!grouped[competencyCode]) {
         grouped[competencyCode] = {
           competencyCode: competencyCode,
-          competencyName: training.competencyType?.name || 'Unknown Competency',
+          competencyName: training.competencyType?.name || "Unknown Competency",
           deskripsi_perilaku: training.deskripsi_perilaku,
           trainings: [],
         };
@@ -139,12 +135,12 @@ export default function TrainingMaterialTab() {
   const handleGenerate = async (item: ITraining, isRegenerate = false) => {
     setGenerating(item.kode);
     setRegenerateDialog(null);
-    
+
     try {
       // Combine keyword (deskripsi_perilaku) with optional referensi
       let combinedReferensi = item.deskripsi_perilaku || "";
       if (item.referensi) {
-        combinedReferensi = combinedReferensi 
+        combinedReferensi = combinedReferensi
           ? `${combinedReferensi}\n\nReferensi Tambahan:\n${item.referensi}`
           : item.referensi;
       }
@@ -155,7 +151,7 @@ export default function TrainingMaterialTab() {
         body: JSON.stringify({
           kode: item.kode,
           topik_training: item.topik_training,
-          kompetensi: item.competencyType?.name || '',
+          kompetensi: item.competencyType?.name || "",
           referensi: combinedReferensi,
           lvl: item.lvl,
           tools_training: item.tools_training,
@@ -170,7 +166,7 @@ export default function TrainingMaterialTab() {
           ? "Materi Berhasil Di-regenerate!"
           : "Materi Berhasil Digenerate!";
         toast.success(message + " PPTX dan PDF telah tersedia untuk diunduh.");
-        
+
         // Reload data from server to get persisted URLs
         const refreshRes = await fetch(`${apiUrl}/trainings`);
         const refreshJson = await refreshRes.json();
@@ -190,13 +186,11 @@ export default function TrainingMaterialTab() {
   const handleSaveReferensi = () => {
     if (selectedTraining) {
       const updatedData = data.map((item) =>
-        item.kode === selectedTraining.kode
-          ? { ...item, referensi: tempReferensi }
-          : item
+        item.kode === selectedTraining.kode ? { ...item, referensi: tempReferensi } : item
       );
       setData(updatedData);
       groupTrainings(updatedData);
-      
+
       setSelectedTraining(null);
       setTempReferensi("");
     }
@@ -219,13 +213,13 @@ export default function TrainingMaterialTab() {
 
   const handleSaveEdit = async () => {
     if (!editingTraining) return;
-    
+
     setEditLoading(true);
     try {
       const res = await fetch(`${apiUrl}/trainings/${editingTraining.no}`, {
         method: "PUT",
-        headers: { 
-          "Content-Type": "application/json"
+        headers: {
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(editForm),
       });
@@ -233,12 +227,10 @@ export default function TrainingMaterialTab() {
       const result = await res.json();
       if (res.ok) {
         toast.success("Data training berhasil diupdate!");
-        
+
         // Update local state
         const updatedData = data.map((row) =>
-          row.no === editingTraining.no
-            ? { ...row, ...editForm }
-            : row
+          row.no === editingTraining.no ? { ...row, ...editForm } : row
         );
         setData(updatedData);
         groupTrainings(updatedData);
@@ -266,15 +258,15 @@ export default function TrainingMaterialTab() {
     try {
       const res = await fetch(`${apiUrl}/trainings/${deletingTraining.no}`, {
         method: "DELETE",
-        headers: { 
-          "Content-Type": "application/json"
+        headers: {
+          "Content-Type": "application/json",
         },
       });
 
       const result = await res.json();
       if (res.ok) {
         toast.success("Training berhasil dihapus!");
-        
+
         // Update local state
         const updatedData = data.filter((row) => row.no !== deletingTraining.no);
         setData(updatedData);
@@ -313,9 +305,7 @@ export default function TrainingMaterialTab() {
                       {group.competencyCode}
                     </div>
                     <div className="text-left">
-                      <h3 className="font-semibold text-lg">
-                        {group.competencyName}
-                      </h3>                      
+                      <h3 className="font-semibold text-lg">{group.competencyName}</h3>
                     </div>
                   </div>
                   <div className="flex items-center gap-2 text-sm text-gray-500">
@@ -329,50 +319,27 @@ export default function TrainingMaterialTab() {
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b bg-gray-50">
-                        <th className="py-3 px-4 text-left font-semibold">
-                          Level
-                        </th>
-                        <th className="py-3 px-4 text-left font-semibold">
-                          Kode
-                        </th>
-                        <th className="py-3 px-4 text-left font-semibold">
-                          Topik Training
-                        </th>
-                        <th className="py-3 px-4 text-left font-semibold">
-                          Tools/Framework
-                        </th>
-                        <th className="py-3 px-4 text-center font-semibold">
-                          Referensi
-                        </th>
-                        <th className="py-3 px-4 text-center font-semibold">
-                          Action
-                        </th>
-                        <th className="py-3 px-4 text-center font-semibold">
-                          Files
-                        </th>
-                        <th className="py-3 px-4 text-center font-semibold">
-                          Actions
-                        </th>
+                        <th className="py-3 px-4 text-left font-semibold">Level</th>
+                        <th className="py-3 px-4 text-left font-semibold">Kode</th>
+                        <th className="py-3 px-4 text-left font-semibold">Topik Training</th>
+                        <th className="py-3 px-4 text-left font-semibold">Tools/Framework</th>
+                        <th className="py-3 px-4 text-center font-semibold">Referensi</th>
+                        <th className="py-3 px-4 text-center font-semibold">Action</th>
+                        <th className="py-3 px-4 text-center font-semibold">Files</th>
+                        <th className="py-3 px-4 text-center font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
                       {group.trainings.map((item) => (
-                        <tr
-                          key={item.kode}
-                          className="border-b hover:bg-gray-50"
-                        >
+                        <tr key={item.kode} className="border-b hover:bg-gray-50">
                           <td className="py-3 px-4">
                             <span className="inline-flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full font-semibold text-sm">
                               {item.lvl}
                             </span>
                           </td>
-                          <td className="py-3 px-4 font-medium">
-                            {item.kode}
-                          </td>
+                          <td className="py-3 px-4 font-medium">{item.kode}</td>
                           <td className="py-3 px-4">{item.topik_training}</td>
-                          <td className="py-3 px-4 text-gray-600">
-                            {item.tools_training}
-                          </td>
+                          <td className="py-3 px-4 text-gray-600">{item.tools_training}</td>
                           <td className="py-3 px-4 text-center">
                             <Button
                               variant="secondary"
@@ -395,9 +362,7 @@ export default function TrainingMaterialTab() {
                                 className="gap-2"
                               >
                                 <RefreshCw className="w-4 h-4" />
-                                {generating === item.kode
-                                  ? "Regenerating..."
-                                  : "Regenerate"}
+                                {generating === item.kode ? "Regenerating..." : "Regenerate"}
                               </Button>
                             ) : (
                               <Button
@@ -405,9 +370,7 @@ export default function TrainingMaterialTab() {
                                 onClick={() => handleGenerate(item, false)}
                                 disabled={generating === item.kode}
                               >
-                                {generating === item.kode
-                                  ? "Generating..."
-                                  : "Generate"}
+                                {generating === item.kode ? "Generating..." : "Generate"}
                               </Button>
                             )}
                           </td>
@@ -458,11 +421,7 @@ export default function TrainingMaterialTab() {
                           <td className="py-3 px-4 text-center">
                             <DropdownMenu>
                               <DropdownMenuTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="h-8 w-8 p-0"
-                                >
+                                <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                                   <span className="sr-only">Open menu</span>
                                   <MoreVertical className="h-4 w-4" />
                                 </Button>
@@ -508,7 +467,7 @@ export default function TrainingMaterialTab() {
               Kode: <span className="font-semibold">{editingTraining?.kode}</span>
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
             <div className="space-y-2">
               <label className="text-sm font-semibold">Level</label>
@@ -584,7 +543,7 @@ export default function TrainingMaterialTab() {
               Topik: <span className="font-semibold">{selectedTraining?.topik_training}</span>
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-6 py-4">
             {/* Bagian 1: Keyword (Fixed - dari deskripsi_perilaku) */}
             <div className="space-y-2">
@@ -607,16 +566,14 @@ export default function TrainingMaterialTab() {
                   Opsional
                 </span>
               </div>
-              
+
               <Textarea
                 placeholder="Tulis referensi tambahan di sini..."
                 value={tempReferensi}
                 onChange={(e) => setTempReferensi(e.target.value)}
                 className="mt-2 h-32 resize-none"
               />
-              <p className="text-xs text-gray-500">
-                {tempReferensi.length} karakter
-              </p>
+              <p className="text-xs text-gray-500">{tempReferensi.length} karakter</p>
             </div>
           </div>
 
@@ -624,9 +581,7 @@ export default function TrainingMaterialTab() {
             <Button variant="outline" onClick={() => setSelectedTraining(null)}>
               Batal
             </Button>
-            <Button onClick={handleSaveReferensi}>
-              Simpan Referensi
-            </Button>
+            <Button onClick={handleSaveReferensi}>Simpan Referensi</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -640,21 +595,16 @@ export default function TrainingMaterialTab() {
           <AlertDialogHeader>
             <AlertDialogTitle>Regenerate Materi Training?</AlertDialogTitle>
             <AlertDialogDescription>
-            Materi training untuk{" "}
-            <span className="font-semibold">
-              {regenerateDialog?.topik_training}
-            </span>{" "}
-            sudah pernah digenerate sebelumnya. Apakah Anda ingin
-            me-regenerate dengan referensi yang baru? File lama (PPTX & PDF) akan
-            dihapus dan diganti dengan yang baru.
+              Materi training untuk{" "}
+              <span className="font-semibold">{regenerateDialog?.topik_training}</span> sudah pernah
+              digenerate sebelumnya. Apakah Anda ingin me-regenerate dengan referensi yang baru?
+              File lama (PPTX & PDF) akan dihapus dan diganti dengan yang baru.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Batal</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() =>
-                regenerateDialog && handleGenerate(regenerateDialog, true)
-              }
+              onClick={() => regenerateDialog && handleGenerate(regenerateDialog, true)}
             >
               Ya, Regenerate
             </AlertDialogAction>
@@ -669,10 +619,7 @@ export default function TrainingMaterialTab() {
             <AlertDialogTitle>Hapus Training?</AlertDialogTitle>
             <AlertDialogDescription>
               Apakah Anda yakin ingin menghapus training{" "}
-              <span className="font-semibold">
-                {deletingTraining?.topik_training}
-              </span>
-              ? 
+              <span className="font-semibold">{deletingTraining?.topik_training}</span>?
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

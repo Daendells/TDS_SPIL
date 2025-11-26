@@ -11,5 +11,6 @@ func AssessmentResultRouter(router *gin.Engine, assessmentResultController *cont
 	{
 		assessmentRoutes.POST("/submit", assessmentResultController.Submit)
 		assessmentRoutes.GET("/seafarer/:seafarerCode", assessmentResultController.FindBySeafarerCode)
+		assessmentRoutes.GET("/report/:seafarerCode", assessmentResultController.GetValueAssessmentReportBySeafarerCode)
 	}
 }

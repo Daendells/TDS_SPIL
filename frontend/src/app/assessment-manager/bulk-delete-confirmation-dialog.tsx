@@ -1,12 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { AlertTriangle } from "lucide-react";
 
 interface BulkDeleteConfirmationDialogProps {
@@ -22,7 +17,7 @@ export default function BulkDeleteConfirmationDialog({
   onCancel,
   onConfirm,
   selectedCount,
-  loading = false
+  loading = false,
 }: BulkDeleteConfirmationDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onCancel}>
@@ -30,9 +25,7 @@ export default function BulkDeleteConfirmationDialog({
         <DialogHeader>
           <DialogTitle className="sr-only">Hapus Beberapa Pertanyaan</DialogTitle>
           <div className="flex justify-center items-center mb-6">
-            <h1 className="text-2xl font-bold uppercase text-red-600">
-              Hapus Beberapa Pertanyaan
-            </h1>
+            <h1 className="text-2xl font-bold uppercase text-red-600">Hapus Beberapa Pertanyaan</h1>
           </div>
         </DialogHeader>
 
@@ -41,28 +34,28 @@ export default function BulkDeleteConfirmationDialog({
             <div className="w-16 h-16 bg-red-100 rounded-full flex items-center justify-center">
               <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
-            
+
             <div className="space-y-2">
               <h2 className="text-lg font-semibold text-gray-900">
                 Apakah Anda yakin ingin menghapus {selectedCount} pertanyaan?
               </h2>
               <p className="text-sm text-gray-600">
-                Tindakan ini tidak dapat dibatalkan. Semua pertanyaan yang dipilih dan opsi jawabannya akan dihapus secara permanen.
+                Tindakan ini tidak dapat dibatalkan. Semua pertanyaan yang dipilih dan opsi
+                jawabannya akan dihapus secara permanen.
               </p>
             </div>
 
-
             <div className="flex justify-center gap-3 w-full pt-4">
-              <Button 
-                variant="outline" 
+              <Button
+                variant="outline"
                 onClick={onCancel}
                 disabled={loading}
                 className="flex-1 max-w-[120px]"
               >
                 Batal
               </Button>
-              <Button 
-                variant="destructive" 
+              <Button
+                variant="destructive"
                 onClick={onConfirm}
                 disabled={loading}
                 className="flex-1 max-w-[120px]"

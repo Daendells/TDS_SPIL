@@ -2,11 +2,9 @@ import axios, { AxiosError } from "axios";
 import { GetServerSidePropsContext } from "next";
 import Cookies from "universal-cookie";
 
-import { getToken } from "./cookies";
 import { UninterceptedApiError } from "../types/api";
 
-export const BASE_URL =
-  process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8080";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8080";
 
 export const api = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
@@ -37,10 +35,11 @@ api.interceptors.request.use(function (config) {
       // if in production
 
       /** Get cookies from context if server side */
-      token = cookies.get("@tds/token");
+      token = cookies.get("Authorization");
     } else {
-      /** Get cookies from context if server side */
-      token = getToken();
+      /** Get cookies from browser */
+      const browserCookies = new Cookies();
+      token = browserCookies.get("Authorization");
     }
 
     config.headers.Authorization = token ? `Bearer ${token}` : "";

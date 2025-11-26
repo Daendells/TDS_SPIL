@@ -86,6 +86,7 @@ func createTriggers(db *gorm.DB) error {
 	// Drop existing triggers if they exist
 	db.Exec("DROP TRIGGER IF EXISTS calculate_readiness_before_insert")
 	db.Exec("DROP TRIGGER IF EXISTS calculate_readiness_before_update")
+	db.Exec("DROP TRIGGER IF EXISTS after_insert_report_create_report_score")
 
 	// Create BEFORE INSERT trigger
 	triggerInsert := `
@@ -178,6 +179,36 @@ BEGIN
 END`
 
 	if err := db.Exec(triggerUpdate).Error; err != nil {
+		return err
+	}
+
+	// Create AFTER INSERT trigger for report_score
+	triggerAfterInsert := `
+CREATE TRIGGER after_insert_report_create_report_scores
+AFTER INSERT ON reports
+FOR EACH ROW
+BEGIN
+    DECLARE a_type_id BIGINT;
+
+    -- hanya proses jika value_assessment tidak null
+    IF NEW.value_assessment IS NOT NULL THEN
+
+        -- cari assessment_type id untuk 'Value Assessment'
+        SELECT id INTO a_type_id
+        FROM assessment_types
+        WHERE assessment_type_name = 'Value Assessment'
+        LIMIT 1;
+
+        -- jika ditemukan, insert ke report_scores
+        IF a_type_id IS NOT NULL THEN
+            INSERT INTO report_scores (report_id, assessment_type_id, score)
+            VALUES (NEW.id, a_type_id, NEW.value_assessment);
+        END IF;
+
+    END IF;
+END`
+
+	if err := db.Exec(triggerAfterInsert).Error; err != nil {
 		return err
 	}
 

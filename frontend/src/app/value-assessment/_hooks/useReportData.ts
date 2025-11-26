@@ -5,8 +5,7 @@ import type { ReportData, ApiResponse } from "@/types/report-types";
 // Query key factory for report queries
 export const reportKeys = {
   all: ["reports"] as const,
-  bySeafarerCode: (seafarerCode: string) =>
-    [...reportKeys.all, "seafarer", seafarerCode] as const,
+  bySeafarerCode: (seafarerCode: string) => [...reportKeys.all, "seafarer", seafarerCode] as const,
 };
 
 // React Query hook for fetching report by seafarer code
@@ -31,10 +30,7 @@ export function useGetReportBySeafarerCode(seafarerCode: string) {
       // Don't retry on 404 or authentication errors
       if (error && typeof error === "object" && "response" in error) {
         const axiosError = error as { response: { status: number } };
-        if (
-          axiosError.response?.status === 404 ||
-          axiosError.response?.status === 401
-        ) {
+        if (axiosError.response?.status === 404 || axiosError.response?.status === 401) {
           return false;
         }
       }

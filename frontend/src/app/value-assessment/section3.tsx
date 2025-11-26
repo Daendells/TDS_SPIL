@@ -6,10 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ValueAssessmentData } from "./page";
-import {
-  useGetAssessmentByRole,
-  usePostAssessmentResults,
-} from "./_hooks/useAssessment";
+import { useGetAssessmentByRole, usePostAssessmentResults } from "./_hooks/useAssessment";
 import Image from "next/image";
 import { useCountdown } from "@/hooks/use-session-storage";
 import { useTimerPauseResume } from "@/hooks/useTimerPauseResume";
@@ -87,9 +84,7 @@ export default function Section3({
   );
 
   // Overall assessment timer (24 hours)
-  const { isExpired: isOverallExpired } = useStorageCountdown(
-    "valueAssessmentFormData"
-  );
+  const { isExpired: isOverallExpired } = useStorageCountdown("valueAssessmentFormData");
 
   const currentQuestion = assessment?.questions?.[currentQuestionIndex];
 
@@ -127,14 +122,10 @@ export default function Section3({
     }
 
     // Check for unanswered questions
-    const unansweredQuestions = assessment.questions.filter(
-      (q) => !(q.questionId in answers)
-    );
+    const unansweredQuestions = assessment.questions.filter((q) => !(q.questionId in answers));
 
     if (unansweredQuestions.length > 0 && timeLeft > 0) {
-      toast.error(
-        `Masih ada ${unansweredQuestions.length} soal yang belum dijawab`
-      );
+      toast.error(`Masih ada ${unansweredQuestions.length} soal yang belum dijawab`);
       return;
     }
 
@@ -158,14 +149,7 @@ export default function Section3({
       // Remove localStorage when assessment submission is successful
       localStorage.removeItem("valueAssessmentFormData");
     }
-  }, [
-    assessment?.questions,
-    answers,
-    assessmentData.seafarerCode,
-    mutate,
-    timeLeft,
-    isSuccess,
-  ]);
+  }, [assessment?.questions, answers, assessmentData.seafarerCode, mutate, timeLeft, isSuccess]);
 
   // Auto-submit ketika waktu section habis (timeLeft === 0)
   useEffect(() => {
@@ -185,9 +169,7 @@ export default function Section3({
   useEffect(() => {
     if (isOverallExpired && !timeOutRef.current && assessment?.questions) {
       timeOutRef.current = true;
-      toast.warning(
-        "Waktu assessment telah habis. Form akan di-submit otomatis."
-      );
+      toast.warning("Waktu assessment telah habis. Form akan di-submit otomatis.");
       handleSubmit();
     }
   }, [isOverallExpired, handleSubmit, assessment?.questions]);
@@ -220,9 +202,7 @@ export default function Section3({
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">
-            Tidak ada soal yang tersedia untuk Section 3
-          </p>
+          <p className="text-gray-600">Tidak ada soal yang tersedia untuk Section 3</p>
           <Button onClick={onBack} className="mt-4">
             Kembali
           </Button>
@@ -261,22 +241,18 @@ export default function Section3({
 
         {/* Instructions */}
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-3">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Panduan Pengisian:
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Panduan Pengisian:</h2>
           <div className="space-y-3 text-gray-700 mb-6">
             <p>
-              Pada bagian ini, terdapat sejumlah pernyataan mengenai diri Anda.
-              Bacalah dengan seksama setiap pernyataan yang ada. Jawablah setiap
-              pernyataan sesuai dengan diri Anda. Tidak ada jawaban benar dan
-              salah dalam asesmen ini.
+              Pada bagian ini, terdapat sejumlah pernyataan mengenai diri Anda. Bacalah dengan
+              seksama setiap pernyataan yang ada. Jawablah setiap pernyataan sesuai dengan diri
+              Anda. Tidak ada jawaban benar dan salah dalam asesmen ini.
             </p>
           </div>
 
           <div className="bg-blue-50 border-l-4 border-blue-400 p-4">
             <h3 className="font-bold text-blue-800 mb-3">
-              Setiap pernyataan terdiri skala 1 hingga 4 dengan keterangan
-              sebagai berikut:
+              Setiap pernyataan terdiri skala 1 hingga 4 dengan keterangan sebagai berikut:
             </h3>
             <div className="space-y-2 text-blue-700">
               {LIKERT_SCALE.map((scale) => (
@@ -291,16 +267,13 @@ export default function Section3({
         <div className="flex flex-col-reverse md:flex-row gap-6">
           {/* Question Navigation Sidebar */}
           <div className="w-full md:w-64 bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="font-bold text-lg mb-4 text-gray-800">
-              Navigasi Soal
-            </h3>
+            <h3 className="font-bold text-lg mb-4 text-gray-800">Navigasi Soal</h3>
 
             {/* Progress Summary */}
             <div className="mb-6 p-4 bg-gray-50 rounded-lg">
               <div className="text-sm text-gray-600 mb-2">Progress:</div>
               <div className="text-lg font-bold text-gray-800">
-                {Object.keys(answers).length} /{" "}
-                {assessment?.questions?.length ?? 0}
+                {Object.keys(answers).length} / {assessment?.questions?.length ?? 0}
               </div>
               <div className="text-sm text-gray-500">soal terjawab</div>
             </div>
@@ -321,8 +294,8 @@ export default function Section3({
                         isCurrent
                           ? "bg-blue-500 text-white border-blue-500"
                           : isAnswered
-                          ? "bg-gray-800 text-white border-gray-800"
-                          : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                            ? "bg-gray-800 text-white border-gray-800"
+                            : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
                       }
                     `}
                   >
@@ -355,8 +328,7 @@ export default function Section3({
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-bold text-gray-800">
-                    Pernyataan {currentQuestionIndex + 1} dari{" "}
-                    {assessment?.questions?.length ?? 0}
+                    Pernyataan {currentQuestionIndex + 1} dari {assessment?.questions?.length ?? 0}
                   </h3>
                 </div>
 
@@ -383,8 +355,7 @@ export default function Section3({
                       : ""
                   }
                   onValueChange={(value) =>
-                    currentQuestion &&
-                    handleAnswerChange(currentQuestion.questionId, value)
+                    currentQuestion && handleAnswerChange(currentQuestion.questionId, value)
                   }
                 >
                   <div className="space-y-4">
@@ -427,8 +398,7 @@ export default function Section3({
                 </Button>
 
                 <div className="flex gap-3">
-                  {currentQuestionIndex <
-                  (assessment?.questions?.length ?? 0) - 1 ? (
+                  {currentQuestionIndex < (assessment?.questions?.length ?? 0) - 1 ? (
                     <Button
                       onClick={handleNext}
                       className="px-6 py-2 bg-gray-800 hover:bg-gray-700 cursor-pointer"

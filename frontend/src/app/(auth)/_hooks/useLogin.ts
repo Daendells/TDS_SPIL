@@ -1,9 +1,11 @@
 import { useMutation } from "@tanstack/react-query";
-import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import api from "@/app/lib/api";
 import { ApiReturn } from "@/app/types/api";
 import { useAuth } from "@/context/AuthContext";
+import Cookies from "universal-cookie";
+
+const cookies = new Cookies();
 
 // Types for login
 export type LoginRequest = {
@@ -14,6 +16,7 @@ export type LoginRequest = {
 export type LoginResponse = {
   id: number;
   username: string;
+  token: string;
 };
 
 export type LoginError = {
@@ -27,7 +30,6 @@ export type LoginError = {
 
 // Hook for login functionality
 export function useLogin() {
-  const router = useRouter();
   const { setUser } = useAuth();
 
   return useMutation<LoginResponse, LoginError, LoginRequest>({
@@ -52,19 +54,29 @@ export function useLogin() {
       return response.data.data;
     },
     onSuccess: (userData) => {
-      // Set user data in auth context
-      setUser(userData);
+      // Store token in cookie (manually from frontend)
+      cookies.set("Authorization", userData.token, {
+        path: "/",
+        maxAge: 3600 * 6, // 6 hours
+        sameSite: "lax",
+      });
+
+      // Set user data in auth context (without token)
+      setUser({
+        id: userData.id,
+        username: userData.username,
+      });
 
       // Show success message
       toast.success("Login berhasil!");
 
-      // Navigate to dashboard
-      router.replace("/dashboard");
+      // Navigate to dashboard with window.location to ensure full page reload
+      // This prevents RSC issues and ensures middleware runs properly
+      window.location.href = "/dashboard";
     },
     onError: (error) => {
       // Handle login error
-      const errorMessage =
-        error.response?.data?.error || error.message || "Login gagal";
+      const errorMessage = error.response?.data?.error || error.message || "Login gagal";
       toast.error(errorMessage);
     },
   });
@@ -72,7 +84,6 @@ export function useLogin() {
 
 // Hook for logout functionality
 export function useLogout() {
-  const router = useRouter();
   const { setUser } = useAuth();
 
   return useMutation<void, LoginError, void>({
@@ -84,24 +95,27 @@ export function useLogout() {
       }
     },
     onSuccess: () => {
+      // Remove token cookie
+      cookies.remove("Authorization", { path: "/" });
+
       // Clear user data
       setUser(null);
 
       // Show success message
       toast.success("Logout berhasil!");
 
-      // Navigate to login
-      router.replace("/login");
+      // Navigate to login with window.location to ensure full page reload
+      window.location.href = "/login";
     },
     onError: (error) => {
       // Handle logout error
-      const errorMessage =
-        error.response?.data?.error || error.message || "Logout gagal";
+      const errorMessage = error.response?.data?.error || error.message || "Logout gagal";
       toast.error(errorMessage);
 
       // Even if logout fails on server, clear local state
+      cookies.remove("Authorization", { path: "/" });
       setUser(null);
-      router.replace("/login");
+      window.location.href = "/login";
     },
   });
 }

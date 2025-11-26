@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  Dropzone,
-  DropzoneContent,
-  DropzoneEmptyState,
-} from "@/components/ui/shadcn-io/dropzone";
+import { Dropzone, DropzoneContent, DropzoneEmptyState } from "@/components/ui/shadcn-io/dropzone";
 import {
   Dialog,
   DialogContent,
@@ -19,14 +15,12 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 
 export default function Excel() {
   const [files, setFile] = useState<File[] | undefined>();
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [onUpload, setOnUpload] = useState<boolean>(true);
-
-  const api = useApi();
 
   const handleDrop = (files: File[]) => {
     console.log(files[0]);
@@ -55,7 +49,8 @@ export default function Excel() {
       toast.success("File uploaded successfully!");
       console.log("Upload response:", data);
     } catch (err) {
-      toast.error((err as any).response?.data.error);
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Upload failed");
       console.error(err);
     }
   };
@@ -70,8 +65,7 @@ export default function Excel() {
       <Dropzone
         accept={{
           "application/vnd.ms-excel": [], // .xls
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet":
-            [], // .xlsx
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // .xlsx
         }}
         maxSize={1024 * 1024 * 10}
         minSize={1024}
@@ -88,10 +82,7 @@ export default function Excel() {
       {/* Upload */}
       <Dialog open={openModal} onOpenChange={setOpenModal}>
         <DialogTrigger asChild>
-          <Button
-            className="transition duration-100 active:scale-95"
-            disabled={onUpload}
-          >
+          <Button className="transition duration-100 active:scale-95" disabled={onUpload}>
             Upload
           </Button>
         </DialogTrigger>
@@ -99,8 +90,7 @@ export default function Excel() {
           <DialogHeader>
             <DialogTitle>Are you absolutely sure?</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. Please make sure you have followed
-              the rules below!
+              This action cannot be undone. Please make sure you have followed the rules below!
             </DialogDescription>
           </DialogHeader>
 
@@ -154,28 +144,18 @@ export default function Excel() {
               {/* Nama Sheet */}
               <div className="grid gap-2">
                 <h2 className="font-medium">2. Nama Sheet Excel</h2>
-                <Image
-                  src="/images/sheet.png"
-                  alt="Sheet Name"
-                  width={240}
-                  height={240}
-                />
+                <Image src="/images/sheet.png" alt="Sheet Name" width={240} height={240} />
                 <p className="leading-7 [&:not(:first-child)]:mt-6">
-                  <span className="font-medium">Sheet1</span> merupakan nama
-                  sheet dari file Excel yang diupload. Pastikan nama sheetnya
-                  sesuai yaitu <span className="font-medium">Sheet1</span>.
+                  <span className="font-medium">Sheet1</span> merupakan nama sheet dari file Excel
+                  yang diupload. Pastikan nama sheetnya sesuai yaitu{" "}
+                  <span className="font-medium">Sheet1</span>.
                 </p>
               </div>
             </div>
           </div>
 
           <DialogFooter className="sm:justify-start">
-            <Button
-              type="button"
-              className="w-full"
-              onClick={upload}
-              disabled={onUpload}
-            >
+            <Button type="button" className="w-full" onClick={upload} disabled={onUpload}>
               Upload
             </Button>
           </DialogFooter>

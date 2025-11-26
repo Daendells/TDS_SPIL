@@ -10,28 +10,10 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import {
-  Pagination,
-  PaginationContent,
-  PaginationItem,
-} from "@/components/ui/pagination";
-import {
-  Command,
-  CommandGroup,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
-import {
-  CheckIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  ChevronsUpDownIcon,
-} from "lucide-react";
+import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
+import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsUpDownIcon } from "lucide-react";
 import CardCompetence from "@/components/card-competence";
 import { IReport, IPaginationRequest, PageType } from "@/types/global-types";
 import { Button } from "@/components/ui/button";
@@ -49,13 +31,12 @@ export default function DashboardClient() {
   const { data: idpCountData, error: idpCountError } = useGetIdpCount();
 
   // Pagination request state
-  const [paginationRequest, setPaginationRequest] =
-    useState<IPaginationRequest>({
-      anchorId: 0,
-      page: "next",
-      pageSize: 10,
-      filter: "",
-    });
+  const [paginationRequest, setPaginationRequest] = useState<IPaginationRequest>({
+    anchorId: 0,
+    page: "next",
+    pageSize: 10,
+    filter: "",
+  });
 
   // Fetch reports using React Query
   const {
@@ -86,9 +67,7 @@ export default function DashboardClient() {
 
   // Show error notification if reports fetch fails
   if (reportsError) {
-    toast.error(
-      (reportsError as Error).message || "Failed to fetch reports data"
-    );
+    toast.error((reportsError as Error).message || "Failed to fetch reports data");
   }
 
   // Pagination navigation
@@ -97,8 +76,7 @@ export default function DashboardClient() {
     setPaginationRequest({
       ...paginationRequest,
       page: page,
-      anchorId:
-        page == "next" ? paginationData?.last_id : paginationData?.first_id,
+      anchorId: page == "next" ? paginationData?.last_id : paginationData?.first_id,
     });
   };
 
@@ -236,10 +214,7 @@ export default function DashboardClient() {
               </TableRow>
             ) : reportsError ? (
               <TableRow>
-                <TableCell
-                  colSpan={5}
-                  className="text-center font-bold text-red-500 py-8"
-                >
+                <TableCell colSpan={5} className="text-center font-bold text-red-500 py-8">
                   Error: {(reportsError as Error).message}
                 </TableCell>
               </TableRow>
@@ -250,27 +225,16 @@ export default function DashboardClient() {
                   className="cursor-pointer hover:bg-gray-100"
                   onClick={() => handleRowClick(report)}
                 >
-                  <TableCell className="text-center font-bold">
-                    {report.seamanCode}
-                  </TableCell>
+                  <TableCell className="text-center font-bold">{report.seamanCode}</TableCell>
                   <TableCell className="text-center">{report.nama}</TableCell>
-                  <TableCell className="text-center">
-                    {report.jabatan}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {report.idpProgram}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {report.readiness}
-                  </TableCell>
+                  <TableCell className="text-center">{report.jabatan}</TableCell>
+                  <TableCell className="text-center">{report.idpProgram}</TableCell>
+                  <TableCell className="text-center">{report.readiness}</TableCell>
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell
-                  colSpan={14}
-                  className="text-center font-bold text-gray-400"
-                >
+                <TableCell colSpan={14} className="text-center font-bold text-gray-400">
                   No Data
                 </TableCell>
               </TableRow>

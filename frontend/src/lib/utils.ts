@@ -13,80 +13,80 @@ export function formatSegmet(segment: string) {
     .join(" ");
 }
 
-/* eslint-disable @typescript-eslint/no-explicit-any */
-export function parseReports(data: Record<any, any>[]): IReport[] {
-  return data.map((d: any) => ({
-    id: d["id"],
-    seamanCode: d["seamanCode"],
-    seafarerCode: d["seafarerCode"],
-    nama: d["nama"],
-    jabatan: d["jabatan"],
-    vesselName: d["vesselName"],
-    certificate: d["certificate"],
-    age: d["age"],
-    tanggalLahir: d["tanggalLahir"],
-    startDate: d["startDate"],
+export function parseReports(data: Record<string, unknown>[]): IReport[] {
+  return data.map((d) => ({
+    id: d["id"] as number,
+    seamanCode: d["seamanCode"] as string,
+    seafarerCode: d["seafarerCode"] as string,
+    nama: d["nama"] as string,
+    jabatan: d["jabatan"] as string,
+    vesselName: d["vesselName"] as string,
+    certificate: d["certificate"] as string,
+    age: d["age"] as string,
+    tanggalLahir: d["tanggalLahir"] as string,
+    startDate: d["startDate"] as string,
 
     // Catatan Indisipliner
-    warningLetter: d["warningLetter"],
-    caseHistory: d["caseHistory"],
-    yearOfCase: d["yearOfCase"],
+    warningLetter: d["warningLetter"] as string,
+    caseHistory: d["caseHistory"] as string,
+    yearOfCase: d["yearOfCase"] as string,
 
     // Data History Vessel
-    vesselHistory: d["vesselHistory"],
+    vesselHistory: d["vesselHistory"] as string,
 
     // Kinerja
-    konditeReview: d["konditeReview"],
-    kpiVessel: d["kpiVessel"],
-    performanceScore: d["performanceScore"],
-    valueAssessment: d["valueAssessment"],
-    assessmentCenter: d["assessmentCenter"],
-    potentialScore: d["potentialScore"],
-    havQuadran: d["havQuadran"],
-    havMapping: d["havMapping"],
-    competencyGapAnalysis: d["competencyGapAnalysis"],
-    totalGap: d["totalGap"],
-    strength: d["strength"],
-    talentClassified: d["talentClassified"],
-    idpProgram: d["idpProgram"],
-    idp: d["idp"],
-    havQuadran2: d["havQuadran2"],
-    talentClassified2: d["talentClassified2"],
-    readiness: d["readiness"],
-    certificateEligible: d["certificateEligible"],
+    konditeReview: d["konditeReview"] as number,
+    kpiVessel: d["kpiVessel"] as number,
+    performanceScore: d["performanceScore"] as number,
+    valueAssessment: d["valueAssessment"] as number,
+    valueAssessmentScore: d["valueAssessmentScore"] as number,
+    assessmentCenter: d["assessmentCenter"] as number,
+    potentialScore: d["potentialScore"] as number,
+    havQuadran: d["havQuadran"] as number,
+    havMapping: d["havMapping"] as string,
+    competencyGapAnalysis: d["competencyGapAnalysis"] as string,
+    totalGap: d["totalGap"] as number,
+    strength: d["strength"] as number,
+    talentClassified: d["talentClassified"] as string,
+    idpProgram: d["idpProgram"] as string,
+    idp: d["idp"] as string,
+    havQuadran2: d["havQuadran2"] as number,
+    talentClassified2: d["talentClassified2"] as string,
+    readiness: d["readiness"] as string,
+    certificateEligible: d["certificateEligible"] as string,
 
     // Training, Mentoring, Coaching
-    trainingCompleted: d["trainingCompleted"],
-    trainingPlanned: d["trainingPlanned"],
-    mentoringCompleted: d["mentoringCompleted"],
-    mentoringPlanned: d["mentoringPlanned"],
-    coachingCompleted: d["coachingCompleted"],
-    coachingPlanned: d["coachingPlanned"],
+    trainingCompleted: d["trainingCompleted"] as string,
+    trainingPlanned: d["trainingPlanned"] as string,
+    mentoringCompleted: d["mentoringCompleted"] as string,
+    mentoringPlanned: d["mentoringPlanned"] as string,
+    coachingCompleted: d["coachingCompleted"] as string,
+    coachingPlanned: d["coachingPlanned"] as string,
 
     // Succession Plan
-    dataIncumbent: d["dataIncumbent"],
-    successionVessel: d["successionVessel"],
-    successionRank: d["successionRank"],
+    dataIncumbent: d["dataIncumbent"] as string,
+    successionVessel: d["successionVessel"] as string,
+    successionRank: d["successionRank"] as string,
 
     // Individual Development Plan
-    idpStart: d["idpStart"],
-    idpMentor: d["idpMentor"],
-    idpCoach: d["idpCoach"],
+    idpStart: d["idpStart"] as string,
+    idpMentor: d["idpMentor"] as string,
+    idpCoach: d["idpCoach"] as string,
+    competencies: d["competencies"] as IReport["competencies"],
   }));
 }
 
 export function parsePaginationData<T>(
-  response: Record<string, any>,
-  parser: (data: any) => T[]
+  response: Record<string, unknown>,
+  parser: (data: Record<string, unknown>[]) => T[]
 ): IPaginationData<T> {
-  const { first_id, first_page, has_more, last_id, page_size, results } =
-    response;
+  const { first_id, first_page, has_more, last_id, page_size, results } = response;
   return {
-    data: parser(results ?? []),
-    firstId: first_id ?? null,
-    lastId: last_id ?? null,
-    pageSize: page_size,
-    hasMore: has_more,
-    firstPage: first_page,
+    results: parser((results as Record<string, unknown>[]) ?? []),
+    first_id: (first_id as number) ?? null,
+    last_id: (last_id as number) ?? null,
+    page_size: page_size as number,
+    has_more: has_more as boolean,
+    first_page: first_page as boolean,
   };
 }

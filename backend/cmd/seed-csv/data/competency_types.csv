@@ -1,0 +1,24 @@
+id,code,name,description,category,is_active
+1,LDC,Leading Change,,M,true
+2,DCM,Decision Making,,M,true
+3,CIO,Continuous Improvement,,M,true
+4,SIO,Self Improvement Orientation,,M,true
+5,FLX,Flexibility,,M,true
+6,LAG,Learning Agility,,M,true
+7,RSC,Resilience,,M,true
+8,CSO,Customer Orientation,,M,true
+9,COM,Communication,,M,true
+10,EMP,Empathy,,M,true
+11,TOR,Team Orientation,,M,true
+12,LDP,Leadership,,M,true
+13,PNO,Planning & Organizing,,M,true
+14,DIR,Directiveness,,M,true
+15,ACH,Achievement Orientation,,M,true
+16,ACT,Accountability,,M,true
+17,IDS,Instructional Discipline,,M,true
+18,CFO,Concern for Order,,M,true
+19,RBG,Relationship Building,,M,true
+20,ING,Integrity,,M,true
+21,RSF,Resourcefulness,,M,true
+22,BAC,Business Acumen,,M,true
+23,PSG,Problem Solving,,M,true

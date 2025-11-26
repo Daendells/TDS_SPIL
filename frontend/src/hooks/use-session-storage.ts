@@ -33,8 +33,7 @@ export function useSessionStorage<T>(key: string, initialValue: T) {
   const setValue = (value: T | ((val: T) => T)) => {
     try {
       // Allow value to be a function so we have the same API as useState
-      const valueToStore =
-        value instanceof Function ? value(storedValue) : value;
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
       setStoredValue(valueToStore);
       saveToStorage(valueToStore);
     } catch (error) {
@@ -86,14 +85,8 @@ export function useCountdown(
         "color: blue; font-weight: bold;"
       );
       console.log(`%c[TIMER] Start time: ${startTime}`, "color: blue;");
-      console.log(
-        `%c[TIMER] Pause timestamp: ${pauseTimestamp || "NOT PAUSED"}`,
-        "color: blue;"
-      );
-      console.log(
-        `%c[TIMER] Current time: ${new Date().toISOString()}`,
-        "color: blue;"
-      );
+      console.log(`%c[TIMER] Pause timestamp: ${pauseTimestamp || "NOT PAUSED"}`, "color: blue;");
+      console.log(`%c[TIMER] Current time: ${new Date().toISOString()}`, "color: blue;");
 
       if (pauseTimestamp) {
         // Sudah dipause: gunakan waktu pause sebagai reference point
@@ -131,10 +124,7 @@ export function useCountdown(
         `%c[COUNTDOWN] ⏳ Timer running: ${timeLeft}s remaining`,
         "color: green; font-size: 10px;"
       );
-      const timer = setTimeout(
-        () => setTimeLeft((prev) => Math.max(0, prev - 1)),
-        1000
-      );
+      const timer = setTimeout(() => setTimeLeft((prev) => Math.max(0, prev - 1)), 1000);
       return () => clearTimeout(timer);
     } else if (pauseTimestamp) {
       console.log(
@@ -147,9 +137,7 @@ export function useCountdown(
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   };
 
   return { timeLeft, formatTime };

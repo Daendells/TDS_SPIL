@@ -64,9 +64,7 @@ export function useGetCompetencyMappings(program: string) {
   return useQuery({
     queryKey: ["competency-mappings", program],
     queryFn: async () => {
-      const response = await fetch(
-        `${API_BASE}/api/competency-mappings?program=${program}`
-      );
+      const response = await fetch(`${API_BASE}/api/competency-mappings?program=${program}`);
       if (!response.ok) {
         throw new Error("Failed to fetch competency mappings");
       }
@@ -112,23 +110,14 @@ export function useUpdateCompetencyMapping() {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: async ({
-      id,
-      data,
-    }: {
-      id: number;
-      data: CompetencyMappingFormData;
-    }) => {
-      const response = await fetch(
-        `${API_BASE}/api/competency-mappings/${id}`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        }
-      );
+    mutationFn: async ({ id, data }: { id: number; data: CompetencyMappingFormData }) => {
+      const response = await fetch(`${API_BASE}/api/competency-mappings/${id}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      });
 
       if (!response.ok) {
         throw new Error("Failed to update competency mapping");
@@ -153,12 +142,9 @@ export function useDeleteCompetencyMapping() {
 
   return useMutation({
     mutationFn: async (id: number) => {
-      const response = await fetch(
-        `${API_BASE}/api/competency-mappings/${id}`,
-        {
-          method: "DELETE",
-        }
-      );
+      const response = await fetch(`${API_BASE}/api/competency-mappings/${id}`, {
+        method: "DELETE",
+      });
 
       if (!response.ok) {
         throw new Error("Failed to delete competency mapping");

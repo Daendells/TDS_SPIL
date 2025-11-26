@@ -2,13 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -20,23 +14,15 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Edit, AlertCircle } from "lucide-react";
-import {
-  useGetAllAssessmentTypes,
-  AssessmentType,
-} from "./_hooks/useAssessmentType";
+import { useGetAllAssessmentTypes, AssessmentType } from "./_hooks/useAssessmentType";
 import AssessmentTypeEditDialog from "./assessment-type-edit-dialog";
 import Image from "next/image";
 
 export default function AssessmentTypeAdmin() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
-  const [selectedAssessmentType, setSelectedAssessmentType] =
-    useState<AssessmentType | null>(null);
+  const [selectedAssessmentType, setSelectedAssessmentType] = useState<AssessmentType | null>(null);
 
-  const {
-    data: assessmentTypes,
-    isLoading,
-    error,
-  } = useGetAllAssessmentTypes();
+  const { data: assessmentTypes, isLoading, error } = useGetAllAssessmentTypes();
 
   const handleEditClick = (assessmentType: AssessmentType) => {
     setSelectedAssessmentType(assessmentType);
@@ -79,12 +65,9 @@ export default function AssessmentTypeAdmin() {
             className="h-12 w-auto"
           />
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">
-              Assessment Type Manager
-            </h1>
+            <h1 className="text-3xl font-bold tracking-tight">Assessment Type Manager</h1>
             <p className="text-gray-500 mt-1">
-              Kelola tanggal, durasi, dan maksimal attempts untuk setiap
-              assessment
+              Kelola tanggal, durasi, dan maksimal attempts untuk setiap assessment
             </p>
           </div>
           <Image
@@ -102,9 +85,7 @@ export default function AssessmentTypeAdmin() {
       <Card>
         <CardHeader>
           <CardTitle>Daftar Assessment Types</CardTitle>
-          <CardDescription>
-            Kelola pengaturan untuk setiap jenis assessment
-          </CardDescription>
+          <CardDescription>Kelola pengaturan untuk setiap jenis assessment</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -115,17 +96,13 @@ export default function AssessmentTypeAdmin() {
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3">
               <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
               <div>
-                <p className="text-sm font-medium text-red-900">
-                  Gagal memuat assessment types
-                </p>
+                <p className="text-sm font-medium text-red-900">Gagal memuat assessment types</p>
                 <p className="text-sm text-red-700">Silakan coba lagi nanti</p>
               </div>
             </div>
           ) : !assessmentTypes || assessmentTypes.length === 0 ? (
             <div className="text-center py-12">
-              <p className="text-gray-500">
-                Tidak ada assessment types ditemukan
-              </p>
+              <p className="text-gray-500">Tidak ada assessment types ditemukan</p>
             </div>
           ) : (
             <div className="overflow-x-auto">
@@ -147,48 +124,29 @@ export default function AssessmentTypeAdmin() {
                       assessmentType.endTime
                     );
                     const hasNotStarted =
-                      assessmentType.startTime &&
-                      new Date(assessmentType.startTime) > new Date();
+                      assessmentType.startTime && new Date(assessmentType.startTime) > new Date();
                     const hasEnded =
-                      assessmentType.endTime &&
-                      new Date(assessmentType.endTime) < new Date();
+                      assessmentType.endTime && new Date(assessmentType.endTime) < new Date();
 
                     return (
                       <TableRow key={assessmentType.id}>
                         <TableCell className="font-medium">
                           {assessmentType.assessmentTypeName}
                         </TableCell>
+                        <TableCell>{formatDate(assessmentType.startTime)}</TableCell>
+                        <TableCell>{formatDate(assessmentType.endTime)}</TableCell>
+                        <TableCell>{assessmentType.maxAttempts || "-"}</TableCell>
                         <TableCell>
-                          {formatDate(assessmentType.startTime)}
-                        </TableCell>
-                        <TableCell>
-                          {formatDate(assessmentType.endTime)}
-                        </TableCell>
-                        <TableCell>
-                          {assessmentType.maxAttempts || "-"}
-                        </TableCell>
-                        <TableCell>
-                          {isActive && (
-                            <Badge className="bg-green-100 text-green-800">
-                              Aktif
-                            </Badge>
-                          )}
+                          {isActive && <Badge className="bg-green-100 text-green-800">Aktif</Badge>}
                           {hasNotStarted && (
-                            <Badge className="bg-blue-100 text-blue-800">
-                              Belum Dimulai
-                            </Badge>
+                            <Badge className="bg-blue-100 text-blue-800">Belum Dimulai</Badge>
                           )}
                           {hasEnded && (
-                            <Badge className="bg-gray-100 text-gray-800">
-                              Sudah Berakhir
-                            </Badge>
+                            <Badge className="bg-gray-100 text-gray-800">Sudah Berakhir</Badge>
                           )}
-                          {!assessmentType.startTime &&
-                            !assessmentType.endTime && (
-                              <Badge className="bg-gray-100 text-gray-800">
-                                Tidak Ada Jadwal
-                              </Badge>
-                            )}
+                          {!assessmentType.startTime && !assessmentType.endTime && (
+                            <Badge className="bg-gray-100 text-gray-800">Tidak Ada Jadwal</Badge>
+                          )}
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -217,20 +175,20 @@ export default function AssessmentTypeAdmin() {
         </CardHeader>
         <CardContent className="text-sm text-gray-600 space-y-2">
           <p>
-            • <span className="font-medium">Status Aktif:</span> Assessment
-            sudah dimulai dan belum berakhir
+            • <span className="font-medium">Status Aktif:</span> Assessment sudah dimulai dan belum
+            berakhir
           </p>
           <p>
-            • <span className="font-medium">Belum Dimulai:</span> Assessment
-            belum mencapai tanggal mulai
+            • <span className="font-medium">Belum Dimulai:</span> Assessment belum mencapai tanggal
+            mulai
           </p>
           <p>
-            • <span className="font-medium">Sudah Berakhir:</span> Assessment
-            sudah melewati tanggal akhir
+            • <span className="font-medium">Sudah Berakhir:</span> Assessment sudah melewati tanggal
+            akhir
           </p>
           <p>
-            • <span className="font-medium">Max Attempts:</span> Batas maksimal
-            user dapat mencoba assessment
+            • <span className="font-medium">Max Attempts:</span> Batas maksimal user dapat mencoba
+            assessment
           </p>
         </CardContent>
       </Card>

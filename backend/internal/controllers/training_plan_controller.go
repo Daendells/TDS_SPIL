@@ -3,6 +3,7 @@ package controllers
 import (
 	"backend/internal/services"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -129,6 +130,56 @@ func (c *TrainingPlanController) GetCompetencyMapping(ctx *gin.Context) {
 }
 
 // GetAvailablePrograms handles GET /api/training-plan/programs
+func (c *TrainingPlanController) SwapSchedules(ctx *gin.Context) {
+	var request struct {
+		Swaps []struct {
+			ID            int    `json:"id" binding:"required"`
+			ScheduledDate string `json:"scheduledDate" binding:"required"`
+		} `json:"swaps" binding:"required,min=1"`
+	}
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	c.log.WithFields(logrus.Fields{
+		"swaps_count": len(request.Swaps),
+	}).Info("Starting to swap schedules")
+
+	for _, swap := range request.Swaps {
+		parsedDate, err := time.Parse(time.RFC3339, swap.ScheduledDate)
+		if err != nil {
+			c.log.WithError(err).Error("Failed to parse scheduled date")
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"success": false,
+				"error":   "Invalid date format",
+			})
+			return
+		}
+
+		err = c.trainingPlanService.UpdateScheduledDate(swap.ID, parsedDate)
+		if err != nil {
+			c.log.WithError(err).Error("Failed to update scheduled date")
+			ctx.JSON(http.StatusInternalServerError, gin.H{
+				"success": false,
+				"error":   "Failed to update schedule",
+			})
+			return
+		}
+	}
+
+	c.log.Info("Successfully swapped schedules")
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"message": "Schedules updated successfully",
+	})
+}
+
 func (c *TrainingPlanController) GetAvailablePrograms(ctx *gin.Context) {
 	programs := []gin.H{
 		{"code": "SDP", "name": "Senior Development Program"},

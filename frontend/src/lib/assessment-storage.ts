@@ -39,10 +39,7 @@ export class ValueAssessmentStorage {
         };
       }
     } catch (error) {
-      console.error(
-        "Error loading assessment data from sessionStorage:",
-        error
-      );
+      console.error("Error loading assessment data from sessionStorage:", error);
     }
     return { data: null, step: 1 };
   }
@@ -54,10 +51,7 @@ export class ValueAssessmentStorage {
     try {
       sessionStorage.removeItem(this.STORAGE_KEY);
     } catch (error) {
-      console.error(
-        "Error clearing assessment data from sessionStorage:",
-        error
-      );
+      console.error("Error clearing assessment data from sessionStorage:", error);
     }
   }
 
@@ -92,7 +86,7 @@ export class ValueAssessmentStorage {
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
         a.href = url;
-        a.download = `value-assessment-${data.seamanCode || "backup"}-${
+        a.download = `value-assessment-${data.seafarerCode || "backup"}-${
           new Date().toISOString().split("T")[0]
         }.json`;
         document.body.appendChild(a);
@@ -143,9 +137,7 @@ export class ValueAssessmentStorage {
       "section3Answers",
     ];
 
-    return required.every((field) =>
-      Object.prototype.hasOwnProperty.call(data, field)
-    );
+    return required.every((field) => Object.prototype.hasOwnProperty.call(data, field));
   }
 
   /**
@@ -161,8 +153,7 @@ export class ValueAssessmentStorage {
     const start = new Date(startTime).getTime();
     const now = new Date().getTime();
     // Subtract pausedTime (convert from ms to seconds) from elapsed time
-    const elapsedSeconds =
-      Math.floor((now - start) / 1000) - Math.floor(pausedTime / 1000);
+    const elapsedSeconds = Math.floor((now - start) / 1000) - Math.floor(pausedTime / 1000);
     const totalSeconds = totalMinutes * 60;
 
     return Math.max(0, totalSeconds - elapsedSeconds);
@@ -174,9 +165,7 @@ export class ValueAssessmentStorage {
   static formatTime(seconds: number): string {
     const mins = Math.floor(seconds / 60);
     const secs = seconds % 60;
-    return `${mins.toString().padStart(2, "0")}:${secs
-      .toString()
-      .padStart(2, "0")}`;
+    return `${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
   }
 
   /**
@@ -187,7 +176,7 @@ export class ValueAssessmentStorage {
     const total = 5; // 5 steps: greeting, personal, section1, section2, section3
 
     if (data.email && data.consent) completed++;
-    if (data.fullName && data.seamanCode) completed++;
+    if (data.fullName && data.seafarerCode) completed++;
     if (Object.keys(data.section1Answers).length > 0) completed++;
     if (Object.keys(data.section2Answers).length > 0) completed++;
     if (Object.keys(data.section3Answers).length > 0) completed++;

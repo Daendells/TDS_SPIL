@@ -34,9 +34,7 @@ export default function Layout({ children }: { children: React.ReactNode }) {
                       <React.Fragment key={href}>
                         {index > 0 && <BreadcrumbSeparator />}
                         <BreadcrumbItem>
-                          <BreadcrumbLink href={href}>
-                            {formatSegmet(segment)}
-                          </BreadcrumbLink>
+                          <BreadcrumbLink href={href}>{formatSegmet(segment)}</BreadcrumbLink>
                         </BreadcrumbItem>
                       </React.Fragment>
                     );

@@ -1,12 +1,10 @@
 "use client";
 import { useState, useEffect, useDeferredValue, startTransition } from "react";
 import { toast } from "sonner";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import { IAssignmentFlat, IAssignmentCreate, IAssignmentUpdate } from "@/types/global-types";
 
 export function useAssignments() {
-  const api = useApi();
-
   const [assignments, setAssignments] = useState<IAssignmentFlat[]>([]);
   const [allAssignments, setAllAssignments] = useState<IAssignmentFlat[]>([]);
   const [loading, setLoading] = useState(false);
@@ -25,32 +23,39 @@ export function useAssignments() {
     try {
       const res = await api.get("/api/assignments");
 
-      const raw =
-        res.data?.results ??
-        res.data?.data?.results ??
-        res.data?.data ??
-        [];
+      const raw = res.data?.results ?? res.data?.data?.results ?? res.data?.data ?? [];
 
       const parsed: IAssignmentFlat[] = Array.isArray(raw)
-        ? raw.map((a: any) => ({
-            id: a.id,
-            seafarerCode: a.seafarerCode,
-            nama: a.nama,
-            assessmentTypeId: a.assessmentTypeId,
-            assessmentType: a.assessmentType,
-            attempts: a.attempts ?? a.Attempts ?? 0,
-            createdBy: a.createdBy ?? "SYSTEM",
-            status: (a.status ?? "ASSIGNED").toUpperCase(),
-          }))
+        ? raw.map(
+            (a: {
+              id: number;
+              seafarerCode: string;
+              nama: string;
+              assessmentTypeId: number;
+              assessmentType: string;
+              attempts?: number;
+              Attempts?: number;
+              status?: string;
+            }) => ({
+              id: a.id,
+              seafarerCode: a.seafarerCode,
+              nama: a.nama,
+              assessmentTypeId: a.assessmentTypeId,
+              assessmentType: a.assessmentType,
+              attempts: a.attempts ?? a.Attempts ?? 0,
+              status: (a.status ?? "ASSIGNED").toUpperCase(),
+            })
+          )
         : [];
 
       startTransition(() => {
         setAllAssignments(parsed);
         setAssignments(parsed);
       });
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to fetch assignments:", err);
-      toast.error(err.response?.data?.error || "Gagal memuat assignments");
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Gagal memuat assignments");
     } finally {
       setLoading(false);
     }
@@ -95,8 +100,9 @@ export function useAssignments() {
       toast.success("Assignment berhasil ditambahkan");
       await fetchAll();
       return res.data;
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Gagal menambah assignment");
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Gagal menambah assignment");
       throw err;
     } finally {
       setLoading(false);
@@ -110,8 +116,9 @@ export function useAssignments() {
       toast.success("Assignment berhasil diperbarui");
       await fetchAll();
       return res.data;
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Gagal memperbarui assignment");
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Gagal memperbarui assignment");
       throw err;
     } finally {
       setLoading(false);
@@ -124,8 +131,9 @@ export function useAssignments() {
       await api.delete(`/api/assignments/${id}`);
       toast.success("Assignment berhasil dihapus");
       await fetchAll();
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Gagal menghapus assignment");
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Gagal menghapus assignment");
     } finally {
       setLoading(false);
     }

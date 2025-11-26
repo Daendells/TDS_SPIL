@@ -9,9 +9,7 @@ export function useGetAssessmentByRole(role: string) {
     enabled: !!role,
     queryFn: async () => {
       try {
-        const response = await api.get<ApiReturn<AssessmentResponse>>(
-          `/api/assessments/${role}`
-        );
+        const response = await api.get<ApiReturn<AssessmentResponse>>(`/api/assessments/${role}`);
 
         if (!response.data) {
           throw new Error("Failed to fetch assessment data");
@@ -22,9 +20,7 @@ export function useGetAssessmentByRole(role: string) {
         // If assessment doesn't exist (404), return a default structure
         const axiosError = error as { response?: { status?: number } };
         if (axiosError?.response?.status === 404) {
-          console.log(
-            `No assessment found for role: ${role}, returning default structure`
-          );
+          console.log(`No assessment found for role: ${role}, returning default structure`);
           return {
             assessmentId: 0,
             role: role,
@@ -129,15 +125,12 @@ export function useGetAllAssessments() {
 export function usePostAssessment() {
   return useMutation<AssessmentResponse, Error, AssessmentPayload>({
     mutationFn: async (payload) => {
-      const response = await api.post<ApiReturn<AssessmentResponse>>(
-        `/api/assessments`,
-        {
-          role: payload.role,
-          assessmentName: payload.assessmentName,
-          usingTimer: payload.usingTimer,
-          timerLimitMinutes: payload.timerLimitMinutes,
-        }
-      );
+      const response = await api.post<ApiReturn<AssessmentResponse>>(`/api/assessments`, {
+        role: payload.role,
+        assessmentName: payload.assessmentName,
+        usingTimer: payload.usingTimer,
+        timerLimitMinutes: payload.timerLimitMinutes,
+      });
 
       if (!response.data) {
         throw new Error("Failed to update assessment data");
@@ -158,12 +151,7 @@ export function useUploadAssessmentImage() {
       }
 
       // Validate file type
-      const allowedTypes = [
-        "image/jpeg",
-        "image/png",
-        "image/gif",
-        "image/webp",
-      ];
+      const allowedTypes = ["image/jpeg", "image/png", "image/gif", "image/webp"];
       if (!allowedTypes.includes(file.type)) {
         throw new Error("Tipe file harus berupa gambar (JPEG, PNG, GIF, WebP)");
       }

@@ -9,23 +9,7 @@ import Questions from "./questions";
 import Completion from "./completion";
 import TimerDisplay from "@/components/timer-display";
 import { useCheckAssessmentTypeStatus } from "./_hooks/useAssessmentTypeStatus";
-
-export interface CESAssessmentData {
-  email: string;
-  consent: boolean;
-  fullName: string;
-  identityNumber: string;
-  rank: string;
-  vesselName: string;
-  seafarerCode: string;
-  answers: { [questionId: number]: number };
-  startTime?: string;
-  currentStep?: number;
-  assessmentStartTime?: string;
-  timerMinutes?: number;
-  pauseTimestamp?: string;
-  sisaWaktu?: number;
-}
+import { CESAssessmentData } from "../types";
 
 export default function CESAssessmentPage() {
   const params = useParams();
@@ -47,8 +31,8 @@ export default function CESAssessmentPage() {
     pauseTimestamp: undefined,
   });
 
-  const [timeLeft, setTimeLeft] = useState<number>(0);
-  const [showTimeWarning, setShowTimeWarning] = useState(false);
+  // const [timeLeft, setTimeLeft] = useState<number>(0);
+  // const [showTimeWarning, setShowTimeWarning] = useState(false);
   const [lastWarningTime, setLastWarningTime] = useState<number>(0);
   const [assessmentStatus, setAssessmentStatus] = useState<{
     isOpen: boolean;
@@ -63,8 +47,7 @@ export default function CESAssessmentPage() {
   });
 
   // Check assessment type status (using ID 2 for CES, adjust as needed)
-  const { data: statusData, isLoading: statusLoading } =
-    useCheckAssessmentTypeStatus(2);
+  const { data: statusData } = useCheckAssessmentTypeStatus(2);
 
   // localStorage key untuk menyimpan assessment data dengan expiry 3 hari
   const STORAGE_KEY = `cesAssessmentFormData_${role}`;
@@ -95,16 +78,13 @@ export default function CESAssessmentPage() {
           const now = new Date().getTime();
           if (now <= parsed.expiresAt) {
             const data = parsed.value;
-            if (
-              data.assessmentData &&
-              (data.assessmentData.fullName || data.currentStep > 1)
-            ) {
+            if (data.assessmentData && (data.assessmentData.fullName || data.currentStep > 1)) {
               setAssessmentData(data.assessmentData);
               setCurrentStep(data.currentStep);
 
-              if (data.assessmentData.sisaWaktu !== undefined) {
-                setTimeLeft(data.assessmentData.sisaWaktu);
-              }
+              // if (data.assessmentData.sisaWaktu !== undefined) {
+              //   setTimeLeft(data.assessmentData.sisaWaktu);
+              // }
             }
           } else {
             window.localStorage.removeItem(STORAGE_KEY);
@@ -144,10 +124,7 @@ export default function CESAssessmentPage() {
 
   // Save data ke localStorage
   useEffect(() => {
-    if (
-      isClient &&
-      (assessmentData.fullName || assessmentData.consent || currentStep > 1)
-    ) {
+    if (isClient && (assessmentData.fullName || assessmentData.consent || currentStep > 1)) {
       try {
         const now = new Date().getTime();
         const expiryTime = now + EXPIRY_MINUTES * 60 * 1000;
@@ -182,7 +159,7 @@ export default function CESAssessmentPage() {
 
     // Reset timer state saat pindah ke questions step
     if (nextStep === 3) {
-      setTimeLeft(0);
+      // setTimeLeft(0);
       updateAssessmentData({
         sisaWaktu: 0,
         pauseTimestamp: undefined,
@@ -194,20 +171,17 @@ export default function CESAssessmentPage() {
     setCurrentStep((prev) => prev - 1);
   };
 
-  const updateAssessmentData = useCallback(
-    (data: Partial<CESAssessmentData>) => {
-      setAssessmentData((prev) => {
-        const updated = { ...prev, ...data };
+  const updateAssessmentData = useCallback((data: Partial<CESAssessmentData>) => {
+    setAssessmentData((prev) => {
+      const updated = { ...prev, ...data };
 
-        if (data.consent && !prev.startTime) {
-          updated.startTime = new Date().toISOString();
-        }
+      if (data.consent && !prev.startTime) {
+        updated.startTime = new Date().toISOString();
+      }
 
-        return updated;
-      });
-    },
-    []
-  );
+      return updated;
+    });
+  }, []);
 
   // Handle ketika waktu habis
   const handleTimeUp = useCallback(() => {
@@ -247,7 +221,7 @@ export default function CESAssessmentPage() {
         sectionTimeRemaining = Math.max(0, totalSeconds - elapsedSeconds);
       }
 
-      setTimeLeft(sectionTimeRemaining);
+      // setTimeLeft(sectionTimeRemaining);
 
       // Show warning modal at specific intervals
       if (
@@ -258,12 +232,10 @@ export default function CESAssessmentPage() {
         !sectionPauseTimestamp &&
         sectionTimeRemaining > 0
       ) {
-        setShowTimeWarning(true);
+        // setShowTimeWarning(true);
         setLastWarningTime(sectionTimeRemaining);
         toast.warning(
-          `Perhatian! Sisa waktu tinggal ${Math.floor(
-            sectionTimeRemaining / 60
-          )} menit`
+          `Perhatian! Sisa waktu tinggal ${Math.floor(sectionTimeRemaining / 60)} menit`
         );
       }
 
@@ -319,9 +291,7 @@ export default function CESAssessmentPage() {
         if (currentStep === 3 && assessmentData.sisaWaktu !== undefined) {
           const newStartTime = new Date(
             Date.now() -
-              ((assessmentData.timerMinutes || 60) * 60 -
-                assessmentData.sisaWaktu) *
-                1000
+              ((assessmentData.timerMinutes || 60) * 60 - assessmentData.sisaWaktu) * 1000
           ).toISOString();
           updateAssessmentData({
             pauseTimestamp: undefined,
@@ -345,10 +315,7 @@ export default function CESAssessmentPage() {
     const handleWindowFocus = () => {
       if (currentStep === 3 && assessmentData.sisaWaktu !== undefined) {
         const newStartTime = new Date(
-          Date.now() -
-            ((assessmentData.timerMinutes || 60) * 60 -
-              assessmentData.sisaWaktu) *
-              1000
+          Date.now() - ((assessmentData.timerMinutes || 60) * 60 - assessmentData.sisaWaktu) * 1000
         ).toISOString();
         updateAssessmentData({
           pauseTimestamp: undefined,
@@ -377,7 +344,7 @@ export default function CESAssessmentPage() {
   const handleClearStoredData = () => {
     try {
       window.localStorage.removeItem(STORAGE_KEY);
-      setTimeLeft(0);
+      // setTimeLeft(0);
     } catch (error) {
       console.warn("Error clearing stored data:", error);
     }
@@ -391,9 +358,7 @@ export default function CESAssessmentPage() {
             onNext={handleNext}
             assessmentData={assessmentData}
             updateAssessmentData={updateAssessmentData}
-            isAssessmentClosed={
-              assessmentStatus.loaded && !assessmentStatus.isOpen
-            }
+            isAssessmentClosed={assessmentStatus.loaded && !assessmentStatus.isOpen}
             closedMessage={assessmentStatus.message}
             startTime={assessmentStatus.startTimeFormatted}
             endTime={assessmentStatus.endTimeFormatted}
@@ -440,9 +405,7 @@ export default function CESAssessmentPage() {
           {/* Timer Display - Show only during assessment questions */}
           {currentStep === 3 && (
             <TimerDisplay
-              sectionName={`CES Assessment - ${role
-                .replace(/_/g, " ")
-                .toUpperCase()}`}
+              sectionName={`CES Assessment - ${role.replace(/_/g, " ").toUpperCase()}`}
               startTime={assessmentData.assessmentStartTime}
               timerMinutes={assessmentData.timerMinutes}
               pauseTimestamp={assessmentData.pauseTimestamp}

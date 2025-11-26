@@ -1,0 +1,12 @@
+assessment_id,assess_type_id,role,assessment_name,using_timer,timer_limit_minutes
+1,1,va_1,COREVA,true,45
+2,1,va_2,AWARE,true,30
+3,1,va_3,GRIT,true,15
+4,2,kkm,KKM,false,NULL
+5,2,masinis_2,Masinis 2,false,NULL
+6,2,masinis_3,Masinis 3,false,NULL
+7,2,masinis_4,Masinis 4,false,NULL
+8,2,mualim_1,Mualim 1,false,NULL
+9,2,mualim_2,Mualim 2,false,NULL
+10,2,mualim_3,Mualim 3,false,NULL
+11,2,nahkoda,Nahkoda,false,NULL

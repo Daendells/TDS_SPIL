@@ -1,7 +1,7 @@
 "use client";
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Clock, User, AlertCircle } from "lucide-react";
+import { User } from "lucide-react";
 import { ValueAssessmentData } from "@/app/value-assessment/page";
 import { ValueAssessmentStorage } from "@/lib/assessment-storage";
 import { Progress } from "@/components/ui/progress";
@@ -26,19 +26,6 @@ export default function AssessmentProgress({
     "Selesai",
   ];
 
-  const isPaused =
-    (currentStep === 3 && assessmentData.section1PauseTimestamp) ||
-    (currentStep === 4 && assessmentData.section2PauseTimestamp) ||
-    (currentStep === 5 && assessmentData.section3PauseTimestamp);
-
-  const formatPausedTime = (milliseconds: number | undefined) => {
-    if (!milliseconds || milliseconds === 0) return "0s";
-    const seconds = Math.round(milliseconds / 1000);
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins > 0 ? mins + "m " : ""}${secs}s`;
-  };
-
   return (
     <Card className="mb-4">
       <CardHeader>
@@ -51,9 +38,7 @@ export default function AssessmentProgress({
         {/* Progress Bar */}
         <div className="space-y-2">
           <div className="flex justify-between text-sm">
-            <span>
-              Progres: {stepNames[currentStep - 1] || "Tidak diketahui"}
-            </span>
+            <span>Progres: {stepNames[currentStep - 1] || "Tidak diketahui"}</span>
             <span>{progress}%</span>
           </div>
           <Progress value={progress} className="h-2" />
@@ -79,10 +64,7 @@ export default function AssessmentProgress({
 
         {/* Info Text */}
         <div className="text-xs text-gray-500">
-          <p>
-            * Data akan otomatis tersimpan di browser dan akan hilang jika cache
-            dibersihkan.
-          </p>
+          <p>* Data akan otomatis tersimpan di browser dan akan hilang jika cache dibersihkan.</p>
         </div>
       </CardContent>
     </Card>

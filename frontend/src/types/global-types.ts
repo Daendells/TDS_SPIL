@@ -12,7 +12,7 @@ export interface IReport {
   age: string;
   tanggalLahir: string;
   startDate: string;
-   user?: string;
+  user?: string;
 
   // Catatan Indisipliner
   warningLetter: string;
@@ -27,6 +27,7 @@ export interface IReport {
   kpiVessel: number;
   performanceScore: number;
   valueAssessment: number;
+  valueAssessmentScore: number;
   assessmentCenter: number;
   potentialScore: number;
   havQuadran: number;
@@ -91,7 +92,7 @@ export interface IAssessment {
   assessmentName?: string;
   usingTimer?: boolean;
   timerLimitMinutes?: number | null;
-  
+
   // camelCase (for compatibility)
   id?: number;
   name?: string;
@@ -151,7 +152,7 @@ export interface IUser {
   TmNm?: string | null;
   CreatedAt?: string;
   UpdatedAt?: string;
-  
+
   // camelCase (for compatibility)
   id?: number;
   nama?: string;
@@ -180,11 +181,11 @@ export interface IAssignmentCreate {
   seafarerCode: string;
   assessmentTypeId: number;
   status?: string;
-   createdBy: string; 
+  createdBy: string;
 }
 
 export interface IAssignmentUpdate {
-    id: number;
+  id: number;
   assessmentTypeId?: number;
   status?: string;
 }
@@ -195,8 +196,8 @@ export interface IGapCompetency {
   competencyType?: {
     id: number;
     code: string;
-    name: string;  // ✓ Must include name
-  }
+    name: string; // ✓ Must include name
+  };
 }
 
 // Re-export report types from specific types module
@@ -208,5 +209,4 @@ export type {
   PersonalInfo,
   ApiError,
   AssessmentAnswer,
-  
 } from "./report-types";

@@ -1,10 +1,5 @@
-import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import {
   Radar,
   RadarChart,
@@ -16,7 +11,7 @@ import {
 import { ChevronRightIcon } from "lucide-react";
 import MentoringListDialog from "@/components/mentoring-list-dialog";
 import AssessmentResultDialog from "@/components/assessment-result-dialog";
-import { useApi } from "@/hooks/use-api";
+import { useGetAssessmentBySeafarerCode } from "@/app/assessment-results/_hooks/useAssessmentResults";
 import Image from "next/image";
 import { IReport } from "@/types/global-types";
 
@@ -26,40 +21,12 @@ interface ProfilingDialogProps {
   report: IReport;
 }
 
-export default function ProfilingDialog({
-  open,
-  setOpen,
-  report,
-}: ProfilingDialogProps) {
+export default function ProfilingDialog({ open, setOpen, report }: ProfilingDialogProps) {
   const [mentoringDialogOpen, setMentoringDialogOpen] = useState(false);
   const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
-  const [assessmentScore, setAssessmentScore] = useState<number | null>(null);
-  const { get } = useApi();
 
-  useEffect(() => {
-    if (report?.seafarerCode) {
-      get(`/assessment-results/seafarer/${report.seafarerCode}`)
-        .then((response) => {
-          // Check if response is successful and has data
-          if (response.data && response.data.code === 200) {
-            if (response.data.data && response.data.data.totalFinalScore) {
-              setAssessmentScore(
-                Math.round(response.data.data.totalFinalScore * 10) / 10
-              );
-            } else {
-              // Backend returned success but with null data (seafarer hasn't completed assessment)
-              setAssessmentScore(null);
-            }
-          } else {
-            setAssessmentScore(null);
-          }
-        })
-        .catch(() => {
-          // Handle any network or other errors
-          setAssessmentScore(null);
-        });
-    }
-  }, [report?.seafarerCode, get]);
+  // Use React Query hook to fetch assessment score
+  const { data: assessmentScore } = useGetAssessmentBySeafarerCode(report?.seafarerCode || "");
 
   if (!report) return null;
 
@@ -149,15 +116,12 @@ export default function ProfilingDialog({
 
             {/* Catatan indisipliner */}
             <div className="border rounded-xl shadow-sm p-4 bg-white text-sm h-full">
-              <h2 className="font-bold text-lg mb-2">
-                CATATAN TERKAIT DENGAN INDISIPLINER
-              </h2>
+              <h2 className="font-bold text-lg mb-2">CATATAN TERKAIT DENGAN INDISIPLINER</h2>
               <p>
                 <strong>Surat Peringatan:</strong> {report.warningLetter}
               </p>
               <p>
-                <strong>Kasus yang Pernah Dilakukan:</strong>{" "}
-                {report.caseHistory}
+                <strong>Kasus yang Pernah Dilakukan:</strong> {report.caseHistory}
               </p>
               <p>
                 <strong>Tahun SP/Kasus:</strong> {report.yearOfCase}
@@ -178,21 +142,15 @@ export default function ProfilingDialog({
                   </tr>
                 </thead>
                 <tbody>
-                  {report.vesselHistory
-                    ?.split(";")
-                    .map((entry: string, idx: number) => {
-                      const [vessel, rank] = entry.split("|");
-                      return (
-                        <tr key={idx}>
-                          <td className="border px-2 py-1">
-                            {vessel?.trim() || "-"}
-                          </td>
-                          <td className="border px-2 py-1">
-                            {rank?.trim() || "-"}
-                          </td>
-                        </tr>
-                      );
-                    })}
+                  {report.vesselHistory?.split(";").map((entry: string, idx: number) => {
+                    const [vessel, rank] = entry.split("|");
+                    return (
+                      <tr key={idx}>
+                        <td className="border px-2 py-1">{vessel?.trim() || "-"}</td>
+                        <td className="border px-2 py-1">{rank?.trim() || "-"}</td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>
@@ -204,18 +162,10 @@ export default function ProfilingDialog({
                 <table className="w-full border-collapse text-sm whitespace-nowrap">
                   <thead>
                     <tr className="bg-gray-100">
-                      <th className="border px-3 py-2 text-left font-semibold">
-                        Category
-                      </th>
-                      <th className="border px-3 py-2 text-center font-semibold">
-                        Completed
-                      </th>
-                      <th className="border px-3 py-2 text-center font-semibold">
-                        Not Completed
-                      </th>
-                      <th className="border px-3 py-2 text-center font-semibold">
-                        Percentage
-                      </th>
+                      <th className="border px-3 py-2 text-left font-semibold">Category</th>
+                      <th className="border px-3 py-2 text-center font-semibold">Completed</th>
+                      <th className="border px-3 py-2 text-center font-semibold">Not Completed</th>
+                      <th className="border px-3 py-2 text-center font-semibold">Percentage</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -239,9 +189,7 @@ export default function ProfilingDialog({
                       <td className="border px-3 py-2">Total</td>
                       <td className="border px-3 py-2 text-center">8</td>
                       <td className="border px-3 py-2 text-center">3</td>
-                      <td className="border px-3 py-2 text-center text-blue-600">
-                        72.7%
-                      </td>
+                      <td className="border px-3 py-2 text-center text-blue-600">72.7%</td>
                     </tr>
                   </tbody>
                 </table>
@@ -298,16 +246,12 @@ export default function ProfilingDialog({
                       <ChevronRightIcon className="h-4 w-4 text-gray-400" />
                     </td>
                     <td className="border px-2 py-1">
-                      {assessmentScore !== null
-                        ? assessmentScore
-                        : report.valueAssessment}
+                      {assessmentScore !== null ? assessmentScore : report.valueAssessment}
                     </td>
                   </tr>
                   <tr>
                     <td className="border px-2 py-1">Assessment Center</td>
-                    <td className="border px-2 py-1">
-                      {report.assessmentCenter}
-                    </td>
+                    <td className="border px-2 py-1">{report.assessmentCenter}</td>
                   </tr>
                   <tr>
                     <td className="border px-2 py-1">Kondite Review</td>
@@ -365,9 +309,7 @@ export default function ProfilingDialog({
           </div>
 
           <div className="border rounded-xl shadow-sm p-4 bg-white text-sm">
-            <h2 className="font-bold text-lg mb-2">
-              INDIVIDUAL DEVELOPMENT PLAN (IDP)
-            </h2>
+            <h2 className="font-bold text-lg mb-2">INDIVIDUAL DEVELOPMENT PLAN (IDP)</h2>
             <p>
               <strong>Program (Kategori):</strong> {report.idpProgram}
             </p>

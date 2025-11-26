@@ -6,10 +6,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ValueAssessmentData } from "./page";
-import {
-  useGetAssessmentByRole,
-  usePostAssessmentResults,
-} from "./_hooks/useAssessment";
+import { useGetAssessmentByRole, usePostAssessmentResults } from "./_hooks/useAssessment";
 import { useCountdown } from "@/hooks/use-session-storage";
 import { useTimerPauseResume } from "@/hooks/useTimerPauseResume";
 import { useStorageCountdown } from "@/hooks/use-local-storage";
@@ -80,9 +77,7 @@ export default function Section2({
   );
 
   // Overall assessment timer (24 hours)
-  const { isExpired: isOverallExpired } = useStorageCountdown(
-    "valueAssessmentFormData"
-  );
+  const { isExpired: isOverallExpired } = useStorageCountdown("valueAssessmentFormData");
 
   const currentQuestion = assessment?.questions
     ? assessment.questions[currentQuestionIndex]
@@ -114,10 +109,7 @@ export default function Section2({
   };
 
   const handleNext = () => {
-    if (
-      assessment?.questions &&
-      currentQuestionIndex < assessment.questions.length - 1
-    ) {
+    if (assessment?.questions && currentQuestionIndex < assessment.questions.length - 1) {
       setCurrentQuestionIndex((prev) => prev + 1);
     }
   };
@@ -143,9 +135,7 @@ export default function Section2({
       (q) => answers[q.questionId] === undefined
     );
     if (unansweredQuestions.length > 0 && timeLeft > 0) {
-      toast.error(
-        `Masih ada ${unansweredQuestions.length} soal yang belum dijawab`
-      );
+      toast.error(`Masih ada ${unansweredQuestions.length} soal yang belum dijawab`);
       return;
     }
 
@@ -167,13 +157,7 @@ export default function Section2({
       role: "va_2",
       answers: filteredAnswers,
     });
-  }, [
-    assessment?.questions,
-    answers,
-    assessmentData.seafarerCode,
-    mutate,
-    timeLeft,
-  ]);
+  }, [assessment?.questions, answers, assessmentData.seafarerCode, mutate, timeLeft]);
 
   // Auto-submit when timer reaches 0
   useEffect(() => {
@@ -197,9 +181,7 @@ export default function Section2({
       assessment.questions.length > 0
     ) {
       storageTimeOutRef.current = true;
-      toast.warning(
-        "Waktu assessment telah habis. Form akan di-submit otomatis."
-      );
+      toast.warning("Waktu assessment telah habis. Form akan di-submit otomatis.");
       handleSubmit();
     }
   }, [isOverallExpired, handleSubmit, assessment?.questions]);
@@ -219,9 +201,7 @@ export default function Section2({
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-red-600">
-            Gagal memuat data assessment: {error.message}
-          </p>
+          <p className="text-red-600">Gagal memuat data assessment: {error.message}</p>
           <Button onClick={onBack} className="mt-4">
             Kembali
           </Button>
@@ -234,9 +214,7 @@ export default function Section2({
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-gray-600">
-            Tidak ada soal yang tersedia untuk Section 2
-          </p>
+          <p className="text-gray-600">Tidak ada soal yang tersedia untuk Section 2</p>
           <Button onClick={onBack} className="mt-4">
             Kembali
           </Button>
@@ -275,24 +253,20 @@ export default function Section2({
 
         {/* Instructions */}
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-3">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">
-            Panduan Pengisian:
-          </h2>
+          <h2 className="text-2xl font-bold text-gray-800 mb-6">Panduan Pengisian:</h2>
           <div className="space-y-3 text-gray-700 mb-6">
             <p>
-              Pada asesmen bagian 2 ini akan terdiri dari 60 pasang pernyataan,
-              masing-masing berisi dua pernyataan (a dan b) bacalah
-              masing-masing pernyataan dengan cermat.
+              Pada asesmen bagian 2 ini akan terdiri dari 60 pasang pernyataan, masing-masing berisi
+              dua pernyataan (a dan b) bacalah masing-masing pernyataan dengan cermat.
             </p>
             <p>
-              Pilihlah satu pernyataan yang paling menggambarkan sikap atau
-              kebiasaan Anda dalam situasi kerja. Bila tidak ada satu pun dari
-              pasangan pernyataan yang cocok, pilihlah yang Anda anggap benar.
+              Pilihlah satu pernyataan yang paling menggambarkan sikap atau kebiasaan Anda dalam
+              situasi kerja. Bila tidak ada satu pun dari pasangan pernyataan yang cocok, pilihlah
+              yang Anda anggap benar.
             </p>
             <p>
-              Jawablah dengan jujur dan sesuai dengan diri Anda, bukan
-              berdasarkan jawaban yang Anda anggap ideal. Tidak ada jawaban
-              benar atau salah dalam tes ini.
+              Jawablah dengan jujur dan sesuai dengan diri Anda, bukan berdasarkan jawaban yang Anda
+              anggap ideal. Tidak ada jawaban benar atau salah dalam tes ini.
             </p>
           </div>
 
@@ -307,8 +281,8 @@ export default function Section2({
               </p>
             </div>
             <p className="text-blue-600 text-sm mt-2">
-              Dalam hal ini apabila pernyataan &quot;a&quot; merupakan diri Anda
-              maka pilihlah jawaban &quot;a&quot;, begitu pun sebaliknya.
+              Dalam hal ini apabila pernyataan &quot;a&quot; merupakan diri Anda maka pilihlah
+              jawaban &quot;a&quot;, begitu pun sebaliknya.
             </p>
           </div>
         </div>
@@ -316,16 +290,13 @@ export default function Section2({
         <div className="flex flex-col-reverse md:flex-row gap-6">
           {/* Question Navigation Sidebar */}
           <div className="w-full md:w-64 bg-white rounded-lg shadow-sm border p-6">
-            <h3 className="font-bold text-lg mb-4 text-gray-800">
-              Navigasi Soal
-            </h3>
+            <h3 className="font-bold text-lg mb-4 text-gray-800">Navigasi Soal</h3>
 
             {/* Progress Summary */}
             <div className="mb-6 p-4 bg-whit rounded-lg w-full">
               <div className="text-sm text-gray-600 mb-2">Progress:</div>
               <div className="text-lg font-bold text-gray-800">
-                {Object.keys(answers).length} /{" "}
-                {assessment?.questions?.length ?? 0}
+                {Object.keys(answers).length} / {assessment?.questions?.length ?? 0}
               </div>
               <div className="text-sm text-gray-500">soal terjawab</div>
             </div>
@@ -346,8 +317,8 @@ export default function Section2({
                         isCurrent
                           ? "bg-blue-500 text-white border-blue-500"
                           : isAnswered
-                          ? "bg-gray-800 text-white border-gray-800"
-                          : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
+                            ? "bg-gray-800 text-white border-gray-800"
+                            : "bg-white text-gray-600 border-gray-300 hover:border-gray-400"
                       }
                     `}
                   >
@@ -380,8 +351,7 @@ export default function Section2({
               <div className="mb-6">
                 <div className="flex justify-between items-center mb-6">
                   <h3 className="text-lg font-bold text-gray-800">
-                    Pernyataan {currentQuestionIndex + 1} dari{" "}
-                    {assessment?.questions?.length ?? 0}
+                    Pernyataan {currentQuestionIndex + 1} dari {assessment?.questions?.length ?? 0}
                   </h3>
                 </div>
 
@@ -409,10 +379,7 @@ export default function Section2({
                         key={option.optionId}
                         className="flex items-center space-x-4 p-6 rounded-lg border-2 hover:bg-gray-50 transition-colors cursor-pointer"
                         onClick={() => {
-                          console.log(
-                            "Div clicked for option:",
-                            option.optionId
-                          );
+                          console.log("Div clicked for option:", option.optionId);
                           handleAnswerChange(option.optionId);
                         }}
                       >
@@ -455,14 +422,11 @@ export default function Section2({
                   variant="outline"
                   className="px-6 py-2 cursor-pointer"
                 >
-                  {currentQuestionIndex === 0
-                    ? "Kembali ke Section 1"
-                    : "Soal Sebelumnya"}
+                  {currentQuestionIndex === 0 ? "Kembali ke Section 1" : "Soal Sebelumnya"}
                 </Button>
 
                 <div className="flex gap-3">
-                  {currentQuestionIndex <
-                  (assessment?.questions?.length ?? 1) - 1 ? (
+                  {currentQuestionIndex < (assessment?.questions?.length ?? 1) - 1 ? (
                     <Button
                       onClick={handleNext}
                       className="px-6 py-2 bg-gray-800 hover:bg-gray-700 cursor-pointer"

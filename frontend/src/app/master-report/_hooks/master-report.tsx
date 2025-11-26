@@ -1,13 +1,12 @@
 "use client";
 import { useEffect, useState, useRef, startTransition, useDeferredValue } from "react";
 import { toast } from "sonner";
-import { useApi } from "@/hooks/use-api";
+import { api } from "@/app/lib/api";
 import { IPaginationData, IPaginationRequest, IReport } from "@/types/global-types";
 import { useDebounce } from "use-debounce";
 import axios from "axios";
 
 export function useMasterReports(initialPageSize = 10) {
-  const api = useApi();
   const [onCallApi, setOnCallApi] = useState(false);
   const [paginationData, setPaginationData] = useState<IPaginationData<IReport> | null>(null);
   const [pageSize, setPageSize] = useState(initialPageSize);
@@ -21,7 +20,7 @@ export function useMasterReports(initialPageSize = 10) {
   const [debouncedName] = useDebounce(searchName, 500);
   const lastQueryRef = useRef<string>("");
   const pendingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  
+
   const deferredData = useDeferredValue(paginationData);
 
   useEffect(() => {
@@ -49,25 +48,23 @@ export function useMasterReports(initialPageSize = 10) {
         });
 
         console.log("Raw response:", response.data);
-        
+
         let apiData = [];
-        
+
         // Handle the nested structure
         if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
           apiData = response.data.data.data;
-        } 
-        else if (response.data?.data && Array.isArray(response.data.data)) {
+        } else if (response.data?.data && Array.isArray(response.data.data)) {
           apiData = response.data.data;
-        }
-        else if (Array.isArray(response.data)) {
+        } else if (Array.isArray(response.data)) {
           apiData = response.data;
         }
 
-        const parsedReports: IReport[] = apiData; 
+        const parsedReports: IReport[] = apiData;
         console.log("Parsed reports:", parsedReports);
 
         // Extract pagination metadata safely
-        let apiMeta = response.data?.data;
+        const apiMeta = response.data?.data;
 
         // Build pagination object using backend data
         const paginationResult: IPaginationData<IReport> = {
@@ -75,7 +72,7 @@ export function useMasterReports(initialPageSize = 10) {
           first_id: apiMeta?.first_id ?? parsedReports[0]?.id ?? null,
           last_id: apiMeta?.last_id ?? parsedReports.at(-1)?.id ?? null,
           page_size: apiMeta?.page_size ?? paginationRequest.pageSize,
-          has_more: apiMeta?.has_more ?? (parsedReports.length >= paginationRequest.pageSize),
+          has_more: apiMeta?.has_more ?? parsedReports.length >= paginationRequest.pageSize,
           first_page: apiMeta?.first_page ?? false,
         };
 
@@ -84,26 +81,27 @@ export function useMasterReports(initialPageSize = 10) {
         // Outdated response check
         if (lastQueryRef.current !== queryKey) return;
 
-        const minDelay = new Promise(resolve => {
+        const minDelay = new Promise((resolve) => {
           pendingTimeoutRef.current = setTimeout(resolve, 150);
         });
-        
+
         await minDelay;
 
         startTransition(() => {
           setPaginationData(paginationResult);
         });
-      } catch (err: any) {
+      } catch (err) {
         if (!axios.isCancel(err)) {
           console.error("Fetch error:", err);
-          toast.error(err.response?.data?.error || err.message);
+          const error = err as { response?: { data?: { error?: string } }; message?: string };
+          toast.error(error.response?.data?.error || error.message || "Failed to fetch data");
         }
       } finally {
         setOnCallApi(false);
       }
     };
     fetchData();
-    
+
     return () => {
       controller.abort();
       if (pendingTimeoutRef.current) {
@@ -135,9 +133,10 @@ export function useMasterReports(initialPageSize = 10) {
         }));
       });
       return res.data;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to create report:", err);
-      toast.error(err.response?.data?.error || "Failed to add report");
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to add report");
       throw err;
     } finally {
       setOnCallApi(false);
@@ -149,7 +148,7 @@ export function useMasterReports(initialPageSize = 10) {
     try {
       const res = await api.delete(`/api/master-reports/${id}`);
       toast.success("Report deleted successfully!");
-      
+
       startTransition(() => {
         setPaginationRequest((prev) => ({
           ...prev,
@@ -159,9 +158,10 @@ export function useMasterReports(initialPageSize = 10) {
       });
 
       return res.data;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to delete report:", err);
-      toast.error(err.response?.data?.error || "Failed to delete report");
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to delete report");
       throw err;
     } finally {
       setOnCallApi(false);
@@ -173,7 +173,7 @@ export function useMasterReports(initialPageSize = 10) {
     try {
       const res = await api.put(`/api/master-reports/${id}`, updates);
       toast.success("Report updated successfully!");
-      
+
       startTransition(() => {
         setPaginationRequest((prev) => ({
           ...prev,
@@ -183,9 +183,10 @@ export function useMasterReports(initialPageSize = 10) {
       });
 
       return res.data;
-    } catch (err: any) {
+    } catch (err) {
       console.error("Failed to update report:", err);
-      toast.error(err.response?.data?.error || "Failed to update report");
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to update report");
       throw err;
     } finally {
       setOnCallApi(false);
