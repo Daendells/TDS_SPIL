@@ -11,20 +11,23 @@ import (
 )
 
 type TrainingController struct {
-	dbSvc *services.TrainingService   // CRUD service
-	aiSvc *training.Service           // AI generator
-	log   *logrus.Logger
+	dbSvc   *services.TrainingService
+	aiSvc   *training.Service
+	quizSvc *training.QuizService
+	log     *logrus.Logger
 }
 
 func NewTrainingController(
 	dbSvc *services.TrainingService,
 	aiSvc *training.Service,
+	quizSvc *training.QuizService,
 	log *logrus.Logger,
 ) *TrainingController {
 	return &TrainingController{
-		dbSvc: dbSvc,
-		aiSvc: aiSvc,
-		log:   log,
+		dbSvc:   dbSvc,
+		aiSvc:   aiSvc,
+		quizSvc: quizSvc,
+		log:     log,
 	}
 }
 
@@ -99,5 +102,46 @@ func (h *TrainingController) Generate(c *gin.Context) {
 		"pptx_link": pptxLink,
 		"pdf_link":  pdfLink,
 		"meta":     meta,
+	})
+}
+
+func (h *TrainingController) GenerateQuiz(c *gin.Context) {
+	var req struct {
+		Kode             string `json:"kode" binding:"required"`
+		TopikTraining    string `json:"topik_training" binding:"required"`
+		Kompetensi       string `json:"kompetensi" binding:"required"`
+		MaterialContent  string `json:"material_content" binding:"required"`
+		OldQuizURL       string `json:"old_quiz_url"`
+	}
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{
+			"error": "Request tidak valid: " + err.Error(),
+		})
+		return
+	}
+
+	if req.OldQuizURL != "" {
+		if err := h.quizSvc.DeleteOldQuizFile(req.OldQuizURL); err != nil {
+			h.log.WithError(err).Warn("Gagal menghapus quiz file lama")
+		}
+	}
+
+	quizLink, err := h.quizSvc.GenerateQuizFromMaterial(c.Request.Context(), req.MaterialContent, req.TopikTraining, req.Kompetensi)
+	if err != nil {
+		h.log.WithError(err).Error("Gagal generate quiz")
+		c.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Gagal membuat quiz: " + err.Error(),
+		})
+		return
+	}
+
+	if err := h.dbSvc.UpdateGeneratedQuizURL(req.Kode, quizLink); err != nil {
+		h.log.WithError(err).Warn("Gagal menyimpan link quiz ke database, tapi file sudah digenerate")
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":   "Quiz berhasil digenerate.",
+		"quiz_link": quizLink,
 	})
 }

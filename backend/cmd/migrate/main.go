@@ -87,6 +87,7 @@ func createTriggers(db *gorm.DB) error {
 	db.Exec("DROP TRIGGER IF EXISTS calculate_readiness_before_insert")
 	db.Exec("DROP TRIGGER IF EXISTS calculate_readiness_before_update")
 	db.Exec("DROP TRIGGER IF EXISTS after_insert_report_create_report_score")
+	db.Exec("DROP TRIGGER IF EXISTS after_insert_report_create_report_scores")
 	db.Exec("DROP TRIGGER IF EXISTS after_report_insert_populate_gaps")
 	db.Exec("DROP TRIGGER IF EXISTS after_report_update_populate_gaps")
 

@@ -48,6 +48,7 @@ interface ITraining {
   referensi?: string;
   generated_file_url?: string | null;
   generated_pdf_url?: string | null;
+  generated_quiz_url?: string | null;
   generated_at?: string | null;
   competencyType?: {
     id: number;
@@ -70,6 +71,7 @@ export default function TrainingMaterialTab() {
   const [groupedData, setGroupedData] = useState<GroupedTraining[]>([]);
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState<string | null>(null);
+  const [generatingQuiz, setGeneratingQuiz] = useState<string | null>(null);
   const [selectedTraining, setSelectedTraining] = useState<ITraining | null>(null);
   const [tempReferensi, setTempReferensi] = useState("");
   const [regenerateDialog, setRegenerateDialog] = useState<ITraining | null>(null);
@@ -180,6 +182,57 @@ export default function TrainingMaterialTab() {
       toast.error("Terjadi kesalahan saat generate materi.");
     } finally {
       setGenerating(null);
+    }
+  };
+
+  const handleGenerateQuiz = async (item: ITraining) => {
+    // Check if material has been generated
+    if (!item.generated_pdf_url) {
+      toast.error("Harap generate materi terlebih dahulu sebelum membuat quiz!");
+      return;
+    }
+
+    setGeneratingQuiz(item.kode);
+
+    try {
+      // First, fetch the material content from the PDF URL
+      // For simplicity, we'll use the combined referensi as material content
+      let materialContent = item.deskripsi_perilaku || "";
+      if (item.referensi) {
+        materialContent = materialContent
+          ? `${materialContent}\n\n${item.referensi}`
+          : item.referensi;
+      }
+
+      const res = await fetch(`${apiUrl}/trainings/generate-quiz`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          kode: item.kode,
+          topik_training: item.topik_training,
+          kompetensi: item.competencyType?.name || "",
+          material_content: materialContent,
+          old_quiz_url: item.generated_quiz_url || "",
+        }),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        toast.success("Quiz berhasil digenerate! PDF quiz telah tersedia untuk diunduh.");
+
+        // Reload data from server to get persisted quiz URL
+        const refreshRes = await fetch(`${apiUrl}/trainings`);
+        const refreshJson = await refreshRes.json();
+        setData(refreshJson.data);
+        groupTrainings(refreshJson.data);
+      } else {
+        toast.error(result.error || "Gagal generate quiz.");
+      }
+    } catch (error) {
+      console.error("Error saat generate quiz:", error);
+      toast.error("Terjadi kesalahan saat generate quiz.");
+    } finally {
+      setGeneratingQuiz(null);
     }
   };
 
@@ -324,7 +377,8 @@ export default function TrainingMaterialTab() {
                         <th className="py-3 px-4 text-left font-semibold">Topik Training</th>
                         <th className="py-3 px-4 text-left font-semibold">Tools/Framework</th>
                         <th className="py-3 px-4 text-center font-semibold">Referensi</th>
-                        <th className="py-3 px-4 text-center font-semibold">Action</th>
+                        <th className="py-3 px-4 text-center font-semibold">Material</th>
+                        <th className="py-3 px-4 text-center font-semibold">Quiz</th>
                         <th className="py-3 px-4 text-center font-semibold">Files</th>
                         <th className="py-3 px-4 text-center font-semibold">Actions</th>
                       </tr>
@@ -375,6 +429,26 @@ export default function TrainingMaterialTab() {
                             )}
                           </td>
                           <td className="py-3 px-4 text-center">
+                            <Button
+                              size="sm"
+                              variant={item.generated_quiz_url ? "outline" : "default"}
+                              onClick={() => handleGenerateQuiz(item)}
+                              disabled={generatingQuiz === item.kode || !item.generated_pdf_url}
+                              className="gap-2"
+                            >
+                              {generatingQuiz === item.kode ? (
+                                "Generating..."
+                              ) : item.generated_quiz_url ? (
+                                <>
+                                  <RefreshCw className="w-4 h-4" />
+                                  Regenerate Quiz
+                                </>
+                              ) : (
+                                "Generate Quiz"
+                              )}
+                            </Button>
+                          </td>
+                          <td className="py-3 px-4 text-center">
                             <div className="flex gap-2 justify-center">
                               {item.generated_file_url ? (
                                 <Button
@@ -415,6 +489,26 @@ export default function TrainingMaterialTab() {
                                 </Button>
                               ) : (
                                 <span className="text-gray-400 text-sm">No PDF</span>
+                              )}
+                              {item.generated_quiz_url ? (
+                                <Button
+                                  asChild
+                                  size="sm"
+                                  variant="default"
+                                  className="bg-purple-600 hover:bg-purple-700"
+                                >
+                                  <a
+                                    href={item.generated_quiz_url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="gap-2"
+                                  >
+                                    <FileText className="w-4 h-4" />
+                                    Quiz
+                                  </a>
+                                </Button>
+                              ) : (
+                                <span className="text-gray-400 text-sm">No Quiz</span>
                               )}
                             </div>
                           </td>

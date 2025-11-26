@@ -67,6 +67,18 @@ func (s *TrainingService) UpdateGeneratedFileURL(kode string, fileURL string, pd
 		Updates(updates).Error
 }
 
+func (s *TrainingService) UpdateGeneratedQuizURL(kode string, quizURL string) error {
+	now := time.Now()
+	updates := map[string]interface{}{
+		"generated_quiz_url": quizURL,
+		"generated_at":       now,
+	}
+	
+	return s.DB.Model(&domain.Training{}).
+		Where("kode = ?", kode).
+		Updates(updates).Error
+}
+
 func (s *TrainingService) Update(no string, req *web.TrainingUpdateRequest) (*web.SuccessResponse, error) {
 	if err := s.Validate.Struct(req); err != nil {
 		s.Log.Errorf("Validasi gagal: %v", err)

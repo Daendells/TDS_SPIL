@@ -118,7 +118,13 @@ func Bootstrap(config *BootstrapConfig) {
 		config.Config.GetString("GROQ_MODEL"),
 		config.Config.GetString("BACKEND_PUBLIC_URL"),
 	)
-	trainingGenController := trainingController.NewTrainingController(trainingServiceDB, trainingGenService, config.Log)
+	quizGenService := trainingService.NewQuizService(
+		config.Log,
+		config.Config.GetString("GROQ_API_KEY"),
+		config.Config.GetString("GROQ_MODEL"),
+		config.Config.GetString("BACKEND_PUBLIC_URL"),
+	)
+	trainingGenController := trainingController.NewTrainingController(trainingServiceDB, trainingGenService, quizGenService, config.Log)
 
 	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KEY"))
 
