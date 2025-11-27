@@ -550,10 +550,10 @@ export default function MasterPage() {
       <Dialog open={mentoringDetailsDialogOpen} onOpenChange={setMentoringDetailsDialogOpen}>
         <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Mentoring Programs for {selectedPersonForMentoring?.nama || editingRow?.nama}</DialogTitle>
-            <DialogDescription>
-              All mentoring programs linked to this person
-            </DialogDescription>
+            <DialogTitle>
+              Mentoring Programs for {selectedPersonForMentoring?.nama || editingRow?.nama}
+            </DialogTitle>
+            <DialogDescription>All mentoring programs linked to this person</DialogDescription>
           </DialogHeader>
 
           <div className="space-y-4">
@@ -720,8 +720,7 @@ export default function MasterPage() {
                 placeholder="Age"
                 value={editingRow?.age || ""}
                 onChange={(e) =>
-                  editingRow &&
-                  setEditingRow({ ...editingRow, age: e.target.value })
+                  editingRow && setEditingRow({ ...editingRow, age: e.target.value })
                 }
               />
             </div>
@@ -746,8 +745,7 @@ export default function MasterPage() {
                 placeholder="IDP Program"
                 value={editingRow?.idpProgram || ""}
                 onChange={(e) =>
-                  editingRow &&
-                  setEditingRow({ ...editingRow, idpProgram: e.target.value })
+                  editingRow && setEditingRow({ ...editingRow, idpProgram: e.target.value })
                 }
               />
             </div>
@@ -773,8 +771,7 @@ export default function MasterPage() {
                 placeholder="Readiness"
                 value={editingRow?.readiness || ""}
                 onChange={(e) =>
-                  editingRow &&
-                  setEditingRow({ ...editingRow, readiness: e.target.value })
+                  editingRow && setEditingRow({ ...editingRow, readiness: e.target.value })
                 }
               />
             </div>
@@ -786,8 +783,7 @@ export default function MasterPage() {
                 placeholder="Talent Classified"
                 value={editingRow?.talentClassified || ""}
                 onChange={(e) =>
-                  editingRow &&
-                  setEditingRow({ ...editingRow, talentClassified: e.target.value })
+                  editingRow && setEditingRow({ ...editingRow, talentClassified: e.target.value })
                 }
               />
             </div>
@@ -809,7 +805,8 @@ export default function MasterPage() {
                 <div className="space-y-2">
                   <div className="p-3 bg-green-50 border border-green-200 rounded-md">
                     <p className="text-sm text-green-800 font-medium">
-                      Found {linkedMentoringReports.length} mentoring program{linkedMentoringReports.length > 1 ? 's' : ''}
+                      Found {linkedMentoringReports.length} mentoring program
+                      {linkedMentoringReports.length > 1 ? "s" : ""}
                     </p>
                   </div>
                   <Button
@@ -1066,7 +1063,9 @@ export default function MasterPage() {
                   {/* Dynamic assessment type score columns */}
                   {assessmentTypeColumns.map((assessmentTypeName) => (
                     <TableCell key={assessmentTypeName} className="text-center">
-                      <Badge variant={"secondary"}>{getScoreForAssessmentType(row, assessmentTypeName)}</Badge>
+                      <Badge variant={"secondary"}>
+                        {getScoreForAssessmentType(row, assessmentTypeName)}
+                      </Badge>
                     </TableCell>
                   ))}
                 </TableRow>

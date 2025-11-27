@@ -44,12 +44,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Pencil, Trash2, Plus, Loader2, MoreVertical } from "lucide-react";
+import { Pencil, Trash2, Loader2, MoreVertical } from "lucide-react";
 import {
   useGetCompetencyMappings,
   useGetAllTrainings,
   useUpdateCompetencyMapping,
-  useCreateCompetencyMapping,
   useDeleteCompetencyMapping,
   type CompetencyMappingFormData,
   type CompetencyMappingItem,
@@ -122,7 +121,7 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
       });
       setIsEditDialogOpen(false);
       setEditingMapping(null);
-    } catch (error) {
+    } catch {
       setIsEditDialogOpen(false);
     }
   };

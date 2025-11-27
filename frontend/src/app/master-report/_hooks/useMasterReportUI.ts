@@ -35,7 +35,9 @@ export function useMasterReportUI() {
   const [linkedMentoringReports, setLinkedMentoringReports] = useState<any[]>([]);
   const [loadingLinkedMentoring, setLoadingLinkedMentoring] = useState(false);
   const [mentoringDetailsDialogOpen, setMentoringDetailsDialogOpen] = useState(false);
-  const [selectedPersonForMentoring, setSelectedPersonForMentoring] = useState<IReport | null>(null);
+  const [selectedPersonForMentoring, setSelectedPersonForMentoring] = useState<IReport | null>(
+    null
+  );
 
   // Function to fetch mentoring reports linked to a specific person
   const fetchLinkedMentoringReports = async (personName: string) => {
@@ -50,7 +52,7 @@ export function useMasterReportUI() {
       const response = await api.get(`/api/master-reports/mentoring-programs`, {
         params: { personName: personName },
       });
-      
+
       console.log("📦 Raw API response:", response.data);
 
       // The response format is { data: [...] }
@@ -88,7 +90,9 @@ export function useMasterReportUI() {
 
   // Form validation
   const isFormValid = () => {
-    return form.nama.trim() !== "" && form.seamanCode.trim() !== "" && form.seafarerCode.trim() !== "";
+    return (
+      form.nama.trim() !== "" && form.seamanCode.trim() !== "" && form.seafarerCode.trim() !== ""
+    );
   };
 
   const isEditFormValid = () => {

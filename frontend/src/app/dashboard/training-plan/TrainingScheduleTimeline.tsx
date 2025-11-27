@@ -57,21 +57,6 @@ export default function TrainingScheduleTimeline({
     setCollapsedMonths(newCollapsed);
   };
 
-  const weekLabelToDay = (label: string): number => {
-    switch (label.trim().toUpperCase()) {
-      case "I":
-        return 1;
-      case "II":
-        return 8;
-      case "III":
-        return 15;
-      case "IV":
-        return 22;
-      default:
-        return 1;
-    }
-  };
-
   const getWeekLabel = (date: Date): string => {
     const d = date.getDate();
     if (d <= 7) return "I";
@@ -93,52 +78,38 @@ export default function TrainingScheduleTimeline({
   const parseSchedules = (): ScheduleItem[] => {
     const schedulesArray: ScheduleItem[] = [];
 
-    Object.entries(summary.trainingMateri1).forEach(([competencyCode, dateStr]) => {
-      if (dateStr && dateStr !== "-") {
-        const [weekLabel, month] = dateStr.split("-");
-        let year = 2025;
-        const monthNum = parseInt(month);
-        if (monthNum >= 1 && monthNum <= 9) {
-          year = 2026;
-        }
-        const date = new Date(year, monthNum - 1, weekLabelToDay(weekLabel));
+    // Backend now sends ISO timestamps (2025-10-22T00:00:00Z) instead of "I-10" format
+    const allEntries: Array<{ code: string; dateStr: string; type: 1 | 2 }> = [
+      ...Object.entries(summary.trainingMateri1).map(([code, dateStr]) => ({
+        code,
+        dateStr,
+        type: 1 as 1 | 2,
+      })),
+      ...Object.entries(summary.trainingMateri2).map(([code, dateStr]) => ({
+        code,
+        dateStr,
+        type: 2 as 1 | 2,
+      })),
+    ];
 
-        const scheduleId = summary.scheduleIds?.[competencyCode]?.["1"] || 0;
+    allEntries.forEach((entry) => {
+      if (!entry.dateStr || entry.dateStr === "-") return;
 
-        schedulesArray.push({
-          id: scheduleId,
-          competencyCode,
-          competencyName: getCompetencyName(competencyCode),
-          trainingMaterial: getTrainingMaterial(competencyCode, 1),
-          category: summary.category[competencyCode] || "NM",
-          materialType: 1,
-          scheduledDate: date,
-        });
-      }
-    });
+      // Parse ISO timestamp directly from database
+      const date = new Date(entry.dateStr);
+      if (isNaN(date.getTime())) return; // Skip invalid dates
 
-    Object.entries(summary.trainingMateri2).forEach(([competencyCode, dateStr]) => {
-      if (dateStr && dateStr !== "-") {
-        const [weekLabel, month] = dateStr.split("-");
-        let year = 2025;
-        const monthNum = parseInt(month);
-        if (monthNum >= 1 && monthNum <= 9) {
-          year = 2026;
-        }
-        const date = new Date(year, monthNum - 1, weekLabelToDay(weekLabel));
+      const scheduleId = summary.scheduleIds?.[entry.code]?.[entry.type.toString()] || 0;
 
-        const scheduleId = summary.scheduleIds?.[competencyCode]?.["2"] || 0;
-
-        schedulesArray.push({
-          id: scheduleId,
-          competencyCode,
-          competencyName: getCompetencyName(competencyCode),
-          trainingMaterial: getTrainingMaterial(competencyCode, 2),
-          category: summary.category[competencyCode] || "NM",
-          materialType: 2,
-          scheduledDate: date,
-        });
-      }
+      schedulesArray.push({
+        id: scheduleId,
+        competencyCode: entry.code,
+        competencyName: getCompetencyName(entry.code),
+        trainingMaterial: getTrainingMaterial(entry.code, entry.type),
+        category: summary.category[entry.code] || "NM",
+        materialType: entry.type,
+        scheduledDate: date,
+      });
     });
 
     return schedulesArray.sort((a, b) => a.scheduledDate.getTime() - b.scheduledDate.getTime());
@@ -183,12 +154,19 @@ export default function TrainingScheduleTimeline({
     return [
       { weekLabel: "I", weekNumber: 1, date: new Date(month.getFullYear(), month.getMonth(), 1) },
       { weekLabel: "II", weekNumber: 2, date: new Date(month.getFullYear(), month.getMonth(), 8) },
-      { weekLabel: "III", weekNumber: 3, date: new Date(month.getFullYear(), month.getMonth(), 15) },
+      {
+        weekLabel: "III",
+        weekNumber: 3,
+        date: new Date(month.getFullYear(), month.getMonth(), 15),
+      },
       { weekLabel: "IV", weekNumber: 4, date: new Date(month.getFullYear(), month.getMonth(), 22) },
     ];
   };
 
-  const getSchedulesForWeek = (schedulesData: ScheduleItem[], weekSlot: WeekSlot): ScheduleItem[] => {
+  const getSchedulesForWeek = (
+    schedulesData: ScheduleItem[],
+    weekSlot: WeekSlot
+  ): ScheduleItem[] => {
     return schedulesData.filter((schedule) => {
       const scheduleWeek = getWeekLabel(schedule.scheduledDate);
       return (
@@ -273,7 +251,7 @@ export default function TrainingScheduleTimeline({
       );
       setEditMode(false);
       toast.success("Schedules saved successfully!");
-    } catch (error) {
+    } catch {
       toast.error("Failed to save schedules");
     }
   };

@@ -486,17 +486,7 @@ export default function TrainingPlanClient() {
 
         {/* Training Materials Tab */}
         <TabsContent value="materials" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Training Materials</CardTitle>
-              <CardDescription>
-                Generate dan kelola materi training berdasarkan kompetensi
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <TrainingMaterialTab />
-            </CardContent>
-          </Card>
+          <TrainingMaterialTab />
         </TabsContent>
 
         {/* Schedules Tab */}
