@@ -2,14 +2,21 @@
 import { useEffect, useState, useRef, startTransition, useDeferredValue } from "react";
 import { toast } from "sonner";
 import { api } from "@/app/lib/api";
-import { IPaginationData, IPaginationRequest, IReport, IMentoringReport } from "@/types/global-types";
+import {
+  IPaginationData,
+  IPaginationRequest,
+  IReport,
+  IMentoringReport,
+} from "@/types/global-types";
 import { useDebounce } from "use-debounce";
 import axios from "axios";
 
 export function useMasterReports(initialPageSize = 10) {
   const [onCallApi, setOnCallApi] = useState(false);
   const [paginationData, setPaginationData] = useState<IPaginationData<IReport> | null>(null);
-  const [availableMentoringReports, setAvailableMentoringReports] = useState<IMentoringReport[]>([]);
+  const [availableMentoringReports, setAvailableMentoringReports] = useState<IMentoringReport[]>(
+    []
+  );
   const [pageSize, setPageSize] = useState(initialPageSize);
   const [paginationRequest, setPaginationRequest] = useState<IPaginationRequest>({
     anchorId: 0,
@@ -48,8 +55,6 @@ export function useMasterReports(initialPageSize = 10) {
           signal: controller.signal,
         });
 
-        console.log("Raw response:", response.data);
-
         let apiData = [];
 
         // Handle the nested structure
@@ -62,7 +67,6 @@ export function useMasterReports(initialPageSize = 10) {
         }
 
         const parsedReports: IReport[] = apiData;
-        console.log("Parsed reports:", parsedReports);
 
         // Extract pagination metadata safely
         const apiMeta = response.data?.data;
@@ -77,10 +81,11 @@ export function useMasterReports(initialPageSize = 10) {
           first_page: apiMeta?.first_page ?? false,
         };
 
-        console.log("Final pagination result:", paginationResult);
-
         // Extract available mentoring reports from response
-        if (apiMeta?.availableMentoringReports && Array.isArray(apiMeta.availableMentoringReports)) {
+        if (
+          apiMeta?.availableMentoringReports &&
+          Array.isArray(apiMeta.availableMentoringReports)
+        ) {
           setAvailableMentoringReports(apiMeta.availableMentoringReports);
         }
 
@@ -98,7 +103,6 @@ export function useMasterReports(initialPageSize = 10) {
         });
       } catch (err) {
         if (!axios.isCancel(err)) {
-          console.error("Fetch error:", err);
           const error = err as { response?: { data?: { error?: string } }; message?: string };
           toast.error(error.response?.data?.error || error.message || "Failed to fetch data");
         }
@@ -140,7 +144,6 @@ export function useMasterReports(initialPageSize = 10) {
       });
       return res.data;
     } catch (err) {
-      console.error("Failed to create report:", err);
       const error = err as { response?: { data?: { error?: string } } };
       toast.error(error.response?.data?.error || "Failed to add report");
       throw err;
@@ -165,7 +168,6 @@ export function useMasterReports(initialPageSize = 10) {
 
       return res.data;
     } catch (err) {
-      console.error("Failed to delete report:", err);
       const error = err as { response?: { data?: { error?: string } } };
       toast.error(error.response?.data?.error || "Failed to delete report");
       throw err;
@@ -190,7 +192,6 @@ export function useMasterReports(initialPageSize = 10) {
 
       return res.data;
     } catch (err) {
-      console.error("Failed to update report:", err);
       const error = err as { response?: { data?: { error?: string } } };
       toast.error(error.response?.data?.error || "Failed to update report");
       throw err;
