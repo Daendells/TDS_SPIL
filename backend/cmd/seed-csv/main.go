@@ -36,6 +36,7 @@ func main() {
 		{"CompetencyTypes", "competency_types.csv", seedCompetencyTypesFromCSV},
 		{"Trainings", "trainings.csv", seedTrainingsFromCSV},
 		{"CompetencyProgramMappings", "competency_program_mappings.csv", seedCompetencyProgramMappingsFromCSV},
+		{"TrainingSchedules", "training_schedules.csv", seedTrainingSchedulesFromCSV},
 		{"Aspects", "aspects.csv", seedAspectsFromCSV},
 		{"Questions", "questions.csv", seedQuestionsFromCSV},
 		{"Options", "options.csv", seedOptionsFromCSV},
@@ -481,3 +482,43 @@ func seedSeafarerAssessmentsFromCSV(db *gorm.DB, filePath string) error {
 	}
 	return nil
 }
+
+func seedTrainingSchedulesFromCSV(db *gorm.DB, filePath string) error {
+	records, err := readCSV(filePath)
+	if err != nil {
+		return err
+	}
+
+	for _, record := range records {
+		if len(record) < 6 {
+			continue
+		}
+		
+		scheduledDate := parseTime(record[5])
+		if scheduledDate == nil {
+			continue
+		}
+
+		var competencyType domain.CompetencyType
+		if err := db.Where("code = ?", record[2]).First(&competencyType).Error; err != nil {
+			continue
+		}
+
+		competencyTypeID := int64(competencyType.ID)
+		schedule := domain.TrainingSchedule{
+			ID:               parseInt(record[0]),
+			Program:          record[1],
+			CompetencyCode:   record[2],
+			CompetencyTypeID: &competencyTypeID,
+			TrainingTopic:    record[3],
+			MaterialType:     parseInt(record[4]),
+			ScheduledDate:    *scheduledDate,
+		}
+		
+		if err := db.FirstOrCreate(&schedule, domain.TrainingSchedule{ID: schedule.ID}).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
