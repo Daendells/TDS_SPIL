@@ -59,11 +59,12 @@ func (c *RouterConfig) SetupGuestRouter() {
 
 	trainings := c.App.Group("trainings")
 	{
-		trainings.GET("", c.TrainingGenController.FindAll)                  // dari DB
-		trainings.POST("/generate", c.TrainingGenController.Generate)       // dari LLM
-		trainings.POST("/generate-quiz", c.TrainingGenController.GenerateQuiz) // Generate quiz from material
-		trainings.PUT("/:no", c.TrainingController.Update)                  // Edit training (no auth required)
-		trainings.DELETE("/:no", c.TrainingController.Delete)               // Delete training (no auth required)
+		trainings.GET("", c.TrainingGenController.FindAll)
+		trainings.POST("", c.TrainingController.Create)
+		trainings.POST("/generate", c.TrainingGenController.Generate)
+		trainings.POST("/generate-quiz", c.TrainingGenController.GenerateQuiz)
+		trainings.PUT("/:no", c.TrainingController.Update)
+		trainings.DELETE("/:no", c.TrainingController.Delete)
 	}
 
 	trainingPlan := c.App.Group("api/training-plan")

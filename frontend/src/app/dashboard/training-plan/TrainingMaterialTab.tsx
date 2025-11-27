@@ -34,6 +34,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Label } from "@/components/ui/label";
 import { FileText, RefreshCw, Edit, Trash2, MoreVertical } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
@@ -57,6 +65,15 @@ interface ITraining {
     description?: string;
     category: string;
   };
+}
+
+interface ICompetencyType {
+  id: number;
+  code: string;
+  name: string;
+  description: string;
+  category: string;
+  isActive: boolean;
 }
 
 interface GroupedTraining {
@@ -87,6 +104,18 @@ export default function TrainingMaterialTab() {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [deletingTraining, setDeletingTraining] = useState<ITraining | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
+  
+  const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [competencyTypes, setCompetencyTypes] = useState<ICompetencyType[]>([]);
+  const [createForm, setCreateForm] = useState({
+    competency_type_id: 0,
+    kode: "",
+    topik_training: "",
+    lvl: 1,
+    tools_training: "",
+    deskripsi_perilaku: "",
+  });
+  const [createLoading, setCreateLoading] = useState(false);
 
   const apiUrl =
     typeof window === "undefined"
@@ -101,12 +130,24 @@ export default function TrainingMaterialTab() {
         setData(json.data);
         groupTrainings(json.data);
       } catch (error) {
-        console.error("Gagal memuat data:", error);
+        setData([]);
       } finally {
         setLoading(false);
       }
     };
+    
+    const fetchCompetencyTypes = async () => {
+      try {
+        const res = await fetch(`${apiUrl}/api/competency-types/active`);
+        const json = await res.json();
+        setCompetencyTypes(json.data || []);
+      } catch (error) {
+        setCompetencyTypes([]);
+      }
+    };
+    
     fetchTrainings();
+    fetchCompetencyTypes();
   }, [apiUrl]);
 
   const groupTrainings = (trainings: ITraining[]) => {
@@ -124,6 +165,11 @@ export default function TrainingMaterialTab() {
         };
       }
       grouped[competencyCode].trainings.push(training);
+    });
+
+    // Sort trainings by kode (alphanumeric) within each group
+    Object.values(grouped).forEach((group) => {
+      group.trainings.sort((a, b) => a.kode.localeCompare(b.kode, undefined, { numeric: true }));
     });
 
     // Sort by competencyCode
@@ -220,7 +266,6 @@ export default function TrainingMaterialTab() {
       if (res.ok) {
         toast.success("Quiz berhasil digenerate! PDF quiz telah tersedia untuk diunduh.");
 
-        // Reload data from server to get persisted quiz URL
         const refreshRes = await fetch(`${apiUrl}/trainings`);
         const refreshJson = await refreshRes.json();
         setData(refreshJson.data);
@@ -229,10 +274,58 @@ export default function TrainingMaterialTab() {
         toast.error(result.error || "Gagal generate quiz.");
       }
     } catch (error) {
-      console.error("Error saat generate quiz:", error);
       toast.error("Terjadi kesalahan saat generate quiz.");
     } finally {
       setGeneratingQuiz(null);
+    }
+  };
+
+  const openCreateDialog = () => {
+    setCreateForm({
+      competency_type_id: 0,
+      kode: "",
+      topik_training: "",
+      lvl: 1,
+      tools_training: "",
+      deskripsi_perilaku: "",
+    });
+    setCreateDialogOpen(true);
+  };
+
+  const handleCreateTraining = async () => {
+    if (!createForm.competency_type_id) {
+      toast.error("Pilih Competency Type terlebih dahulu!");
+      return;
+    }
+    if (!createForm.kode || !createForm.topik_training || !createForm.tools_training || !createForm.deskripsi_perilaku) {
+      toast.error("Semua field harus diisi!");
+      return;
+    }
+
+    setCreateLoading(true);
+    try {
+      const res = await fetch(`${apiUrl}/trainings`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(createForm),
+      });
+
+      const result = await res.json();
+      if (res.ok) {
+        toast.success("Training berhasil ditambahkan!");
+
+        const refreshRes = await fetch(`${apiUrl}/trainings`);
+        const refreshJson = await refreshRes.json();
+        setData(refreshJson.data);
+        groupTrainings(refreshJson.data);
+        setCreateDialogOpen(false);
+      } else {
+        toast.error(result.error || "Gagal menambahkan training.");
+      }
+    } catch (error) {
+      toast.error("Terjadi kesalahan saat menambahkan training.");
+    } finally {
+      setCreateLoading(false);
     }
   };
 
@@ -281,7 +374,6 @@ export default function TrainingMaterialTab() {
       if (res.ok) {
         toast.success("Data training berhasil diupdate!");
 
-        // Update local state
         const updatedData = data.map((row) =>
           row.no === editingTraining.no ? { ...row, ...editForm } : row
         );
@@ -292,7 +384,6 @@ export default function TrainingMaterialTab() {
         toast.error(result.error || "Gagal update training.");
       }
     } catch (error) {
-      console.error("Error saat update:", error);
       toast.error("Terjadi kesalahan saat update training.");
     } finally {
       setEditLoading(false);
@@ -320,7 +411,6 @@ export default function TrainingMaterialTab() {
       if (res.ok) {
         toast.success("Training berhasil dihapus!");
 
-        // Update local state
         const updatedData = data.filter((row) => row.no !== deletingTraining.no);
         setData(updatedData);
         groupTrainings(updatedData);
@@ -330,7 +420,6 @@ export default function TrainingMaterialTab() {
         toast.error(result.error || "Gagal delete training.");
       }
     } catch (error) {
-      console.error("Error saat delete:", error);
       toast.error("Terjadi kesalahan saat delete training.");
     } finally {
       setDeleteLoading(false);
@@ -339,6 +428,19 @@ export default function TrainingMaterialTab() {
 
   return (
     <div className="space-y-4">
+      <div className="flex items-start justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold">Training Materials</h2>
+          <p className="text-sm text-muted-foreground mt-1">
+            Generate dan kelola materi training berdasarkan kompetensi
+          </p>
+        </div>
+        <Button onClick={openCreateDialog} className="gap-2">
+          <FileText className="w-4 h-4" />
+          Add New Training
+        </Button>
+      </div>
+      
       {loading ? (
         <div className="text-center py-12">
           <p className="text-gray-500">Memuat data training...</p>
@@ -728,6 +830,116 @@ export default function TrainingMaterialTab() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Add New Training</DialogTitle>
+            <DialogDescription>
+              Tambahkan training baru untuk competency type tertentu
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="competency_type">Competency Type</Label>
+              <Select
+                value={createForm.competency_type_id.toString()}
+                onValueChange={(value) =>
+                  setCreateForm({ ...createForm, competency_type_id: parseInt(value) })
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih Competency Type" />
+                </SelectTrigger>
+                <SelectContent>
+                  {competencyTypes.map((ct) => (
+                    <SelectItem key={ct.id} value={ct.id.toString()}>
+                      {ct.code} - {ct.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="kode">Kode</Label>
+              <Input
+                id="kode"
+                type="text"
+                value={createForm.kode}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, kode: e.target.value })
+                }
+                placeholder="Masukkan kode training (contoh: M001)"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="topik_training">Topik Training</Label>
+              <Input
+                id="topik_training"
+                type="text"
+                value={createForm.topik_training}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, topik_training: e.target.value })
+                }
+                placeholder="Masukkan topik training"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="lvl">Level</Label>
+              <Input
+                id="lvl"
+                type="number"
+                min="1"
+                max="5"
+                value={createForm.lvl}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, lvl: parseInt(e.target.value) || 1 })
+                }
+                placeholder="Masukkan level (1-5)"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="tools_training">Tools/Framework</Label>
+              <Input
+                id="tools_training"
+                type="text"
+                value={createForm.tools_training}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, tools_training: e.target.value })
+                }
+                placeholder="Masukkan tools/framework"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="deskripsi_perilaku">Keyword (Deskripsi Perilaku)</Label>
+              <Textarea
+                id="deskripsi_perilaku"
+                value={createForm.deskripsi_perilaku}
+                onChange={(e) =>
+                  setCreateForm({ ...createForm, deskripsi_perilaku: e.target.value })
+                }
+                placeholder="Masukkan keyword/deskripsi perilaku"
+                className="h-24 resize-none"
+              />
+            </div>
+          </div>
+
+          <DialogFooter className="mt-6">
+            <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+              Batal
+            </Button>
+            <Button onClick={handleCreateTraining} disabled={createLoading}>
+              {createLoading ? "Menyimpan..." : "Simpan Training"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

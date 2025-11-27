@@ -651,18 +651,12 @@ func (s *trainingPlanService) findNextAvailableDate(startDate time.Time, usedDat
 	iterations := 0
 
 	for iterations < maxIterations {
-		// Hanya izinkan tanggal pada awal slot minggu (1, 8, 15, 22)
 		if isWeekSlotStart(currentDate.Day()) {
-			dateKey := currentDate.Format("2006-01-02")
-
-			if !usedDates[dateKey] {
-				if !s.hasParticipantConflict(currentDate, competencyCode, categories, participantGaps, usedDates) {
-					return currentDate
-				}
+			if !s.hasParticipantConflict(currentDate, competencyCode, categories, participantGaps, usedDates) {
+				return currentDate
 			}
 		}
 
-		// Loncat ke slot minggu berikutnya
 		currentDate = nextWeekSlotStart(currentDate)
 		iterations++
 	}
@@ -726,42 +720,32 @@ func (s *trainingPlanService) hasParticipantConflict(date time.Time, competencyC
 	dateKey := date.Format("2006-01-02")
 	category := categories[competencyCode]
 
-	// Check if this date is already used
-	if usedDates[dateKey] {
-		// Get participants who need this competency
-		currentParticipants := make(map[int]bool)
+	if !usedDates[dateKey] {
+		return false
+	}
 
-		if category == "M" {
-			// Mandatory: ALL participants must attend
-			for participantID := range participantGaps {
-				currentParticipants[participantID] = true
-			}
-		} else {
-			// Non-Mandatory: Only participants with this gap attend
-			for participantID, gaps := range participantGaps {
-				for _, gap := range gaps {
-					if gap == competencyCode {
-						currentParticipants[participantID] = true
-						break
-					}
+	currentParticipants := make(map[int]bool)
+
+	if category == "M" {
+		for participantID := range participantGaps {
+			currentParticipants[participantID] = true
+		}
+	} else {
+		for participantID, gaps := range participantGaps {
+			for _, gap := range gaps {
+				if gap == competencyCode {
+					currentParticipants[participantID] = true
+					break
 				}
 			}
 		}
-
-		// Check if any participant would have a conflict
-		// This is a simplified check - in a real implementation, you would need to:
-		// 1. Track which specific competencies are scheduled on which dates
-		// 2. Check for participant overlaps between different competencies on the same date
-		// 3. Ensure mandatory trainings don't conflict with non-mandatory ones
-
-		// For now, we prevent scheduling multiple competencies on the same date
-		// if they would have overlapping participants
-		if len(currentParticipants) > 0 {
-			return true // Conflict detected
-		}
 	}
 
-	return false // No conflict
+	if len(currentParticipants) > 0 {
+		return true
+	}
+
+	return false
 }
 
 // generateMateri2Schedules is now deprecated - Materi 2 scheduling is done in tryGenerateSchedules

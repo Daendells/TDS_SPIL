@@ -255,7 +255,7 @@ export default function TrainingPlanClient() {
           <TabsTrigger value="summary">Gap Summary</TabsTrigger>
           <TabsTrigger value="materials">Training Materials</TabsTrigger>
           <TabsTrigger value="mapping">Competency Mapping</TabsTrigger>
-          <TabsTrigger value="schedules">Schedules</TabsTrigger>
+          <TabsTrigger value="schedules">Training Plan</TabsTrigger>
         </TabsList>
 
         {/* Participants Tab */}

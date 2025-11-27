@@ -34,6 +34,44 @@ func NewTrainingService(
 	}
 }
 
+func (s *TrainingService) Create(req *web.TrainingCreateRequest) (*web.SuccessResponse, error) {
+	if err := s.Validate.Struct(req); err != nil {
+		return nil, err
+	}
+
+	var competencyType domain.CompetencyType
+	if err := s.DB.First(&competencyType, req.CompetencyTypeID).Error; err != nil {
+		return nil, err
+	}
+
+	var maxNo int
+	s.DB.Model(&domain.Training{}).Select("COALESCE(MAX(no), 0)").Scan(&maxNo)
+
+	training := domain.Training{
+		No:                maxNo + 1,
+		CompetencyTypeID:  req.CompetencyTypeID,
+		Level:             req.Lvl,
+		DeskripsiPerilaku: req.DeskripsiPerilaku,
+		ToolsTraining:     req.ToolsTraining,
+		Kode:              req.Kode,
+		TopikTraining:     req.TopikTraining,
+	}
+
+	if err := s.DB.Create(&training).Error; err != nil {
+		return nil, err
+	}
+
+	if err := s.DB.Preload("CompetencyType").First(&training, training.No).Error; err != nil {
+		return nil, err
+	}
+
+	return &web.SuccessResponse{
+		Code:   http.StatusCreated,
+		Status: "Created",
+		Data:   training,
+	}, nil
+}
+
 func (s *TrainingService) FindAll() (*web.SuccessResponse, error) {
 	var rows []domain.Training	
 	if err := s.TrainingRepository.FindAll(s.DB, &rows); err != nil {

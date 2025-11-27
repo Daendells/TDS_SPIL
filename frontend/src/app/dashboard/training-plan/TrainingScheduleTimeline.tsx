@@ -28,6 +28,12 @@ interface ScheduleItem {
   scheduledDate: Date;
 }
 
+interface WeekSlot {
+  weekLabel: string;
+  weekNumber: 1 | 2 | 3 | 4;
+  date: Date;
+}
+
 export default function TrainingScheduleTimeline({
   summary,
   program,
@@ -37,7 +43,7 @@ export default function TrainingScheduleTimeline({
   const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
   const [originalSchedules, setOriginalSchedules] = useState<ScheduleItem[]>([]);
   const [draggedItem, setDraggedItem] = useState<ScheduleItem | null>(null);
-  const [dragOverItem, setDragOverItem] = useState<ScheduleItem | null>(null);
+  const [dragOverWeek, setDragOverWeek] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const swapSchedules = useSwapSchedules();
 
@@ -173,47 +179,68 @@ export default function TrainingScheduleTimeline({
     );
   };
 
+  const getWeekSlotsForMonth = (month: Date): WeekSlot[] => {
+    return [
+      { weekLabel: "I", weekNumber: 1, date: new Date(month.getFullYear(), month.getMonth(), 1) },
+      { weekLabel: "II", weekNumber: 2, date: new Date(month.getFullYear(), month.getMonth(), 8) },
+      { weekLabel: "III", weekNumber: 3, date: new Date(month.getFullYear(), month.getMonth(), 15) },
+      { weekLabel: "IV", weekNumber: 4, date: new Date(month.getFullYear(), month.getMonth(), 22) },
+    ];
+  };
+
+  const getSchedulesForWeek = (schedulesData: ScheduleItem[], weekSlot: WeekSlot): ScheduleItem[] => {
+    return schedulesData.filter((schedule) => {
+      const scheduleWeek = getWeekLabel(schedule.scheduledDate);
+      return (
+        scheduleWeek === weekSlot.weekLabel &&
+        schedule.scheduledDate.getMonth() === weekSlot.date.getMonth() &&
+        schedule.scheduledDate.getFullYear() === weekSlot.date.getFullYear()
+      );
+    });
+  };
+
+  const getWeekKey = (month: Date, weekLabel: string): string => {
+    return `${month.getFullYear()}-${month.getMonth()}-${weekLabel}`;
+  };
+
   const handleDragStart = (e: React.DragEvent, item: ScheduleItem) => {
     setDraggedItem(item);
     e.dataTransfer.effectAllowed = "move";
   };
 
-  const handleDragOver = (e: React.DragEvent, item: ScheduleItem) => {
+  const handleDragOverWeek = (e: React.DragEvent, weekKey: string) => {
     e.preventDefault();
-    setDragOverItem(item);
+    setDragOverWeek(weekKey);
   };
 
   const handleDragLeave = () => {
-    setDragOverItem(null);
+    setDragOverWeek(null);
   };
 
-  const handleDrop = (e: React.DragEvent, targetItem: ScheduleItem) => {
+  const handleDropOnWeek = (e: React.DragEvent, weekSlot: WeekSlot) => {
     e.preventDefault();
 
-    if (!draggedItem || draggedItem.id === targetItem.id) {
+    if (!draggedItem) {
       setDraggedItem(null);
-      setDragOverItem(null);
+      setDragOverWeek(null);
       return;
     }
 
     const newSchedules = [...schedules];
     const draggedIndex = newSchedules.findIndex((s) => s.id === draggedItem.id);
-    const targetIndex = newSchedules.findIndex((s) => s.id === targetItem.id);
 
-    const tempDate = newSchedules[draggedIndex].scheduledDate;
-    newSchedules[draggedIndex].scheduledDate = newSchedules[targetIndex].scheduledDate;
-    newSchedules[targetIndex].scheduledDate = tempDate;
+    newSchedules[draggedIndex].scheduledDate = new Date(weekSlot.date);
 
     newSchedules.sort((a, b) => a.scheduledDate.getTime() - b.scheduledDate.getTime());
 
     setSchedules(newSchedules);
     setDraggedItem(null);
-    setDragOverItem(null);
+    setDragOverWeek(null);
   };
 
   const handleDragEnd = () => {
     setDraggedItem(null);
-    setDragOverItem(null);
+    setDragOverWeek(null);
   };
 
   const hasChanges = () => {
@@ -248,7 +275,6 @@ export default function TrainingScheduleTimeline({
       toast.success("Schedules saved successfully!");
     } catch (error) {
       toast.error("Failed to save schedules");
-      console.error("Save error:", error);
     }
   };
 
@@ -334,69 +360,77 @@ export default function TrainingScheduleTimeline({
                 {!isCollapsed && (
                   <div className="p-4">
                     <div className="space-y-3">
-                      {monthSchedules.length > 0 ? (
-                        monthSchedules
-                          .sort((a, b) => a.scheduledDate.getDate() - b.scheduledDate.getDate())
-                          .map((schedule) => (
-                            <div
-                              key={schedule.id}
-                              draggable={editMode}
-                              onDragStart={(e) => editMode && handleDragStart(e, schedule)}
-                              onDragOver={(e) => editMode && handleDragOver(e, schedule)}
-                              onDragLeave={editMode ? handleDragLeave : undefined}
-                              onDrop={(e) => editMode && handleDrop(e, schedule)}
-                              onDragEnd={editMode ? handleDragEnd : undefined}
-                              className={`flex items-center gap-4 p-3 rounded-lg transition-all ${
-                                editMode
-                                  ? `cursor-move ${
-                                      draggedItem?.id === schedule.id
-                                        ? "opacity-50 bg-blue-100"
-                                        : dragOverItem?.id === schedule.id
-                                          ? "bg-blue-50 border-2 border-blue-300"
-                                          : "bg-muted/50 hover:bg-muted/70"
-                                    }`
-                                  : "bg-muted/50"
-                              }`}
-                            >
-                              <div className="flex-shrink-0 w-12 text-center">
-                                <div className="text-lg font-bold">
-                                  {getWeekLabel(schedule.scheduledDate)}
-                                </div>
+                      {getWeekSlotsForMonth(month).map((weekSlot) => {
+                        const weekSchedules = getSchedulesForWeek(schedules, weekSlot);
+                        const weekKey = getWeekKey(month, weekSlot.weekLabel);
+                        const isWeekDragOver = dragOverWeek === weekKey;
+
+                        return (
+                          <div
+                            key={weekSlot.weekLabel}
+                            onDragOver={(e) => editMode && handleDragOverWeek(e, weekKey)}
+                            onDragLeave={editMode ? handleDragLeave : undefined}
+                            onDrop={(e) => editMode && handleDropOnWeek(e, weekSlot)}
+                            className={`min-h-[60px] p-3 rounded-lg border-2 transition-all ${
+                              editMode
+                                ? isWeekDragOver
+                                  ? "border-blue-400 bg-blue-50"
+                                  : "border-dashed border-gray-300 bg-gray-50/50"
+                                : "border-transparent bg-muted/30"
+                            }`}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="flex-shrink-0 w-12 text-center pt-1">
+                                <div className="text-lg font-bold">{weekSlot.weekLabel}</div>
                                 <div className="text-xs text-muted-foreground">Week</div>
                               </div>
 
-                              <div className="flex-1 flex items-center justify-between">
-                                <div className="flex items-center gap-3">
-                                  <Badge
-                                    variant={
-                                      schedule.category === "M" ? "destructive" : "secondary"
-                                    }
-                                    className={`font-medium ${schedule.category !== "M" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}`}
-                                  >
-                                    {schedule.category}
-                                  </Badge>
-                                  <div>
-                                    <div className="font-medium text-sm">
-                                      {schedule.competencyCode} - {schedule.competencyName}
+                              <div className="flex-1 space-y-2">
+                                {weekSchedules.length > 0 ? (
+                                  weekSchedules.map((schedule) => (
+                                    <div
+                                      key={schedule.id}
+                                      draggable={editMode}
+                                      onDragStart={(e) => editMode && handleDragStart(e, schedule)}
+                                      onDragEnd={editMode ? handleDragEnd : undefined}
+                                      className={`flex items-center gap-3 p-2 rounded-md transition-all ${
+                                        editMode
+                                          ? `cursor-move ${
+                                              draggedItem?.id === schedule.id
+                                                ? "opacity-50 bg-blue-200"
+                                                : "bg-white hover:bg-gray-50 shadow-sm"
+                                            }`
+                                          : "bg-white shadow-sm"
+                                      }`}
+                                    >
+                                      <Badge
+                                        variant={
+                                          schedule.category === "M" ? "destructive" : "secondary"
+                                        }
+                                        className={`font-medium ${schedule.category !== "M" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}`}
+                                      >
+                                        {schedule.category}
+                                      </Badge>
+                                      <div className="flex-1">
+                                        <div className="font-medium text-sm">
+                                          {schedule.trainingMaterial}
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                          {schedule.competencyCode} - {schedule.competencyName}
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="text-xs text-muted-foreground">
-                                      {schedule.trainingMaterial}
-                                    </div>
+                                  ))
+                                ) : (
+                                  <div className="text-xs text-muted-foreground italic py-2">
+                                    {editMode ? "Drop training here" : "No training scheduled"}
                                   </div>
-                                </div>
-
-                                <div className="text-xs text-muted-foreground">
-                                  Week {getWeekLabel(schedule.scheduledDate)} of{" "}
-                                  {month.toLocaleDateString("en-US", { month: "long" })}
-                                </div>
+                                )}
                               </div>
                             </div>
-                          ))
-                      ) : (
-                        <div className="text-center py-4 text-muted-foreground text-sm">
-                          No trainings scheduled for this month
-                        </div>
-                      )}
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}

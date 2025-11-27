@@ -64,11 +64,9 @@ interface CompetencyMappingCMSProps {
 export default function CompetencyMappingCMS({ program, trainingPlan }: CompetencyMappingCMSProps) {
   const [editingMapping, setEditingMapping] = useState<CompetencyMappingItem | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
 
-  // Form state
   const [formData, setFormData] = useState<CompetencyMappingFormData>({
     competencyTypeId: 0,
     program: program,
@@ -76,14 +74,11 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
     trainingMaterial2Id: null,
   });
 
-  // React Query hooks
   const { data: mappings, isLoading: mappingsLoading } = useGetCompetencyMappings(program);
   const { data: trainings, isLoading: trainingsLoading } = useGetAllTrainings();
   const updateMutation = useUpdateCompetencyMapping();
-  const createMutation = useCreateCompetencyMapping();
   const deleteMutation = useDeleteCompetencyMapping();
 
-  // Sort mappings by gap summary order and add category info
   const sortedMappings =
     mappings
       ?.map((mapping) => {
@@ -106,7 +101,6 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
         return (b.percentageGap || 0) - (a.percentageGap || 0);
       }) || [];
 
-  // Handle edit click
   const handleEdit = (mapping: CompetencyMappingItem) => {
     setEditingMapping(mapping);
     setFormData({
@@ -118,18 +112,6 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
     setIsEditDialogOpen(true);
   };
 
-  // Handle create new mapping
-  const handleCreateNew = () => {
-    setFormData({
-      competencyTypeId: 0,
-      program: program,
-      trainingMaterial1Id: null,
-      trainingMaterial2Id: null,
-    });
-    setIsCreateDialogOpen(true);
-  };
-
-  // Handle update submit
   const handleUpdateSubmit = async () => {
     if (!editingMapping) return;
 
@@ -141,21 +123,10 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
       setIsEditDialogOpen(false);
       setEditingMapping(null);
     } catch (error) {
-      console.error("Update error:", error);
+      setIsEditDialogOpen(false);
     }
   };
 
-  // Handle create submit
-  const handleCreateSubmit = async () => {
-    try {
-      await createMutation.mutateAsync(formData);
-      setIsCreateDialogOpen(false);
-    } catch (error) {
-      console.error("Create error:", error);
-    }
-  };
-
-  // Handle delete
   const handleDelete = (mapping: CompetencyMappingItem) => {
     setDeletingId(mapping.id);
     setIsDeleteDialogOpen(true);
@@ -190,10 +161,6 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
             Manage competency-to-training mappings for {program} program
           </p>
         </div>
-        <Button onClick={handleCreateNew} className="gap-2">
-          <Plus className="h-4 w-4" />
-          Add New Mapping
-        </Button>
       </div>
 
       <div className="border rounded-lg">
@@ -352,125 +319,6 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
             <Button onClick={handleUpdateSubmit} disabled={updateMutation.isPending}>
               {updateMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
               Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Create Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Create Competency Mapping</DialogTitle>
-            <DialogDescription>
-              Add a new competency training mapping for {program}
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Competency Type</Label>
-              <Select
-                value={formData.competencyTypeId > 0 ? formData.competencyTypeId.toString() : ""}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, competencyTypeId: parseInt(value) })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select competency type..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {(() => {
-                    // Extract unique competency types from trainings
-                    const uniqueCompetencies = trainings
-                      ?.filter((t) => t.competencyType)
-                      .reduce(
-                        (acc, training) => {
-                          const ct = training.competencyType!;
-                          if (!acc.find((c) => c.id === ct.id)) {
-                            acc.push(ct);
-                          }
-                          return acc;
-                        },
-                        [] as Array<{ id: number; code: string; name: string }>
-                      )
-                      .sort((a, b) => a.code.localeCompare(b.code));
-
-                    return uniqueCompetencies?.map((ct) => (
-                      <SelectItem key={ct.id} value={ct.id.toString()}>
-                        {ct.code} - {ct.name}
-                      </SelectItem>
-                    ));
-                  })()}
-                </SelectContent>
-              </Select>
-              <p className="text-xs text-muted-foreground">
-                Category (Mandatory/Non-Mandatory) is automatically calculated based on gap
-                percentage (&gt;60% = Mandatory)
-              </p>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Training Material 1</Label>
-              <Select
-                value={formData.trainingMaterial1Id?.toString() || "none"}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    trainingMaterial1Id: value !== "none" ? parseInt(value) : null,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select training material..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">-- None --</SelectItem>
-                  {trainings?.map((training) => (
-                    <SelectItem key={training.no} value={training.no.toString()}>
-                      {training.topik_training} ({training.kode})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Training Material 2</Label>
-              <Select
-                value={formData.trainingMaterial2Id?.toString() || "none"}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    trainingMaterial2Id: value !== "none" ? parseInt(value) : null,
-                  })
-                }
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select training material..." />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">-- None --</SelectItem>
-                  {trainings?.map((training) => (
-                    <SelectItem key={training.no} value={training.no.toString()}>
-                      {training.topik_training} ({training.kode})
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsCreateDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleCreateSubmit}
-              disabled={createMutation.isPending || formData.competencyTypeId === 0}
-            >
-              {createMutation.isPending && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              Create Mapping
             </Button>
           </DialogFooter>
         </DialogContent>

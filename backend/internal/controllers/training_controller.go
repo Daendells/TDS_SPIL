@@ -22,6 +22,29 @@ func NewTrainingController(service *services.TrainingService, log *logrus.Logger
 	}
 }
 
+func (c *TrainingController) Create(ctx *gin.Context) {
+	var request web.TrainingCreateRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	resp, err := c.Service.Create(&request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+	ctx.JSON(resp.Code, resp)
+}
+
 func (c *TrainingController) FindAll(ctx *gin.Context) {
 	resp, err := c.Service.FindAll()
 	if err != nil {
