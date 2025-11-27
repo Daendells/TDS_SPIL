@@ -1,6 +1,7 @@
 package services
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/http"
@@ -30,6 +31,65 @@ type MasterService struct {
 func NewMasterService(db *gorm.DB, log *logrus.Logger, validate *validator.Validate, repo *repositories.MasterRepository) *MasterService {
 	return &MasterService{
 		DB: db, Log: log, Validate: validate, MasterRepository: repo,
+	}
+}
+
+//
+// ---------------------- HELPER FUNCTIONS ----------------------
+
+// Convert mentoring report domain to web model
+func (s *MasterService) toMentoringReportWeb(mr *domain.MentoringReport) *web.MentoringReportData {
+	if mr == nil {
+		return nil
+	}
+
+	// Parse mentee names from JSON string
+	var menteeNames []string
+	if mr.MenteeNames != "" {
+		if err := json.Unmarshal([]byte(mr.MenteeNames), &menteeNames); err != nil {
+			s.Log.WithError(err).Warn("failed to parse mentee names")
+			menteeNames = []string{}
+		}
+	}
+
+	// Parse report IDs from JSON string
+	var reportIDs []int
+	if mr.ReportIDs != "" {
+		if err := json.Unmarshal([]byte(mr.ReportIDs), &reportIDs); err != nil {
+			s.Log.WithError(err).Warn("failed to parse report IDs")
+			reportIDs = []int{}
+		}
+	}
+
+	createdAt := ""
+	if mr.CreatedAt != nil {
+		createdAt = mr.CreatedAt.Format(time.RFC3339)
+	}
+
+	updatedAt := ""
+	if mr.UpdatedAt != nil {
+		updatedAt = mr.UpdatedAt.Format(time.RFC3339)
+	}
+
+	return &web.MentoringReportData{
+		ID:              mr.ID,
+		MentorName:      mr.MentorName,
+		Period:          mr.Period,
+		MenteeNames:     menteeNames,
+		Department:      mr.Department,
+		Program:         mr.Program,
+		ProgramTitle:    mr.ProgramTitle,
+		SessionNumber:   mr.SessionNumber,
+		Date:            mr.Date,
+		Duration:        mr.Duration,
+		Purpose:         mr.Purpose,
+		Observation:     mr.Observation,
+		Reflection:      mr.Reflection,
+		ActionPlan:      mr.ActionPlan,
+		AdditionalNotes: mr.AdditionalNotes,
+		ReportIDs:       reportIDs,
+		CreatedAt:       createdAt,
+		UpdatedAt:       updatedAt,
 	}
 }
 
@@ -65,7 +125,8 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 	}
 	db = db.Limit(limit)
 
-	// --- Preload GapCompetencies with CompetencyType and ReportScores with AssessmentType ---
+	// --- Preload GapCompetencies with CompetencyType, ReportScores with AssessmentType ---
+	// Note: MentoringReport is not preloaded - use GET /api/master-reports/mentoring-programs?personName=<name>
 	db = db.Preload("GapCompetencies").Preload("GapCompetencies.CompetencyType").
 		Preload("ReportScores").Preload("ReportScores.AssessmentType")
 
@@ -122,6 +183,9 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 		// Calculate total gap as count of gap competencies
 		totalGap := len(r.GapCompetencies)
 
+		// Note: Mentoring programs are not loaded here
+		// Use GET /api/master-reports/mentoring-programs?personName=<name> to fetch them
+
 		result = append(result, web.MasterReportData{
 			ID:                         r.ID,
 			VesselName:                 r.VesselName,
@@ -153,6 +217,8 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 			TotalReadinessUpdateMonths: r.TotalReadinessUpdateMonths,
 			Keterangan:                 r.Keterangan,
 			TmNm:                       r.TmNm,
+			MentoringReportID:          r.MentoringReportID,
+			MentoringReport:            nil, // Fetch via /api/master-reports/mentoring-programs?personName=<name>
 			Competencies:               competencies,
 			ReportScores:               reportScores,
 		})
@@ -172,11 +238,16 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 		isFirstPage = (count == 0)
 	}
 
+	// NOTE: Mentoring reports will be fetched per-person on the frontend using
+	// GET /api/master-reports/mentoring-programs?personName=<NAME>
+	// This avoids fetching all mentoring reports which could be expensive
+
 	responsePayload := web.MasterReportListResponse{
-		Data:      result,
-		PageSize:  limit,
-		HasMore:   len(result) >= limit,
-		FirstPage: isFirstPage,
+		Data:                      result,
+		PageSize:                  limit,
+		HasMore:                   len(result) >= limit,
+		FirstPage:                 isFirstPage,
+		AvailableMentoringReports: []web.MentoringReportData{}, // Empty, fetch per-person instead
 	}
 
 	if len(result) > 0 {
@@ -412,6 +483,26 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 	if request.SeamanCode != nil {
 		existing.SeamanCode = nullifyStringPtr(request.SeamanCode)
 	}
+	if request.Age != nil {
+		existing.Age = nullifyStringPtr(request.Age)
+	}
+	if request.Certificate != nil {
+		existing.Certificate = nullifyStringPtr(request.Certificate)
+	}
+	if request.IDPProgram != nil {
+		existing.IDPProgram = nullifyStringPtr(request.IDPProgram)
+	}
+	if request.PerformanceScore != nil {
+		existing.PerformanceScore = request.PerformanceScore
+	}
+	if request.Readiness != nil {
+		existing.Readiness = nullifyStringPtr(request.Readiness)
+	}
+	if request.TalentClassified != nil {
+		existing.TalentClassified = nullifyStringPtr(request.TalentClassified)
+	}
+	// Note: MentoringReportID is not stored in reports table
+	// Mentoring programs are linked via mentee_names in mentoring_reports table
 
 	// Save master report basic fields
 	if err := s.DB.Save(&existing).Error; err != nil {
@@ -626,31 +717,75 @@ func (s *MasterService) Delete(id uint) (*web.SuccessResponse, error) {
 		return nil, err
 	}
 
-	// Hapus child terlebih dahulu
-	var deleted int64
-	s.DB.Model(&domain.GapCompetency{}).
-		Where("report_id = ?", id).
-		Count(&deleted)
+	// Delete all related tables using transaction
+	var competenciesDeleted int64
+	var scoresDeleted int64
 
-	s.DB.Where("report_id = ?", id).Delete(&domain.GapCompetency{})
+	err := s.DB.Transaction(func(tx *gorm.DB) error {
+		// Delete gap competencies
+		result := tx.Where("report_id = ?", id).Delete(&domain.GapCompetency{})
+		if result.Error != nil {
+			return fmt.Errorf("failed to delete gap competencies: %w", result.Error)
+		}
+		competenciesDeleted = result.RowsAffected
+
+		// Delete report scores
+		result = tx.Where("report_id = ?", id).Delete(&domain.ReportScore{})
+		if result.Error != nil {
+			return fmt.Errorf("failed to delete report scores: %w", result.Error)
+		}
+		scoresDeleted = result.RowsAffected
+
+		// Delete the master report
+		if err := tx.Delete(&master).Error; err != nil {
+			return fmt.Errorf("failed to delete master report: %w", err)
+		}
+
+		return nil
+	})
+
+	if err != nil {
+		s.Log.WithError(err).Error("failed to delete master report and related data")
+		return nil, err
+	}
 
 	s.Log.WithFields(logrus.Fields{
-		"report_id":       id,
-		"childrenDeleted": deleted,
-		"time":            time.Now(),
-	}).Info("Deleting master report and children")
-
-	// Hapus parent
-	if err := s.MasterRepository.Delete(s.DB, &master); err != nil {
-		return nil, fmt.Errorf("failed to delete master report: %w", err)
-	}
+		"report_id":           id,
+		"competenciesDeleted": competenciesDeleted,
+		"scoresDeleted":       scoresDeleted,
+		"time":                time.Now(),
+	}).Info("Deleted master report and all related data")
 
 	return &web.SuccessResponse{
 		Code:   http.StatusOK,
 		Status: "Deleted",
 		Data: gin.H{
-			"message":      fmt.Sprintf("Master report %d deleted", id),
-			"childDeleted": deleted,
+			"message":             fmt.Sprintf("Master report %d deleted", id),
+			"competenciesDeleted": competenciesDeleted,
+			"scoresDeleted":       scoresDeleted,
 		},
+	}, nil
+}
+
+// GetMentoringProgramsByPersonName retrieves all mentoring programs for a specific person
+func (s *MasterService) GetMentoringProgramsByPersonName(personName string) (*web.SuccessResponse, error) {
+	var mentoringReports []domain.MentoringReport
+
+	// Search for mentoring reports where the person's name appears in mentee_names JSON array
+	if err := s.DB.Where("mentee_names LIKE ?", "%\""+personName+"\"%").Find(&mentoringReports).Error; err != nil {
+		s.Log.WithError(err).Error("failed to find mentoring reports by person name")
+		return nil, fmt.Errorf("failed to retrieve mentoring reports: %w", err)
+	}
+
+	// Convert to web response format
+	result := make([]web.MentoringReportData, 0, len(mentoringReports))
+	for _, mr := range mentoringReports {
+		result = append(result, *s.toMentoringReportWeb(&mr))
+	}
+
+	return &web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   result,
 	}, nil
 }

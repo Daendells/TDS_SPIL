@@ -1,7 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
@@ -51,15 +51,9 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Label } from "@/components/ui/label";
 import { useMasterReports } from "./_hooks/master-report";
-import { api } from "@/app/lib/api";
+import { useMasterReportUI } from "./_hooks/useMasterReportUI";
 import { useGetAllAssessmentTypes } from "./_hooks/useAssessmentType";
-import type { IReport } from "@/types/global-types";
-
-interface CompetencyType {
-  id: number;
-  code: string;
-  name: string;
-}
+import type { IReport, IMentoringReport } from "@/types/global-types";
 
 /* Dynamic sticky offset calculator */
 function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pinnedCount = 2) {
@@ -86,9 +80,11 @@ function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pi
 }
 
 export default function MasterPage() {
+  // Data hooks
   const {
     onCallApi,
     paginationData,
+    availableMentoringReports,
     paginationRequest,
     setPaginationRequest,
     setPageSize,
@@ -99,23 +95,46 @@ export default function MasterPage() {
     updateReport,
   } = useMasterReports(10);
 
-  // Fetch assessment types
   const { data: assessmentTypes = [] } = useGetAllAssessmentTypes();
 
-  const [openDialog, setOpenDialog] = useState(false);
-  const [confirmDeleteDialog, setConfirmDeleteDialog] = useState(false);
-  const [form, setForm] = useState({ nama: "", seamanCode: "", seafarerCode: "" });
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
-  const [editingRow, setEditingRow] = useState<IReport | null>(null);
-  const [openEditDialog, setOpenEditDialog] = useState(false);
-  const [currentPage, setCurrentPage] = useState(1);
-
-  // Competency states
-  const [competencyTypes, setCompetencyTypes] = useState<CompetencyType[]>([]);
-  const [selectedCompetencies, setSelectedCompetencies] = useState<number[]>([]);
-  const [competencySearchOpen, setCompetencySearchOpen] = useState(false);
-  const [loadingCompetencies, setLoadingCompetencies] = useState(false);
+  // UI hooks
+  const {
+    openDialog,
+    setOpenDialog,
+    confirmDeleteDialog,
+    setConfirmDeleteDialog,
+    openEditDialog,
+    setOpenEditDialog,
+    form,
+    setForm,
+    editingRow,
+    setEditingRow,
+    isEditMode,
+    setIsEditMode,
+    selectedIds,
+    setSelectedIds,
+    currentPage,
+    setCurrentPage,
+    competencyTypes,
+    selectedCompetencies,
+    setSelectedCompetencies,
+    competencySearchOpen,
+    setCompetencySearchOpen,
+    loadingCompetencies,
+    linkedMentoringReports,
+    loadingLinkedMentoring,
+    fetchLinkedMentoringReports,
+    mentoringDetailsDialogOpen,
+    setMentoringDetailsDialogOpen,
+    selectedPersonForMentoring,
+    setSelectedPersonForMentoring,
+    isFormValid,
+    isEditFormValid,
+    toggleCompetencySelection,
+    removeCompetency,
+    resetForm,
+    resetEditForm,
+  } = useMasterReportUI();
 
   const tableRef = useRef<HTMLDivElement>(null);
   const offsets = useDynamicStickyOffsets(tableRef, 2);
@@ -143,37 +162,13 @@ export default function MasterPage() {
     "Talent Classified",
     "Readiness",
     "Certificate Eligible",
+    "Actions",
   ];
 
   // Add assessment type columns dynamically
   const assessmentTypeColumns = assessmentTypes.map((type) => type.assessmentTypeName);
 
   const TABLE_COLUMNS = [...STATIC_COLUMNS, ...assessmentTypeColumns];
-
-  const fetchCompetencyTypes = useCallback(async () => {
-    setLoadingCompetencies(true);
-    try {
-      const response = await api.get("/api/competency-types");
-      const data = response.data?.data || response.data || [];
-      setCompetencyTypes(Array.isArray(data) ? data : []);
-      console.log("Loaded competency types:", data);
-    } catch (error: unknown) {
-      console.error("Failed to fetch competency types:", error);
-      toast.error("Failed to load competency types");
-    } finally {
-      setLoadingCompetencies(false);
-    }
-  }, []);
-
-  // Fetch competency types on mount
-  useEffect(() => {
-    fetchCompetencyTypes();
-  }, [fetchCompetencyTypes]);
-
-  const isFormValid = () => form.nama.trim() && form.seamanCode.trim() && form.seafarerCode.trim();
-
-  const isEditFormValid = () =>
-    editingRow?.nama?.trim() && editingRow?.seamanCode?.trim() && editingRow?.seafarerCode?.trim();
 
   const navigatePage = (page: "prev" | "next") => {
     if (!paginationData) return;
@@ -210,16 +205,37 @@ export default function MasterPage() {
     if (!isEditFormValid()) return toast.error("Please fill in all fields!");
     if (!editingRow) return;
     try {
-      const updatePayload: {
-        nama: string;
-        seamanCode: string;
-        seafarerCode: string;
-        competencies?: Array<{ competencyTypeId: number }>;
-      } = {
+      const updatePayload: any = {
         nama: editingRow.nama,
         seamanCode: editingRow.seamanCode,
         seafarerCode: editingRow.seafarerCode,
       };
+
+      // Add optional fields if they have values
+      if (editingRow.vesselName) {
+        updatePayload.vesselName = editingRow.vesselName;
+      }
+      if (editingRow.jabatan) {
+        updatePayload.jabatan = editingRow.jabatan;
+      }
+      if (editingRow.age) {
+        updatePayload.age = editingRow.age;
+      }
+      if (editingRow.certificate) {
+        updatePayload.certificate = editingRow.certificate;
+      }
+      if (editingRow.idpProgram) {
+        updatePayload.idpProgram = editingRow.idpProgram;
+      }
+      if (editingRow.performanceScore) {
+        updatePayload.performanceScore = editingRow.performanceScore;
+      }
+      if (editingRow.readiness) {
+        updatePayload.readiness = editingRow.readiness;
+      }
+      if (editingRow.talentClassified) {
+        updatePayload.talentClassified = editingRow.talentClassified;
+      }
 
       // Add competencies if they were modified
       if (selectedCompetencies.length > 0) {
@@ -302,26 +318,24 @@ export default function MasterPage() {
         .filter((id): id is number => id !== undefined) || [];
     setSelectedCompetencies(competencyIds);
 
+    // Fetch mentoring reports linked to this person
+    if (row.nama) {
+      fetchLinkedMentoringReports(row.nama);
+    }
+
     console.log("Editing row:", row);
     console.log("Existing competencies:", competencyIds);
     setOpenEditDialog(true);
   };
 
-  const toggleCompetencySelection = (typeId: number) => {
-    setSelectedCompetencies((prev) => {
-      if (prev.includes(typeId)) {
-        return prev.filter((id) => id !== typeId);
-      } else {
-        return [...prev, typeId];
-      }
-    });
-  };
-
-  const removeCompetency = (typeId: number) => {
-    setSelectedCompetencies((prev) => prev.filter((id) => id !== typeId));
-  };
-
   const getRowNumber = (i: number) => (currentPage - 1) * paginationRequest.pageSize + i + 1;
+
+  const handleViewMentoringPrograms = async (row: IReport, e: React.MouseEvent) => {
+    e.stopPropagation(); // Prevent row click when clicking the button
+    setSelectedPersonForMentoring(row);
+    await fetchLinkedMentoringReports(row.nama);
+    setMentoringDetailsDialogOpen(true);
+  };
 
   function colorFromString(str: string | undefined | null) {
     if (!str) return "hsl(200, 70%, 70%)"; // Default color if undefined
@@ -532,6 +546,97 @@ export default function MasterPage() {
         </DialogContent>
       </Dialog>
 
+      {/* Mentoring Programs Details Dialog */}
+      <Dialog open={mentoringDetailsDialogOpen} onOpenChange={setMentoringDetailsDialogOpen}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Mentoring Programs for {selectedPersonForMentoring?.nama || editingRow?.nama}</DialogTitle>
+            <DialogDescription>
+              All mentoring programs linked to this person
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            {linkedMentoringReports.length === 0 ? (
+              <div className="p-4 bg-gray-50 rounded-md text-center">
+                <p className="text-gray-600">No mentoring programs found</p>
+              </div>
+            ) : (
+              linkedMentoringReports.map((report: any, index: number) => (
+                <div key={report.id} className="p-4 border rounded-lg bg-white space-y-3">
+                  <div className="flex items-center justify-between border-b pb-2">
+                    <h3 className="text-lg font-semibold text-gray-800">
+                      Program {index + 1}: {report.programTitle || "N/A"}
+                    </h3>
+                    <Badge variant="outline">{report.program || "N/A"}</Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 text-sm">
+                    <div>
+                      <span className="font-medium text-gray-600">Mentor Name:</span>
+                      <p className="text-gray-800">{report.mentorName || "-"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Period:</span>
+                      <p className="text-gray-800">{report.period || "-"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Department:</span>
+                      <p className="text-gray-800">{report.department || "-"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Session Number:</span>
+                      <p className="text-gray-800">{report.sessionNumber || "-"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Date:</span>
+                      <p className="text-gray-800">{report.date || "-"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Duration:</span>
+                      <p className="text-gray-800">{report.duration || "-"} minutes</p>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-2">
+                    <div>
+                      <span className="font-medium text-gray-600">Purpose:</span>
+                      <p className="text-gray-800 mt-1">{report.purpose || "-"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Observation:</span>
+                      <p className="text-gray-800 mt-1">{report.observation || "-"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Reflection:</span>
+                      <p className="text-gray-800 mt-1">{report.reflection || "-"}</p>
+                    </div>
+                    <div>
+                      <span className="font-medium text-gray-600">Action Plan:</span>
+                      <p className="text-gray-800 mt-1">{report.actionPlan || "-"}</p>
+                    </div>
+                    {report.additionalNotes && (
+                      <div>
+                        <span className="font-medium text-gray-600">Additional Notes:</span>
+                        <p className="text-gray-800 mt-1">{report.additionalNotes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMentoringDetailsDialogOpen(false)}>
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Edit Dialog with Competency Selection */}
       <Dialog open={openEditDialog} onOpenChange={setOpenEditDialog}>
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
@@ -579,6 +684,144 @@ export default function MasterPage() {
                   setEditingRow({ ...editingRow, seafarerCode: e.target.value.toUpperCase() })
                 }
               />
+            </div>
+
+            {/* Additional Master Report Fields */}
+            <div>
+              <Label htmlFor="edit-vesselName">Vessel Name</Label>
+              <Input
+                id="edit-vesselName"
+                placeholder="Vessel Name"
+                value={editingRow?.vesselName || ""}
+                onChange={(e) =>
+                  editingRow &&
+                  setEditingRow({ ...editingRow, vesselName: e.target.value.toUpperCase() })
+                }
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-jabatan">Position</Label>
+              <Input
+                id="edit-jabatan"
+                placeholder="Position"
+                value={editingRow?.jabatan || ""}
+                onChange={(e) =>
+                  editingRow &&
+                  setEditingRow({ ...editingRow, jabatan: e.target.value.toUpperCase() })
+                }
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-age">Age</Label>
+              <Input
+                id="edit-age"
+                placeholder="Age"
+                value={editingRow?.age || ""}
+                onChange={(e) =>
+                  editingRow &&
+                  setEditingRow({ ...editingRow, age: e.target.value })
+                }
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-certificate">Certificate</Label>
+              <Input
+                id="edit-certificate"
+                placeholder="Certificate"
+                value={editingRow?.certificate || ""}
+                onChange={(e) =>
+                  editingRow &&
+                  setEditingRow({ ...editingRow, certificate: e.target.value.toUpperCase() })
+                }
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-idpProgram">IDP Program</Label>
+              <Input
+                id="edit-idpProgram"
+                placeholder="IDP Program"
+                value={editingRow?.idpProgram || ""}
+                onChange={(e) =>
+                  editingRow &&
+                  setEditingRow({ ...editingRow, idpProgram: e.target.value })
+                }
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-performanceScore">Performance Score</Label>
+              <Input
+                id="edit-performanceScore"
+                placeholder="Performance Score"
+                type="number"
+                value={editingRow?.performanceScore || ""}
+                onChange={(e) =>
+                  editingRow &&
+                  setEditingRow({ ...editingRow, performanceScore: parseInt(e.target.value) || 0 })
+                }
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-readiness">Readiness</Label>
+              <Input
+                id="edit-readiness"
+                placeholder="Readiness"
+                value={editingRow?.readiness || ""}
+                onChange={(e) =>
+                  editingRow &&
+                  setEditingRow({ ...editingRow, readiness: e.target.value })
+                }
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="edit-talentClassified">Talent Classified</Label>
+              <Input
+                id="edit-talentClassified"
+                placeholder="Talent Classified"
+                value={editingRow?.talentClassified || ""}
+                onChange={(e) =>
+                  editingRow &&
+                  setEditingRow({ ...editingRow, talentClassified: e.target.value })
+                }
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Mentoring Programs for {editingRow?.nama}</Label>
+              {loadingLinkedMentoring ? (
+                <div className="p-3 bg-blue-50 rounded-md flex items-center gap-2">
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  <p className="text-sm text-blue-700">Loading mentoring programs...</p>
+                </div>
+              ) : linkedMentoringReports.length === 0 ? (
+                <div className="p-3 bg-gray-50 rounded-md">
+                  <p className="text-sm text-gray-600">
+                    No mentoring programs found for <strong>{editingRow?.nama}</strong>
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-2">
+                  <div className="p-3 bg-green-50 border border-green-200 rounded-md">
+                    <p className="text-sm text-green-800 font-medium">
+                      Found {linkedMentoringReports.length} mentoring program{linkedMentoringReports.length > 1 ? 's' : ''}
+                    </p>
+                  </div>
+                  <Button
+                    variant="outline"
+                    className="w-full"
+                    type="button"
+                    onClick={() => setMentoringDetailsDialogOpen(true)}
+                  >
+                    View All Programs ({linkedMentoringReports.length})
+                  </Button>
+                </div>
+              )}
             </div>
 
             <div className="space-y-2">
@@ -696,8 +939,8 @@ export default function MasterPage() {
         }`}
       >
         <Table className="min-w-[2000px] border-collapse">
-          <TableHeader className="sticky top-0 bg-background z-50">
-            <TableRow>
+          <TableHeader className="sticky top-0 bg-background z-50 shadow-sm">
+            <TableRow className="bg-background">
               {isEditMode && (
                 <TableHead className="text-center sticky left-0 z-40 bg-background w-[50px]">
                   <button
@@ -807,10 +1050,23 @@ export default function MasterPage() {
                   <TableCell className="text-center">{row.talentClassified || "-"}</TableCell>
                   <TableCell className="text-center">{row.readiness || "-"}</TableCell>
                   <TableCell className="text-center">{row.certificateEligible || "-"}</TableCell>
+
+                  {/* Actions Column */}
+                  <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => handleViewMentoringPrograms(row, e)}
+                      className="text-xs"
+                    >
+                      View Programs
+                    </Button>
+                  </TableCell>
+
                   {/* Dynamic assessment type score columns */}
                   {assessmentTypeColumns.map((assessmentTypeName) => (
                     <TableCell key={assessmentTypeName} className="text-center">
-                      {getScoreForAssessmentType(row, assessmentTypeName)}
+                      <Badge variant={"secondary"}>{getScoreForAssessmentType(row, assessmentTypeName)}</Badge>
                     </TableCell>
                   ))}
                 </TableRow>

@@ -123,8 +123,6 @@ func (c *RouterConfig) SetupGuestRouter() {
 		options.GET("/question/:questionId", c.OptionController.FindByQuestionId)
 	}
 
-	
-
 	// Combined question-option routes (Public access - only read operations)
 	questionsWithOptions := c.App.Group("api/questions-with-options")
 	{
@@ -168,6 +166,7 @@ func (r *RouterConfig) SetupMasterRouter() {
 
 	{
 		group.GET("", r.MasterController.FindAll)
+		group.GET("/mentoring-programs", r.MasterController.GetMentoringPrograms)
 		group.GET("/:id", r.MasterController.FindById)
 		group.POST("", r.MasterController.Create)
 		group.PUT("/:id", r.MasterController.Update)
