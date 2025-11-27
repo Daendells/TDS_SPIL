@@ -83,7 +83,7 @@ func Bootstrap(config *BootstrapConfig) {
 	questionService := services.NewQuestionService(questionRepository, config.Validate)
 	optionService := services.NewOptionService(optionRepository, config.Validate)
 	assessmentResultService := services.NewAssessmentResultService(assessmentResultRepository, questionRepository, optionRepository, reportRepository, config.Log, config.Validate)
-	assessmentService := services.NewAssessmentService(repositories.NewAssessmentRepository(), config.Validate)
+	assessmentService := services.NewAssessmentService(repositories.NewAssessmentRepository(), assessmentTypeRepository, config.Validate)
 	assessmentTypeService := services.NewAssessmentTypeService(assessmentTypeRepository, config.Validate)
 	seafarerAssessmentService := services.NewSeafarerAssessmentService(seafarerAssessmentRepository, reportRepository, config.Validate)
 	masterService := services.NewMasterService(config.DB, config.Log, config.Validate, masterRepository)

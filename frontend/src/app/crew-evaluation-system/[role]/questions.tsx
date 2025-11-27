@@ -312,7 +312,7 @@ export default function Questions({
                 </div>
 
                 <div className="text-gray-700 text-lg leading-relaxed mb-6 flex flex-col gap-2">
-                  {currentQuestion?.imageUrl && (
+                  {currentQuestion?.isImage && (
                     <Image
                       src={BASE_URL + currentQuestion?.imageUrl}
                       width={300}
@@ -358,7 +358,7 @@ export default function Questions({
                         >
                           <span className="font-medium">{option.optionLetter}.</span>{" "}
                           <div className="flex flex-col gap-2">
-                            {option?.imageUrl && (
+                            {option?.isImage && (
                               <Image
                                 src={BASE_URL + option?.imageUrl}
                                 width={300}
