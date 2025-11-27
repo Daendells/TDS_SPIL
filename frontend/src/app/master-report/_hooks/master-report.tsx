@@ -55,8 +55,6 @@ export function useMasterReports(initialPageSize = 10) {
           signal: controller.signal,
         });
 
-        console.log("Raw response:", response.data);
-
         let apiData = [];
 
         // Handle the nested structure
@@ -69,7 +67,6 @@ export function useMasterReports(initialPageSize = 10) {
         }
 
         const parsedReports: IReport[] = apiData;
-        console.log("Parsed reports:", parsedReports);
 
         // Extract pagination metadata safely
         const apiMeta = response.data?.data;
@@ -83,8 +80,6 @@ export function useMasterReports(initialPageSize = 10) {
           has_more: apiMeta?.has_more ?? parsedReports.length >= paginationRequest.pageSize,
           first_page: apiMeta?.first_page ?? false,
         };
-
-        console.log("Final pagination result:", paginationResult);
 
         // Extract available mentoring reports from response
         if (
@@ -108,7 +103,6 @@ export function useMasterReports(initialPageSize = 10) {
         });
       } catch (err) {
         if (!axios.isCancel(err)) {
-          console.error("Fetch error:", err);
           const error = err as { response?: { data?: { error?: string } }; message?: string };
           toast.error(error.response?.data?.error || error.message || "Failed to fetch data");
         }
@@ -150,7 +144,6 @@ export function useMasterReports(initialPageSize = 10) {
       });
       return res.data;
     } catch (err) {
-      console.error("Failed to create report:", err);
       const error = err as { response?: { data?: { error?: string } } };
       toast.error(error.response?.data?.error || "Failed to add report");
       throw err;
@@ -175,7 +168,6 @@ export function useMasterReports(initialPageSize = 10) {
 
       return res.data;
     } catch (err) {
-      console.error("Failed to delete report:", err);
       const error = err as { response?: { data?: { error?: string } } };
       toast.error(error.response?.data?.error || "Failed to delete report");
       throw err;
@@ -200,7 +192,6 @@ export function useMasterReports(initialPageSize = 10) {
 
       return res.data;
     } catch (err) {
-      console.error("Failed to update report:", err);
       const error = err as { response?: { data?: { error?: string } } };
       toast.error(error.response?.data?.error || "Failed to update report");
       throw err;

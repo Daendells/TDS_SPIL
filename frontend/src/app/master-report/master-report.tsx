@@ -53,7 +53,7 @@ import { Label } from "@/components/ui/label";
 import { useMasterReports } from "./_hooks/master-report";
 import { useMasterReportUI } from "./_hooks/useMasterReportUI";
 import { useGetAllAssessmentTypes } from "./_hooks/useAssessmentType";
-import type { IReport, IMentoringReport } from "@/types/global-types";
+import type { IReport } from "@/types/global-types";
 
 /* Dynamic sticky offset calculator */
 function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pinnedCount = 2) {
@@ -84,7 +84,6 @@ export default function MasterPage() {
   const {
     onCallApi,
     paginationData,
-    availableMentoringReports,
     paginationRequest,
     setPaginationRequest,
     setPageSize,
@@ -132,8 +131,6 @@ export default function MasterPage() {
     isEditFormValid,
     toggleCompetencySelection,
     removeCompetency,
-    resetForm,
-    resetEditForm,
   } = useMasterReportUI();
 
   const tableRef = useRef<HTMLDivElement>(null);
@@ -205,7 +202,7 @@ export default function MasterPage() {
     if (!isEditFormValid()) return toast.error("Please fill in all fields!");
     if (!editingRow) return;
     try {
-      const updatePayload: any = {
+      const updatePayload: Partial<IReport> = {
         nama: editingRow.nama,
         seamanCode: editingRow.seamanCode,
         seafarerCode: editingRow.seafarerCode,
@@ -247,7 +244,6 @@ export default function MasterPage() {
         updatePayload.competencies = [];
       }
 
-      console.log("Update payload:", updatePayload);
       await updateReport(editingRow.id, updatePayload);
 
       setOpenEditDialog(false);
@@ -323,8 +319,6 @@ export default function MasterPage() {
       fetchLinkedMentoringReports(row.nama);
     }
 
-    console.log("Editing row:", row);
-    console.log("Existing competencies:", competencyIds);
     setOpenEditDialog(true);
   };
 
@@ -562,7 +556,7 @@ export default function MasterPage() {
                 <p className="text-gray-600">No mentoring programs found</p>
               </div>
             ) : (
-              linkedMentoringReports.map((report: any, index: number) => (
+              linkedMentoringReports.map((report, index) => (
                 <div key={report.id} className="p-4 border rounded-lg bg-white space-y-3">
                   <div className="flex items-center justify-between border-b pb-2">
                     <h3 className="text-lg font-semibold text-gray-800">
