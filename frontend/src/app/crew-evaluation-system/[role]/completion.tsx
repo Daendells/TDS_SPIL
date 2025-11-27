@@ -30,7 +30,7 @@ export default function Completion({ assessmentData, clearStoredData, role }: Co
     window.close();
     // Fallback if window.close() doesn't work
     setTimeout(() => {
-      window.location.href = "/";
+      window.location.href = "/crew-evaluation-system";
     }, 100);
   };
 

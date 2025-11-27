@@ -5,6 +5,7 @@ import (
 	"backend/internal/models/domain"
 	"backend/internal/models/web"
 	"backend/internal/repositories"
+	"strings"
 
 	"github.com/go-playground/validator/v10"
 	"gorm.io/gorm"
@@ -248,7 +249,7 @@ func (service *seafarerAssessmentServiceImpl) CheckAssignmentWithRole(db *gorm.D
 
 	// Record found, so it's assigned. Now fetch the report data
 	report, reportErr := service.ReportRepository.FindBySeafarerCode(db, seafarerCode, &domain.Report{})
-	
+
 	// Convert to web.ReportData if report found
 	var reportData *web.ReportData
 	if reportErr == nil {
@@ -266,8 +267,24 @@ func (service *seafarerAssessmentServiceImpl) CheckAssignmentWithRole(db *gorm.D
 			StartDate: report.StartDate,
 		}
 		reportData = &reportWebData
+
+		// Check if jabatan matches assessment name (case insensitive)
+		jabatanUpper := strings.ToUpper(report.Jabatan)
+		assessmentNameUpper := strings.ToUpper(assessment.AssessmentName)
+
+		if jabatanUpper != assessmentNameUpper {
+			return web.AssignmentCheckResponse{
+				IsAssigned: false,
+				Message: "Jabatan '" + report.Jabatan + "' tidak sesuai dengan assessment '" + assessment.AssessmentName + "'. Pastikan Anda membuka halaman assessment yang sesuai dengan jabatan Anda.",
+				SeafarerCode: seafarerCode,
+				AssessmentTypeID: assessmentTypeID,
+				PersonalData: reportData,
+				AttemptsCount: seafarerAssessment.AttemptsCount,
+				MaxAttempts: assessmentType.MaxAttempts,
+			}, nil
+		}
 	}
-	
+
 	response := web.AssignmentCheckResponse{
 		IsAssigned: true,
 		Message: "Seafarer is assigned to this assessment type and role matches",

@@ -334,7 +334,7 @@ export default function Section3({
 
                 {/* Question Statement */}
                 <div className="mb-8 p-6 bg-gray-50 rounded-lg border-l-4 border-blue-400 flex flex-col gap-2">
-                  {currentQuestion?.imageUrl && (
+                  {currentQuestion?.isImage && (
                     <Image
                       src={BASE_URL + currentQuestion?.imageUrl}
                       width={300}

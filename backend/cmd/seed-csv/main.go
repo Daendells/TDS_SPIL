@@ -93,6 +93,13 @@ func parseStringPtr(s string) *string {
 	return &s
 }
 
+func parseString(s string) string {
+	if s == "" || s == "NULL" {
+		return ""
+	}
+	return s
+}
+
 func parseInt(s string) int {
 	if s == "" || s == "NULL" {
 		return 0
@@ -169,8 +176,8 @@ func seedUsersFromCSV(db *gorm.DB, filePath string) error {
 		}
 		user := domain.User{
 			ID:       parseInt(record[0]),
-			Username: record[1],
-			Password: record[2],
+			Username: parseString(record[1]),
+			Password: parseString(record[2]),
 		}
 		if err := db.FirstOrCreate(&user, domain.User{Username: user.Username}).Error; err != nil {
 			return err
@@ -191,7 +198,7 @@ func seedAssessmentTypesFromCSV(db *gorm.DB, filePath string) error {
 		}
 		assessmentType := domain.AssessmentType{
 			ID:                 parseUint64(record[0]),
-			AssessmentTypeName: record[1],
+			AssessmentTypeName: parseString(record[1]),
 			StartTime:          parseTime(record[2]),
 			EndTime:            parseTime(record[3]),
 			MaxAttempts:        parseIntPtr(record[4]),
@@ -216,8 +223,8 @@ func seedAssessmentsFromCSV(db *gorm.DB, filePath string) error {
 		assessment := domain.Assessment{
 			AssessmentID:      parseUint64(record[0]),
 			AssessTypeID:      parseUint64Ptr(record[1]),
-			Role:              record[2],
-			AssessmentName:    record[3],
+			Role:              parseString(record[2]),
+			AssessmentName:    parseString(record[3]),
 			UsingTimer:        parseBool(record[4]),
 			TimerLimitMinutes: parseUint64Ptr(record[5]),
 		}
@@ -240,10 +247,10 @@ func seedCompetencyTypesFromCSV(db *gorm.DB, filePath string) error {
 		}
 		competencyType := domain.CompetencyType{
 			ID:          parseInt(record[0]),
-			Code:        record[1],
-			Name:        record[2],
-			Description: record[3],
-			Category:    record[4],
+			Code:        parseString(record[1]),
+			Name:        parseString(record[2]),
+			Description: parseString(record[3]),
+			Category:    parseString(record[4]),
 			IsActive:    parseBool(record[5]),
 		}
 		if err := db.FirstOrCreate(&competencyType, domain.CompetencyType{ID: competencyType.ID}).Error; err != nil {
@@ -267,10 +274,10 @@ func seedTrainingsFromCSV(db *gorm.DB, filePath string) error {
 			No:                parseInt(record[0]),
 			CompetencyTypeID:  parseInt(record[1]),
 			Level:             parseInt(record[2]),
-			DeskripsiPerilaku: record[3],
-			ToolsTraining:     record[4],
-			Kode:              record[5],
-			TopikTraining:     record[6],
+			DeskripsiPerilaku: parseString(record[3]),
+			ToolsTraining:     parseString(record[4]),
+			Kode:              parseString(record[5]),
+			TopikTraining:     parseString(record[6]),
 			GeneratedFileURL:  parseStringPtr(record[7]),
 			GeneratedPdfURL:   parseStringPtr(record[8]),
 		}
@@ -297,7 +304,7 @@ func seedCompetencyProgramMappingsFromCSV(db *gorm.DB, filePath string) error {
 		mapping := domain.CompetencyProgramMapping{
 			ID:                  parseInt(record[0]),
 			CompetencyTypeID:    parseInt(record[1]),
-			Program:             record[2],
+			Program:             parseString(record[2]),
 			TrainingMaterial1ID: parseIntPtr(record[3]),
 			TrainingMaterial2ID: parseIntPtr(record[4]),
 			Category:            "M", // Default value, will be calculated dynamically by training_plan_service
@@ -321,7 +328,7 @@ func seedAspectsFromCSV(db *gorm.DB, filePath string) error {
 		}
 		aspect := domain.Aspect{
 			ID:           parseInt(record[0]),
-			Name:         record[1],
+			Name:         parseString(record[1]),
 			Weight:       parseInt(record[2]),
 			AssessmentID: parseInt(record[3]),
 			QuestionID:   parseIntPtr(record[4]),
@@ -345,8 +352,8 @@ func seedQuestionsFromCSV(db *gorm.DB, filePath string) error {
 		}
 		question := domain.Question{
 			QuestionID:   parseInt(record[0]),
-			Role:         record[1],
-			QuestionText: record[2],
+			Role:         parseString(record[1]),
+			QuestionText: parseString(record[2]),
 			Category:     parseStringPtr(record[3]),
 			IsImage:      parseStringPtr(record[4]),
 			ImageURL:     parseStringPtr(record[5]),
@@ -370,14 +377,15 @@ func seedOptionsFromCSV(db *gorm.DB, filePath string) error {
 		if len(record) < 7 {
 			continue
 		}
+
 		option := domain.Option{
 			OptionID:     parseInt(record[0]),
 			QuestionID:   parseInt(record[1]),
-			OptionLetter: record[2],
-			OptionText:   record[3],
+			OptionLetter: parseString(record[2]),
+			OptionText:   parseString(record[3]),
 			Score:        parseInt(record[4]),
 			IsImage:      parseInt(record[5]),
-			ImageUrl:     record[6],
+			ImageUrl:     parseString(record[6]),
 		}
 		if err := db.FirstOrCreate(&option, domain.Option{OptionID: option.OptionID}).Error; err != nil {
 			return err
@@ -398,20 +406,20 @@ func seedReportsFromCSV(db *gorm.DB, filePath string) error {
 		}
 		report := domain.Report{
 			ID:                         parseInt(record[0]),
-			SeamanCode:                 record[1],
-			SeafarerCode:               record[2],
-			Nama:                       record[3],
-			IDP:                        record[4],
-			Jabatan:                    record[5],
-			VesselName:                 record[6],
-			Certificate:                record[7],
-			Age:                        record[8],
-			TanggalLahir:               record[9],
+			SeamanCode:                 parseString(record[1]),
+			SeafarerCode:               parseString(record[2]),
+			Nama:                       parseString(record[3]),
+			IDP:                        parseString(record[4]),
+			Jabatan:                    parseString(record[5]),
+			VesselName:                 parseString(record[6]),
+			Certificate:                parseString(record[7]),
+			Age:                        parseString(record[8]),
+			TanggalLahir:               parseString(record[9]),
 			StartDate:                  parseTime(record[10]),
-			WarningLetter:              record[11],
-			CaseHistory:                record[12],
-			YearOfCase:                 record[13],
-			VesselHistory:              record[14],
+			WarningLetter:              parseString(record[11]),
+			CaseHistory:                parseString(record[12]),
+			YearOfCase:                 parseString(record[13]),
+			VesselHistory:              parseString(record[14]),
 			KonditeReview:              parseInt(record[15]),
 			KpiVessel:                  parseInt(record[16]),
 			PerformanceScore:           parseInt(record[17]),
@@ -419,38 +427,38 @@ func seedReportsFromCSV(db *gorm.DB, filePath string) error {
 			AssessmentCenter:           parseInt(record[19]),
 			PotentialScore:             parseInt(record[20]),
 			HavQuadran:                 parseInt(record[21]),
-			HavMapping:                 record[22],
-			CompetencyGapAnalysis:      record[23],
+			HavMapping:                 parseString(record[22]),
+			CompetencyGapAnalysis:      parseString(record[23]),
 			TotalGap:                   parseInt(record[24]),
 			Strength:                   parseInt(record[25]),
-			TalentClassified:           record[26],
-			IDPProgram:                 record[27],
+			TalentClassified:           parseString(record[26]),
+			IDPProgram:                 parseString(record[27]),
 			HavQuadran2:                parseInt(record[28]),
-			TalentClassified2:          record[29],
-			Readiness:                  record[30],
-			CertificateEligible:        record[31],
-			TrainingCompleted:          record[32],
-			TrainingPlanned:            record[33],
-			MentoringCompleted:         record[34],
-			MentoringPlanned:           record[35],
-			CoachingCompleted:          record[36],
-			CoachingPlanned:            record[37],
-			DataIncumbent:              record[38],
-			SuccessionVessel:           record[39],
-			SuccessionRank:             record[40],
-			IDPStart:                   record[41],
-			IDPMentor:                  record[42],
-			IDPCoach:                   record[43],
+			TalentClassified2:          parseString(record[29]),
+			Readiness:                  parseString(record[30]),
+			CertificateEligible:        parseString(record[31]),
+			TrainingCompleted:          parseString(record[32]),
+			TrainingPlanned:            parseString(record[33]),
+			MentoringCompleted:         parseString(record[34]),
+			MentoringPlanned:           parseString(record[35]),
+			CoachingCompleted:          parseString(record[36]),
+			CoachingPlanned:            parseString(record[37]),
+			DataIncumbent:              parseString(record[38]),
+			SuccessionVessel:           parseString(record[39]),
+			SuccessionRank:             parseString(record[40]),
+			IDPStart:                   parseString(record[41]),
+			IDPMentor:                  parseString(record[42]),
+			IDPCoach:                   parseString(record[43]),
 			CreatedAt:                  parseTime(record[44]),
 			UpdatedAt:                  parseTime(record[45]),
-			User:                       record[46],
+			User:                       parseString(record[46]),
 			ReadinessMonth:             parseIntPtr(record[47]),
 			EducationFulfillmentMonths: parseIntPtr(record[48]),
 			TotalReadinessUpdateMonths: parseIntPtr(record[49]),
-			Keterangan:                 record[50],
+			Keterangan:                 parseString(record[50]),
 		}
 		if len(record) > 51 {
-			report.TMNM = record[51]
+			report.TMNM = parseString(record[51])
 		}
 		if err := db.FirstOrCreate(&report, domain.Report{ID: report.ID}).Error; err != nil {
 			return err
@@ -471,9 +479,9 @@ func seedSeafarerAssessmentsFromCSV(db *gorm.DB, filePath string) error {
 		}
 		assessment := domain.SeafarerAssessment{
 			ID:               parseUint64(record[0]),
-			SeafarerCode:     record[1],
+			SeafarerCode:     parseString(record[1]),
 			AssessmentTypeID: parseUint64(record[2]),
-			Status:           record[3],
+			Status:           parseString(record[3]),
 			AttemptsCount:    parseUint64(record[4]),
 		}
 		if err := db.FirstOrCreate(&assessment, domain.SeafarerAssessment{ID: assessment.ID}).Error; err != nil {
@@ -507,10 +515,10 @@ func seedTrainingSchedulesFromCSV(db *gorm.DB, filePath string) error {
 		competencyTypeID := int64(competencyType.ID)
 		schedule := domain.TrainingSchedule{
 			ID:               parseInt(record[0]),
-			Program:          record[1],
-			CompetencyCode:   record[2],
+			Program:          parseString(record[1]),
+			CompetencyCode:   parseString(record[2]),
 			CompetencyTypeID: &competencyTypeID,
-			TrainingTopic:    record[3],
+			TrainingTopic:    parseString(record[3]),
 			MaterialType:     parseInt(record[4]),
 			ScheduledDate:    *scheduledDate,
 		}

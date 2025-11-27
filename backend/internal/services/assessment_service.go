@@ -2,6 +2,7 @@ package services
 
 import (
 	"backend/internal/models/converter"
+	"backend/internal/models/domain"
 	"backend/internal/models/web"
 	"backend/internal/repositories"
 
@@ -18,14 +19,16 @@ type AssessmentService interface {
 }
 
 type assessmentServiceImpl struct {
-	AssessmentRepository repositories.AssessmentRepository
-	Validate *validator.Validate
+	AssessmentRepository     repositories.AssessmentRepository
+	AssessmentTypeRepository repositories.AssessmentTypeRepository
+	Validate                 *validator.Validate
 }
 
-func NewAssessmentService (assessmentRepository repositories.AssessmentRepository, validate *validator.Validate) AssessmentService {
+func NewAssessmentService (assessmentRepository repositories.AssessmentRepository, assessmentTypeRepository repositories.AssessmentTypeRepository, validate *validator.Validate) AssessmentService {
 	return &assessmentServiceImpl{
-		AssessmentRepository: assessmentRepository,
-		Validate: validate,
+		AssessmentRepository:     assessmentRepository,
+		AssessmentTypeRepository: assessmentTypeRepository,
+		Validate:                 validate,
 	}
 }
 
@@ -59,7 +62,22 @@ func (service *assessmentServiceImpl) Create(db *gorm.DB, request *web.Assessmen
 		return web.AssessmentData{}, err
 	}
 
+	// Create assessment type with default max_attempts = 1
+	defaultMaxAttempts := 1
+	assessmentType := domain.AssessmentType{
+		AssessmentTypeName: request.AssessmentName,
+		MaxAttempts:        &defaultMaxAttempts,
+	}
+
+	err = service.AssessmentTypeRepository.Create(db, &assessmentType)
+	if err != nil {
+		return web.AssessmentData{}, err
+	}
+
+	// Create assessment with the assessment type ID
 	assessment := converter.AssessmentCreateRequestToAssessment(request)
+	assessment.AssessTypeID = &assessmentType.ID
+
 	err = service.AssessmentRepository.Create(db, &assessment)
 	if err != nil {
 		return web.AssessmentData{}, err
