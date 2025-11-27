@@ -5,40 +5,42 @@ import (
 )
 
 type MasterReport struct {
-	ID                         int    `json:"id" gorm:"column:id;primaryKey"`
-	VesselName                 string `json:"vesselName" gorm:"column:vessel_name"`
-	Nama                       string `json:"nama" gorm:"column:nama"`
-	Jabatan                    string `json:"jabatan" gorm:"column:jabatan"`
-	User                       string `json:"user" gorm:"column:user"`
-	SeamanCode                 string `json:"seamanCode" gorm:"column:seaman_code"`
-	SeafarerCode               string `json:"seafarerCode" gorm:"column:seafarer_code"`
-	Certificate                string `json:"certificate" gorm:"column:certificate"`
-	Age                        string `json:"age" gorm:"column:age"`
-	KonditeReview              int    `json:"konditeReview" gorm:"column:kondite_review"`
-	KpiVessel                  int    `json:"kpiVessel" gorm:"column:kpi_vessel"`
-	PerformanceScore           int    `json:"performanceScore" gorm:"column:performance_score"`
-	ValueAssessment            int    `json:"valueAssessment" gorm:"column:value_assessment"`
-	AssessmentCenter           int    `json:"assessmentCenter" gorm:"column:assessment_center"`
-	PotentialScore             int    `json:"potentialScore" gorm:"column:potential_score"`
-	HavQuadran                 int    `json:"havQuadran" gorm:"column:hav_quadran"`
-	HavMapping                 string `json:"havMapping" gorm:"column:hav_mapping"`
-	CompetencyGapAnalysis      string `json:"competencyGapAnalysis" gorm:"column:competency_gap_analysis"`
-	TotalGap                   int    `json:"totalGap" gorm:"column:total_gap"`
-	Strength                   int    `json:"strength" gorm:"column:strength"`
-	TalentClassified           string `json:"talentClassified" gorm:"column:talent_classified"`
-	IDPProgram                 string `json:"idpProgram" gorm:"column:idp_program"`
-	HavQuadran2                int    `json:"havQuadran2" gorm:"column:hav_quadran2"`
-	TalentClassified2          string `json:"talentClassified2" gorm:"column:talent_classified2"`
-	Readiness                  string `json:"readiness" gorm:"column:readiness"`
-	CertificateEligible        string `json:"certificateEligible" gorm:"column:certificate_eligible"`
-	EducationFulfillmentMonths *int   `json:"educationFulfillmentMonths" gorm:"column:education_fulfillment_months"`
-	TotalReadinessUpdateMonths *int   `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness_update_months"`
-	Keterangan                 string `json:"keterangan" gorm:"column:keterangan"`
-	TmNm                       string `json:"tmNm" gorm:"column:tm_nm"`
-	StartDate                  string `json:"startDate" gorm:"column:start_date"` //
+	ID                         int     `json:"id" gorm:"column:id;primaryKey"`
+	VesselName                 string  `json:"vesselName" gorm:"column:vessel_name"`
+	Nama                       string  `json:"nama" gorm:"column:nama"`
+	Jabatan                    string  `json:"jabatan" gorm:"column:jabatan"`
+	User                       string  `json:"user" gorm:"column:user"`
+	SeamanCode                 string  `json:"seamanCode" gorm:"column:seaman_code"`
+	SeafarerCode               string  `json:"seafarerCode" gorm:"column:seafarer_code"`
+	Certificate                string  `json:"certificate" gorm:"column:certificate"`
+	Age                        string  `json:"age" gorm:"column:age"`
+	KonditeReview              int     `json:"konditeReview" gorm:"column:kondite_review"`
+	KpiVessel                  int     `json:"kpiVessel" gorm:"column:kpi_vessel"`
+	PerformanceScore           int     `json:"performanceScore" gorm:"column:performance_score"`
+	ValueAssessment            int     `json:"valueAssessment" gorm:"column:value_assessment"`
+	AssessmentCenter           int     `json:"assessmentCenter" gorm:"column:assessment_center"`
+	PotentialScore             int     `json:"potentialScore" gorm:"column:potential_score"`
+	HavQuadran                 int     `json:"havQuadran" gorm:"column:hav_quadran"`
+	HavMapping                 string  `json:"havMapping" gorm:"column:hav_mapping"`
+	CompetencyGapAnalysis      string  `json:"competencyGapAnalysis" gorm:"column:competency_gap_analysis"`
+	TotalGap                   int     `json:"totalGap" gorm:"column:total_gap"`
+	Strength                   int     `json:"strength" gorm:"column:strength"`
+	TalentClassified           string  `json:"talentClassified" gorm:"column:talent_classified"`
+	IDPProgram                 string  `json:"idpProgram" gorm:"column:idp_program"`
+	HavQuadran2                int     `json:"havQuadran2" gorm:"column:hav_quadran2"`
+	TalentClassified2          string  `json:"talentClassified2" gorm:"column:talent_classified2"`
+	Readiness                  string  `json:"readiness" gorm:"column:readiness"`
+	CertificateEligible        string  `json:"certificateEligible" gorm:"column:certificate_eligible"`
+	EducationFulfillmentMonths *int    `json:"educationFulfillmentMonths" gorm:"column:education_fulfillment_months"`
+	TotalReadinessUpdateMonths *int    `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness_update_months"`
+	Keterangan                 string  `json:"keterangan" gorm:"column:keterangan"`
+	TmNm                       *string `json:"tmNm" gorm:"column:tm_nm"`
+	StartDate                  string  `json:"startDate" gorm:"column:start_date"` //
 	//optional, but if provided must be a valid date
-	GapCompetencies []GapCompetency `json:"gapCompetencies" gorm:"foreignKey:ReportID"`
-	ReportScores    []ReportScore   `json:"reportScores" gorm:"foreignKey:ReportID;references:ID"`
+	MentoringReportID *int64           `json:"mentoringReportId" gorm:"-"` // Not stored in DB, linked via mentee_names
+	GapCompetencies   []GapCompetency  `json:"gapCompetencies" gorm:"foreignKey:ReportID"`
+	ReportScores      []ReportScore    `json:"reportScores" gorm:"foreignKey:ReportID;references:ID"`
+	MentoringReport   *MentoringReport `json:"mentoringReport,omitempty" gorm:"-"` // Not stored in DB, fetched via API
 }
 
 type FullReport struct {
@@ -100,12 +102,15 @@ type FullReport struct {
 	TotalReadinessUpdateMonths *int `gorm:"column:total_readiness_update_months;default:0"`
 
 	Keterangan *string `gorm:"column:keterangan;default:null"`
-	TmNm       *int    `gorm:"column:tm_nm;default:0"`
+	TmNm       *string `gorm:"column:tm_nm;default:null"`
 
-	CreatedAt       time.Time       `gorm:"column:created_at;autoCreateTime"`
-	UpdatedAt       time.Time       `gorm:"column:updated_at;autoUpdateTime"`
-	GapCompetencies []GapCompetency `json:"gapCompetencies" gorm:"foreignKey:ReportID"`
-	ReportScores    []ReportScore   `json:"reportScores" gorm:"foreignKey:ReportID;references:ID"`
+	MentoringReportID *int64 `json:"mentoringReportId" gorm:"-"` // Not stored in DB, linked via mentee_names
+
+	CreatedAt       time.Time        `gorm:"column:created_at;autoCreateTime"`
+	UpdatedAt       time.Time        `gorm:"column:updated_at;autoUpdateTime"`
+	GapCompetencies []GapCompetency  `json:"gapCompetencies" gorm:"foreignKey:ReportID"`
+	ReportScores    []ReportScore    `json:"reportScores" gorm:"foreignKey:ReportID;references:ID"`
+	MentoringReport *MentoringReport `json:"mentoringReport,omitempty" gorm:"-"` // Not stored in DB, fetched via API
 }
 
 func (FullReport) TableName() string {

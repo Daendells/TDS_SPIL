@@ -142,3 +142,27 @@ func (c *MasterController) Delete(ctx *gin.Context) {
 
 	ctx.JSON(response.Code, response)
 }
+
+func (c *MasterController) GetMentoringPrograms(ctx *gin.Context) {
+	personName := ctx.Query("personName")
+	if personName == "" {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  "personName query parameter is required",
+		})
+		return
+	}
+
+	response, err := c.Service.GetMentoringProgramsByPersonName(personName)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(response.Code, response)
+}

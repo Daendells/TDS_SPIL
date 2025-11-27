@@ -2,13 +2,14 @@
 import { useEffect, useState, useRef, startTransition, useDeferredValue } from "react";
 import { toast } from "sonner";
 import { api } from "@/app/lib/api";
-import { IPaginationData, IPaginationRequest, IReport } from "@/types/global-types";
+import { IPaginationData, IPaginationRequest, IReport, IMentoringReport } from "@/types/global-types";
 import { useDebounce } from "use-debounce";
 import axios from "axios";
 
 export function useMasterReports(initialPageSize = 10) {
   const [onCallApi, setOnCallApi] = useState(false);
   const [paginationData, setPaginationData] = useState<IPaginationData<IReport> | null>(null);
+  const [availableMentoringReports, setAvailableMentoringReports] = useState<IMentoringReport[]>([]);
   const [pageSize, setPageSize] = useState(initialPageSize);
   const [paginationRequest, setPaginationRequest] = useState<IPaginationRequest>({
     anchorId: 0,
@@ -77,6 +78,11 @@ export function useMasterReports(initialPageSize = 10) {
         };
 
         console.log("Final pagination result:", paginationResult);
+
+        // Extract available mentoring reports from response
+        if (apiMeta?.availableMentoringReports && Array.isArray(apiMeta.availableMentoringReports)) {
+          setAvailableMentoringReports(apiMeta.availableMentoringReports);
+        }
 
         // Outdated response check
         if (lastQueryRef.current !== queryKey) return;
@@ -196,6 +202,7 @@ export function useMasterReports(initialPageSize = 10) {
   return {
     onCallApi,
     paginationData: deferredData,
+    availableMentoringReports,
     paginationRequest,
     setPaginationRequest,
     pageSize,

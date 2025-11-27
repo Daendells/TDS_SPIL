@@ -60,7 +60,33 @@ export interface IReport {
   idpStart: string;
   idpMentor: string;
   idpCoach: string;
+
+  // Mentoring Report Link
+  mentoringReportId?: number | null;
+  mentoringReport?: IMentoringReport;
+
   competencies: IGapCompetency[];
+}
+
+export interface IMentoringReport {
+  id: number;
+  mentorName: string;
+  period: string;
+  menteeNames: string[];
+  department: string;
+  program: string;
+  programTitle: string;
+  sessionNumber: string;
+  date: string;
+  duration: string;
+  purpose: string;
+  observation: string;
+  reflection: string;
+  actionPlan: string;
+  additionalNotes: string;
+  reportIds: number[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface IPaginationData<T> {
@@ -188,6 +214,15 @@ export interface IAssignmentUpdate {
   id: number;
   assessmentTypeId?: number;
   status?: string;
+}
+
+export interface ICompetencyType {
+  id: number;
+  code: string;
+  name: string;
+  description?: string;
+  category?: string;
+  isActive?: boolean;
 }
 
 export interface IGapCompetency {

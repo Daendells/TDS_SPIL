@@ -32,38 +32,40 @@ type ReportScoreData struct {
 
 // Mirrors domain.MasterReport 1:1 so the frontend gets all columns.
 type MasterReportData struct {
-	ID                         int                 `json:"id"`
-	VesselName                 string              `json:"vesselName"`
-	Nama                       string              `json:"nama"`
-	Jabatan                    string              `json:"jabatan"`
-	User                       string              `json:"user"`
-	SeamanCode                 string              `json:"seamanCode"`
-	SeafarerCode               string              `json:"seafarerCode"`
-	Certificate                string              `json:"certificate"`
-	Age                        string              `json:"age"`
-	KonditeReview              int                 `json:"konditeReview"`
-	KpiVessel                  int                 `json:"kpiVessel"`
-	PerformanceScore           int                 `json:"performanceScore"`
-	ValueAssessment            int                 `json:"valueAssessment"`
-	AssessmentCenter           int                 `json:"assessmentCenter"`
-	PotentialScore             int                 `json:"potentialScore"`
-	HavQuadran                 int                 `json:"havQuadran"`
-	HavMapping                 string              `json:"havMapping"`
-	CompetencyGapAnalysis      string              `json:"competencyGapAnalysis"`
-	TotalGap                   int                 `json:"totalGap"`
-	Strength                   int                 `json:"strength"`
-	TalentClassified           string              `json:"talentClassified"`
-	IDPProgram                 string              `json:"idpProgram"`
-	HavQuadran2                int                 `json:"havQuadran2"`
-	TalentClassified2          string              `json:"talentClassified2"`
-	Readiness                  string              `json:"readiness"`
-	CertificateEligible        string              `json:"certificateEligible"`
-	EducationFulfillmentMonths *int                `json:"educationFulfillmentMonths"`
-	TotalReadinessUpdateMonths *int                `json:"totalReadinessUpdateMonths"`
-	Keterangan                 string              `json:"keterangan"`
-	TmNm                       string                 `json:"tmNm"`
-	Competencies               []GapCompetencyData `json:"competencies,omitempty"`
-	ReportScores               []ReportScoreData   `json:"reportScores,omitempty"`
+	ID                         int                  `json:"id"`
+	VesselName                 string               `json:"vesselName"`
+	Nama                       string               `json:"nama"`
+	Jabatan                    string               `json:"jabatan"`
+	User                       string               `json:"user"`
+	SeamanCode                 string               `json:"seamanCode"`
+	SeafarerCode               string               `json:"seafarerCode"`
+	Certificate                string               `json:"certificate"`
+	Age                        string               `json:"age"`
+	KonditeReview              int                  `json:"konditeReview"`
+	KpiVessel                  int                  `json:"kpiVessel"`
+	PerformanceScore           int                  `json:"performanceScore"`
+	ValueAssessment            int                  `json:"valueAssessment"`
+	AssessmentCenter           int                  `json:"assessmentCenter"`
+	PotentialScore             int                  `json:"potentialScore"`
+	HavQuadran                 int                  `json:"havQuadran"`
+	HavMapping                 string               `json:"havMapping"`
+	CompetencyGapAnalysis      string               `json:"competencyGapAnalysis"`
+	TotalGap                   int                  `json:"totalGap"`
+	Strength                   int                  `json:"strength"`
+	TalentClassified           string               `json:"talentClassified"`
+	IDPProgram                 string               `json:"idpProgram"`
+	HavQuadran2                int                  `json:"havQuadran2"`
+	TalentClassified2          string               `json:"talentClassified2"`
+	Readiness                  string               `json:"readiness"`
+	CertificateEligible        string               `json:"certificateEligible"`
+	EducationFulfillmentMonths *int                 `json:"educationFulfillmentMonths"`
+	TotalReadinessUpdateMonths *int                 `json:"totalReadinessUpdateMonths"`
+	Keterangan                 string               `json:"keterangan"`
+	TmNm                       *string              `json:"tmNm"`
+	MentoringReportID          *int64               `json:"mentoringReportId,omitempty"`
+	MentoringReport            *MentoringReportData `json:"mentoringReport,omitempty"`
+	Competencies               []GapCompetencyData  `json:"competencies,omitempty"`
+	ReportScores               []ReportScoreData    `json:"reportScores,omitempty"`
 }
 
 type MasterListRequest struct {
@@ -89,14 +91,21 @@ func (r *DeleteMasterRequest) ParseID(param string) error {
 }
 
 type UpdateMasterRequest struct {
-	ID           uint    `json:"-"`
-	Nama         *string `json:"nama"`
-	SeafarerCode *string `json:"seafarerCode"`
-	SeamanCode   *string `json:"seamanCode"`
-	Jabatan      *string `json:"jabatan"`
-	VesselName   *string `json:"vesselName"`
-	StartDate    *string `json:"startDate"`
-	// hanya competency types
+	ID                uint    `json:"-"`
+	Nama              *string `json:"nama"`
+	SeafarerCode      *string `json:"seafarerCode"`
+	SeamanCode        *string `json:"seamanCode"`
+	Jabatan           *string `json:"jabatan"`
+	VesselName        *string `json:"vesselName"`
+	StartDate         *string `json:"startDate"`
+	Age               *string `json:"age"`
+	Certificate       *string `json:"certificate"`
+	IDPProgram        *string `json:"idpProgram"`
+	PerformanceScore  *int    `json:"performanceScore"`
+	Readiness         *string `json:"readiness"`
+	TalentClassified  *string `json:"talentClassified"`
+	MentoringReportID *int64  `json:"mentoringReportId"` // Link to mentoring report
+	// honly competency types
 	CompetencyUpdateRequests []CompetencyUpdateRequest `json:"competencies"`
 }
 
@@ -110,13 +119,14 @@ func (r *UpdateMasterRequest) ParseID(param string) error {
 }
 
 type MasterReportListResponse struct {
-	Data      []MasterReportData `json:"data"`
-	FirstID   int                `json:"firstId,omitempty"`
-	LastID    int                `json:"lastId,omitempty"`
-	PageSize  int                `json:"pageSize"`
-	HasMore   bool               `json:"hasMore"`
-	FirstPage bool               `json:"firstPage"`
-	Total     int                `json:"total"`
+	Data                      []MasterReportData    `json:"data"`
+	FirstID                   int                   `json:"firstId,omitempty"`
+	LastID                    int                   `json:"lastId,omitempty"`
+	PageSize                  int                   `json:"pageSize"`
+	HasMore                   bool                  `json:"hasMore"`
+	FirstPage                 bool                  `json:"firstPage"`
+	Total                     int                   `json:"total"`
+	AvailableMentoringReports []MentoringReportData `json:"availableMentoringReports,omitempty"`
 }
 
 // ReportData is the request body for creating a new report
@@ -151,7 +161,7 @@ type FullReportResponse struct {
 	EducationFulfillmentMonths *int                `json:"educationFulfillmentMonths"`
 	TotalReadinessUpdateMonths *int                `json:"totalReadinessUpdateMonths"`
 	Keterangan                 *string             `json:"keterangan"`
-	TmNm                       *int                `json:"tmNm"`
+	TmNm                       *string             `json:"tmNm"`
 	Competencies               []GapCompetencyData `json:"competencies"`
 	ReportScores               []ReportScoreData   `json:"reportScores,omitempty"`
 }
