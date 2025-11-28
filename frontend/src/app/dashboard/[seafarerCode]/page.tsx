@@ -11,6 +11,7 @@ import {
 } from "recharts";
 import { ChevronRightIcon } from "lucide-react";
 import MentoringListDialog from "@/components/mentoring-list-dialog";
+import CoachingListDialog from "@/components/coaching-list-dialog";
 import AssessmentResultDialog from "@/components/assessment-result-dialog";
 import { useGetReportBySeafarerCode } from "@/app/dashboard/_hooks/useReportData";
 import Image from "next/image";
@@ -26,6 +27,7 @@ interface PageProps {
 export default function TalentProfilePage({ params }: PageProps) {
   const { seafarerCode } = use(params);
   const [mentoringDialogOpen, setMentoringDialogOpen] = useState(false);
+  const [coachingDialogOpen, setCoachingDialogOpen] = useState(false);
   const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
 
   // Fetch report data using React Query hook
@@ -259,9 +261,15 @@ export default function TalentProfilePage({ params }: PageProps) {
           </div>
 
           {/* Coaching */}
-          <div className="border rounded-lg shadow-sm p-4 bg-white">
-            <h2 className="font-bold text-lg mb-4 pb-2 border-b">DATA COACHING</h2>
-            <div className="space-y-2 text-sm">
+          <div
+            className="border rounded-lg shadow-sm p-4 bg-white cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setCoachingDialogOpen(true)}
+          >
+            <div className="flex items-center justify-between">
+              <h2 className="font-bold text-lg">DATA COACHING</h2>
+              <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+            </div>
+            <div className="mt-2 text-sm text-gray-600">
               <p>
                 <strong>Sudah diikuti:</strong> {report.coachingCompleted}
               </p>
@@ -398,6 +406,13 @@ export default function TalentProfilePage({ params }: PageProps) {
       <MentoringListDialog
         open={mentoringDialogOpen}
         setOpen={setMentoringDialogOpen}
+        reportId={report.id}
+        reportName={report.nama || "Unknown"}
+      />
+
+      <CoachingListDialog
+        open={coachingDialogOpen}
+        setOpen={setCoachingDialogOpen}
         reportId={report.id}
         reportName={report.nama || "Unknown"}
       />

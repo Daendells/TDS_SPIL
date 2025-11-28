@@ -55,6 +55,7 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.SeafarerAssessment{},
 		&domain.Training{},
 		&domain.MentoringReport{},
+		&domain.CoachingReport{},
 
 		// Tables with multiple dependencies
 		&domain.Aspect{},

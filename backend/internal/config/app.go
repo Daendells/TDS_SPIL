@@ -62,6 +62,7 @@ func Bootstrap(config *BootstrapConfig) {
 	reportRepository := repositories.NewReportRepository(config.Log)
 	userRepository := repositories.NewUserReposiotry(config.Log)
 	mentoringReportRepository := repositories.NewMentoringReportRepository(config.Log)
+	coachingReportRepository := repositories.NewCoachingReportRepository(config.DB, config.Log)
 	questionRepository := repositories.NewQuestionRepository()
 	optionRepository := repositories.NewOptionRepository()
 	assessmentResultRepository := repositories.NewAssessmentResultRepository()
@@ -80,6 +81,7 @@ func Bootstrap(config *BootstrapConfig) {
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository)
 	userService := services.NewUserService(config.DB, config.Log, config.Validate, config.Config, userRepository)
 	mentoringReportService := services.NewMentoringReportService(config.DB, config.Log, config.Validate, mentoringReportRepository)
+	coachingReportService := services.NewCoachingReportService(coachingReportRepository, config.Log)
 	questionService := services.NewQuestionService(questionRepository, config.Validate)
 	optionService := services.NewOptionService(optionRepository, config.Validate)
 	assessmentResultService := services.NewAssessmentResultService(assessmentResultRepository, questionRepository, optionRepository, reportRepository, config.Log, config.Validate)
@@ -96,6 +98,7 @@ func Bootstrap(config *BootstrapConfig) {
 	reportController := controllers.NewReportController(reportService, config.Log)
 	userController := controllers.NewUserController(userService, config.Log)
 	mentoringReportController := controllers.NewMentoringReportController(mentoringReportService, config.Log)
+	coachingReportController := controllers.NewCoachingReportController(coachingReportService, config.Log)
 	questionController := controllers.NewQuestionController(questionService, optionService, config.DB)
 	optionController := controllers.NewOptionController(optionService, config.DB)
 	assessmentResultController := controllers.NewAssessmentResultController(assessmentResultService, config.Log, config.DB)
@@ -134,6 +137,7 @@ func Bootstrap(config *BootstrapConfig) {
 		ReportController:             reportController,
 		UserController:               userController,
 		MentoringReportController:    mentoringReportController,
+		CoachingReportController:     coachingReportController,
 		TrainingController:           trainingControllerDB,  // DB
 		TrainingGenController:        trainingGenController, // LLM Generator
 		TrainingPlanController:       trainingPlanController,

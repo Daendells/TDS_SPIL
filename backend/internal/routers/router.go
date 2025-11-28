@@ -12,6 +12,7 @@ type RouterConfig struct {
 	ReportController             *controllers.ReportController
 	UserController               *controllers.UserController
 	MentoringReportController    *controllers.MentoringReportController
+	CoachingReportController     *controllers.CoachingReportController
 	TrainingController           *controllers.TrainingController // DB
 	TrainingGenController        *traininggen.TrainingController // LLM Generator
 	TrainingPlanController       *controllers.TrainingPlanController
@@ -107,6 +108,16 @@ func (c *RouterConfig) SetupGuestRouter() {
 		mentoringReports.DELETE("/:id", c.MentoringReportController.Delete)
 		mentoringReports.GET("/by-mentee", c.MentoringReportController.FindByMenteeName)
 		mentoringReports.GET("/reports/:reportId", c.MentoringReportController.FindByReportID)
+	}
+
+	coachingReports := c.App.Group("coaching-reports")
+	{
+		coachingReports.POST("", c.CoachingReportController.Create)
+		coachingReports.GET("", c.CoachingReportController.GetAll)
+		coachingReports.GET("/:id", c.CoachingReportController.GetByID)
+		coachingReports.PUT("/:id", c.CoachingReportController.Update)
+		coachingReports.DELETE("/:id", c.CoachingReportController.Delete)
+		coachingReports.GET("/reports/:reportId", c.CoachingReportController.GetByReportID)
 	}
 
 	questions := c.App.Group("questions")

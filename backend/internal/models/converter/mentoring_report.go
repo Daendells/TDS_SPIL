@@ -2,6 +2,7 @@ package converter
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"backend/internal/models/domain"
 	"backend/internal/models/web"
@@ -20,9 +21,9 @@ func MentoringReportRequestToDomain(request *web.MentoringReportRequest) *domain
 		Department:      request.Department,
 		Program:         request.Program,
 		ProgramTitle:    request.ProgramTitle,
-		SessionNumber:   request.SessionNumber,
+		SessionNumber:   fmt.Sprintf("%d", request.SessionNumber),
 		Date:            request.Date,
-		Duration:        request.Duration,
+		Duration:        fmt.Sprintf("%d", request.Duration),
 		Purpose:         request.Purpose,
 		Observation:     request.Observation,
 		Reflection:      request.Reflection,
@@ -46,9 +47,9 @@ func MentoringReportUpdateRequestToDomain(request *web.MentoringReportUpdateRequ
 		Department:      request.Department,
 		Program:         request.Program,
 		ProgramTitle:    request.ProgramTitle,
-		SessionNumber:   request.SessionNumber,
+		SessionNumber:   fmt.Sprintf("%d", request.SessionNumber),
 		Date:            request.Date,
-		Duration:        request.Duration,
+		Duration:        fmt.Sprintf("%d", request.Duration),
 		Purpose:         request.Purpose,
 		Observation:     request.Observation,
 		Reflection:      request.Reflection,
