@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"backend/internal/services"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -210,4 +211,42 @@ func (c *TrainingPlanController) GetAvailablePrograms(ctx *gin.Context) {
 		"success": true,
 		"data":    programs,
 	})
+}
+
+func (c *TrainingPlanController) ExportTrainingPlanExcel(ctx *gin.Context) {
+	program := ctx.Query("program")
+	if program == "" {
+		program = "SDP"
+	}
+
+	validPrograms := map[string]bool{"SDP": true, "MDP": true, "FDP": true}
+	if !validPrograms[program] {
+		c.log.WithField("program", program).Warn("Invalid program for Excel export")
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"error": "Invalid program. Must be one of: SDP, MDP, FDP",
+		})
+		return
+	}
+
+	excelBuffer, err := c.trainingPlanService.GenerateTrainingPlanExcel(program)
+	if err != nil {
+		c.log.WithError(err).WithField("program", program).Error("Failed to generate Excel")
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"error": "Failed to generate Excel file",
+		})
+		return
+	}
+
+	filename := fmt.Sprintf("Training_Plan_%s_%s.xlsx", program, time.Now().Format("20060102_150405"))
+
+	ctx.Header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+	ctx.Header("Content-Disposition", fmt.Sprintf("attachment; filename=%s", filename))
+	ctx.Header("Content-Length", fmt.Sprintf("%d", excelBuffer.Len()))
+
+	ctx.Data(http.StatusOK, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", excelBuffer.Bytes())
+
+	c.log.WithFields(logrus.Fields{
+		"program":  program,
+		"filename": filename,
+	}).Info("Successfully exported training plan to Excel")
 }

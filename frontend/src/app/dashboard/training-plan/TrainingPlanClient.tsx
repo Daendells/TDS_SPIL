@@ -54,7 +54,6 @@ import {
 import TrainingScheduleTimeline from "./TrainingScheduleTimeline";
 import CompetencyMappingCMS from "./CompetencyMappingCMS";
 import TrainingMaterialTab from "./TrainingMaterialTab";
-import { generateTrainingPlanMatrixPDF } from "@/lib/pdf/trainingPlanMatrixPDF";
 
 export default function TrainingPlanClient() {
   const [selectedProgram, setSelectedProgram] = useState("SDP");
@@ -99,64 +98,34 @@ export default function TrainingPlanClient() {
     }
   };
 
-  const handleExportPDF = () => {
+  const handleExportExcel = async () => {
     if (!trainingPlan?.summary) {
       toast.error("No training plan data available to export");
       return;
     }
 
-    const schedules: Array<{
-      id: number;
-      program: string;
-      competencyCode: string;
-      trainingTopic: string;
-      materialType: number;
-      scheduledDate: string;
-    }> = [];
-
-    if (trainingPlan.summary.trainingMateri1) {
-      Object.entries(trainingPlan.summary.trainingMateri1).forEach(([competencyCode, date]) => {
-        const competency = competencyMapping?.[competencyCode];
-        if (competency) {
-          schedules.push({
-            id: schedules.length + 1,
-            program: selectedProgram,
-            competencyCode,
-            trainingTopic: competency.name,
-            materialType: 1,
-            scheduledDate: date,
-          });
-        }
-      });
-    }
-
-    if (trainingPlan.summary.trainingMateri2) {
-      Object.entries(trainingPlan.summary.trainingMateri2).forEach(([competencyCode, date]) => {
-        const competency = competencyMapping?.[competencyCode];
-        if (competency) {
-          schedules.push({
-            id: schedules.length + 1,
-            program: selectedProgram,
-            competencyCode,
-            trainingTopic: competency.name,
-            materialType: 2,
-            scheduledDate: date,
-          });
-        }
-      });
-    }
-
-    if (schedules.length === 0) {
-      toast.error("No schedules available to export");
-      return;
-    }
-
     try {
-      generateTrainingPlanMatrixPDF(schedules, selectedProgram);
-      toast.success("PDF exported successfully!");
-    } catch (error) {
-      toast.error("Failed to export PDF");
-      console.error("PDF export error:", error);
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_API_ENDPOINT}/api/training-plan/export-excel?program=${selectedProgram}`
+      );
+
+      if (!response.ok) {
+        throw new Error("Failed to export Excel");
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `Training_Plan_${selectedProgram}_${new Date().toISOString().split("T")[0]}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+
+      toast.success("Excel exported successfully!");
+    } catch {
+      toast.error("Failed to export Excel");
     }
   };
 
@@ -593,7 +562,7 @@ export default function TrainingPlanClient() {
                   summary={trainingPlan.summary}
                   program={selectedProgram}
                   competencyMapping={competencyMapping}
-                  onExportPDF={handleExportPDF}
+                  onExportExcel={handleExportExcel}
                 />
               ) : (
                 <div className="text-center py-8">

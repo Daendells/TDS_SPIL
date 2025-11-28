@@ -16,7 +16,7 @@ interface TrainingScheduleTimelineProps {
       training_topics: string[];
     };
   };
-  onExportPDF?: () => void;
+  onExportExcel?: () => void;
 }
 
 interface ScheduleItem {
@@ -39,7 +39,7 @@ export default function TrainingScheduleTimeline({
   summary,
   program,
   competencyMapping,
-  onExportPDF,
+  onExportExcel,
 }: TrainingScheduleTimelineProps) {
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
@@ -304,10 +304,10 @@ export default function TrainingScheduleTimeline({
             </Button>
           )}
         </div>
-        {onExportPDF && !editMode && (
-          <Button onClick={onExportPDF} size="sm" className="gap-2">
+        {onExportExcel && !editMode && (
+          <Button onClick={onExportExcel} size="sm" className="gap-2">
             <Download className="h-4 w-4" />
-            Export to PDF
+            Export to Excel
           </Button>
         )}
       </div>
