@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import {
@@ -29,13 +29,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { FileText, RefreshCw, Edit, Trash2, MoreVertical } from "lucide-react";
+import { FileText, RefreshCw, Edit, Trash2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
 
 interface ITraining {
@@ -99,6 +93,8 @@ export default function TrainingMaterialTab() {
   const [deleteLoading, setDeleteLoading] = useState(false);
 
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [expandedGroups, setExpandedGroups] = useState<string[]>([]);
 
   const [competencyTypes, setCompetencyTypes] = useState<ICompetencyType[]>([]);
   const [createForm, setCreateForm] = useState({
@@ -161,13 +157,38 @@ export default function TrainingMaterialTab() {
       grouped[competencyCode].trainings.push(training);
     });
 
-    // Sort by competencyCode
-    const sortedGroups = Object.values(grouped).sort((a, b) =>
-      a.competencyCode.localeCompare(b.competencyCode)
-    );
+    // Sort groups by competencyCode and trainings by level (descending)
+    const sortedGroups = Object.values(grouped)
+      .sort((a, b) => a.competencyCode.localeCompare(b.competencyCode))
+      .map((group) => ({
+        ...group,
+        trainings: group.trainings.sort((a, b) => b.lvl - a.lvl),
+      }));
 
     setGroupedData(sortedGroups);
   };
+
+  const filteredGroupedData = useMemo(
+    () =>
+      groupedData
+        .map((group) => ({
+          ...group,
+          trainings: group.trainings.filter((training) =>
+            training.topik_training.toLowerCase().includes(searchTerm.toLowerCase())
+          ),
+        }))
+        .filter((group) => group.trainings.length > 0),
+    [groupedData, searchTerm]
+  );
+
+  useEffect(() => {
+    if (searchTerm) {
+      const matchedGroups = filteredGroupedData.map((group) => group.competencyCode);
+      setExpandedGroups(matchedGroups);
+    } else {
+      setExpandedGroups([]);
+    }
+  }, [searchTerm, filteredGroupedData]);
 
   const handleGenerate = async (item: ITraining, isRegenerate = false) => {
     setGenerating(item.kode);
@@ -427,10 +448,22 @@ export default function TrainingMaterialTab() {
             Generate dan kelola materi training berdasarkan kompetensi
           </CardDescription>
         </div>
-        <Button onClick={openCreateDialog} className="gap-2">
-          <FileText className="w-4 h-4" />
-          Add New Training
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              type="text"
+              placeholder="Search training topic..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 w-64"
+            />
+          </div>
+          <Button onClick={openCreateDialog} className="gap-2">
+            <FileText className="w-4 h-4" />
+            Add New Training
+          </Button>
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
@@ -439,8 +472,13 @@ export default function TrainingMaterialTab() {
               <p className="text-gray-500">Memuat data training...</p>
             </div>
           ) : (
-            <Accordion type="multiple" className="space-y-4">
-              {groupedData.map((group) => (
+            <Accordion
+              type="multiple"
+              className="space-y-4"
+              value={expandedGroups}
+              onValueChange={setExpandedGroups}
+            >
+              {filteredGroupedData.map((group) => (
                 <AccordionItem
                   key={group.competencyCode}
                   value={group.competencyCode}
@@ -480,7 +518,7 @@ export default function TrainingMaterialTab() {
                         </thead>
                         <tbody>
                           {group.trainings.map((item) => (
-                            <tr key={item.kode} className="border-b hover:bg-gray-50">
+                            <tr key={item.no} className="border-b hover:bg-gray-50">
                               <td className="py-3 px-4">
                                 <span className="inline-flex items-center justify-center w-8 h-8 bg-gray-200 rounded-full font-semibold text-sm">
                                   {item.lvl}
@@ -608,30 +646,24 @@ export default function TrainingMaterialTab() {
                                 </div>
                               </td>
                               <td className="py-3 px-4 text-center">
-                                <DropdownMenu>
-                                  <DropdownMenuTrigger asChild>
-                                    <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                                      <span className="sr-only">Open menu</span>
-                                      <MoreVertical className="h-4 w-4" />
-                                    </Button>
-                                  </DropdownMenuTrigger>
-                                  <DropdownMenuContent align="end">
-                                    <DropdownMenuItem
-                                      onClick={() => openEditDialog(item)}
-                                      className="cursor-pointer"
-                                    >
-                                      <Edit className="mr-2 h-4 w-4" />
-                                      <span>Edit</span>
-                                    </DropdownMenuItem>
-                                    <DropdownMenuItem
-                                      onClick={() => openDeleteDialog(item)}
-                                      className="cursor-pointer text-red-600"
-                                    >
-                                      <Trash2 className="mr-2 h-4 w-4" />
-                                      <span>Delete</span>
-                                    </DropdownMenuItem>
-                                  </DropdownMenuContent>
-                                </DropdownMenu>
+                                <div className="flex gap-2 justify-center">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openEditDialog(item)}
+                                    className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                                  >
+                                    <Edit className="h-4 w-4" />
+                                  </Button>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => openDeleteDialog(item)}
+                                    className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                                  >
+                                    <Trash2 className="h-4 w-4" />
+                                  </Button>
+                                </div>
                               </td>
                             </tr>
                           ))}

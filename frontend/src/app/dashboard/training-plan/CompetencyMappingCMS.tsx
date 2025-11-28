@@ -29,12 +29,6 @@ import {
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import {
   AlertDialog,
   AlertDialogAction,
   AlertDialogCancel,
@@ -44,7 +38,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Pencil, Trash2, Loader2, MoreVertical } from "lucide-react";
+import { Pencil, Trash2, Loader2 } from "lucide-react";
 import {
   useGetCompetencyMappings,
   useGetAllTrainings,
@@ -202,30 +196,24 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
                     )}
                   </TableCell>
                   <TableCell className="text-right">
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                          <span className="sr-only">Open menu</span>
-                          <MoreVertical className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() => handleEdit(mapping)}
-                          className="cursor-pointer"
-                        >
-                          <Pencil className="mr-2 h-4 w-4" />
-                          <span>Edit</span>
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDelete(mapping)}
-                          className="cursor-pointer text-red-600"
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          <span>Delete</span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex gap-2 justify-end">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleEdit(mapping)}
+                        className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                      >
+                        <Pencil className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDelete(mapping)}
+                        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </TableCell>
                 </TableRow>
               ))
