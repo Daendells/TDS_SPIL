@@ -2,38 +2,72 @@ networks:
   spil_tds:
     driver: bridge
 
-services:
-  tds_frontend:
-      container_name: tds_frontend
-      build:
-        context: .
-        dockerfile: docker/nextjs.dockerfile
-      restart: always
-      environment:
-        - NODE_ENV=production
-        - NEXT_PUBLIC_API_ENDPOINT=http://localhost:8080       # dipakai di browser
-        - INTERNAL_API_ENDPOINT=http://tds_backend:8090        # dipakai di SSR
-      ports:
-        - "3000:3000"
-      networks:
-        - spil_tds
+volumes:
+  mysql_data:
 
+services:
+  # MySQL Database
+  tds_db:
+    image: mysql:8.0
+    container_name: tds_db
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: tds
+      MYSQL_USER: tds_user
+      MYSQL_PASSWORD: tds_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - spil_tds
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  # Backend API
   tds_backend:
     container_name: tds_backend
     build:
-      context: .
-      dockerfile: docker/golang.dockerfile
+      context: ./backend
+      dockerfile: Dockerfile
     restart: always
     env_file:
-      - ./backend/.env              
+      - ./backend/.env
     environment:
-      - GIN_MODE=release
-    extra_hosts:
-      - "host.docker.internal:host-gateway"
+      # Override untuk Docker environment
+      DB_HOST: tds_db
+      DB_PORT: 3306
+      DB_NAME: tds
+      DB_USER: tds_user
+      DB_PASSWORD: tds_password
+      GIN_MODE: release
+    ports:
+      - "8080:8080"
+    depends_on:
+      tds_db:
+        condition: service_healthy
     networks:
       - spil_tds
+
+  # Frontend
+  tds_frontend:
+    container_name: tds_frontend
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    restart: always
+    env_file:
+      - ./frontend/.env
+    environment:
+      # Override untuk Docker environment
+      NODE_ENV: production
+      INTERNAL_API_ENDPOINT: http://tds_backend:8080
     ports:
-      - "8080:8090"
-    deploy:
-      restart_policy:
-        condition: on-failure
+      - "3000:3000"
+    depends_on:
+      - tds_backend
+    networks:
+      - spil_tds
