@@ -8,9 +8,9 @@ type MentoringReportRequest struct {
 	Program         string   `json:"program" binding:"required"`
 	ProgramTitle    string   `json:"programTitle" binding:"required"`
 	
-	SessionNumber   string   `json:"sessionNumber" binding:"required"`
+	SessionNumber   int      `json:"sessionNumber" binding:"required,min=1"`
 	Date            string   `json:"date" binding:"required"`
-	Duration        string   `json:"duration" binding:"required"`
+	Duration        int      `json:"duration" binding:"required,min=1"`
 	Purpose         string   `json:"purpose" binding:"required"`
 	Observation     string   `json:"observation"`
 	Reflection      string   `json:"reflection"`
@@ -27,9 +27,9 @@ type MentoringReportUpdateRequest struct {
 	Department      string   `json:"department" binding:"required"`
 	Program         string   `json:"program" binding:"required"`
 	ProgramTitle    string   `json:"programTitle" binding:"required"`
-	SessionNumber   string   `json:"sessionNumber" binding:"required"`
+	SessionNumber   int      `json:"sessionNumber" binding:"required,min=1"`
 	Date            string   `json:"date" binding:"required"`
-	Duration        string   `json:"duration" binding:"required"`
+	Duration        int      `json:"duration" binding:"required,min=1"`
 	Purpose         string   `json:"purpose" binding:"required"`
 	Observation     string   `json:"observation"`
 	Reflection      string   `json:"reflection"`

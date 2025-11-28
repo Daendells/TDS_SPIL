@@ -39,9 +39,7 @@ export async function middleware(request: NextRequest) {
     "/master-report",
     "/assessment-manager",
     "/assessment-type-manager",
-    "/crew-evaluation-system",
     "/assignments",
-    "/value-assessment",
     "/report-mentoring",
   ];
 

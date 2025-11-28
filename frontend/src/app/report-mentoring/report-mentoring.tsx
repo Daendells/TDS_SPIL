@@ -31,6 +31,7 @@ import Image from "next/image";
 import { Calendar } from "lucide-react";
 
 const FormSchema = z.object({
+  reportType: z.enum(["mentoring", "coaching"], { message: "Tipe laporan harus dipilih" }),
   mentorName: z.string().min(1, { message: "Nama Mentor harus diisi" }),
   period: z.string().min(1, { message: "Periode harus diisi" }),
   program: z.string().min(1, { message: "Program harus diisi" }),
@@ -62,6 +63,7 @@ export default function ReportMentoring() {
     resolver: zodResolver(FormSchema),
     mode: "onChange",
     defaultValues: {
+      reportType: "mentoring",
       mentorName: "",
       period: "",
       program: "",
@@ -144,20 +146,55 @@ export default function ReportMentoring() {
   };
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-    console.log("Form submitted with data:", data);
     setIsSubmitting(true);
     try {
-      console.log("Sending POST request to /mentoring-reports");
-      const response = await api.post("/mentoring-reports", {
-        ...data,
-        sessionNumber: data.sessionNumber.toString(),
-        duration: data.duration.toString(),
+      const endpoint = data.reportType === "coaching" ? "/coaching-reports" : "/mentoring-reports";
+      const response = await api.post(endpoint, {
+        coachName: data.mentorName,
+        mentorName: data.mentorName,
+        period: data.period,
+        program: data.program,
+        programTitle: data.programTitle,
+        coacheeNames: data.menteeNames,
+        menteeNames: data.menteeNames,
+        department: data.department,
+        sessionNumber: Number(data.sessionNumber),
+        date: data.date,
+        duration: Number(data.duration),
+        purpose: data.purpose,
+        observation: data.observation,
+        reflection: data.reflection,
+        actionPlan: data.actionPlan,
+        additionalNotes: data.additionalNotes,
+        reportIds: data.reportIds,
       });
-      console.log("Response received:", response);
 
       if (response.status === 201) {
-        toast.success("Laporan mentoring berhasil disimpan!");
-        form.reset();
+        const successMessage =
+          data.reportType === "coaching"
+            ? "Laporan coaching berhasil disimpan!"
+            : "Laporan mentoring berhasil disimpan!";
+        toast.success(successMessage);
+
+        form.reset({
+          reportType: "mentoring",
+          mentorName: "",
+          period: "",
+          program: "",
+          programTitle: "",
+          menteeNames: [],
+          department: "",
+          sessionNumber: 0,
+          date: "",
+          duration: 0,
+          purpose: "",
+          observation: "",
+          reflection: "",
+          actionPlan: "",
+          additionalNotes: "",
+          reportIds: [],
+        });
+
         setSelectedMentees([]);
         setSelectedProgram("");
         setReports([]);
@@ -165,12 +202,11 @@ export default function ReportMentoring() {
         setMenteeSearchTerm("");
       }
     } catch (error: unknown) {
-      console.error("Error submitting form:", error);
       const errorMessage =
         error instanceof Error && "response" in error
           ? (error as { response?: { data?: { error?: string } } }).response?.data?.error
-          : "Gagal menyimpan laporan mentoring";
-      toast.error(errorMessage || "Gagal menyimpan laporan mentoring");
+          : "Gagal menyimpan laporan";
+      toast.error(errorMessage || "Gagal menyimpan laporan");
     } finally {
       setIsSubmitting(false);
     }
@@ -274,6 +310,31 @@ export default function ReportMentoring() {
                           className="border-gray-300 focus:border-gray-500 focus:ring-gray-500"
                         />
                       </FormControl>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+
+                {/* Report Type Selection */}
+                <FormField
+                  control={form.control}
+                  name="reportType"
+                  render={({ field }) => (
+                    <FormItem className="md:col-span-2">
+                      <FormLabel className="font-medium text-gray-700">
+                        Tipe Laporan <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <Select onValueChange={field.onChange} value={field.value}>
+                        <FormControl>
+                          <SelectTrigger className="border-gray-300 focus:border-gray-500 focus:ring-gray-500">
+                            <SelectValue placeholder="Pilih Tipe Laporan" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="mentoring">Mentoring</SelectItem>
+                          <SelectItem value="coaching">Coaching</SelectItem>
+                        </SelectContent>
+                      </Select>
                       <FormMessage />
                     </FormItem>
                   )}

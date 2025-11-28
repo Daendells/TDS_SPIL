@@ -29,9 +29,21 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Progress } from "@/components/ui/progress";
-import { Loader2, Users, TrendingUp, Calendar } from "lucide-react";
+import { Loader2, Users, TrendingUp, Calendar, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { SkeletonCard } from "@/components/skeleton-card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import {
   useGetTrainingPlan,
   useGetCompetencyMapping,
@@ -42,12 +54,15 @@ import {
 import TrainingScheduleTimeline from "./TrainingScheduleTimeline";
 import CompetencyMappingCMS from "./CompetencyMappingCMS";
 import TrainingMaterialTab from "./TrainingMaterialTab";
+import { generateTrainingPlanMatrixPDF } from "@/lib/pdf/trainingPlanMatrixPDF";
 
 export default function TrainingPlanClient() {
   const [selectedProgram, setSelectedProgram] = useState("SDP");
   const [selectedParticipant, setSelectedParticipant] = useState<TrainingPlanParticipant | null>(
     null
   );
+  const [showGenerateDialog, setShowGenerateDialog] = useState(false);
+  const [startDate, setStartDate] = useState("");
 
   // React Query hooks
   const { data: programs, isLoading: programsLoading } = useGetPrograms();
@@ -66,12 +81,82 @@ export default function TrainingPlanClient() {
 
   // Handle schedule generation
   const handleGenerateSchedules = async () => {
+    setShowGenerateDialog(true);
+  };
+
+  const confirmGenerate = async () => {
+    setShowGenerateDialog(false);
     try {
-      await generateSchedules.mutateAsync({ program: selectedProgram });
+      await generateSchedules.mutateAsync({
+        program: selectedProgram,
+        startDate: startDate || undefined,
+      });
       toast.success("Training schedules generated successfully!");
+      setStartDate(""); // Reset date after generation
     } catch (error) {
       toast.error("Failed to generate training schedules");
       console.error("Schedule generation error:", error);
+    }
+  };
+
+  const handleExportPDF = () => {
+    if (!trainingPlan?.summary) {
+      toast.error("No training plan data available to export");
+      return;
+    }
+
+    const schedules: Array<{
+      id: number;
+      program: string;
+      competencyCode: string;
+      trainingTopic: string;
+      materialType: number;
+      scheduledDate: string;
+    }> = [];
+
+    if (trainingPlan.summary.trainingMateri1) {
+      Object.entries(trainingPlan.summary.trainingMateri1).forEach(([competencyCode, date]) => {
+        const competency = competencyMapping?.[competencyCode];
+        if (competency) {
+          schedules.push({
+            id: schedules.length + 1,
+            program: selectedProgram,
+            competencyCode,
+            trainingTopic: competency.name,
+            materialType: 1,
+            scheduledDate: date,
+          });
+        }
+      });
+    }
+
+    if (trainingPlan.summary.trainingMateri2) {
+      Object.entries(trainingPlan.summary.trainingMateri2).forEach(([competencyCode, date]) => {
+        const competency = competencyMapping?.[competencyCode];
+        if (competency) {
+          schedules.push({
+            id: schedules.length + 1,
+            program: selectedProgram,
+            competencyCode,
+            trainingTopic: competency.name,
+            materialType: 2,
+            scheduledDate: date,
+          });
+        }
+      });
+    }
+
+    if (schedules.length === 0) {
+      toast.error("No schedules available to export");
+      return;
+    }
+
+    try {
+      generateTrainingPlanMatrixPDF(schedules, selectedProgram);
+      toast.success("PDF exported successfully!");
+    } catch (error) {
+      toast.error("Failed to export PDF");
+      console.error("PDF export error:", error);
     }
   };
 
@@ -492,6 +577,12 @@ export default function TrainingPlanClient() {
         {/* Schedules Tab */}
         <TabsContent value="schedules" className="space-y-4">
           <Card>
+            <CardHeader className="space-y-1 pb-4">
+              <CardTitle>Training Plan Timeline</CardTitle>
+              <CardDescription>
+                Visual timeline of training schedules for {selectedProgram}
+              </CardDescription>
+            </CardHeader>
             <CardContent>
               {trainingPlan?.summary &&
               trainingPlan.summary.trainingMateri1 &&
@@ -502,6 +593,7 @@ export default function TrainingPlanClient() {
                   summary={trainingPlan.summary}
                   program={selectedProgram}
                   competencyMapping={competencyMapping}
+                  onExportPDF={handleExportPDF}
                 />
               ) : (
                 <div className="text-center py-8">
@@ -531,6 +623,53 @@ export default function TrainingPlanClient() {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Generate Schedules Warning Dialog */}
+      <AlertDialog open={showGenerateDialog} onOpenChange={setShowGenerateDialog}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              Critical Warning
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-4">
+                <p className="font-semibold text-foreground">
+                  Generating schedules will DELETE all existing schedules for this program!
+                </p>
+                <p>
+                  This action cannot be undone. All previously generated training schedules for the{" "}
+                  <span className="font-medium">{selectedProgram}</span> program will be permanently
+                  removed.
+                </p>
+                <div className="space-y-2 pt-2">
+                  <Label htmlFor="start-date">Start Date (Optional)</Label>
+                  <Input
+                    id="start-date"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    placeholder="YYYY-MM-DD"
+                    className="w-full"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Leave empty to use default start date (October 1, 2025)
+                  </p>
+                </div>
+              </div>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmGenerate}
+              className="bg-destructive hover:bg-destructive/90"
+            >
+              Generate Schedules
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

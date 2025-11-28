@@ -12,6 +12,7 @@ type RouterConfig struct {
 	ReportController             *controllers.ReportController
 	UserController               *controllers.UserController
 	MentoringReportController    *controllers.MentoringReportController
+	CoachingReportController     *controllers.CoachingReportController
 	TrainingController           *controllers.TrainingController // DB
 	TrainingGenController        *traininggen.TrainingController // LLM Generator
 	TrainingPlanController       *controllers.TrainingPlanController
@@ -109,6 +110,16 @@ func (c *RouterConfig) SetupGuestRouter() {
 		mentoringReports.GET("/reports/:reportId", c.MentoringReportController.FindByReportID)
 	}
 
+	coachingReports := c.App.Group("coaching-reports")
+	{
+		coachingReports.POST("", c.CoachingReportController.Create)
+		coachingReports.GET("", c.CoachingReportController.GetAll)
+		coachingReports.GET("/:id", c.CoachingReportController.GetByID)
+		coachingReports.PUT("/:id", c.CoachingReportController.Update)
+		coachingReports.DELETE("/:id", c.CoachingReportController.Delete)
+		coachingReports.GET("/reports/:reportId", c.CoachingReportController.GetByReportID)
+	}
+
 	questions := c.App.Group("questions")
 	{
 		questions.POST("", c.QuestionController.Create)
@@ -154,6 +165,11 @@ func (c *RouterConfig) SetupGuestRouter() {
 		seafarerAssessments.GET("/:id", c.SeafarerAssessmentController.FindByID)
 		seafarerAssessments.GET("/by-seafarer/:seafarerCode", c.SeafarerAssessmentController.FindBySeafarerCode)
 		seafarerAssessments.GET("/by-assessment-type/:assessmentTypeId", c.SeafarerAssessmentController.FindByAssessmentTypeID)
+	}
+
+	assessmentResults := c.App.Group("assessment-results")
+	{
+		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
 	}
 
 	// Register Question and Option routes
@@ -206,7 +222,6 @@ func (c *RouterConfig) SetupAuthRouter() {
 
 	assessmentResults := c.App.Group("assessment-results").Use(c.AuthMiddleware)
 	{
-		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
 		assessmentResults.GET("/seafarer/:seafarerCode", c.AssessmentResultController.FindBySeafarerCode)
 		assessmentResults.GET("/report/:seafarerCode", c.AssessmentResultController.GetValueAssessmentReportBySeafarerCode)
 	}

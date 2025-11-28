@@ -24,6 +24,7 @@ func NewAssessmentResultController(assessmentResultService services.AssessmentRe
 	}
 }
 
+
 func (controller *AssessmentResultController) Submit(ctx *gin.Context) {
 	var request web.AssessmentSubmitRequest
 	err := ctx.ShouldBindJSON(&request)
@@ -37,6 +38,9 @@ func (controller *AssessmentResultController) Submit(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, webResponse)
 		return
 	}
+
+	// Map role based on hierarchy before submitting
+	request.Role = getAssessmentRoleByJabatan(request.Role)
 
 	assessmentResult, err := controller.AssessmentResultService.SubmitAssessment(controller.DB, &request)
 	if err != nil {
