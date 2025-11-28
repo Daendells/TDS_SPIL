@@ -135,11 +135,11 @@ export function useGetPrograms() {
 export function useGenerateSchedules() {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, { program: string }>({
-    mutationFn: async ({ program }) => {
+  return useMutation<void, Error, { program: string; startDate?: string }>({
+    mutationFn: async ({ program, startDate }) => {
       const response = await api.post<ApiResponse<{ message: string }>>(
         `/api/training-plan/generate-schedules`,
-        { program }
+        { program, startDate }
       );
 
       if (!response.data || !response.data.success) {

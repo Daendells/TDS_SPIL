@@ -61,7 +61,8 @@ func (c *TrainingPlanController) GetTrainingPlan(ctx *gin.Context) {
 // GenerateSchedules handles POST /api/training-plan/generate-schedules
 func (c *TrainingPlanController) GenerateSchedules(ctx *gin.Context) {
 	var request struct {
-		Program string `json:"program" binding:"required"`
+		Program   string `json:"program" binding:"required"`
+		StartDate string `json:"startDate"`
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
@@ -82,7 +83,22 @@ func (c *TrainingPlanController) GenerateSchedules(ctx *gin.Context) {
 		return
 	}
 
-	err := c.trainingPlanService.GenerateSchedules(request.Program)
+	var startDate time.Time
+	if request.StartDate != "" {
+		parsedDate, err := time.Parse("2006-01-02", request.StartDate)
+		if err != nil {
+			c.log.WithError(err).Error("Invalid start date format")
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"error": "Invalid start date format. Use YYYY-MM-DD",
+			})
+			return
+		}
+		startDate = parsedDate
+	} else {
+		startDate = time.Date(2025, 10, 1, 0, 0, 0, 0, time.UTC)
+	}
+
+	err := c.trainingPlanService.GenerateSchedulesWithStartDate(request.Program, startDate)
 	if err != nil {
 		c.log.WithError(err).WithField("program", request.Program).Error("Failed to generate schedules")
 		ctx.JSON(http.StatusInternalServerError, gin.H{
@@ -91,7 +107,10 @@ func (c *TrainingPlanController) GenerateSchedules(ctx *gin.Context) {
 		return
 	}
 
-	c.log.WithField("program", request.Program).Info("Successfully generated training schedules")
+	c.log.WithFields(logrus.Fields{
+		"program":    request.Program,
+		"start_date": startDate.Format("2006-01-02"),
+	}).Info("Successfully generated training schedules")
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"success": true,

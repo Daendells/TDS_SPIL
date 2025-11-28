@@ -98,9 +98,8 @@ export default function TrainingMaterialTab() {
   const [deletingTraining, setDeletingTraining] = useState<ITraining | null>(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+
   const [competencyTypes, setCompetencyTypes] = useState<ICompetencyType[]>([]);
   const [createForm, setCreateForm] = useState({
     competency_type_id: 0,
@@ -110,7 +109,6 @@ export default function TrainingMaterialTab() {
     deskripsi_perilaku: "",
     kode: "",
   });
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [createLoading, setCreateLoading] = useState(false);
 
   const apiUrl =
@@ -282,7 +280,6 @@ export default function TrainingMaterialTab() {
     setCreateDialogOpen(true);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const handleCreateTraining = async () => {
     if (!createForm.competency_type_id) {
       toast.error("Pilih Competency Type terlebih dahulu!");
@@ -423,21 +420,20 @@ export default function TrainingMaterialTab() {
 
   return (
     <Card>
-      <CardHeader>
-        <CardTitle>Training Materials</CardTitle>
-        <CardDescription>
-          Generate dan kelola materi training berdasarkan kompetensi
-        </CardDescription>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
+        <div className="space-y-1">
+          <CardTitle>Training Materials</CardTitle>
+          <CardDescription>
+            Generate dan kelola materi training berdasarkan kompetensi
+          </CardDescription>
+        </div>
+        <Button onClick={openCreateDialog} className="gap-2">
+          <FileText className="w-4 h-4" />
+          Add New Training
+        </Button>
       </CardHeader>
       <CardContent>
         <div className="space-y-4">
-          <div className="flex justify-end mb-4">
-            <Button onClick={openCreateDialog} className="gap-2">
-              <FileText className="w-4 h-4" />
-              Add New Training
-            </Button>
-          </div>
-
           {loading ? (
             <div className="text-center py-12">
               <p className="text-gray-500">Memuat data training...</p>
@@ -831,6 +827,107 @@ export default function TrainingMaterialTab() {
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>
+
+          {/* Dialog Create New Training */}
+          <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
+            <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+              <DialogHeader>
+                <DialogTitle>Tambah Training Baru</DialogTitle>
+                <DialogDescription>Isi semua field untuk membuat training baru</DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-4 py-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Competency Type</label>
+                  <select
+                    value={createForm.competency_type_id}
+                    onChange={(e) =>
+                      setCreateForm({
+                        ...createForm,
+                        competency_type_id: parseInt(e.target.value),
+                      })
+                    }
+                    className="w-full px-3 py-2 border rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value={0}>Pilih Competency Type</option>
+                    {competencyTypes.map((ct) => (
+                      <option key={ct.id} value={ct.id}>
+                        {ct.code} - {ct.name}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Level</label>
+                  <Input
+                    type="number"
+                    value={createForm.lvl}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, lvl: parseInt(e.target.value) || 1 })
+                    }
+                    placeholder="Masukkan level (default: 1)"
+                    min="1"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Kode</label>
+                  <Input
+                    type="text"
+                    value={createForm.kode}
+                    onChange={(e) => setCreateForm({ ...createForm, kode: e.target.value })}
+                    placeholder="Contoh: LDC-001"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Topik Training</label>
+                  <Input
+                    type="text"
+                    value={createForm.topik_training}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, topik_training: e.target.value })
+                    }
+                    placeholder="Masukkan topik training"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Deskripsi Perilaku</label>
+                  <Textarea
+                    value={createForm.deskripsi_perilaku}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, deskripsi_perilaku: e.target.value })
+                    }
+                    placeholder="Masukkan deskripsi perilaku/keyword"
+                    className="h-24 resize-none"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-sm font-semibold">Tools/Framework</label>
+                  <Input
+                    type="text"
+                    value={createForm.tools_training}
+                    onChange={(e) =>
+                      setCreateForm({ ...createForm, tools_training: e.target.value })
+                    }
+                    placeholder="Contoh: React, Angular, Node.js"
+                  />
+                </div>
+              </div>
+
+              <DialogFooter className="mt-6">
+                <Button variant="outline" onClick={() => setCreateDialogOpen(false)}>
+                  Batal
+                </Button>
+                <Button onClick={handleCreateTraining} disabled={createLoading}>
+                  {createLoading ? "Menyimpan..." : "Tambah Training"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </CardContent>
     </Card>
