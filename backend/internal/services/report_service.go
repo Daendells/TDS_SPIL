@@ -156,48 +156,30 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 			continue
 		}
 
-		// Excel Column Mapping (based on user's file):
-		// Column 0: No (skip - not in DB)
-		// Column 1: Vessel Name
-		// Column 2: Name
-		// Column 3: Position (Jabatan)
-		// Column 4: Department (skip - not in DB)
-		// Column 5: Seafarer Code
-		// Column 6: Seaman Code
-		// Column 7: Certificate
-		// Column 8: Age
-		// Column 9: Competency Gap Analysis
-		// Column 10: TOTAL GAP
-		// Column 11: IDP Program
-		// Column 12: HAV Quadran 2
-		// Column 13: Readiness (Month)
-		// Column 14: Certificate Eligible
-		// Column 15: Pemenuhan Pendidikan (Month)
-		// Column 16: Total Readiness Update (Month)
-		// Column 17: KonditeReview
-		// Column 18: KpiVessel
-		// Column 19: PerformanceScore
-		// Column 20: Value Assessment ⭐
-
-		// Parse all columns from Excel
+		// Parse all columns from Excel - PERBAIKAN INDEX
 		vesselName := helpers.SanitizeCell(helpers.GetCell(row, 1))
 		nama := helpers.SanitizeCell(helpers.GetCell(row, 2))
 		jabatan := helpers.SanitizeCell(helpers.GetCell(row, 3))
 		// Column 4: Department (skip)
-		seafarerCode := helpers.SanitizeCell(helpers.GetCell(row, 5))
-		seamanCode := helpers.SanitizeCell(helpers.GetCell(row, 6))
+		seamanCode := helpers.SanitizeCell(helpers.GetCell(row, 5))
+		seafarerCode := helpers.SanitizeCell(helpers.GetCell(row, 6))
 		certificate := helpers.SanitizeCell(helpers.GetCell(row, 7))
 		age := helpers.SanitizeCell(helpers.GetCell(row, 8))
-		competencyGapAnalysis := helpers.SanitizeCell(helpers.GetCell(row, 9))
-		totalGapStr := helpers.SanitizeCell(helpers.GetCell(row, 10))
-		idpProgram := helpers.SanitizeCell(helpers.GetCell(row, 11))
-		havQuadran2Str := helpers.SanitizeCell(helpers.GetCell(row, 12))
-		readinessStr := helpers.SanitizeCell(helpers.GetCell(row, 13))
-		certificateEligible := helpers.SanitizeCell(helpers.GetCell(row, 14))
-		educationFulfillmentStr := helpers.SanitizeCell(helpers.GetCell(row, 15))
-		totalReadinessUpdateStr := helpers.SanitizeCell(helpers.GetCell(row, 16))
-		performanceScoreStr := helpers.SanitizeCell(helpers.GetCell(row, 19))
-		valueAssessmentStr := helpers.SanitizeCell(helpers.GetCell(row, 17))
+		konditeReviewStr := helpers.SanitizeCell(helpers.GetCell(row, 9))
+		kpiVesselStr := helpers.SanitizeCell(helpers.GetCell(row, 10))
+		performanceScoreStr := helpers.SanitizeCell(helpers.GetCell(row, 11))
+		valueAssessmentStr := helpers.SanitizeCell(helpers.GetCell(row, 12))
+		competencyGapAnalysis := helpers.SanitizeCell(helpers.GetCell(row, 13))
+		totalGapStr := helpers.SanitizeCell(helpers.GetCell(row, 14))
+		strengthStr := helpers.SanitizeCell(helpers.GetCell(row, 15))
+		idpProgram := helpers.SanitizeCell(helpers.GetCell(row, 16))
+		havQuadran2Str := helpers.SanitizeCell(helpers.GetCell(row, 17))
+		talentClassified := helpers.SanitizeCell(helpers.GetCell(row, 18))
+		readinessStr := helpers.SanitizeCell(helpers.GetCell(row, 19))
+		certificateEligible := helpers.SanitizeCell(helpers.GetCell(row, 20))
+		educationFulfillmentStr := helpers.SanitizeCell(helpers.GetCell(row, 21))
+		// Column 22: Readiness Bersyarat Pendidikan (skip)
+		totalReadinessUpdateStr := helpers.SanitizeCell(helpers.GetCell(row, 22))
 
 		// Convert string values to integers with proper error handling
 		totalGap, _ := strconv.Atoi(totalGapStr)
@@ -208,10 +190,13 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		performanceScore, _ := strconv.Atoi(performanceScoreStr)
 		valueAssessment, _ := strconv.Atoi(valueAssessmentStr)
 
+		// Parse numeric fields that came as strings in excel cells
+		konditeReview, _ := strconv.Atoi(konditeReviewStr)
+		kpiVessel, _ := strconv.Atoi(kpiVesselStr)
+		strength, _ := strconv.Atoi(strengthStr)
+
 		// Fields not in Excel - set to default values
-		strength := 0
 		talentClassified2 := ""
-		tanggalLahir := "dd-mm-yyyy"
 
 		// Convert int to *int for pointer fields (only if value > 0)
 		var readinessMonthPtr *int
@@ -228,61 +213,72 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 			totalReadinessUpdatePtr = &totalReadinessUpdateMonths
 		}
 
-		report := domain.Report{
-			// Basic Info
-			SeamanCode:   seamanCode,
-			SeafarerCode: seafarerCode,
-			Nama:         nama,
-			Jabatan:      jabatan,
-			VesselName:   vesselName,
-			Certificate:  certificate,
-			Age:          age,
-			TanggalLahir: tanggalLahir,
+		// Check if report already exists by seafarerCode
+		var existingReport domain.Report
+		_, findErr := service.ReportRepository.FindBySeafarerCode(tx, seafarerCode, &existingReport)
 
-			// Performance scores (default values since not in Excel)
+		var report domain.Report
+		isUpdate := findErr == nil
 
-			PerformanceScore: performanceScore,
-			ValueAssessment:  valueAssessment,
-			Strength:         strength,
-
-			// Competency & IDP
-			CompetencyGapAnalysis: competencyGapAnalysis,
-			TotalGap:              totalGap,
-			IDPProgram:            idpProgram,
-			HavQuadran2:           havQuadran2,
-			TalentClassified2:     talentClassified2,
-
-			// Readiness fields - BOTH string and int versions
-			Readiness:           readinessStr,      // String version (column 31 in DB)
-			ReadinessMonth:      readinessMonthPtr, // Integer version (column 48 in DB) - THIS WAS MISSING!
-			CertificateEligible: certificateEligible,
-
-			// Education & Readiness months
-			EducationFulfillmentMonths: educationFulfillmentPtr,
-			TotalReadinessUpdateMonths: totalReadinessUpdatePtr,
+		if isUpdate {
+			// Update existing report - keep the ID and timestamps
+			report = existingReport
+			service.Log.Infof("Row %d - Updating existing report ID=%d for Seafarer Code: %s", i, existingReport.ID, seafarerCode)
+		} else {
+			// New report
+			service.Log.Infof("Row %d - Creating new report for Seafarer Code: %s", i, seafarerCode)
 		}
+
+		// Update all fields from Excel
+		report.SeamanCode = seamanCode
+		report.SeafarerCode = seafarerCode
+		report.Nama = nama
+		report.Jabatan = jabatan
+		report.VesselName = vesselName
+		report.Certificate = certificate
+		report.Age = age
+		report.PerformanceScore = performanceScore
+		report.ValueAssessment = valueAssessment
+		report.Strength = strength
+		report.KonditeReview = konditeReview
+		report.KpiVessel = kpiVessel
+		report.TalentClassified = talentClassified
+		report.CompetencyGapAnalysis = competencyGapAnalysis
+		report.TotalGap = totalGap
+		report.IDPProgram = idpProgram
+		report.HavQuadran2 = havQuadran2
+		report.TalentClassified2 = talentClassified2
+		report.Readiness = readinessStr
+		report.ReadinessMonth = readinessMonthPtr
+		report.CertificateEligible = certificateEligible
+		report.EducationFulfillmentMonths = educationFulfillmentPtr
+		report.TotalReadinessUpdateMonths = totalReadinessUpdatePtr
 
 		// Log first 3 records for debugging
 		if i <= 3 {
-			service.Log.Infof("Row %d - Name: %s, Vessel: %s, Seaman: %s, Seafarer: %s, Position: %s, ValueAssessment: %d, PerformanceScore: %d",
-				i, nama, vesselName, seamanCode, seafarerCode, jabatan, valueAssessment, performanceScore)
+			service.Log.Infof("Row %d - Name: %s, Vessel: %s, Seaman: %s, Seafarer: %s, Position: %s, ValueAssessment: %d, PerformanceScore: %d, IsUpdate: %v",
+				i, nama, vesselName, seamanCode, seafarerCode, jabatan, valueAssessment, performanceScore, isUpdate)
+		}
+
+		// Save or Update the report
+		if isUpdate {
+			if err = service.ReportRepository.Update(tx, &report); err != nil {
+				service.Log.Warnf("Failed updating report for seafarer %s: %+v", seafarerCode, err)
+				return nil, fmt.Errorf("failed updating report: %w", err)
+			}
+			service.Log.Infof("Successfully updated report ID=%d for seafarer: %s", report.ID, seafarerCode)
+		} else {
+			if err = tx.Create(&report).Error; err != nil {
+				service.Log.Warnf("Failed creating report for seafarer %s: %+v", seafarerCode, err)
+				return nil, fmt.Errorf("failed creating report: %w", err)
+			}
+			service.Log.Infof("Successfully created report ID=%d for seafarer: %s", report.ID, seafarerCode)
 		}
 
 		reports = append(reports, report)
 	}
 
-	service.Log.Infof("Total reports to insert: %d", len(reports))
-
-	// TODO: Create Reports
-	if err = service.ReportRepository.CreateAll(tx, &reports); err != nil {
-		service.Log.Warnf("Failed saving to DB: %+v", err)
-		return nil, fmt.Errorf("failed saving to DB: %w", err)
-	}
-
-	// Flush pending writes immediately
-	if err = tx.Exec("SELECT 1").Error; err != nil {
-		service.Log.Warnf("Failed to flush transaction: %+v", err)
-	}
+	service.Log.Infof("Total reports processed: %d", len(reports))
 
 	// TODO: Save Value Assessment scores to report_scores table
 	if err = service.saveValueAssessmentScores(tx, &reports); err != nil {
@@ -447,8 +443,18 @@ func (service *ReportService) processGapCompetencies(db *gorm.DB, reports *[]dom
 	service.Log.Info("Starting to process gap competencies from Excel upload")
 
 	for _, report := range *reports {
+		// Delete all existing gap competencies for this report first
+		// This ensures fresh data from Excel replaces old data
+		deleteResult := db.Where("report_id = ?", report.ID).Delete(&domain.GapCompetency{})
+		if deleteResult.Error != nil {
+			service.Log.Warnf("Failed to delete existing gap competencies for report ID %d: %v", report.ID, deleteResult.Error)
+		} else {
+			service.Log.Infof("Deleted %d existing gap competencies for report ID=%d", deleteResult.RowsAffected, report.ID)
+		}
+
 		// Skip if no competency gap analysis data
 		if report.CompetencyGapAnalysis == "" {
+			service.Log.Infof("No competency gap analysis data for report ID %d, skipping", report.ID)
 			continue
 		}
 
@@ -476,31 +482,12 @@ func (service *ReportService) processGapCompetencies(db *gorm.DB, reports *[]dom
 				Priority:         1,
 			}
 
-			// Check if gap competency already exists
-			var existing domain.GapCompetency
-			err := db.Where("report_id = ? AND competency_type_id = ?", report.ID, competencyType.ID).First(&existing).Error
-
-			if err == gorm.ErrRecordNotFound {
-				// Create new gap competency
-				if err := db.Create(&gapCompetency).Error; err != nil {
-					service.Log.Warnf("Failed to create gap competency for report ID %d, competency '%s': %v", report.ID, code, err)
-					continue
-				}
-				service.Log.Infof("Created gap competency: Report ID=%d, Competency=%s (%d)", report.ID, code, competencyType.ID)
-			} else if err == nil {
-				// Update existing gap competency
-				if err := db.Model(&existing).Updates(map[string]interface{}{
-					"gap_level": gapCompetency.GapLevel,
-					"priority":  gapCompetency.Priority,
-				}).Error; err != nil {
-					service.Log.Warnf("Failed to update gap competency for report ID %d, competency '%s': %v", report.ID, code, err)
-					continue
-				}
-				service.Log.Infof("Updated gap competency: Report ID=%d, Competency=%s (%d)", report.ID, code, competencyType.ID)
-			} else {
-				service.Log.Warnf("Error checking existing gap competency: %v", err)
+			// Create new gap competency
+			if err := db.Create(&gapCompetency).Error; err != nil {
+				service.Log.Warnf("Failed to create gap competency for report ID %d, competency '%s': %v", report.ID, code, err)
 				continue
 			}
+			service.Log.Infof("Created gap competency: Report ID=%d, Competency=%s (%d)", report.ID, code, competencyType.ID)
 		}
 	}
 

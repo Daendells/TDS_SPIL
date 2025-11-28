@@ -111,27 +111,39 @@ export default function Excel() {
                   <Separator orientation="vertical" />
                   <div>Department</div>
                   <Separator orientation="vertical" />
-                  <div>Seafarer Code</div>
-                  <Separator orientation="vertical" />
                   <div>Seaman Code</div>
+                  <Separator orientation="vertical" />
+                  <div>Seafarer Code</div>
                   <Separator orientation="vertical" />
                   <div>Certificate</div>
                   <Separator orientation="vertical" />
                   <div>Age</div>
                   <Separator orientation="vertical" />
+                  <div>Kondite Review</div>
+                  <Separator orientation="vertical" />
+                  <div>KPI Vessel</div>
+                  <Separator orientation="vertical" />
+                  <div>Performance Score</div>
+                  <Separator orientation="vertical" />
+                  <div>Value Assessment</div>
+                  <Separator orientation="vertical" />
                   <div>Competency Gap Analysis</div>
                   <Separator orientation="vertical" />
                   <div>TOTAL GAP</div>
+                  <Separator orientation="vertical" />
+                  <div>Strength Analysis</div>
                   <Separator orientation="vertical" />
                   <div>IDP Program</div>
                   <Separator orientation="vertical" />
                   <div>HAV Quadran 2</div>
                   <Separator orientation="vertical" />
+                  <div>Talent Classified 2</div>
+                  <Separator orientation="vertical" />
                   <div>Readiness (Month)</div>
                   <Separator orientation="vertical" />
                   <div>Certificate Eligible</div>
                   <Separator orientation="vertical" />
-                  <div>Pemenuhan Pendidikan (Month)</div>
+                  <div>Durasi Pemenuhan Pendidikan (Month)</div>
                   <Separator orientation="vertical" />
                   <div>Total Readiness Update (Month)</div>
                 </div>
