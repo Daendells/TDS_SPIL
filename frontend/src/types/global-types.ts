@@ -41,6 +41,7 @@ export interface IReport {
   havQuadran2: number;
   talentClassified2: string;
   readiness: string;
+  totalReadinessUpdateMonths: number;
   certificateEligible: string;
 
   // Training, Mentoring, Coaching
