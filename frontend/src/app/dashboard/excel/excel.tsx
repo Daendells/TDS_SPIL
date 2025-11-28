@@ -101,7 +101,7 @@ export default function Excel() {
               <div className="grid gap-2">
                 <h2 className="font-medium">1. Urutan Header dari Excel</h2>
                 <div className="flex items-center space-x-4 text-sm overflow-auto">
-                  <div>No.</div>
+                  <div>No</div>
                   <Separator orientation="vertical" />
                   <div>Vessel Name</div>
                   <Separator orientation="vertical" />
@@ -109,7 +109,11 @@ export default function Excel() {
                   <Separator orientation="vertical" />
                   <div>Position</div>
                   <Separator orientation="vertical" />
+                  <div>Department</div>
+                  <Separator orientation="vertical" />
                   <div>Seaman Code</div>
+                  <Separator orientation="vertical" />
+                  <div>Seafarer Code</div>
                   <Separator orientation="vertical" />
                   <div>Certificate</div>
                   <Separator orientation="vertical" />
@@ -135,9 +139,13 @@ export default function Excel() {
                   <Separator orientation="vertical" />
                   <div>Talent Classified 2</div>
                   <Separator orientation="vertical" />
-                  <div>Readiness</div>
+                  <div>Readiness (Month)</div>
                   <Separator orientation="vertical" />
                   <div>Certificate Eligible</div>
+                  <Separator orientation="vertical" />
+                  <div>Durasi Pemenuhan Pendidikan (Month)</div>
+                  <Separator orientation="vertical" />
+                  <div>Total Readiness Update (Month)</div>
                 </div>
               </div>
 
@@ -145,7 +153,7 @@ export default function Excel() {
               <div className="grid gap-2">
                 <h2 className="font-medium">2. Nama Sheet Excel</h2>
                 <Image src="/images/sheet.png" alt="Sheet Name" width={240} height={240} />
-                <p className="leading-7 [&:not(:first-child)]:mt-6">
+                <p className="leading-7 not-first:mt-6">
                   <span className="font-medium">Sheet1</span> merupakan nama sheet dari file Excel
                   yang diupload. Pastikan nama sheetnya sesuai yaitu{" "}
                   <span className="font-medium">Sheet1</span>.

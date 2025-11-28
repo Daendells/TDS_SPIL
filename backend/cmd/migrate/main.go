@@ -21,19 +21,19 @@ func main() {
 
 	log.Info("Migration completed successfully")
 
-	log.Info("Creating database triggers...")
-	if err := createTriggers(db); err != nil {
-		log.Fatalf("trigger creation failed: %v", err)
-	}
+	// TRIGGERS DISABLED - Reading values directly from Excel columns
+	// log.Info("Creating database triggers...")
+	// if err := createTriggers(db); err != nil {
+	// 	log.Fatalf("trigger creation failed: %v", err)
+	// }
+	// log.Info("Triggers created successfully")
 
-	log.Info("Triggers created successfully")
+	// log.Info("Updating existing records with calculated values...")
+	// if err := updateExistingRecords(db); err != nil {
+	// 	log.Fatalf("update existing records failed: %v", err)
+	// }
 
-	log.Info("Updating existing records with calculated values...")
-	if err := updateExistingRecords(db); err != nil {
-		log.Fatalf("update existing records failed: %v", err)
-	}
-
-	log.Info("All migrations and updates completed successfully")
+	log.Info("All migrations completed successfully")
 }
 
 func runAutoMigrate(db *gorm.DB) error {
@@ -377,7 +377,7 @@ WHERE total_readiness_update_months IS NULL`
 		ID                    int
 		CompetencyGapAnalysis string
 	}
-	
+
 	var reports []ReportGap
 	if err := db.Table("reports").
 		Select("id, competency_gap_analysis").

@@ -1016,13 +1016,13 @@ export default function MasterPage() {
                   <TableCell className="text-center">
                     {Array.isArray(row.competencies) && row.competencies.length > 0 ? (
                       <div className="flex flex-wrap gap-1 justify-center">
-                        {row.competencies.map((c) => {
+                        {row.competencies.map((c, index) => {
                           const code = c?.competencyType?.code;
                           if (!code) return null;
 
                           return (
                             <span
-                              key={code}
+                              key={c.id || c.competencyTypeId || `${code}-${index}`}
                               className="px-2 py-1 rounded-xl text-xs font-semibold text-white"
                               style={{ backgroundColor: colorFromString(code) }}
                             >
@@ -1037,9 +1037,11 @@ export default function MasterPage() {
                   </TableCell>
                   <TableCell className="text-center">{row.totalGap || "-"}</TableCell>
                   <TableCell className="text-center">{row.strength || "-"}</TableCell>
-                  <TableCell className="text-center">{row.havQuadran || "-"}</TableCell>
+                  <TableCell className="text-center">{row.havQuadran2 || "-"}</TableCell>
                   <TableCell className="text-center">{row.talentClassified || "-"}</TableCell>
-                  <TableCell className="text-center">{row.readiness || "-"}</TableCell>
+                  <TableCell className="text-center">
+                    {row.totalReadinessUpdateMonths || "-"}
+                  </TableCell>
                   <TableCell className="text-center">{row.certificateEligible || "-"}</TableCell>
 
                   {/* Actions Column */}
