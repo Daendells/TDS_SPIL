@@ -77,7 +77,7 @@ func Bootstrap(config *BootstrapConfig) {
 	aspectRepository := repositories.NewAspectRepository(config.Log)
 
 	// --- Services (DB-based)
-	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository)
+	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository, gapCompetencyRepository)
 	userService := services.NewUserService(config.DB, config.Log, config.Validate, config.Config, userRepository)
 	mentoringReportService := services.NewMentoringReportService(config.DB, config.Log, config.Validate, mentoringReportRepository)
 	questionService := services.NewQuestionService(questionRepository, config.Validate)

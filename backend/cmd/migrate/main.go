@@ -376,7 +376,7 @@ WHERE total_readiness_update_months IS NULL`
 		ID                    int
 		CompetencyGapAnalysis string
 	}
-	
+
 	var reports []ReportGap
 	if err := db.Table("reports").
 		Select("id, competency_gap_analysis").
