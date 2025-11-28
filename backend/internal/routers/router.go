@@ -156,6 +156,11 @@ func (c *RouterConfig) SetupGuestRouter() {
 		seafarerAssessments.GET("/by-assessment-type/:assessmentTypeId", c.SeafarerAssessmentController.FindByAssessmentTypeID)
 	}
 
+	assessmentResults := c.App.Group("assessment-results")
+	{
+		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
+	}
+
 	// Register Question and Option routes
 	QuestionRouter(c.App, c.QuestionController)
 	OptionRouter(c.App, c.OptionController)
@@ -206,7 +211,6 @@ func (c *RouterConfig) SetupAuthRouter() {
 
 	assessmentResults := c.App.Group("assessment-results").Use(c.AuthMiddleware)
 	{
-		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
 		assessmentResults.GET("/seafarer/:seafarerCode", c.AssessmentResultController.FindBySeafarerCode)
 		assessmentResults.GET("/report/:seafarerCode", c.AssessmentResultController.GetValueAssessmentReportBySeafarerCode)
 	}

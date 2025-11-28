@@ -397,7 +397,7 @@ export default function Section2({
                               {option.optionLetter}.
                             </span>
                             <div className="flex flex-col gap-2">
-                              {option?.imageUrl && (
+                              {option?.isImage && (
                                 <Image
                                   src={BASE_URL + option?.imageUrl}
                                   width={300}

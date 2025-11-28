@@ -39,6 +39,15 @@ import { AspectResponse } from "@/types/aspect";
 
 const VA_1_CATEGORIES = ["Integrity", "Customer Oriented", "Competitive", "Team Work", "Visioner"];
 
+// Helper function to check if image URL is valid
+const isValidImageUrl = (imageUrl: string | null | undefined): boolean => {
+  if (!imageUrl || typeof imageUrl !== "string") return false;
+  const trimmed = imageUrl.trim();
+  if (trimmed === "" || trimmed === "null" || trimmed === "undefined") return false;
+  // Check if it starts with a valid path character
+  return trimmed.startsWith("/") || trimmed.startsWith("http");
+};
+
 export default function QuestionsAdmin() {
   const queryClient = useQueryClient();
 
@@ -389,7 +398,7 @@ export default function QuestionsAdmin() {
                             )}
                             {question.isImage === 1 && <Badge variant="outline">Ada Gambar</Badge>}
                           </div>
-                          {question.imageUrl && (
+                          {isValidImageUrl(question.imageUrl) && (
                             <Image
                               src={BASE_URL + question.imageUrl}
                               alt={`Gambar untuk pertanyaan ${index + 1}`}
@@ -447,7 +456,7 @@ export default function QuestionsAdmin() {
                                   {option.optionLetter.toUpperCase()}
                                 </Badge>
                                 <div className="flex flex-col gap-2">
-                                  {option.imageUrl && (
+                                  {isValidImageUrl(option.imageUrl) && (
                                     <Image
                                       src={BASE_URL + option.imageUrl}
                                       alt={option.optionLetter}

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
-import { IReport, ICompetencyType } from "@/types/global-types";
+import { IReport, ICompetencyType, IMentoringReport } from "@/types/global-types";
 import { api } from "@/app/lib/api";
 import { toast } from "sonner";
 
@@ -32,7 +32,7 @@ export function useMasterReportUI() {
   const [loadingCompetencies, setLoadingCompetencies] = useState(false);
 
   // Mentoring states
-  const [linkedMentoringReports, setLinkedMentoringReports] = useState<any[]>([]);
+  const [linkedMentoringReports, setLinkedMentoringReports] = useState<IMentoringReport[]>([]);
   const [loadingLinkedMentoring, setLoadingLinkedMentoring] = useState(false);
   const [mentoringDetailsDialogOpen, setMentoringDetailsDialogOpen] = useState(false);
   const [selectedPersonForMentoring, setSelectedPersonForMentoring] = useState<IReport | null>(
@@ -48,21 +48,17 @@ export function useMasterReportUI() {
 
     setLoadingLinkedMentoring(true);
     try {
-      console.log(`🔍 Fetching mentoring reports for: ${personName}`);
       const response = await api.get(`/api/master-reports/mentoring-programs`, {
         params: { personName: personName },
       });
-
-      console.log("📦 Raw API response:", response.data);
 
       // The response format is { data: [...] }
       const reports = response.data?.data || [];
 
       // Ensure reports is always an array
       const finalReports = Array.isArray(reports) ? reports : [];
-      console.log(`✅ Fetched ${finalReports.length} mentoring reports for ${personName}`);
       setLinkedMentoringReports(finalReports);
-    } catch (error) {
+    } catch {
       setLinkedMentoringReports([]);
     } finally {
       setLoadingLinkedMentoring(false);
@@ -77,8 +73,7 @@ export function useMasterReportUI() {
         const response = await api.get("/api/competency-types");
         const types = response.data?.data || response.data || [];
         setCompetencyTypes(types);
-      } catch (error) {
-        console.error("Failed to fetch competency types:", error);
+      } catch {
         toast.error("Failed to load competency types");
       } finally {
         setLoadingCompetencies(false);

@@ -9,6 +9,7 @@ import (
 	"net/http"
 	"path/filepath"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -23,6 +24,30 @@ type AssessmentController struct {
 	AssessmentService services.AssessmentService
 	QuestionService services.QuestionService
 	OptionService services.OptionService
+}
+
+// getAssessmentRoleByJabatan returns the assessment role based on job position hierarchy
+func getAssessmentRoleByJabatan(jabatan string) string {
+	jabatanUpper := strings.ToUpper(strings.TrimSpace(jabatan))
+
+	// Define the role hierarchy mapping
+	roleMap := map[string]string{
+		"NAHKODA":   "nahkoda",
+		"MUALIM 1":  "nahkoda",
+		"MUALIM_2":  "mualim_1",
+		"MUALIM_3":  "mualim_2",
+		"KKM":       "kkm",
+		"MASINIS_2": "kkm",
+		"MASINIS_3": "masinis_2",
+		"MASINIS_4": "masinis_3",
+	}
+
+	if role, exists := roleMap[jabatanUpper]; exists {
+		return role
+	}
+
+	// If no mapping found, return lowercase version of jabatan
+	return strings.ToLower(jabatan)
 }
 
 func NewAssessmentController(
@@ -104,7 +129,10 @@ func (controller *AssessmentController) FindByRole (ctx *gin.Context) {
 func (controller *AssessmentController) FindByRolePublic(ctx *gin.Context) {
 	role := ctx.Param("role")
 
-	assessment, err := controller.AssessmentService.FindByRole(controller.DB, role)
+	// Map role based on hierarchy (e.g., mualim_1 -> nahkoda, mualim_2 -> mualim_1, etc.)
+	assessmentRole := getAssessmentRoleByJabatan(role)
+
+	assessment, err := controller.AssessmentService.FindByRole(controller.DB, assessmentRole)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
 			Code: http.StatusInternalServerError,
@@ -114,7 +142,7 @@ func (controller *AssessmentController) FindByRolePublic(ctx *gin.Context) {
 		return
 	}
 
-	questionData, err := controller.QuestionService.FindByRole(controller.DB, role)
+	questionData, err := controller.QuestionService.FindByRole(controller.DB, assessmentRole)
 
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
