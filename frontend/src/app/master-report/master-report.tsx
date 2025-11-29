@@ -227,7 +227,10 @@ export default function MasterPage() {
       if (editingRow.performanceScore) {
         updatePayload.performanceScore = editingRow.performanceScore;
       }
-      if (editingRow.totalReadinessUpdateMonths !== undefined && editingRow.totalReadinessUpdateMonths !== null) {
+      if (
+        editingRow.totalReadinessUpdateMonths !== undefined &&
+        editingRow.totalReadinessUpdateMonths !== null
+      ) {
         updatePayload.totalReadinessUpdateMonths = editingRow.totalReadinessUpdateMonths;
       }
       if (editingRow.talentClassified) {
@@ -766,7 +769,11 @@ export default function MasterPage() {
                 type="number"
                 value={editingRow?.totalReadinessUpdateMonths || ""}
                 onChange={(e) =>
-                  editingRow && setEditingRow({ ...editingRow, totalReadinessUpdateMonths: parseInt(e.target.value) || 0 })
+                  editingRow &&
+                  setEditingRow({
+                    ...editingRow,
+                    totalReadinessUpdateMonths: parseInt(e.target.value) || 0,
+                  })
                 }
               />
             </div>
