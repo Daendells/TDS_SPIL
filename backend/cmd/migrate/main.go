@@ -60,8 +60,8 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.IDPTracking{}, // Depends on Report
 
 		// Tables with multiple dependencies
-		&doma        POST http://localhost:8080/api/idp-tracking/refresh/1in.Aspect{},
-		&domain.CompetencyProgramMapping{},
+        
+		&domain.Aspect{},
 		&domain.TrainingSchedule{},
 		&domain.GapCompetency{},
 		&domain.MentoringReportRelation{},

@@ -3,7 +3,15 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
-import { ChevronDown, ChevronRight, Save, RotateCcw, Edit, Download, PlayCircle } from "lucide-react";
+import {
+  ChevronDown,
+  ChevronRight,
+  Save,
+  RotateCcw,
+  Edit,
+  Download,
+  PlayCircle,
+} from "lucide-react";
 import { toast } from "sonner";
 import { useSwapSchedules, useToggleTrainingStarted } from "./_hooks/useTrainingPlan";
 import type { TrainingPlanSummary } from "./_hooks/useTrainingPlan";
@@ -279,14 +287,14 @@ export default function TrainingScheduleTimeline({
         scheduleId,
         isStarted: !currentStatus,
       });
-      
-      setSchedules(prev =>
-        prev.map(s => s.id === scheduleId ? { ...s, isStarted: !currentStatus } : s)
+
+      setSchedules((prev) =>
+        prev.map((s) => (s.id === scheduleId ? { ...s, isStarted: !currentStatus } : s))
       );
-      setOriginalSchedules(prev =>
-        prev.map(s => s.id === scheduleId ? { ...s, isStarted: !currentStatus } : s)
+      setOriginalSchedules((prev) =>
+        prev.map((s) => (s.id === scheduleId ? { ...s, isStarted: !currentStatus } : s))
       );
-      
+
       toast.success(`Training ${!currentStatus ? "started" : "stopped"}!`);
     } catch {
       toast.error("Failed to toggle training status");
@@ -435,10 +443,14 @@ export default function TrainingScheduleTimeline({
                                       </div>
                                       <div className="flex items-center gap-2">
                                         <div className="flex items-center gap-1.5">
-                                          <PlayCircle className={`h-3.5 w-3.5 ${schedule.isStarted ? "text-green-600" : "text-gray-400"}`} />
+                                          <PlayCircle
+                                            className={`h-3.5 w-3.5 ${schedule.isStarted ? "text-green-600" : "text-gray-400"}`}
+                                          />
                                           <Switch
                                             checked={schedule.isStarted}
-                                            onCheckedChange={() => handleToggleStarted(schedule.id, schedule.isStarted)}
+                                            onCheckedChange={() =>
+                                              handleToggleStarted(schedule.id, schedule.isStarted)
+                                            }
                                             disabled={toggleLoading === schedule.id}
                                             className="scale-75"
                                           />
