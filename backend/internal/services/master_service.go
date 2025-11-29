@@ -495,6 +495,9 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 	if request.PerformanceScore != nil {
 		existing.PerformanceScore = request.PerformanceScore
 	}
+	if request.TotalReadinessUpdateMonths != nil {
+		existing.TotalReadinessUpdateMonths = request.TotalReadinessUpdateMonths
+	}
 	if request.Readiness != nil {
 		existing.Readiness = nullifyStringPtr(request.Readiness)
 	}

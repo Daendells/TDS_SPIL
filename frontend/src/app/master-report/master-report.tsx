@@ -227,8 +227,8 @@ export default function MasterPage() {
       if (editingRow.performanceScore) {
         updatePayload.performanceScore = editingRow.performanceScore;
       }
-      if (editingRow.readiness) {
-        updatePayload.readiness = editingRow.readiness;
+      if (editingRow.totalReadinessUpdateMonths !== undefined && editingRow.totalReadinessUpdateMonths !== null) {
+        updatePayload.totalReadinessUpdateMonths = editingRow.totalReadinessUpdateMonths;
       }
       if (editingRow.talentClassified) {
         updatePayload.talentClassified = editingRow.talentClassified;
@@ -763,9 +763,10 @@ export default function MasterPage() {
               <Input
                 id="edit-readiness"
                 placeholder="Readiness"
-                value={editingRow?.readiness || ""}
+                type="number"
+                value={editingRow?.totalReadinessUpdateMonths || ""}
                 onChange={(e) =>
-                  editingRow && setEditingRow({ ...editingRow, readiness: e.target.value })
+                  editingRow && setEditingRow({ ...editingRow, totalReadinessUpdateMonths: parseInt(e.target.value) || 0 })
                 }
               />
             </div>

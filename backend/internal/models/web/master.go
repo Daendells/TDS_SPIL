@@ -91,20 +91,21 @@ func (r *DeleteMasterRequest) ParseID(param string) error {
 }
 
 type UpdateMasterRequest struct {
-	ID                uint    `json:"-"`
-	Nama              *string `json:"nama"`
-	SeafarerCode      *string `json:"seafarerCode"`
-	SeamanCode        *string `json:"seamanCode"`
-	Jabatan           *string `json:"jabatan"`
-	VesselName        *string `json:"vesselName"`
-	StartDate         *string `json:"startDate"`
-	Age               *string `json:"age"`
-	Certificate       *string `json:"certificate"`
-	IDPProgram        *string `json:"idpProgram"`
-	PerformanceScore  *int    `json:"performanceScore"`
-	Readiness         *string `json:"readiness"`
-	TalentClassified  *string `json:"talentClassified"`
-	MentoringReportID *int64  `json:"mentoringReportId"` // Link to mentoring report
+	ID                         uint    `json:"-"`
+	Nama                       *string `json:"nama"`
+	SeafarerCode               *string `json:"seafarerCode"`
+	SeamanCode                 *string `json:"seamanCode"`
+	Jabatan                    *string `json:"jabatan"`
+	VesselName                 *string `json:"vesselName"`
+	StartDate                  *string `json:"startDate"`
+	Age                        *string `json:"age"`
+	Certificate                *string `json:"certificate"`
+	IDPProgram                 *string `json:"idpProgram"`
+	PerformanceScore           *int    `json:"performanceScore"`
+	Readiness                  *string `json:"readiness"`
+	TotalReadinessUpdateMonths *int    `json:"totalReadinessUpdateMonths"`
+	TalentClassified           *string `json:"talentClassified"`
+	MentoringReportID          *int64  `json:"mentoringReportId"` // Link to mentoring report
 	// honly competency types
 	CompetencyUpdateRequests []CompetencyUpdateRequest `json:"competencies"`
 }
