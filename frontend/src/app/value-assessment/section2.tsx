@@ -12,6 +12,7 @@ import { useTimerPauseResume } from "@/hooks/useTimerPauseResume";
 import { useStorageCountdown } from "@/hooks/use-local-storage";
 import Image from "next/image";
 import { BASE_URL } from "../lib/api";
+import { isValidImageUrl } from "../assessment-manager/questions-admin";
 
 interface Section2Props {
   onNext: () => void;
@@ -56,6 +57,16 @@ export default function Section2({
       updateAssessmentData({ section2TimerMinutes: timerMinutes });
     }
   }, [timerMinutes, assessmentData.section2TimerMinutes, updateAssessmentData]);
+
+  // Store usingTimer in assessmentData
+  useEffect(() => {
+    if (
+      assessment?.usingTimer !== undefined &&
+      assessmentData.usingTimer !== assessment.usingTimer
+    ) {
+      updateAssessmentData({ usingTimer: assessment.usingTimer });
+    }
+  }, [assessment?.usingTimer, assessmentData.usingTimer, updateAssessmentData]);
 
   // Stable pause/resume callbacks to prevent hook re-setup
   const handlePause = useCallback(() => {
@@ -397,7 +408,7 @@ export default function Section2({
                               {option.optionLetter}.
                             </span>
                             <div className="flex flex-col gap-2">
-                              {option?.isImage && (
+                              {isValidImageUrl(option.imageUrl) && (
                                 <Image
                                   src={BASE_URL + option?.imageUrl}
                                   width={300}

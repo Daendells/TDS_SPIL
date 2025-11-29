@@ -14,7 +14,7 @@ export interface QuestionOptionPublicResponse {
   questionId: number;
   questionText: string;
   category: string;
-  isImage: string;
+  isImage: number;
   imageUrl: string;
   options: OptionPublicResponse[];
 }

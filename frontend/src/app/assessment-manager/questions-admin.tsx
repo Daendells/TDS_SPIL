@@ -40,12 +40,12 @@ import { AspectResponse } from "@/types/aspect";
 const VA_1_CATEGORIES = ["Integrity", "Customer Oriented", "Competitive", "Team Work", "Visioner"];
 
 // Helper function to check if image URL is valid
-const isValidImageUrl = (imageUrl: string | null | undefined): boolean => {
+export const isValidImageUrl = (imageUrl: string | null | undefined): boolean => {
   if (!imageUrl || typeof imageUrl !== "string") return false;
   const trimmed = imageUrl.trim();
   if (trimmed === "" || trimmed === "null" || trimmed === "undefined") return false;
   // Check if it starts with a valid path character
-  return trimmed.startsWith("/") || trimmed.startsWith("http");
+  return trimmed.startsWith("/");
 };
 
 export default function QuestionsAdmin() {

@@ -590,12 +590,14 @@ export default function QuestionDialog({
                         <Label className="text-sm font-medium">Skor</Label>
                         <Input
                           type="number"
-                          value={option.score}
-                          onChange={(e) =>
-                            updateOption(index, "score", parseInt(e.target.value) || 0)
-                          }
+                          value={option.score === 0 ? "" : option.score}
+                          onChange={(e) => {
+                            const value = e.target.value;
+                            updateOption(index, "score", value === "" ? 0 : parseInt(value));
+                          }}
+                          onWheel={(e) => e.currentTarget.blur()}
                           placeholder="0"
-                          className="mt-1"
+                          className="mt-1 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                         />
                       </div>
 

@@ -44,6 +44,7 @@ func ToReportData(data *domain.Report) web.ReportData {
 		HavQuadran2:          data.HavQuadran2,
 		TalentClassified2:    data.TalentClassified2,
 		Readiness:            data.Readiness,
+		TotalReadinessUpdateMonths: 		data.TotalReadinessUpdateMonths,
 		CertificateEligible:  data.CertificateEligible,
 
 		// Training, Mentoring, Coaching

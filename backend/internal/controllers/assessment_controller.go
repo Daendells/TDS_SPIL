@@ -33,7 +33,7 @@ func getAssessmentRoleByJabatan(jabatan string) string {
 	// Define the role hierarchy mapping
 	roleMap := map[string]string{
 		"NAHKODA":   "nahkoda",
-		"MUALIM 1":  "nahkoda",
+		"MUALIM_1":  "nahkoda",
 		"MUALIM_2":  "mualim_1",
 		"MUALIM_3":  "mualim_2",
 		"KKM":       "kkm",

@@ -104,6 +104,7 @@ func (controller *QuestionOptionController) CreateQuestionWithOptions(ctx *gin.C
 	}
 
 	controller.Log.WithField("request", request).Info("Creating question with options")
+	
 
 	// START TRANSACTION
 	tx := controller.DB.Begin()
@@ -125,6 +126,13 @@ func (controller *QuestionOptionController) CreateQuestionWithOptions(ctx *gin.C
 		}
 	}()
 
+	// Update question within transaction
+	var aspectID *int64
+	if request.AspectID != nil {
+		val := int64(*request.AspectID)
+		aspectID = &val
+	}
+
 	// Create question within transaction
 	questionRequest := web.QuestionCreateRequest{
 		Role:         request.Role,
@@ -133,6 +141,8 @@ func (controller *QuestionOptionController) CreateQuestionWithOptions(ctx *gin.C
 		Category:     helpers.StringToPtr(request.Category),
 		IsImage:      helpers.StringToPtr(request.IsImage),
 		ImageURL:     helpers.StringToPtr(request.ImageUrl),
+		AspectID:     aspectID,
+
 	}
 
 	questionData, err := controller.QuestionService.Create(tx, &questionRequest)
@@ -241,6 +251,12 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 	}()
 
 	// Update question within transaction
+	var aspectID *int64
+	if request.AspectID != nil {
+		val := int64(*request.AspectID)
+		aspectID = &val
+	}
+
 	questionRequest := web.QuestionUpdateRequest{
 		QuestionID:   questionId,
 		Role:         request.Role,
@@ -249,6 +265,7 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 		Category:     request.Category,
 		IsImage:      request.IsImage,
 		ImageURL:     request.ImageURL,
+		AspectID:     aspectID,
 	}
 
 	questionData, err := controller.QuestionService.Update(tx, &questionRequest)
