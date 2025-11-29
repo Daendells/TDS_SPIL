@@ -64,6 +64,16 @@ export default function Section3({
     }
   }, [timerMinutes, assessmentData.section3TimerMinutes, updateAssessmentData]);
 
+  // Store usingTimer in assessmentData
+  useEffect(() => {
+    if (
+      assessment?.usingTimer !== undefined &&
+      assessmentData.usingTimer !== assessment.usingTimer
+    ) {
+      updateAssessmentData({ usingTimer: assessment.usingTimer });
+    }
+  }, [assessment?.usingTimer, assessmentData.usingTimer, updateAssessmentData]);
+
   // Stable pause/resume callbacks to prevent hook re-setup
   const handlePause = useCallback(() => {
     const now = new Date().toISOString();
@@ -334,7 +344,7 @@ export default function Section3({
 
                 {/* Question Statement */}
                 <div className="mb-8 p-6 bg-gray-50 rounded-lg border-l-4 border-blue-400 flex flex-col gap-2">
-                  {currentQuestion?.isImage && (
+                  {currentQuestion?.isImage === 1 && (
                     <Image
                       src={BASE_URL + currentQuestion?.imageUrl}
                       width={300}

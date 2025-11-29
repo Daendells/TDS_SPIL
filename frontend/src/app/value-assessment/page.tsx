@@ -43,6 +43,7 @@ export interface ValueAssessmentData {
   section1SisaWaktu?: number;
   section2SisaWaktu?: number;
   section3SisaWaktu?: number;
+  usingTimer?: boolean;
 }
 
 export default function ValueAssessmentPage() {
@@ -725,6 +726,7 @@ export default function ValueAssessmentPage() {
                       : undefined
               }
               isActive={currentStep >= 3 && currentStep <= 5}
+              usingTimer={assessmentData.usingTimer}
             />
           )}
 

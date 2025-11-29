@@ -21,6 +21,7 @@ type UpdateQuestionWithOptionsRequest struct {
 	Category     *string                  `json:"category"`
 	IsImage      *string                  `json:"isImage"`
 	ImageURL     *string                  `json:"imageUrl"`
+	AspectID     *int                     `json:"aspectId"`
 	Options      []OptionOperationRequest `json:"options" validate:"required,min=1"`
 }
 

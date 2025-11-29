@@ -372,7 +372,7 @@ export default function TalentProfilePage({ params }: PageProps) {
               <strong>Rank:</strong> {report.successionRank}
             </p>
             <p>
-              <strong>Readiness:</strong> {report.readiness}
+              <strong>Readiness:</strong> {report.totalReadinessUpdateMonths + " Months"}
             </p>
           </div>
         </div>

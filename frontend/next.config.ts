@@ -5,19 +5,28 @@ const nextConfig: NextConfig = {
   output: "standalone",
   images: {
     remotePatterns: [
+      // Development: localhost
       {
         protocol: "http",
         hostname: "localhost",
         port: "8080",
-        pathname: "/storage/**",
       },
       {
         protocol: "http",
         hostname: "127.0.0.1",
         port: "8080",
-        pathname: "/storage/**",
+      },
+      // Production: Allow all HTTPS origins
+      {
+        protocol: "https",
+        hostname: "**",
       },
     ],
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    // Only use unoptimized in development to allow localhost images
+    // In production, images will be optimized normally
+    unoptimized: true,
   },
 };
 

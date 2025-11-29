@@ -11,6 +11,7 @@ interface TimerDisplayProps {
   pauseTimestamp?: string;
   sisaWaktu?: number; // remaining time when paused (in seconds)
   isActive?: boolean;
+  usingTimer?: boolean; // Whether assessment uses timer or not
   // Optional legacy props (not used anymore)
   timeLeft?: number;
   isRunning?: boolean;
@@ -28,6 +29,7 @@ const TimerDisplay: React.FC<TimerDisplayProps> = ({
   pauseTimestamp,
   sisaWaktu,
   isActive = true,
+  usingTimer = true,
 }) => {
   // Use section countdown hook for accurate timer with sisaWaktu approach
   const { timeRemaining, timeRemainingFormatted } = useSectionCountdown(
@@ -48,6 +50,11 @@ const TimerDisplay: React.FC<TimerDisplayProps> = ({
   const getBackgroundColor = () => {
     return "bg-blue-50 border-blue-200"; // Background konsisten untuk semua waktu
   };
+
+  // If assessment doesn't use timer, don't render anything
+  if (!usingTimer) {
+    return null;
+  }
 
   return (
     <div

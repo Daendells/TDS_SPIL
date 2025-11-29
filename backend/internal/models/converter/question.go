@@ -26,6 +26,7 @@ func QuestionCreateRequestToQuestion(request *web.QuestionCreateRequest) domain.
 		Category:     request.Category,
 		IsImage:      request.IsImage,
 		ImageURL:     request.ImageURL,
+		AspectID:     request.AspectID,
 	}
 }
 

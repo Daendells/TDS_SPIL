@@ -411,6 +411,7 @@ export default function CESAssessmentPage() {
               pauseTimestamp={assessmentData.pauseTimestamp}
               sisaWaktu={assessmentData.sisaWaktu}
               isActive={currentStep === 3}
+              usingTimer={assessmentData.usingTimer}
             />
           )}
           {renderCurrentStep()}
