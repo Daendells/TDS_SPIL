@@ -233,11 +233,17 @@ export function AspectQuestionAssignmentDialog({
                       return (
                         <div
                           key={question.questionId}
-                          className={`border rounded-lg p-3 hover:bg-muted/50 transition-colors ${
+                          className={`border rounded-lg p-3 hover:bg-muted/50 transition-colors cursor-pointer ${
                             selectedQuestionIds.includes(question.questionId)
                               ? "bg-blue-50 border-blue-300"
                               : ""
                           }`}
+                          onClick={() => {
+                            const isCurrentlyChecked = selectedQuestionIds.includes(
+                              question.questionId
+                            );
+                            handleSelectQuestion(question.questionId, !isCurrentlyChecked);
+                          }}
                         >
                           <div className="flex items-start gap-3">
                             <Checkbox
@@ -246,6 +252,7 @@ export function AspectQuestionAssignmentDialog({
                                 handleSelectQuestion(question.questionId, checked as boolean)
                               }
                               className="mt-1"
+                              onClick={(e) => e.stopPropagation()}
                             />
                             <div className="flex-1 min-w-0">
                               <div className="flex items-center gap-2 mb-2 flex-wrap">
