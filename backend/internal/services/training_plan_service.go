@@ -3,11 +3,13 @@ package services
 import (
 	"backend/internal/models/domain"
 	"backend/internal/repositories"
+	"bytes"
 	"fmt"
 	"math/rand"
 	"time"
 
 	"github.com/sirupsen/logrus"
+	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
 )
 
@@ -17,6 +19,7 @@ type TrainingPlanService interface {
 	GenerateSchedulesWithStartDate(program string, startDate time.Time) error
 	GetCompetencyMapping(program string) map[string]domain.CompetencyMappingItem
 	UpdateScheduledDate(id int, newDate time.Time) error
+	GenerateTrainingPlanExcel(program string) (*bytes.Buffer, error)
 }
 
 type trainingPlanService struct {
@@ -896,4 +899,409 @@ func (s *trainingPlanService) generateMateri2Schedules(schedules *[]domain.Train
 
 func (s *trainingPlanService) UpdateScheduledDate(id int, newDate time.Time) error {
 	return s.trainingScheduleRepo.UpdateScheduledDate(id, newDate)
+}
+
+func (s *trainingPlanService) GenerateTrainingPlanExcel(program string) (*bytes.Buffer, error) {
+	trainingPlan, err := s.GetTrainingPlan(program)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get training plan: %w", err)
+	}
+
+	if trainingPlan.Summary.TrainingMateri1 == nil && trainingPlan.Summary.TrainingMateri2 == nil {
+		return nil, fmt.Errorf("no training schedules available for program %s", program)
+	}
+
+	f := excelize.NewFile()
+	defer func() {
+		if err := f.Close(); err != nil {
+			s.log.WithError(err).Error("Failed to close Excel file")
+		}
+	}()
+
+	sheetOverview := "Overview"
+	sheetMatrix := "Training Matrix"
+	
+	f.SetSheetName("Sheet1", sheetOverview)
+	_, err = f.NewSheet(sheetMatrix)
+	if err != nil {
+		return nil, fmt.Errorf("failed to create matrix sheet: %w", err)
+	}
+
+	if err := s.createOverviewSheet(f, sheetOverview, trainingPlan, program); err != nil {
+		return nil, fmt.Errorf("failed to create overview sheet: %w", err)
+	}
+
+	if err := s.createMatrixSheet(f, sheetMatrix, trainingPlan, program); err != nil {
+		return nil, fmt.Errorf("failed to create matrix sheet: %w", err)
+	}
+
+	sheetIndex, err := f.GetSheetIndex(sheetOverview)
+	if err != nil {
+		return nil, fmt.Errorf("failed to get sheet index: %w", err)
+	}
+	f.SetActiveSheet(sheetIndex)
+
+	buf := new(bytes.Buffer)
+	if err := f.Write(buf); err != nil {
+		return nil, fmt.Errorf("failed to write Excel to buffer: %w", err)
+	}
+
+	return buf, nil
+}
+
+func (s *trainingPlanService) createOverviewSheet(f *excelize.File, sheetName string, trainingPlan *domain.TrainingPlanResponse, program string) error {
+	headerStyle, err := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{
+			Bold: true,
+			Size: 14,
+		},
+		Alignment: &excelize.Alignment{
+			Horizontal: "left",
+			Vertical:   "center",
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	titleStyle, err := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{
+			Bold: true,
+			Size: 18,
+		},
+		Alignment: &excelize.Alignment{
+			Horizontal: "center",
+			Vertical:   "center",
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	labelStyle, err := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{
+			Bold: true,
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	f.SetCellValue(sheetName, "A1", "Training Plan Overview")
+	f.SetCellStyle(sheetName, "A1", "B1", titleStyle)
+	f.MergeCell(sheetName, "A1", "B1")
+
+	row := 3
+	programName := program
+	switch program {
+	case "SDP":
+		programName = "Senior Development Program"
+	case "MDP":
+		programName = "Management Development Program"
+	case "FDP":
+		programName = "Future Development Program"
+	}
+
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "Program:")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), programName)
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), labelStyle)
+	row++
+
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "Total Participants:")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), len(trainingPlan.Participants))
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), labelStyle)
+	row++
+
+	mandatoryCount := 0
+	nonMandatoryCount := 0
+	competencyMapping := s.GetCompetencyMapping(program)
+	
+	if trainingPlan.Summary.Category != nil {
+		for code, cat := range trainingPlan.Summary.Category {
+			if _, exists := competencyMapping[code]; exists {
+				if cat == "M" {
+					mandatoryCount++
+				} else {
+					nonMandatoryCount++
+				}
+			}
+		}
+	}
+
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "Mandatory Competencies:")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), mandatoryCount)
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), labelStyle)
+	row++
+
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "Non-Mandatory Competencies:")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), nonMandatoryCount)
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), labelStyle)
+	row++
+
+	avgGap := 0.0
+	if len(trainingPlan.Participants) > 0 {
+		totalGaps := 0
+		for _, p := range trainingPlan.Participants {
+			totalGaps += p.Total
+		}
+		avgGap = float64(totalGaps) / float64(len(trainingPlan.Participants))
+	}
+
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "Average Gap Score:")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), fmt.Sprintf("%.2f", avgGap))
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), labelStyle)
+	row++
+
+	deadlineText := fmt.Sprintf("%d months", trainingPlan.MinDeadlineMonths)
+	if trainingPlan.MinDeadlineMonths == 1 {
+		deadlineText = "1 month"
+	}
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "Mandatory Training Deadline:")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), deadlineText)
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), labelStyle)
+	row++
+
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "Generated Date:")
+	f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), time.Now().Format("2006-01-02 15:04:05"))
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("A%d", row), labelStyle)
+	row++
+
+	row++
+	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "Participants List")
+	f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("F%d", row), headerStyle)
+	row++
+
+	tableHeaderStyle, err := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{
+			Bold: true,
+		},
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"#E0E0E0"},
+			Pattern: 1,
+		},
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	cellStyle, err := f.NewStyle(&excelize.Style{
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	headers := []string{"Seaman Code", "Name", "Position", "Vessel", "Total Gaps", "Readiness"}
+	for i, header := range headers {
+		cell := fmt.Sprintf("%c%d", 'A'+i, row)
+		f.SetCellValue(sheetName, cell, header)
+		f.SetCellStyle(sheetName, cell, cell, tableHeaderStyle)
+	}
+	row++
+
+	for _, p := range trainingPlan.Participants {
+		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), p.SeamanCode)
+		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), p.Name)
+		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), p.Position)
+		f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), p.VesselName)
+		f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), p.Total)
+		f.SetCellValue(sheetName, fmt.Sprintf("F%d", row), p.Readiness)
+
+		for i := 0; i < 6; i++ {
+			cell := fmt.Sprintf("%c%d", 'A'+i, row)
+			f.SetCellStyle(sheetName, cell, cell, cellStyle)
+		}
+		row++
+	}
+
+	f.SetColWidth(sheetName, "A", "A", 15)
+	f.SetColWidth(sheetName, "B", "B", 25)
+	f.SetColWidth(sheetName, "C", "C", 20)
+	f.SetColWidth(sheetName, "D", "D", 20)
+	f.SetColWidth(sheetName, "E", "E", 12)
+	f.SetColWidth(sheetName, "F", "F", 15)
+
+	return nil
+}
+
+func (s *trainingPlanService) createMatrixSheet(f *excelize.File, sheetName string, trainingPlan *domain.TrainingPlanResponse, program string) error {
+	competencyMapping := s.GetCompetencyMapping(program)
+
+	type scheduleItem struct {
+		competencyCode string
+		competencyName string
+		category       string
+		material1Date  time.Time
+		material2Date  time.Time
+	}
+
+	schedules := make([]scheduleItem, 0)
+	processedCodes := make(map[string]bool)
+
+	for code := range competencyMapping {
+		if processedCodes[code] {
+			continue
+		}
+		processedCodes[code] = true
+
+		item := scheduleItem{
+			competencyCode: code,
+			competencyName: competencyMapping[code].Name,
+			category:       trainingPlan.Summary.Category[code],
+		}
+
+		if dateStr, exists := trainingPlan.Summary.TrainingMateri1[code]; exists && dateStr != "-" {
+			if parsedDate, err := time.Parse(time.RFC3339, dateStr); err == nil {
+				item.material1Date = parsedDate
+			}
+		}
+
+		if dateStr, exists := trainingPlan.Summary.TrainingMateri2[code]; exists && dateStr != "-" {
+			if parsedDate, err := time.Parse(time.RFC3339, dateStr); err == nil {
+				item.material2Date = parsedDate
+			}
+		}
+
+		if !item.material1Date.IsZero() || !item.material2Date.IsZero() {
+			schedules = append(schedules, item)
+		}
+	}
+
+	if len(schedules) == 0 {
+		return fmt.Errorf("no schedules to display in matrix")
+	}
+
+	headerStyle, err := f.NewStyle(&excelize.Style{
+		Font: &excelize.Font{
+			Bold:  true,
+			Color: "FFFFFF",
+		},
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"#4472C4"},
+			Pattern: 1,
+		},
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+		Alignment: &excelize.Alignment{
+			Horizontal: "center",
+			Vertical:   "center",
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	mandatoryStyle, err := f.NewStyle(&excelize.Style{
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"#FF6B6B"},
+			Pattern: 1,
+		},
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	nonMandatoryStyle, err := f.NewStyle(&excelize.Style{
+		Fill: excelize.Fill{
+			Type:    "pattern",
+			Color:   []string{"#4ECDC4"},
+			Pattern: 1,
+		},
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	cellStyle, err := f.NewStyle(&excelize.Style{
+		Border: []excelize.Border{
+			{Type: "left", Color: "000000", Style: 1},
+			{Type: "right", Color: "000000", Style: 1},
+			{Type: "top", Color: "000000", Style: 1},
+			{Type: "bottom", Color: "000000", Style: 1},
+		},
+	})
+	if err != nil {
+		return err
+	}
+
+	f.SetCellValue(sheetName, "A1", "Competency Code")
+	f.SetCellValue(sheetName, "B1", "Competency Name")
+	f.SetCellValue(sheetName, "C1", "Category")
+	f.SetCellValue(sheetName, "D1", "Material 1 Date")
+	f.SetCellValue(sheetName, "E1", "Material 2 Date")
+
+	f.SetCellStyle(sheetName, "A1", "E1", headerStyle)
+
+	row := 2
+	for _, item := range schedules {
+		f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), item.competencyCode)
+		f.SetCellValue(sheetName, fmt.Sprintf("B%d", row), item.competencyName)
+		
+		categoryText := "Non-Mandatory"
+		if item.category == "M" {
+			categoryText = "Mandatory"
+		}
+		f.SetCellValue(sheetName, fmt.Sprintf("C%d", row), categoryText)
+
+		if !item.material1Date.IsZero() {
+			f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), item.material1Date.Format("2006-01-02"))
+		} else {
+			f.SetCellValue(sheetName, fmt.Sprintf("D%d", row), "-")
+		}
+
+		if !item.material2Date.IsZero() {
+			f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), item.material2Date.Format("2006-01-02"))
+		} else {
+			f.SetCellValue(sheetName, fmt.Sprintf("E%d", row), "-")
+		}
+
+		categoryStyle := nonMandatoryStyle
+		if item.category == "M" {
+			categoryStyle = mandatoryStyle
+		}
+
+		f.SetCellStyle(sheetName, fmt.Sprintf("A%d", row), fmt.Sprintf("B%d", row), cellStyle)
+		f.SetCellStyle(sheetName, fmt.Sprintf("C%d", row), fmt.Sprintf("C%d", row), categoryStyle)
+		f.SetCellStyle(sheetName, fmt.Sprintf("D%d", row), fmt.Sprintf("E%d", row), cellStyle)
+
+		row++
+	}
+
+	f.SetColWidth(sheetName, "A", "A", 18)
+	f.SetColWidth(sheetName, "B", "B", 35)
+	f.SetColWidth(sheetName, "C", "C", 15)
+	f.SetColWidth(sheetName, "D", "D", 18)
+	f.SetColWidth(sheetName, "E", "E", 18)
+
+	return nil
 }

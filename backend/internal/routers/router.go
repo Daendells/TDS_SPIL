@@ -75,6 +75,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		trainingPlan.PUT("/swap-schedules", c.TrainingPlanController.SwapSchedules)
 		trainingPlan.GET("/competency-mapping", c.TrainingPlanController.GetCompetencyMapping)
 		trainingPlan.GET("/programs", c.TrainingPlanController.GetAvailablePrograms)
+		trainingPlan.GET("/export-excel", c.TrainingPlanController.ExportTrainingPlanExcel)
 	}
 
 	// Competency Mapping CMS endpoints
