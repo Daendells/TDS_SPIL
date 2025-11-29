@@ -60,7 +60,7 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.IDPTracking{}, // Depends on Report
 
 		// Tables with multiple dependencies
-        
+		&domain.CompetencyProgramMapping{}, // Depends on CompetencyType and Training
 		&domain.Aspect{},
 		&domain.TrainingSchedule{},
 		&domain.GapCompetency{},
