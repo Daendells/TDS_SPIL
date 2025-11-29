@@ -24,6 +24,7 @@ func NewAspectService(db *gorm.DB, log *logrus.Logger, aspectRepository *reposit
 	}
 }
 
+
 func (s *AspectService) Create(request *web.AspectCreateRequest) (*web.AspectData, error) {
 	aspect := converter.AspectCreateRequestToAspect(request)
 
