@@ -196,7 +196,7 @@ export default function DashboardClient() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="text-center">Seaman Code</TableHead>
+              <TableHead className="text-center">Seafarer Code</TableHead>
               <TableHead className="text-center">Nama Talent</TableHead>
               <TableHead className="text-center">Rank</TableHead>
               <TableHead className="text-center">Program</TableHead>
@@ -225,11 +225,13 @@ export default function DashboardClient() {
                   className="cursor-pointer hover:bg-gray-100"
                   onClick={() => handleRowClick(report)}
                 >
-                  <TableCell className="text-center font-bold">{report.seamanCode}</TableCell>
+                  <TableCell className="text-center font-bold">{report.seafarerCode}</TableCell>
                   <TableCell className="text-center">{report.nama}</TableCell>
                   <TableCell className="text-center">{report.jabatan}</TableCell>
                   <TableCell className="text-center">{report.idpProgram}</TableCell>
-                  <TableCell className="text-center">{report.readiness}</TableCell>
+                  <TableCell className="text-center">
+                    {report.totalReadinessUpdateMonths + " Months"}
+                  </TableCell>
                 </TableRow>
               ))
             ) : (

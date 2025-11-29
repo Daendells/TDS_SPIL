@@ -13,6 +13,7 @@ export interface AssessmentData {
   timerMinutes?: number;
   pauseTimestamp?: string;
   sisaWaktu?: number;
+  usingTimer?: boolean;
 }
 
 export type CESAssessmentData = AssessmentData;

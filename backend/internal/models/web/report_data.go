@@ -1,4 +1,5 @@
 package web
+
 import "time"
 
 type IDPCountData struct {
@@ -46,6 +47,7 @@ type ReportData struct {
 	HavQuadran2           int    `json:"havQuadran2" gorm:"column:hav_quadran2"`
 	TalentClassified2     string `json:"talentClassified2" gorm:"column:talent_classified2"`
 	Readiness             string `json:"readiness" gorm:"column:readiness"`
+	TotalReadinessUpdateMonths *int `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness"`
 	CertificateEligible   string `json:"certificateEligible" gorm:"column:certificate_eligible"`
 
 	// Training, Mentoring, Coaching

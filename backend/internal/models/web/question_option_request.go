@@ -11,6 +11,7 @@ type CreateQuestionWithOptionsRequest struct {
 	Category     string                `json:"category"`
 	IsImage      string                `json:"isImage"`
 	ImageUrl     string                `json:"imageUrl"`
+	AspectID     *int                  `json:"aspectId"`
 	Options      []CreateOptionRequest `json:"options" binding:"required,min=1"`
 }
 
@@ -21,4 +22,3 @@ type CreateOptionRequest struct {
 	IsImage      int    `json:"isImage"`
 	ImageURL     string `json:"imageUrl"`
 }
-

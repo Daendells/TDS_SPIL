@@ -12,6 +12,7 @@ import { ValueAssessmentData } from "./page";
 import Image from "next/image";
 import { useGetAssessmentByRole, usePostAssessmentResults } from "./_hooks/useAssessment";
 import { BASE_URL } from "../lib/api";
+import { isValidImageUrl } from "../assessment-manager/questions-admin";
 
 interface Section1Props {
   onNext: () => void;
@@ -64,6 +65,16 @@ export default function Section1({
       updateAssessmentData({ section1TimerMinutes: timerMinutes });
     }
   }, [timerMinutes, assessmentData.section1TimerMinutes, updateAssessmentData]);
+
+  // Store usingTimer in assessmentData
+  useEffect(() => {
+    if (
+      assessment?.usingTimer !== undefined &&
+      assessmentData.usingTimer !== assessment.usingTimer
+    ) {
+      updateAssessmentData({ usingTimer: assessment.usingTimer });
+    }
+  }, [assessment?.usingTimer, assessmentData.usingTimer, updateAssessmentData]);
 
   // Stable pause/resume callbacks to prevent hook re-setup
   const handlePause = useCallback(() => {
@@ -375,7 +386,7 @@ export default function Section1({
                 </div>
 
                 <div className="text-gray-700 text-lg leading-relaxed mb-6 flex flex-col gap-2">
-                  {currentQuestion?.isImage && (
+                  {currentQuestion?.isImage === 1 && (
                     <Image
                       src={BASE_URL + currentQuestion?.imageUrl}
                       width={300}
@@ -425,7 +436,7 @@ export default function Section1({
                         >
                           <span className="font-medium">{option.optionLetter}.</span>{" "}
                           <div className="flex flex-col gap-2">
-                            {option?.isImage && (
+                            {isValidImageUrl(option.imageUrl) && (
                               <Image
                                 src={BASE_URL + option?.imageUrl}
                                 width={300}

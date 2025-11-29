@@ -11,6 +11,7 @@ import { CESAssessmentData } from "../types";
 import Image from "next/image";
 import { useGetAssessmentByRole, usePostCESResults } from "./_hooks/useAssessment";
 import { BASE_URL } from "../../lib/api";
+import { isValidImageUrl } from "@/app/assessment-manager/questions-admin";
 
 interface QuestionsProps {
   onNext: () => void;
@@ -53,12 +54,21 @@ export default function Questions({
     assessmentData.pauseTimestamp
   );
 
-  // Store timer minutes in assessmentData
+  // Store timer minutes and usingTimer in assessmentData
   useEffect(() => {
     if (timerMinutes && assessmentData.timerMinutes !== timerMinutes) {
       updateAssessmentData({ timerMinutes: timerMinutes });
     }
   }, [timerMinutes, assessmentData.timerMinutes, updateAssessmentData]);
+
+  useEffect(() => {
+    if (
+      assessment?.usingTimer !== undefined &&
+      assessmentData.usingTimer !== assessment.usingTimer
+    ) {
+      updateAssessmentData({ usingTimer: assessment.usingTimer });
+    }
+  }, [assessment?.usingTimer, assessmentData.usingTimer, updateAssessmentData]);
 
   // Stable pause/resume callbacks
   const handlePause = useCallback(() => {
@@ -312,7 +322,7 @@ export default function Questions({
                 </div>
 
                 <div className="text-gray-700 text-lg leading-relaxed mb-6 flex flex-col gap-2">
-                  {currentQuestion?.isImage && (
+                  {currentQuestion?.isImage === 1 && (
                     <Image
                       src={BASE_URL + currentQuestion?.imageUrl}
                       width={300}
@@ -358,7 +368,7 @@ export default function Questions({
                         >
                           <span className="font-medium">{option.optionLetter}.</span>{" "}
                           <div className="flex flex-col gap-2">
-                            {option?.isImage && (
+                            {isValidImageUrl(option.imageUrl) && (
                               <Image
                                 src={BASE_URL + option?.imageUrl}
                                 width={300}
