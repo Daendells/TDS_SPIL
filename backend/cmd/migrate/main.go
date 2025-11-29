@@ -49,6 +49,7 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.AssessmentType{},
 		&domain.CompetencyType{},
 		&domain.Report{},
+		&domain.ApolloTrainingCache{}, // Cache table (no dependencies)
 
 		// Tables with single dependency
 		&domain.Assessment{},
@@ -56,9 +57,10 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.Training{},
 		&domain.MentoringReport{},
 		&domain.CoachingReport{},
+		&domain.IDPTracking{}, // Depends on Report
 
 		// Tables with multiple dependencies
-		&domain.Aspect{},
+		&doma        POST http://localhost:8080/api/idp-tracking/refresh/1in.Aspect{},
 		&domain.CompetencyProgramMapping{},
 		&domain.TrainingSchedule{},
 		&domain.GapCompetency{},

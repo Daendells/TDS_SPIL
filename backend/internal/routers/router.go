@@ -28,6 +28,7 @@ type RouterConfig struct {
 	MasterController             *controllers.MasterController
 	AssignmentController         *controllers.AssignmentController
 	AspectController             *controllers.AspectController
+	IDPTrackingController        *controllers.IDPTrackingController
 	AuthMiddleware               gin.HandlerFunc
 }
 
@@ -76,6 +77,14 @@ func (c *RouterConfig) SetupGuestRouter() {
 		trainingPlan.GET("/competency-mapping", c.TrainingPlanController.GetCompetencyMapping)
 		trainingPlan.GET("/programs", c.TrainingPlanController.GetAvailablePrograms)
 		trainingPlan.GET("/export-excel", c.TrainingPlanController.ExportTrainingPlanExcel)
+		trainingPlan.PUT("/toggle-started/:id", c.TrainingPlanController.ToggleTrainingStarted) // Toggle is_started flag
+	}
+
+	// IDP Tracking endpoints (for readiness refresh)
+	idpTracking := c.App.Group("api/idp-tracking")
+	{
+		idpTracking.POST("/refresh/:reportId", c.IDPTrackingController.RefreshReadiness)    // Refresh specific report
+		idpTracking.POST("/refresh-all", c.IDPTrackingController.RefreshAllReadiness)       // Refresh all reports
 	}
 
 	// Competency Mapping CMS endpoints

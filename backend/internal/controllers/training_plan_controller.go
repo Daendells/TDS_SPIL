@@ -4,6 +4,7 @@ import (
 	"backend/internal/services"
 	"fmt"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -249,4 +250,48 @@ func (c *TrainingPlanController) ExportTrainingPlanExcel(ctx *gin.Context) {
 		"program":  program,
 		"filename": filename,
 	}).Info("Successfully exported training plan to Excel")
+}
+
+// ToggleTrainingStarted toggles the is_started flag for a training schedule
+// PUT /api/training-plan/toggle-started/:id
+func (c *TrainingPlanController) ToggleTrainingStarted(ctx *gin.Context) {
+	idStr := ctx.Param("id")
+	id, err := strconv.Atoi(idStr)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"status":  "Bad Request",
+			"error":   "Invalid schedule ID",
+		})
+		return
+	}
+
+	var request struct {
+		IsStarted bool `json:"isStarted" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"code":    http.StatusBadRequest,
+			"status":  "Bad Request",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	err = c.trainingPlanService.ToggleTrainingStarted(id, request.IsStarted)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code":    http.StatusInternalServerError,
+			"status":  "Internal Server Error",
+			"error":   err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"status":  "OK",
+		"message": fmt.Sprintf("Training schedule is_started flag updated to %v", request.IsStarted),
+	})
 }

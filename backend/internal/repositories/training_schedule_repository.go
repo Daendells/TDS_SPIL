@@ -21,6 +21,9 @@ type TrainingScheduleRepository interface {
 	CreateBatch(schedules []domain.TrainingSchedule) error
 	UpdateScheduledDate(id int, newDate time.Time) error
 	GetByIDList(ids []int) ([]domain.TrainingSchedule, error)
+	GetStartedTrainings() ([]domain.TrainingSchedule, error) // Get all trainings where is_started = true
+	GetStartedTrainingsByProgram(program string) ([]domain.TrainingSchedule, error) // Get started trainings for specific program
+	UpdateIsStarted(id int, isStarted bool) error // Toggle is_started flag
 }
 
 type trainingScheduleRepository struct {
@@ -166,4 +169,46 @@ func (r *trainingScheduleRepository) GetByIDList(ids []int) ([]domain.TrainingSc
 	}
 
 	return schedules, nil
+}
+
+func (r *trainingScheduleRepository) GetStartedTrainings() ([]domain.TrainingSchedule, error) {
+	var schedules []domain.TrainingSchedule
+	if err := r.db.Where("is_started = ?", true).
+		Preload("CompetencyType").
+		Order("program ASC, scheduled_date ASC").
+		Find(&schedules).Error; err != nil {
+		r.log.WithError(err).Error("Failed to get started training schedules")
+		return nil, err
+	}
+
+	return schedules, nil
+}
+
+func (r *trainingScheduleRepository) GetStartedTrainingsByProgram(program string) ([]domain.TrainingSchedule, error) {
+	var schedules []domain.TrainingSchedule
+	if err := r.db.Where("is_started = ? AND program = ?", true, program).
+		Preload("CompetencyType").
+		Order("scheduled_date ASC").
+		Find(&schedules).Error; err != nil {
+		r.log.WithError(err).WithFields(logrus.Fields{
+			"program": program,
+		}).Error("Failed to get started training schedules by program")
+		return nil, err
+	}
+
+	return schedules, nil
+}
+
+func (r *trainingScheduleRepository) UpdateIsStarted(id int, isStarted bool) error {
+	if err := r.db.Model(&domain.TrainingSchedule{}).
+		Where("id = ?", id).
+		Update("is_started", isStarted).Error; err != nil {
+		r.log.WithError(err).WithFields(logrus.Fields{
+			"id":         id,
+			"is_started": isStarted,
+		}).Error("Failed to update is_started flag")
+		return err
+	}
+
+	return nil
 }

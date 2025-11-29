@@ -20,6 +20,7 @@ type TrainingPlanService interface {
 	GetCompetencyMapping(program string) map[string]domain.CompetencyMappingItem
 	UpdateScheduledDate(id int, newDate time.Time) error
 	GenerateTrainingPlanExcel(program string) (*bytes.Buffer, error)
+	ToggleTrainingStarted(id int, isStarted bool) error
 }
 
 type trainingPlanService struct {
@@ -303,6 +304,7 @@ func (s *trainingPlanService) buildSummary(gapCompetencies []domain.GapCompetenc
 	trainingMateri1 := make(map[string]string)
 	trainingMateri2 := make(map[string]string)
 	scheduleIDs := make(map[string]map[string]int)
+	isStartedStatus := make(map[string]map[string]bool)
 
 	for _, schedule := range schedules {
 		// Send ISO timestamp instead of "I-10" format to preserve year information
@@ -310,14 +312,17 @@ func (s *trainingPlanService) buildSummary(gapCompetencies []domain.GapCompetenc
 
 		if _, exists := scheduleIDs[schedule.CompetencyCode]; !exists {
 			scheduleIDs[schedule.CompetencyCode] = make(map[string]int)
+			isStartedStatus[schedule.CompetencyCode] = make(map[string]bool)
 		}
 
 		if schedule.MaterialType == 1 {
 			trainingMateri1[schedule.CompetencyCode] = dateStr
 			scheduleIDs[schedule.CompetencyCode]["1"] = schedule.ID
+			isStartedStatus[schedule.CompetencyCode]["1"] = schedule.IsStarted
 		} else if schedule.MaterialType == 2 {
 			trainingMateri2[schedule.CompetencyCode] = dateStr
 			scheduleIDs[schedule.CompetencyCode]["2"] = schedule.ID
+			isStartedStatus[schedule.CompetencyCode]["2"] = schedule.IsStarted
 		}
 	}
 
@@ -328,6 +333,7 @@ func (s *trainingPlanService) buildSummary(gapCompetencies []domain.GapCompetenc
 		TrainingMateri1: trainingMateri1,
 		TrainingMateri2: trainingMateri2,
 		ScheduleIDs:     scheduleIDs,
+		IsStartedStatus: isStartedStatus,
 	}
 }
 
@@ -1304,4 +1310,14 @@ func (s *trainingPlanService) createMatrixSheet(f *excelize.File, sheetName stri
 	f.SetColWidth(sheetName, "E", "E", 18)
 
 	return nil
+}
+
+// ToggleTrainingStarted updates the is_started flag for a training schedule
+func (s *trainingPlanService) ToggleTrainingStarted(id int, isStarted bool) error {
+	s.log.WithFields(logrus.Fields{
+		"id":         id,
+		"is_started": isStarted,
+	}).Info("Toggling training started flag")
+
+	return s.trainingScheduleRepo.UpdateIsStarted(id, isStarted)
 }

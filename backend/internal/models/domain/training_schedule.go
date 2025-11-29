@@ -14,6 +14,7 @@ type TrainingSchedule struct {
 	Category         string    `json:"category" gorm:"-"` // Dynamically calculated, NOT stored in database
 	MaterialType     int       `json:"materialType" gorm:"column:material_type;not null"`         // 1 or 2 (Materi 1 or Materi 2)
 	ScheduledDate    time.Time `json:"scheduledDate" gorm:"column:scheduled_date;not null"`
+	IsStarted        bool      `json:"isStarted" gorm:"column:is_started;not null;default:false"` // Mark if training has started (for Apollo API filtering)
 
 	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`
@@ -64,6 +65,7 @@ type TrainingPlanSummary struct {
 	TrainingMateri1 map[string]string             `json:"trainingMateri1"` // Scheduled dates for Materi 1
 	TrainingMateri2 map[string]string             `json:"trainingMateri2"` // Scheduled dates for Materi 2
 	ScheduleIDs     map[string]map[string]int     `json:"scheduleIds"`     // Map of competencyCode -> materialType -> scheduleID
+	IsStartedStatus map[string]map[string]bool    `json:"isStartedStatus"` // Map of competencyCode -> materialType -> isStarted
 }
 
 type TrainingPlanResponse struct {

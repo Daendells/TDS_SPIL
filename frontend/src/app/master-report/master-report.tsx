@@ -37,6 +37,7 @@ import {
   XIcon,
   AlertTriangle,
   Loader2,
+  RefreshCw,
 } from "lucide-react";
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
 import {
@@ -92,6 +93,7 @@ export default function MasterPage() {
     createReport,
     deleteReport,
     updateReport,
+    refreshAllReadiness,
   } = useMasterReports(10);
 
   const { data: assessmentTypes = [] } = useGetAllAssessmentTypes();
@@ -409,6 +411,24 @@ export default function MasterPage() {
           />
 
           <div className="flex items-center gap-2">
+            <Button
+              size="lg"
+              variant="default"
+              onClick={refreshAllReadiness}
+              disabled={onCallApi}
+              className="flex items-center gap-2"
+            >
+              {onCallApi ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Refreshing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" /> Refresh Readiness
+                </>
+              )}
+            </Button>
+
             <Button
               size="lg"
               variant={isEditMode ? "destructive" : "outline"}

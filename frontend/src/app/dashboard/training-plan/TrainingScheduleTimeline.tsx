@@ -2,9 +2,10 @@ import React, { useState, useEffect } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { ChevronDown, ChevronRight, Save, RotateCcw, Edit, Download } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { ChevronDown, ChevronRight, Save, RotateCcw, Edit, Download, PlayCircle } from "lucide-react";
 import { toast } from "sonner";
-import { useSwapSchedules } from "./_hooks/useTrainingPlan";
+import { useSwapSchedules, useToggleTrainingStarted } from "./_hooks/useTrainingPlan";
 import type { TrainingPlanSummary } from "./_hooks/useTrainingPlan";
 
 interface TrainingScheduleTimelineProps {
@@ -27,6 +28,7 @@ interface ScheduleItem {
   category: string;
   materialType: 1 | 2;
   scheduledDate: Date;
+  isStarted: boolean;
 }
 
 interface WeekSlot {
@@ -47,7 +49,9 @@ export default function TrainingScheduleTimeline({
   const [draggedItem, setDraggedItem] = useState<ScheduleItem | null>(null);
   const [dragOverWeek, setDragOverWeek] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [toggleLoading, setToggleLoading] = useState<number | null>(null);
   const swapSchedules = useSwapSchedules();
+  const toggleTrainingStarted = useToggleTrainingStarted();
 
   const toggleMonth = (monthKey: string) => {
     const newCollapsed = new Set(collapsedMonths);
@@ -102,6 +106,7 @@ export default function TrainingScheduleTimeline({
       if (isNaN(date.getTime())) return; // Skip invalid dates
 
       const scheduleId = summary.scheduleIds?.[entry.code]?.[entry.type.toString()] || 0;
+      const isStarted = summary.isStartedStatus?.[entry.code]?.[entry.type.toString()] || false;
 
       schedulesArray.push({
         id: scheduleId,
@@ -111,6 +116,7 @@ export default function TrainingScheduleTimeline({
         category: summary.category[entry.code] || "NM",
         materialType: entry.type,
         scheduledDate: date,
+        isStarted: isStarted,
       });
     });
 
@@ -266,6 +272,29 @@ export default function TrainingScheduleTimeline({
     toast.info("Changes reset");
   };
 
+  const handleToggleStarted = async (scheduleId: number, currentStatus: boolean) => {
+    setToggleLoading(scheduleId);
+    try {
+      await toggleTrainingStarted.mutateAsync({
+        scheduleId,
+        isStarted: !currentStatus,
+      });
+      
+      setSchedules(prev =>
+        prev.map(s => s.id === scheduleId ? { ...s, isStarted: !currentStatus } : s)
+      );
+      setOriginalSchedules(prev =>
+        prev.map(s => s.id === scheduleId ? { ...s, isStarted: !currentStatus } : s)
+      );
+      
+      toast.success(`Training ${!currentStatus ? "started" : "stopped"}!`);
+    } catch {
+      toast.error("Failed to toggle training status");
+    } finally {
+      setToggleLoading(null);
+    }
+  };
+
   const monthsToDisplay = generateMonthsToDisplay(schedules);
 
   if (schedules.length === 0) {
@@ -402,6 +431,17 @@ export default function TrainingScheduleTimeline({
                                         </div>
                                         <div className="text-xs text-muted-foreground">
                                           {schedule.competencyCode} - {schedule.competencyName}
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-2">
+                                        <div className="flex items-center gap-1.5">
+                                          <PlayCircle className={`h-3.5 w-3.5 ${schedule.isStarted ? "text-green-600" : "text-gray-400"}`} />
+                                          <Switch
+                                            checked={schedule.isStarted}
+                                            onCheckedChange={() => handleToggleStarted(schedule.id, schedule.isStarted)}
+                                            disabled={toggleLoading === schedule.id}
+                                            className="scale-75"
+                                          />
                                         </div>
                                       </div>
                                     </div>

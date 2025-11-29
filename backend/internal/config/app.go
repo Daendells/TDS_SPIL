@@ -76,6 +76,8 @@ func Bootstrap(config *BootstrapConfig) {
 	seafarerAssessmentRepository := repositories.NewSeafarerAssessmentRepository()
 	assignmentRepo := repositories.NewAssignmentRepository()
 	aspectRepository := repositories.NewAspectRepository(config.Log)
+	idpTrackingRepository := repositories.NewIDPTrackingRepository(config.DB, config.Log)
+	apolloTrainingCacheRepository := repositories.NewApolloTrainingCacheRepository(config.DB, config.Log)
 
 	// --- Services (DB-based)
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository, gapCompetencyRepository)
@@ -93,6 +95,23 @@ func Bootstrap(config *BootstrapConfig) {
 	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, competencyProgramMappingRepository, competencyTypeRepository, *reportRepository, config.DB, config.Log)
 	assignmentService := services.NewAssignmentService(assignmentRepo, config.Validate)
 	aspectService := services.NewAspectService(config.DB, config.Log, aspectRepository)
+	
+	// --- IDP Tracking Services
+	apolloAPIBaseURL := config.Config.GetString("APOLLO_API_BASE_URL") // Optional: from .env
+	apolloAPIService := services.NewApolloAPIService(config.DB, config.Log, apolloTrainingCacheRepository, apolloAPIBaseURL)
+	idpCalculationService := services.NewIDPCalculationService(
+		config.DB,
+		config.Log,
+		idpTrackingRepository,
+		reportRepository,
+		trainingScheduleRepository,
+		coachingReportRepository,
+		mentoringReportRepository,
+		apolloAPIService,
+	)
+	
+	// --- Cron Service (start at the end)
+	cronService := services.NewCronService(config.Log, idpCalculationService, apolloAPIService)
 
 	// --- Controllers (DB-based)
 	reportController := controllers.NewReportController(reportService, config.Log)
@@ -113,6 +132,7 @@ func Bootstrap(config *BootstrapConfig) {
 	assignmentController := controllers.NewAssignmentController(config.DB, assignmentService)
 	competencyTypeController := controllers.NewCompetencyTypeController(competencyTypeRepository, config.Log)
 	aspectController := controllers.NewAspectController(config.Log, aspectService)
+	idpTrackingController := controllers.NewIDPTrackingController(config.Log, idpCalculationService)
 
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(
@@ -154,6 +174,13 @@ func Bootstrap(config *BootstrapConfig) {
 		AspectController:             aspectController,
 		AuthMiddleware:               authMiddleware,
 		AssignmentController:         assignmentController,
+		IDPTrackingController:        idpTrackingController,
 	}
 	routerConfig.Setup()
+	
+	// --- Start Cron Service
+	if err := cronService.Start(); err != nil {
+		config.Log.Fatalf("Failed to start cron service: %v", err)
+	}
+	config.Log.Info("Application bootstrap completed successfully")
 }

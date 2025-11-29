@@ -21,6 +21,7 @@ export interface TrainingPlanSummary {
   trainingMateri1: { [key: string]: string };
   trainingMateri2: { [key: string]: string };
   scheduleIds: { [competencyCode: string]: { [materialType: string]: number } };
+  isStartedStatus: { [competencyCode: string]: { [materialType: string]: boolean } };
 }
 
 export interface TrainingPlanResponse {
@@ -176,6 +177,32 @@ export function useSwapSchedules() {
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({
         queryKey: trainingPlanKeys.byProgram(variables.program),
+      });
+    },
+  });
+}
+
+export function useToggleTrainingStarted() {
+  const queryClient = useQueryClient();
+
+  return useMutation<
+    void,
+    Error,
+    { scheduleId: number; isStarted: boolean }
+  >({
+    mutationFn: async ({ scheduleId, isStarted }) => {
+      const response = await api.put<ApiResponse<{ message: string }>>(
+        `/api/training-plan/toggle-started/${scheduleId}`,
+        { isStarted }
+      );
+
+      if (!response.data || !response.data.success) {
+        throw new Error("Failed to toggle training started status");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({
+        queryKey: trainingPlanKeys.list(),
       });
     },
   });

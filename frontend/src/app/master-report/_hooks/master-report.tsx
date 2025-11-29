@@ -200,6 +200,28 @@ export function useMasterReports(initialPageSize = 10) {
     }
   };
 
+  const refreshAllReadiness = async () => {
+    setOnCallApi(true);
+    try {
+      await api.post("/api/idp-tracking/refresh-all");
+      toast.success("Readiness refreshed for all participants!");
+
+      startTransition(() => {
+        setPaginationRequest((prev) => ({
+          ...prev,
+          anchorId: 0,
+          page: "next",
+        }));
+      });
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to refresh readiness");
+      throw err;
+    } finally {
+      setOnCallApi(false);
+    }
+  };
+
   return {
     onCallApi,
     paginationData: deferredData,
@@ -213,5 +235,6 @@ export function useMasterReports(initialPageSize = 10) {
     createReport,
     deleteReport,
     updateReport,
+    refreshAllReadiness,
   };
 }

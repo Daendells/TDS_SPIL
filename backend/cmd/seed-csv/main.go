@@ -41,6 +41,7 @@ func main() {
 		{"Questions", "questions.csv", seedQuestionsFromCSV},
 		{"Options", "options.csv", seedOptionsFromCSV},
 		{"Reports", "reports.csv", seedReportsFromCSV},
+		{"GapCompetencies", "gap_competencies.csv", seedGapCompetenciesFromCSV},
 		{"SeafarerAssessments", "seafarer_assessments.csv", seedSeafarerAssessmentsFromCSV},
 	}
 
@@ -524,6 +525,30 @@ func seedTrainingSchedulesFromCSV(db *gorm.DB, filePath string) error {
 		}
 		
 		if err := db.FirstOrCreate(&schedule, domain.TrainingSchedule{ID: schedule.ID}).Error; err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+func seedGapCompetenciesFromCSV(db *gorm.DB, filePath string) error {
+	records, err := readCSV(filePath)
+	if err != nil {
+		return err
+	}
+
+	for _, record := range records {
+		if len(record) < 5 {
+			continue
+		}
+		gap := domain.GapCompetency{
+			ID:               parseInt(record[0]),
+			ReportID:         parseInt(record[1]),
+			CompetencyTypeID: parseInt(record[2]),
+			GapLevel:         parseString(record[3]),
+			Priority:         parseInt(record[4]),
+		}
+		if err := db.FirstOrCreate(&gap, domain.GapCompetency{ID: gap.ID}).Error; err != nil {
 			return err
 		}
 	}
