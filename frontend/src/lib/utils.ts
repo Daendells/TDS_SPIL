@@ -53,6 +53,7 @@ export function parseReports(data: Record<string, unknown>[]): IReport[] {
     havQuadran2: d["havQuadran2"] as number,
     talentClassified2: d["talentClassified2"] as string,
     readiness: d["readiness"] as string,
+    totalReadinessUpdateMonths: d["totalReadinessUpdateMonths"] as number,
     certificateEligible: d["certificateEligible"] as string,
 
     // Training, Mentoring, Coaching
