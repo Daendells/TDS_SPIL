@@ -9,10 +9,16 @@ type IDPTracking struct {
 	ReportID int       `json:"reportId" gorm:"column:report_id;not null;index:idx_report_month"`
 	Month    time.Time `json:"month" gorm:"column:month;type:date;not null;index:idx_report_month"` // First day of month
 
-	// Target values (TODO: Currently hardcoded, will be calculated later)
-	TargetTraining  int `json:"targetTraining" gorm:"column:target_training;not null;default:3"`   // Hardcoded: 3
-	TargetCoaching  int `json:"targetCoaching" gorm:"column:target_coaching;not null;default:2"`   // Hardcoded: 2
-	TargetMentoring int `json:"targetMentoring" gorm:"column:target_mentoring;not null;default:5"` // Hardcoded: 5
+	// Competency tracking
+	CompetencyTarget     string `json:"competencyTarget" gorm:"column:competency_target;type:text"`
+	CompetencyDone       string `json:"competencyDone" gorm:"column:competency_done;type:text"`
+	TotalCompetencyCount int    `json:"totalCompetencyCount" gorm:"column:total_competency_count;not null;default:0"`
+	TotalTrainingNeeded  int    `json:"totalTrainingNeeded" gorm:"column:total_training_needed;not null;default:0"`
+
+	// Target values (dynamically calculated based on program and readiness)
+	TargetTraining  int `json:"targetTraining" gorm:"column:target_training;not null;default:0"`
+	TargetCoaching  int `json:"targetCoaching" gorm:"column:target_coaching;not null;default:2"`
+	TargetMentoring int `json:"targetMentoring" gorm:"column:target_mentoring;not null;default:5"`
 
 	// Actual completion counts (fetched from Apollo API and coaching/mentoring reports)
 	ActualTraining  int `json:"actualTraining" gorm:"column:actual_training;not null;default:0"`
@@ -134,4 +140,110 @@ func (t *IDPTracking) CalculateNextMonthBacklog() (trainingBacklog, coachingBack
 	}
 
 	return
+}
+
+// CalculateTrainingTarget calculates monthly training target based on program, readiness, and competency count
+func CalculateTrainingTarget(program string, readinessMonth int, competencyCount int) int {
+	if competencyCount == 0 {
+		return 0
+	}
+
+	totalTrainingNeeded := competencyCount * 2
+	var targetMonths int
+
+	switch program {
+	case "FDP":
+		if readinessMonth == 0 {
+			targetMonths = 1
+		} else if readinessMonth == 6 {
+			targetMonths = 3
+		} else if readinessMonth >= 7 && readinessMonth <= 12 {
+			targetMonths = 6
+		} else if readinessMonth >= 13 && readinessMonth <= 18 {
+			targetMonths = 12
+		} else {
+			targetMonths = 12
+		}
+
+	case "MDP", "SDP":
+		if readinessMonth == 0 {
+			targetMonths = 2
+		} else if readinessMonth == 6 {
+			targetMonths = 3
+		} else if readinessMonth >= 7 && readinessMonth <= 12 {
+			targetMonths = 6
+		} else if readinessMonth >= 13 && readinessMonth <= 18 {
+			targetMonths = 12
+		} else {
+			targetMonths = 12
+		}
+
+	default:
+		targetMonths = 12
+	}
+
+	targetPerMonth := totalTrainingNeeded / targetMonths
+	if totalTrainingNeeded%targetMonths > 0 {
+		targetPerMonth++
+	}
+
+	return targetPerMonth
+}
+
+// CalculateMentoringTarget calculates monthly mentoring target based on program, readiness, and month number
+// monthNumber is calculated from training start date (1 = first month of training)
+func CalculateMentoringTarget(program string, readinessMonth int, monthNumber int) int {
+	// All programs follow the same logic:
+	// - Ready now (0): 1x kehadiran total
+	// - Ready 6 months: Bulan 1-3 = 2x/bulan, Bulan 4-6 = 1x/bulan (TOTAL 9)
+	// - Ready 7-12 months: Bulan 1-3 = 2x/bulan, Bulan 4-6 = 1x/bulan, Bulan 7-12 = 1x/bulan (TOTAL 12)
+	// - Ready 13-18 months: Bulan 1-3 = 2x/bulan, Bulan 4-6 = 1x/bulan, Bulan 7-18 = 1x/bulan (TOTAL 18)
+	
+	if readinessMonth == 0 {
+		// Ready now - only 1 kehadiran total, so only first month gets target
+		if monthNumber == 1 {
+			return 1
+		}
+		return 0
+	}
+	
+	if readinessMonth == 6 {
+		// Bulan 1-3: 2x/bulan, Bulan 4-6: 1x/bulan
+		if monthNumber >= 1 && monthNumber <= 3 {
+			return 2
+		} else if monthNumber >= 4 && monthNumber <= 6 {
+			return 1
+		}
+		return 0
+	}
+	
+	if readinessMonth >= 7 && readinessMonth <= 12 {
+		// Bulan 1-3: 2x/bulan, Bulan 4-6: 1x/bulan, Bulan 7-12: 1x/bulan
+		if monthNumber >= 1 && monthNumber <= 3 {
+			return 2
+		} else if monthNumber >= 4 && monthNumber <= 12 {
+			return 1
+		}
+		return 0
+	}
+	
+	if readinessMonth >= 13 && readinessMonth <= 18 {
+		// Bulan 1-3: 2x/bulan, Bulan 4-6: 1x/bulan, Bulan 7-18: 1x/bulan
+		if monthNumber >= 1 && monthNumber <= 3 {
+			return 2
+		} else if monthNumber >= 4 && monthNumber <= 18 {
+			return 1
+		}
+		return 0
+	}
+	
+	// Default fallback
+	return 1
+}
+
+// CalculateCoachingTarget calculates monthly coaching target
+// For all programs and all readiness levels: 1 kehadiran per bulan
+func CalculateCoachingTarget(program string, readinessMonth int, monthNumber int) int {
+	// Simple: always 1 per month regardless of program or readiness
+	return 1
 }

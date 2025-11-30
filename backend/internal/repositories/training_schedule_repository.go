@@ -24,6 +24,7 @@ type TrainingScheduleRepository interface {
 	GetStartedTrainings() ([]domain.TrainingSchedule, error) // Get all trainings where is_started = true
 	GetStartedTrainingsByProgram(program string) ([]domain.TrainingSchedule, error) // Get started trainings for specific program
 	UpdateIsStarted(id int, isStarted bool) error // Toggle is_started flag
+	GetEarliestTrainingDateByProgram(program string) (*time.Time, error) // Get earliest scheduled_date for a program
 }
 
 type trainingScheduleRepository struct {
@@ -211,4 +212,23 @@ func (r *trainingScheduleRepository) UpdateIsStarted(id int, isStarted bool) err
 	}
 
 	return nil
+}
+
+func (r *trainingScheduleRepository) GetEarliestTrainingDateByProgram(program string) (*time.Time, error) {
+	var schedule domain.TrainingSchedule
+	
+	if err := r.db.Where("program = ?", program).
+		Order("scheduled_date ASC").
+		Limit(1).
+		Find(&schedule).Error; err != nil {
+		r.log.WithError(err).WithField("program", program).Error("Failed to get earliest training date by program")
+		return nil, err
+	}
+	
+	// If no schedule found, return nil
+	if schedule.ID == 0 {
+		return nil, nil
+	}
+	
+	return &schedule.ScheduledDate, nil
 }

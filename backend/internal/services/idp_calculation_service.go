@@ -60,25 +60,80 @@ func (s *IDPCalculationService) CalculateReadinessForMonth(reportID int, month t
 		return nil
 	}
 
+	// DELETE existing tracking for this report+month to prevent duplicates
+	// This ensures fresh calculation every time
+	normalized := time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.UTC)
+	if err := s.DB.Where("report_id = ? AND month = ?", reportID, normalized).
+		Delete(&domain.IDPTracking{}).Error; err != nil {
+		s.Log.Warnf("Failed to delete existing tracking (might not exist): %v", err)
+	} else {
+		s.Log.Infof("🗑️  Deleted existing idp_tracking for report_id=%d, month=%s", reportID, month.Format("2006-01"))
+	}
+
 	// Get or create tracking for this month
 	tracking, err := s.IDPTrackingRepo.GetByReportAndMonth(reportID, month)
 	if err != nil {
 		return fmt.Errorf("failed to get tracking: %w", err)
 	}
 
+	// Parse competency gap analysis
+	competencyCodes := s.parseCompetencyGapAnalysis(report.CompetencyGapAnalysis)
+	competencyCount := len(competencyCodes)
+	totalTrainingNeeded := competencyCount * 2
+
+	// Get training start date for this program to calculate month number
+	trainingStartDate, err := s.TrainingScheduleRepo.GetEarliestTrainingDateByProgram(report.IDPProgram)
+	if err != nil {
+		s.Log.Warnf("Failed to get training start date for program %s: %v", report.IDPProgram, err)
+	}
+
+	// Calculate which month this is relative to training start (1-based)
+	monthNumber := 1 // Default to month 1 if we can't determine
+	if trainingStartDate != nil {
+		// Calculate months difference between training start and current month
+		// Both normalized to first day of month for accurate comparison
+		startMonth := time.Date(trainingStartDate.Year(), trainingStartDate.Month(), 1, 0, 0, 0, 0, time.UTC)
+		currentMonth := time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.UTC)
+		
+		// Calculate difference in months
+		yearsDiff := currentMonth.Year() - startMonth.Year()
+		monthsDiff := int(currentMonth.Month()) - int(startMonth.Month())
+		totalMonthsDiff := yearsDiff*12 + monthsDiff
+		
+		// Month number is 1-based (first month of training = 1)
+		monthNumber = totalMonthsDiff + 1
+		
+		if monthNumber < 1 {
+			monthNumber = 1 // Safety: if current month is before training start
+		}
+		
+		s.Log.Infof("Training start date: %s, Current month: %s, Month number: %d", 
+			trainingStartDate.Format("2006-01-02"), month.Format("2006-01"), monthNumber)
+	} else {
+		s.Log.Warnf("No training start date found for program %s, using month number 1", report.IDPProgram)
+	}
+
 	if tracking == nil {
-		// Create new tracking entry
+		// Calculate dynamic training target
+		targetTraining := domain.CalculateTrainingTarget(report.IDPProgram, *report.ReadinessMonth, competencyCount)
+		
+		// Calculate dynamic mentoring target based on program, readiness, and month number
+		targetMentoring := domain.CalculateMentoringTarget(report.IDPProgram, *report.ReadinessMonth, monthNumber)
+		
+		// Calculate dynamic coaching target (always 1 per month)
+		targetCoaching := domain.CalculateCoachingTarget(report.IDPProgram, *report.ReadinessMonth, monthNumber)
+
 		tracking = &domain.IDPTracking{
-			ReportID:        reportID,
-			Month:           time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.UTC),
-			// TODO: These targets are currently hardcoded
-			// In the future, these should be calculated based on business logic
-			TargetTraining:  3, // Hardcoded
-			TargetCoaching:  2, // Hardcoded
-			TargetMentoring: 5, // Hardcoded
+			ReportID:             reportID,
+			Month:                time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.UTC),
+			CompetencyTarget:     report.CompetencyGapAnalysis,
+			TotalCompetencyCount: competencyCount,
+			TotalTrainingNeeded:  totalTrainingNeeded,
+			TargetTraining:       targetTraining,
+			TargetCoaching:       targetCoaching,
+			TargetMentoring:      targetMentoring,
 		}
 
-		// Get backlog from previous month
 		prevMonth := month.AddDate(0, -1, 0)
 		prevTracking, err := s.IDPTrackingRepo.GetByReportAndMonth(reportID, prevMonth)
 		if err != nil {
@@ -86,7 +141,6 @@ func (s *IDPCalculationService) CalculateReadinessForMonth(reportID int, month t
 		}
 
 		if prevTracking != nil {
-			// Calculate backlog from previous month
 			trainingBacklog, coachingBacklog, mentoringBacklog := prevTracking.CalculateNextMonthBacklog()
 			tracking.BacklogTraining = trainingBacklog
 			tracking.BacklogCoaching = coachingBacklog
@@ -96,13 +150,19 @@ func (s *IDPCalculationService) CalculateReadinessForMonth(reportID int, month t
 		}
 	}
 
-	// 1. Calculate actual training count from Apollo API
-	actualTraining, err := s.getActualTrainingCount(report.SeamanCode, report.IDPProgram, month)
+	// 1. Get actual training count and competency done tracking
+	actualTraining, competencyDone, err := s.getActualTrainingCountWithDetails(
+		report.SeamanCode,
+		report.IDPProgram,
+		competencyCodes,
+		month,
+	)
 	if err != nil {
 		s.Log.Warnf("Failed to get training count: %v", err)
 		actualTraining = 0
 	}
 	tracking.ActualTraining = actualTraining
+	tracking.CompetencyDone = competencyDone
 
 	// 2. Calculate actual coaching count
 	actualCoaching, err := s.getActualCoachingCount(reportID, month)
@@ -165,7 +225,87 @@ func (s *IDPCalculationService) CalculateReadinessForMonth(reportID int, month t
 	return nil
 }
 
+// parseCompetencyGapAnalysis parses competency gap analysis string into array of codes
+func (s *IDPCalculationService) parseCompetencyGapAnalysis(gapAnalysis string) []string {
+	if gapAnalysis == "" {
+		return []string{}
+	}
+
+	parts := strings.Split(gapAnalysis, ";")
+	codes := make([]string, 0, len(parts))
+
+	for _, part := range parts {
+		code := strings.TrimSpace(part)
+		if code != "" {
+			codes = append(codes, code)
+		}
+	}
+
+	return codes
+}
+
+// getActualTrainingCountWithDetails fetches training count and tracks completed competencies with material type
+func (s *IDPCalculationService) getActualTrainingCountWithDetails(
+	seamanCode string,
+	program string,
+	competencyCodes []string,
+	month time.Time,
+) (int, string, error) {
+	if len(competencyCodes) == 0 {
+		return 0, "", nil
+	}
+
+	completedCompetencies := make([]string, 0)
+	totalCount := 0
+
+	for _, competencyCode := range competencyCodes {
+		schedules, err := s.TrainingScheduleRepo.GetByProgramAndCompetency(program, competencyCode)
+		if err != nil {
+			s.Log.Warnf("Failed to get training schedules for %s: %v", competencyCode, err)
+			continue
+		}
+
+		for _, schedule := range schedules {
+			if !schedule.IsStarted {
+				continue
+			}
+
+			var training domain.Training
+			err := s.DB.Joins("JOIN competency_types ON competency_types.id = training.competency_type_id").
+				Where("competency_types.code = ?", competencyCode).
+				Order("training.lvl DESC").
+				First(&training).Error
+
+			if err != nil {
+				s.Log.Warnf("Failed to find training material for %s: %v", competencyCode, err)
+				continue
+			}
+
+			courseName := strings.ToUpper(training.TopikTraining)
+			if courseName == "" {
+				continue
+			}
+
+			count, err := s.ApolloAPIService.GetTrainingCountForMonth(seamanCode, courseName, month)
+			if err != nil {
+				s.Log.Warnf("Failed to get training count for %s: %v", courseName, err)
+				continue
+			}
+
+			if count > 0 {
+				materialType := schedule.MaterialType
+				completedCompetencies = append(completedCompetencies, fmt.Sprintf("%s-%d", competencyCode, materialType))
+				totalCount += count
+			}
+		}
+	}
+
+	competencyDone := strings.Join(completedCompetencies, "; ")
+	return totalCount, competencyDone, nil
+}
+
 // getActualTrainingCount fetches training count from Apollo API for started trainings only
+// DEPRECATED: Use getActualTrainingCountWithDetails instead
 func (s *IDPCalculationService) getActualTrainingCount(seamanCode, program string, month time.Time) (int, error) {
 	// Get started trainings for this specific program (filtered at database level)
 	relevantTrainings, err := s.TrainingScheduleRepo.GetStartedTrainingsByProgram(program)

@@ -267,21 +267,27 @@ func (c *TrainingPlanController) ToggleTrainingStarted(ctx *gin.Context) {
 	}
 
 	var request struct {
-		IsStarted bool `json:"isStarted" binding:"required"`
+		IsStarted bool `json:"isStarted"` // No binding:required for boolean (false is valid)
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
+		c.log.WithError(err).Errorf("Failed to bind request body for schedule ID %d", id)
 		ctx.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
 			"code":    http.StatusBadRequest,
 			"status":  "Bad Request",
-			"error":   err.Error(),
+			"error":   fmt.Sprintf("Invalid request body: %v", err.Error()),
 		})
 		return
 	}
 
+	c.log.Infof("Toggling training schedule ID %d to is_started=%v", id, request.IsStarted)
+
 	err = c.trainingPlanService.ToggleTrainingStarted(id, request.IsStarted)
 	if err != nil {
+		c.log.WithError(err).Error("Failed to toggle training started")
 		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
 			"code":    http.StatusInternalServerError,
 			"status":  "Internal Server Error",
 			"error":   err.Error(),
@@ -289,9 +295,15 @@ func (c *TrainingPlanController) ToggleTrainingStarted(ctx *gin.Context) {
 		return
 	}
 
+	c.log.Infof("✅ Training schedule ID %d is_started updated to %v", id, request.IsStarted)
 	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
 		"code":    http.StatusOK,
 		"status":  "OK",
 		"message": fmt.Sprintf("Training schedule is_started flag updated to %v", request.IsStarted),
+		"data": gin.H{
+			"id":         id,
+			"is_started": request.IsStarted,
+		},
 	})
 }

@@ -72,7 +72,7 @@ func NewApolloAPIService(
 	
 	// TESTING MODE: Set UseDummy to true to use dummy data (for testing without WiFi kantor)
 	// Set to false when testing with real Apollo API
-	useDummy := false // Real API mode - connected to Apollo
+	useDummy := false // ✅ DUMMY MODE - for testing outside office
 	
 	return &ApolloAPIService{
 		DB:        db,
@@ -239,38 +239,28 @@ func (s *ApolloAPIService) CleanExpiredCache() error {
 }
 
 // getDummyTrainingData returns dummy training data for testing without WiFi kantor
-// This simulates the Apollo API response structure
+// PENTING: Ini mensimulasikan Apollo API response untuk SEMUA course yang di-start
+// Semua training yang di-query akan return 1 completion record di bulan ini (untuk testing)
 func (s *ApolloAPIService) getDummyTrainingData(seamanCode, coursesName string) *ApolloTrainingResponse {
-	// Generate dummy training records (simulating completed trainings in current month)
 	currentMonth := time.Now()
+	
+	// TESTING MODE: Return dummy completion untuk SEMUA course yang di-request
+	// Ini simulasi seolah-olah training sudah selesai di bulan ini
+	s.Log.Infof("🎭 DUMMY MODE: Generating fake completion for course: %s", coursesName)
+	
 	dummyRecords := []ApolloTrainingRecord{
 		{
 			SeamanCode:   seamanCode,
 			SeamanName:   "DUMMY SEAFARER",
-			VesselCode:   "MV-TEST-001",
-			RankName:     "Chief Officer",
-			CoursesName:  coursesName,
+			VesselCode:   "MV-DUMMY-001",
+			RankName:     "Dummy Rank",
+			CoursesName:  coursesName, // Use exact course name from request
 			StartDate:    currentMonth.AddDate(0, 0, -10).Format("02/01/2006"),
-			FinishDate:   currentMonth.AddDate(0, 0, -8).Format("02/01/2006"),
+			FinishDate:   currentMonth.AddDate(0, 0, -5).Format("02/01/2006"), // Completed in current month
 			PretestDate:  currentMonth.AddDate(0, 0, -10).Format("02/01/2006"),
 			PointPre:     75,
-			PostDate:     currentMonth.AddDate(0, 0, -8).Format("02/01/2006"),
+			PostDate:     currentMonth.AddDate(0, 0, -5).Format("02/01/2006"),
 			PointPost:    85,
-			MinimumPoint: 70,
-			CoursesHours: 8,
-		},
-		{
-			SeamanCode:   seamanCode,
-			SeamanName:   "DUMMY SEAFARER",
-			VesselCode:   "MV-TEST-001",
-			RankName:     "Chief Officer",
-			CoursesName:  coursesName,
-			StartDate:    currentMonth.AddDate(0, 0, -5).Format("02/01/2006"),
-			FinishDate:   currentMonth.AddDate(0, 0, -3).Format("02/01/2006"),
-			PretestDate:  currentMonth.AddDate(0, 0, -5).Format("02/01/2006"),
-			PointPre:     80,
-			PostDate:     currentMonth.AddDate(0, 0, -3).Format("02/01/2006"),
-			PointPost:    90,
 			MinimumPoint: 70,
 			CoursesHours: 8,
 		},
@@ -284,9 +274,10 @@ func (s *ApolloAPIService) getDummyTrainingData(seamanCode, coursesName string) 
 		OutputParams: ApolloOutputParams{
 			IntRecords: fmt.Sprintf("%d", len(dummyRecords)),
 			CsrResult:  dummyRecords,
-			StrMessage: "DUMMY DATA - Success",
+			StrMessage: fmt.Sprintf("✅ DUMMY SUCCESS - %s", coursesName),
 		},
 	}
 
+	s.Log.Infof("🎭 DUMMY MODE: Returned %d completion records for %s", len(dummyRecords), coursesName)
 	return response
 }
