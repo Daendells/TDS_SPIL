@@ -36,9 +36,10 @@ services:
     environment:
       # Override untuk Docker environment
       NODE_ENV: production
-      # Client-side API calls (browser to backend via reverse proxy)
+      # Client-side API calls (browser to backend)
       NEXT_PUBLIC_API_ENDPOINT: https://pe.spil.co.id
-      HOST: "0.0.0.0"
+      # Listen on all interfaces
+      HOSTNAME: "0.0.0.0"
       PORT: 3000
     ports:
       - "8121:3000"
