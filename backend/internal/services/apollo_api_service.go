@@ -70,9 +70,7 @@ func NewApolloAPIService(
 		baseURL = "http://apollo.spil.co.id:3773" // Default Apollo API URL
 	}
 	
-	// TESTING MODE: Set UseDummy to true to use dummy data (for testing without WiFi kantor)
-	// Set to false when testing with real Apollo API
-	useDummy := false // ✅ DUMMY MODE - for testing outside office
+	useDummy := false 
 	
 	return &ApolloAPIService{
 		DB:        db,
