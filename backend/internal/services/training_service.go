@@ -86,7 +86,7 @@ func (s *TrainingService) FindAll() (*web.SuccessResponse, error) {
 	}, nil
 }
 
-func (s *TrainingService) UpdateGeneratedFileURL(kode string, fileURL string, pdfURL string) error {
+func (s *TrainingService) UpdateGeneratedFileURL(no int, fileURL string, pdfURL string) error {
 	now := time.Now()
 	updates := map[string]interface{}{
 		"generated_at": now,
@@ -101,11 +101,11 @@ func (s *TrainingService) UpdateGeneratedFileURL(kode string, fileURL string, pd
 	}
 	
 	return s.DB.Model(&domain.Training{}).
-		Where("kode = ?", kode).
+		Where("no = ?", no).
 		Updates(updates).Error
 }
 
-func (s *TrainingService) UpdateGeneratedQuizURL(kode string, quizURL string) error {
+func (s *TrainingService) UpdateGeneratedQuizURL(no int, quizURL string) error {
 	now := time.Now()
 	updates := map[string]interface{}{
 		"generated_quiz_url": quizURL,
@@ -113,7 +113,7 @@ func (s *TrainingService) UpdateGeneratedQuizURL(kode string, quizURL string) er
 	}
 	
 	return s.DB.Model(&domain.Training{}).
-		Where("kode = ?", kode).
+		Where("no = ?", no).
 		Updates(updates).Error
 }
 

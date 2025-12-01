@@ -74,8 +74,8 @@ export default function TrainingMaterialTab() {
   const [data, setData] = useState<ITraining[]>([]);
   const [groupedData, setGroupedData] = useState<GroupedTraining[]>([]);
   const [loading, setLoading] = useState(true);
-  const [generating, setGenerating] = useState<string | null>(null);
-  const [generatingQuiz, setGeneratingQuiz] = useState<string | null>(null);
+  const [generating, setGenerating] = useState<number | null>(null);
+  const [generatingQuiz, setGeneratingQuiz] = useState<number | null>(null);
   const [selectedTraining, setSelectedTraining] = useState<ITraining | null>(null);
   const [tempReferensi, setTempReferensi] = useState("");
   const [regenerateDialog, setRegenerateDialog] = useState<ITraining | null>(null);
@@ -191,7 +191,7 @@ export default function TrainingMaterialTab() {
   }, [searchTerm, filteredGroupedData]);
 
   const handleGenerate = async (item: ITraining, isRegenerate = false) => {
-    setGenerating(item.kode);
+    setGenerating(item.no);
     setRegenerateDialog(null);
 
     try {
@@ -207,6 +207,7 @@ export default function TrainingMaterialTab() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          no: item.no,
           kode: item.kode,
           topik_training: item.topik_training,
           kompetensi: item.competencyType?.name || "",
@@ -247,7 +248,7 @@ export default function TrainingMaterialTab() {
       return;
     }
 
-    setGeneratingQuiz(item.kode);
+    setGeneratingQuiz(item.no);
 
     try {
       // First, fetch the material content from the PDF URL
@@ -263,6 +264,7 @@ export default function TrainingMaterialTab() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
+          no: item.no,
           kode: item.kode,
           topik_training: item.topik_training,
           kompetensi: item.competencyType?.name || "",
@@ -545,19 +547,19 @@ export default function TrainingMaterialTab() {
                                     size="sm"
                                     variant="outline"
                                     onClick={() => openRegenerateDialog(item)}
-                                    disabled={generating === item.kode}
+                                    disabled={generating === item.no}
                                     className="gap-2"
                                   >
                                     <RefreshCw className="w-4 h-4" />
-                                    {generating === item.kode ? "Regenerating..." : "Regenerate"}
+                                    {generating === item.no ? "Regenerating..." : "Regenerate"}
                                   </Button>
                                 ) : (
                                   <Button
                                     size="sm"
                                     onClick={() => handleGenerate(item, false)}
-                                    disabled={generating === item.kode}
+                                    disabled={generating === item.no}
                                   >
-                                    {generating === item.kode ? "Generating..." : "Generate"}
+                                    {generating === item.no ? "Generating..." : "Generate"}
                                   </Button>
                                 )}
                               </td>
@@ -566,10 +568,10 @@ export default function TrainingMaterialTab() {
                                   size="sm"
                                   variant={item.generated_quiz_url ? "outline" : "default"}
                                   onClick={() => handleGenerateQuiz(item)}
-                                  disabled={generatingQuiz === item.kode || !item.generated_pdf_url}
+                                  disabled={generatingQuiz === item.no || !item.generated_pdf_url}
                                   className="gap-2"
                                 >
-                                  {generatingQuiz === item.kode ? (
+                                  {generatingQuiz === item.no ? (
                                     "Generating..."
                                   ) : item.generated_quiz_url ? (
                                     <>
