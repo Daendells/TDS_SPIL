@@ -42,7 +42,7 @@ func NewQuizService(log *logrus.Logger, apiKey, model, pubBase string) *QuizServ
 
 	return &QuizService{
 		log:     log,
-		http:    &http.Client{Timeout: 120 * time.Second},
+		http:    &http.Client{Timeout: 180 * time.Second},
 		apiKey:  apiKey,
 		model:   model,
 		pubBase: strings.TrimRight(pubBase, "/"),
@@ -99,7 +99,7 @@ func (s *QuizService) callGroqForQuiz(ctx context.Context, materialContent, topi
 			{"role": "user", "content": prompt},
 		},
 		"temperature": 0.7,
-		"max_tokens":  4096,
+		"max_tokens":  6000,
 	}
 
 	body, _ := json.Marshal(payload)
@@ -161,7 +161,7 @@ func (s *QuizService) callGroqForQuiz(ctx context.Context, materialContent, topi
 }
 
 func (s *QuizService) buildQuizPrompt(materialContent, topicTitle, competency string) string {
-	return fmt.Sprintf(`Anda adalah ahli dalam membuat soal evaluasi training. Berdasarkan materi training berikut, buatlah 10 soal pilihan ganda berkualitas tinggi.
+	return fmt.Sprintf(`Anda adalah ahli dalam membuat soal evaluasi training. Berdasarkan materi training berikut, buatlah 20 soal pilihan ganda berkualitas tinggi.
 
 MATERI TRAINING:
 Topik: %s
@@ -171,12 +171,14 @@ Konten Materi:
 %s
 
 INSTRUKSI:
-1. Buat TEPAT 10 soal pilihan ganda (A, B, C, D)
+1. Buat TEPAT 20 soal pilihan ganda (A, B, C, D)
 2. Soal harus menguji pemahaman konsep dari materi, bukan hanya hafalan
 3. Setiap soal harus jelas dan tidak ambigu
 4. Pilihan jawaban harus masuk akal dan menantang
 5. Sertakan jawaban yang benar untuk setiap soal (A/B/C/D)
-6. Soal harus progresif: dari basic understanding ke aplikasi konsep
+6. Soal harus progresif: mulai dari basic understanding, ke pemahaman mendalam, hingga aplikasi konsep
+7. Variasikan tingkat kesulitan soal: 30%% mudah, 50%% sedang, 20%% sulit
+8. Pastikan soal mencakup semua aspek penting dari materi
 
 Format output HARUS dalam JSON valid berikut (tanpa markdown, tanpa backticks):
 {

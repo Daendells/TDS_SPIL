@@ -54,6 +54,7 @@ func (h *TrainingController) FindAll(c *gin.Context) {
 // ======================
 func (h *TrainingController) Generate(c *gin.Context) {
 	var req struct {
+		No               int    `json:"no" binding:"required"`
 		Kode             string `json:"kode" binding:"required"`
 		TopikTraining    string `json:"topik_training" binding:"required"`
 		Kompetensi       string `json:"kompetensi" binding:"required"`
@@ -92,7 +93,7 @@ func (h *TrainingController) Generate(c *gin.Context) {
 	}
 
 	// Save both links to database
-	if err := h.dbSvc.UpdateGeneratedFileURL(req.Kode, pptxLink, pdfLink); err != nil {
+	if err := h.dbSvc.UpdateGeneratedFileURL(req.No, pptxLink, pdfLink); err != nil {
 		h.log.WithError(err).Warn("Gagal menyimpan link file ke database, tapi file sudah digenerate")
 		// Not returning error, karena file sudah berhasil digenerate
 	}
@@ -107,6 +108,7 @@ func (h *TrainingController) Generate(c *gin.Context) {
 
 func (h *TrainingController) GenerateQuiz(c *gin.Context) {
 	var req struct {
+		No               int    `json:"no" binding:"required"`
 		Kode             string `json:"kode" binding:"required"`
 		TopikTraining    string `json:"topik_training" binding:"required"`
 		Kompetensi       string `json:"kompetensi" binding:"required"`
@@ -136,7 +138,7 @@ func (h *TrainingController) GenerateQuiz(c *gin.Context) {
 		return
 	}
 
-	if err := h.dbSvc.UpdateGeneratedQuizURL(req.Kode, quizLink); err != nil {
+	if err := h.dbSvc.UpdateGeneratedQuizURL(req.No, quizLink); err != nil {
 		h.log.WithError(err).Warn("Gagal menyimpan link quiz ke database, tapi file sudah digenerate")
 	}
 
