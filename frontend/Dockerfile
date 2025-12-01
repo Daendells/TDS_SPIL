@@ -6,14 +6,11 @@ WORKDIR /app
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install dependencies (skip prepare scripts to avoid husky)
+# Install all dependencies (including devDependencies for build)
 RUN npm ci --ignore-scripts
 
 # Copy source code
 COPY . .
-
-# Set environment to production for build
-ENV NODE_ENV=production
 
 # Build the application
 RUN npm run build
@@ -26,28 +23,24 @@ WORKDIR /app
 # Set environment variable
 ENV NODE_ENV=production
 
-ENV HOST=0.0.0.0
+# Copy package files
+COPY package.json package-lock.json* ./
 
-ENV PORT=3000
+# Install only production dependencies
+RUN npm ci --omit=dev --ignore-scripts
 
-# Create a non-root user first
-RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nextjs -u 1001
-
-# Copy standalone output from builder (includes server.js and node_modules)
-COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
-
-# Copy static files
-COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
-
-# Copy public files
-COPY --from=builder --chown=nextjs:nodejs /app/public ./public
-
-# Switch to non-root user
-USER nextjs
+# Copy built application from builder
+COPY --from=builder /app/.next ./.next
+COPY --from=builder /app/public ./public
+COPY --from=builder /app/next.config.ts ./next.config.ts
+COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
 
 # Expose port
 EXPOSE 3000
 
-# Run the application using standalone server
-CMD ["node", "server.js"]
+# Set hostname to listen on all interfaces
+ENV HOSTNAME=0.0.0.0
+ENV PORT=3000
+
+# Run the application
+CMD ["npm", "start"]
