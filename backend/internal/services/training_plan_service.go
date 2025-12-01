@@ -1001,11 +1001,11 @@ func (s *trainingPlanService) createOverviewSheet(f *excelize.File, sheetName st
 	programName := program
 	switch program {
 	case "SDP":
-		programName = "Senior Development Program"
+		programName = "Strategic Development Program"
 	case "MDP":
 		programName = "Management Development Program"
 	case "FDP":
-		programName = "Future Development Program"
+		programName = "Foundational Development Program"
 	}
 
 	f.SetCellValue(sheetName, fmt.Sprintf("A%d", row), "Program:")

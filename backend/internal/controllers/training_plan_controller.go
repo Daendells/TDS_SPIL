@@ -203,9 +203,9 @@ func (c *TrainingPlanController) SwapSchedules(ctx *gin.Context) {
 
 func (c *TrainingPlanController) GetAvailablePrograms(ctx *gin.Context) {
 	programs := []gin.H{
-		{"code": "SDP", "name": "Senior Development Program"},
+		{"code": "SDP", "name": "Strategic Development Program"},
 		{"code": "MDP", "name": "Management Development Program"},
-		{"code": "FDP", "name": "Future Development Program"},
+		{"code": "FDP", "name": "Foundational Development Program"},
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{

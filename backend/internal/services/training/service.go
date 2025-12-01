@@ -186,7 +186,7 @@ Return ONLY valid JSON without any markdown formatting, comments, or additional 
   "overview": {
     "goals": ["Tujuan 1 yang spesifik", "Tujuan 2 yang terukur"],
     "outcomes": ["Hasil 1 yang konkret", "Hasil 2 yang aplikatif"],
-    "duration": "75 menit",
+    "duration": "60-75 menit",
     "audience": "Target peserta dengan level kompetensi"
   },
   "slides": [
@@ -194,13 +194,13 @@ Return ONLY valid JSON without any markdown formatting, comments, or additional 
       "heading": "OBJECTIVE: TUJUAN PEMBELAJARAN",
       "bullets": [
         "Sub-judul Pertama",
-        "Penjelasan lengkap dalam 2-4 kalimat yang memberikan konteks, detail, dan contoh konkret untuk memudahkan pemahaman peserta. Setiap kalimat harus menambah value dan insight baru yang relevan dengan topik pembahasan.",
+        "Penjelasan fokus dalam 2-3 kalimat yang memberikan konteks dan contoh konkret. Langsung ke poin penting tanpa bertele-tele.",
         "• Poin pertama dengan elaborasi",
-        "Penjelasan mendalam tentang poin ini dalam beberapa kalimat yang mencakup why, how, dan what. Berikan contoh praktis yang relatable dengan pengalaman peserta di dunia kerja.",
-        "• Poin kedua dengan detail lengkap",
-        "Elaborasi yang substansial dengan penjelasan step-by-step atau breakdown dari konsep yang kompleks menjadi lebih mudah dipahami. Include tips, best practices, atau common mistakes to avoid."
+        "Penjelasan singkat tentang poin ini mencakup why dan how. Berikan contoh praktis yang relatable.",
+        "• Poin kedua dengan detail",
+        "Elaborasi yang efisien dengan penjelasan step-by-step utama. Include tips paling penting atau common mistake yang critical."
       ],
-      "speaker_notes": "Detailed guidance untuk fasilitator dalam 250-400 kata dengan interaction cues dan timing",
+      "speaker_notes": "Guidance untuk fasilitator dalam 150-250 kata dengan interaction cues dan timing",
       "slide_type": "objective"
     }
   ],
@@ -287,9 +287,16 @@ func (s *Service) buildFocusSection(in GenerateInput) string {
    - Assessment harus measure apakah peserta bisa exhibit perilaku ini
    - Action items di closing harus actionable untuk develop perilaku ini
 
-4. REFERENSI TAMBAHAN (Opsional):
+4. ⭐ REFERENSI TAMBAHAN (Opsional - PENTING!):
    %s
    %s
+   
+   ⚠️ CATATAN PENTING UNTUK REFERENSI TAMBAHAN:
+   - Jika ada referensi tambahan, WAJIB diintegrasikan ke dalam materi
+   - Buat 1 SLIDE KHUSUS tentang referensi tambahan (di bagian KONSEP atau setelahnya)
+   - Jelaskan bagaimana referensi ini memperkaya pemahaman topik
+   - Berikan contoh konkret dari referensi tersebut
+   - Tunjukkan aplikasi praktis dari referensi dalam konteks topik training
 
 INTEGRASI KETIGA ELEMEN:
 Topik Training + Tools/Metode + Deskripsi Perilaku = Materi Training yang Kohesif
@@ -332,44 +339,35 @@ func (s *Service) buildStructureSection() string {
    ├─ Learning outcomes yang tie ke Deskripsi Perilaku
    └─ Ekspektasi hasil: Skill/knowledge yang langsung applicable
 
-2. OBJECTIVE (1-2 slide):
+2. OBJECTIVE (1 slide):
    ├─ slide_type: "objective"
    ├─ Tujuan SMART yang directly address Topik Training
    ├─ Kompetensi yang developed (align dengan Deskripsi Perilaku)
-   ├─ Indikator keberhasilan yang measurable
    ├─ Connection: Bagaimana Tools mendukung pencapaian objective
    └─ Practical benefits dalam konteks pekerjaan sehari-hari
 
-3. KONSEP (3-4 slide):
+3. KONSEP (2-3 slide):
    ├─ slide_type: "concept"
-   ├─ Definisi Topik Training yang comprehensive
-   ├─ Prinsip fundamental yang underpin topik
-   ├─ Framework/Model (Tools) dijelaskan secara detail
-   ├─ Terminologi kunci dengan context dan contoh
+   ├─ Definisi Topik Training yang jelas dan concise
+   ├─ Framework/Model (Tools) dijelaskan dengan fokus pada hal penting
+   ├─ Terminologi kunci dengan contoh singkat
    ├─ Hubungan logis: Konsep → Tools → Aplikasi → Perilaku
-   ├─ Differentiate similar concepts untuk clarity
-   └─ Ilustrasi yang relatable dengan experience peserta
+   └─ [JIKA ADA REFERENSI TAMBAHAN]: 1 slide khusus membahas referensi
 
-4. LANGKAH (3-4 slide):
+4. LANGKAH (2-3 slide):
    ├─ slide_type: "steps"
-   ├─ Step-by-step implementation menggunakan Tools
-   ├─ Setiap langkah explain: WHAT + HOW + WHY
-   ├─ Best practices proven effective dalam apply Tools
-   ├─ Practical tips untuk optimize hasil (relate ke Topik)
-   ├─ Specific tools/techniques dengan usage guidance
-   ├─ Checklist verification untuk ensure completeness
-   ├─ Common pitfalls dan prevention strategies
-   └─ Troubleshooting guide untuk handle obstacles
+   ├─ Step-by-step implementation menggunakan Tools (fokus pada langkah utama)
+   ├─ Setiap langkah explain: WHAT + HOW (singkat & jelas)
+   ├─ Best practices yang paling critical
+   ├─ Practical tips untuk optimize hasil
+   └─ Common pitfalls yang paling sering terjadi
 
-5. STUDI KASUS (2-3 slide):
+5. STUDI KASUS (2 slide):
    ├─ slide_type: "case_study"
    ├─ Real case dari konteks Indonesia/industri relevant
-   ├─ Problem statement yang clearly describe situation
-   ├─ Analysis menggunakan Tools yang telah dijelaskan
-   ├─ Problem-solving process yang systematic
-   ├─ Alternative solutions dengan pros/cons evaluation
-   ├─ Implementation details dan results achieved
-   ├─ Lessons learned yang actionable
+   ├─ Problem statement yang jelas
+   ├─ Solution menggunakan Tools yang telah dijelaskan
+   ├─ Results achieved dan lessons learned
    └─ Key takeaways: Bagaimana case ini demonstrate Deskripsi Perilaku
 
 6. PENUTUP (1 slide):
@@ -389,67 +387,111 @@ func (s *Service) buildContentRequirements() string {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 CRITICAL REQUIREMENTS:
-✓ Setiap slide: 5-8 bullet points yang substansial
-✓ Setiap bullet: Minimal 2-4 kalimat lengkap dengan penjelasan mendalam
-✓ Hindari bullet yang hanya keyword atau satu kalimat pendek
+✓ Setiap slide: 4-6 bullet points yang substansial dan fokus
+✓ Setiap bullet: 2-3 kalimat yang padat dan informatif (tidak bertele-tele)
+✓ Hindari bullet yang hanya keyword atau terlalu panjang
 ✓ Format heading: "OBJECTIVE:", "KONSEP:", "LANGKAH 1:", dll (untuk styling hijau)
-✓ Konten kaya detail praktis, contoh konkret, dan penjelasan clear
-✓ Bahasa Indonesia profesional, natural, engaging (tidak terlalu formal/kaku)
+✓ Prioritaskan poin-poin paling penting dan actionable
+✓ Bahasa Indonesia profesional, concise, engaging (langsung ke inti)
 ✓ Konsistensi reference ke Topik + Tools + Deskripsi Perilaku di semua slide
 
 FORMAT BULLET POINTS YANG DIHARAPKAN:
 
-1. Sub-judul + Penjelasan Detail (3-4 kalimat):
+1. Sub-judul + Penjelasan Fokus (2-3 kalimat):
    "Definisi Problem Analysis
-   Problem analysis adalah proses berpikir sistematis untuk memahami akar penyebab dari sebuah masalah, bukan hanya mengidentifikasi gejala yang tampak di permukaan. Metode ini membantu kita untuk tidak terjebak pada solusi quick-fix yang hanya mengatasi symptom sementara, tetapi fokus pada penyelesaian fundamental yang mencegah masalah berulang. Dengan problem analysis yang baik, organisasi dapat menghemat waktu, biaya, dan resources karena masalah ditangani secara tuntas dari akarnya."
+   Problem analysis adalah proses sistematis untuk memahami akar penyebab masalah, bukan hanya gejala permukaan. Metode ini fokus pada solusi fundamental yang mencegah masalah berulang, sehingga organisasi menghemat waktu dan resources."
 
-2. Poin Utama dengan Elaborasi (3-4 kalimat):
+2. Poin Utama dengan Elaborasi (2-3 kalimat):
    "• Fokus pada sistem, bukan individu
-   Pendekatan yang efektif dalam problem analysis adalah melihat masalah sebagai hasil dari kegagalan sistem atau proses, bukan kesalahan personal seseorang. Dengan perspektif ini, kita dapat mengidentifikasi gap dalam prosedur, training, atau tools yang menyebabkan masalah terjadi. Blame culture hanya akan membuat orang defensif dan tidak mendorong perbaikan berkelanjutan, sedangkan system-focused approach menciptakan learning organization yang terus berkembang."
+   Pendekatan efektif adalah melihat masalah sebagai hasil kegagalan sistem atau proses, bukan kesalahan personal. Dengan perspektif ini, kita identifikasi gap dalam prosedur atau tools, dan ciptakan learning organization yang terus berkembang."
 
-3. Langkah dengan Penjelasan Lengkap (4-5 kalimat):
+3. Langkah dengan Penjelasan (2-3 kalimat):
    "Langkah 1: Identifikasi Masalah Secara Spesifik
-   Nyatakan masalah dalam satu kalimat yang jelas, objektif, dan berbasis fakta, hindari asumsi atau interpretasi subjektif. Pastikan definisi masalah fokus pada proses atau hasil yang tidak sesuai ekspektasi, bukan pada siapa yang melakukannya. Libatkan semua stakeholder yang relevan untuk memastikan pemahaman yang sama tentang apa yang menjadi masalah sebenarnya. Contoh yang baik: 'Pompa pendingin unit A berhenti beroperasi pada tanggal 15 Januari pukul 14:00, menyebabkan delay produksi selama 3 jam'."
+   Nyatakan masalah dalam satu kalimat yang jelas, objektif, dan berbasis fakta. Libatkan stakeholder untuk memastikan pemahaman yang sama. Contoh: 'Pompa pendingin unit A berhenti pada 15 Jan pukul 14:00, delay produksi 3 jam'."
 
 DURASI DAN AKTIVITAS:
-├─ Total durasi: 60-90 menit (alokasi realistis per sesi)
-├─ Speaker notes per slide: 250-400 kata (detailed guidance untuk fasilitator)
-├─ 4-6 aktivitas interaktif (clear instructions + time allocation)
-├─ 8-12 assessment questions (test pemahaman aplikatif + comprehensive answers)
+├─ Total durasi: 60-75 menit (alokasi realistis per sesi)
+├─ Speaker notes per slide: 150-250 kata (guidance efisien untuk fasilitator)
+├─ 3-4 aktivitas interaktif (clear instructions + time allocation)
+├─ 6-8 assessment questions (test pemahaman aplikatif + comprehensive answers)
 └─ Referensi credible, up-to-date, relevant (konteks Indonesia jika memungkinkan)
 
+⭐ SLIDE KHUSUS REFERENSI TAMBAHAN (WAJIB jika ada referensi):
+Jika ada referensi tambahan, buat 1 slide tersendiri dengan format:
+{
+  "heading": "REFERENSI TAMBAHAN: [Nama Referensi]",
+  "bullets": [
+    "🔖 SUMBER REFERENSI",
+    "[Nama referensi/artikel/buku/framework yang disebutkan user]",
+    "",
+    "• Relevansi dengan Topik Training",
+    "Jelaskan bagaimana referensi ini memperkaya pemahaman topik dalam 2-3 kalimat fokus.",
+    "",
+    "• Konsep Kunci dari Referensi",
+    "Highlight 2-3 konsep utama dari referensi yang directly applicable ke topik training.",
+    "",
+    "• Aplikasi Praktis",
+    "Tunjukkan bagaimana mengintegrasikan referensi ini dengan tools/metode dalam konteks pekerjaan.",
+    "",
+    "• Contoh Implementasi",
+    "Berikan 1 contoh konkret bagaimana referensi ini dapat diaplikasikan dalam scenario real."
+  ],
+  "speaker_notes": "Guidance 150-200 kata tentang cara membahas referensi tambahan",
+  "slide_type": "concept"
+}
+
 LARANGAN:
-✗ JANGAN gunakan emoji dalam konten apapun
-✗ JANGAN buat bullet point hanya satu kalimat pendek tanpa elaborasi
+✗ JANGAN gunakan emoji dalam konten apapun (kecuali slide referensi tambahan)
+✗ JANGAN buat bullet point terlalu panjang (max 3-4 kalimat per bullet)
 ✗ JANGAN gunakan jargon tanpa penjelasan memadai
 ✗ JANGAN konten terlalu teoretis tanpa aplikasi praktis
 ✗ JANGAN bahasa ambigu atau tidak jelas
 ✗ JANGAN abaikan integrasi Topik + Tools + Deskripsi Perilaku
+✗ JANGAN skip slide referensi tambahan jika ada referensi dari user
 `
 }
 
 // getExampleSection provides quality content examples
 func (s *Service) getExampleSection() string {
-	return `CONTOH KONTEN BERKUALITAS TINGGI:
+	return `CONTOH KONTEN BERKUALITAS:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Slide KONSEP yang baik (showing Topik + Tools integration):
+Slide KONSEP yang baik (concise & fokus):
 
 "bullets": [
   "KONSEP: PROBLEM ANALYSIS SISTEMATIS",
   "",
   "Definisi Problem Analysis",
-  "Problem analysis adalah metodologi sistematis untuk mengidentifikasi, menganalisis, dan memahami akar penyebab dari sebuah masalah atau deviasi yang terjadi dalam proses kerja. Berbeda dengan troubleshooting yang hanya fokus pada memperbaiki gejala, problem analysis menggali lebih dalam untuk menemukan why di balik setiap issue yang muncul. Dengan pendekatan ini, solusi yang dihasilkan bersifat sustainable dan preventive, bukan hanya reaktif terhadap symptom yang tampak di permukaan. Metode ini directly support kompetensi dalam berpikir analitis dan pengambilan keputusan berbasis data.",
+  "Problem analysis adalah metodologi sistematis untuk mengidentifikasi dan memahami akar penyebab masalah dalam proses kerja. Berbeda dengan troubleshooting yang fokus pada gejala, problem analysis menggali why di balik setiap issue untuk menghasilkan solusi sustainable dan preventive.",
   "",
   "• Tools: 5 Whys Method",
-  "5 Whys adalah teknik iteratif yang developed oleh Toyota sebagai part dari problem-solving toolkit mereka. Metode ini bekerja dengan bertanya 'Mengapa?' secara berulang (typically 5 kali) untuk drill down dari symptom hingga root cause yang sebenarnya. Proses ini membantu team move beyond superficial answers dan uncover underlying system issues yang mungkin tidak obvious di awal. Ketika properly applied, 5 Whys prevent kita dari waste resources fixing wrong problems dan ensure effort focused pada real root causes.",
+  "5 Whys adalah teknik iteratif yang developed oleh Toyota untuk drill down dari symptom hingga root cause dengan bertanya 'Mengapa?' secara berulang (typically 5 kali). Metode ini membantu team uncover underlying system issues dan prevent waste resources fixing wrong problems.",
   "",
   "• Perbedaan Symptom dan Root Cause",
-  "Symptom adalah tanda atau gejala yang tampak di permukaan dan mudah diobservasi, seperti mesin yang berhenti, error message yang muncul, atau delay dalam delivery. Sementara root cause adalah faktor fundamental yang berada di balik symptom tersebut, yang mungkin berupa prosedur yang tidak diikuti, kurangnya maintenance, atau gap dalam training. Memahami perbedaan ini sangat critical karena mengatasi symptom saja hanya memberikan relief sementara, sedangkan menyelesaikan root cause akan mencegah issue yang sama terulang di masa depan dan demonstrate perilaku problem-solving yang efektif.",
+  "Symptom adalah gejala yang tampak di permukaan (mesin berhenti, error message, delay). Root cause adalah faktor fundamental di balik symptom (prosedur tidak diikuti, kurang maintenance, gap dalam training). Mengatasi root cause mencegah issue berulang dan demonstrate perilaku problem-solving efektif.",
   "",
-  "• Hubungan: Problem Analysis → Decision Making → Continuous Improvement",
-  "Problem analysis yang solid menjadi foundation untuk decision making yang efektif karena keputusan dibuat based on accurate understanding of the situation, bukan assumptions. Decisions yang informed by proper analysis have higher success rate dan less risk dari unintended consequences. Furthermore, systematic problem analysis create learning opportunities yang feed ke continuous improvement cycle, di mana setiap problem menjadi chance untuk strengthen systems dan processes untuk future prevention."
-]`
+  "• Impact: Problem Analysis → Decision Making → Improvement",
+  "Problem analysis yang solid menjadi foundation untuk decision making efektif karena keputusan based on accurate understanding, bukan assumptions. Decisions yang informed by proper analysis memiliki higher success rate dan create learning opportunities untuk continuous improvement."
+]
+
+Slide REFERENSI TAMBAHAN yang menonjol (jika ada):
+
+"bullets": [
+  "🔖 REFERENSI TAMBAHAN: [Nama Framework/Artikel]",
+  "",
+  "• Relevansi dengan Problem Analysis",
+  "Jelaskan bagaimana referensi ini complement atau extend konsep problem analysis yang sudah dijelaskan. Tunjukkan unique value yang ditambahkan oleh referensi ini.",
+  "",
+  "• Konsep Kunci",
+  "Highlight 2-3 konsep utama dari referensi yang directly applicable. Contoh: framework thinking, systematic approach, atau specific methodology yang introduced oleh referensi.",
+  "",
+  "• Aplikasi dalam Konteks Kerja",
+  "Tunjukkan step-by-step bagaimana mengintegrasikan referensi dengan tools yang sudah dijelaskan. Berikan scenario konkret di workplace.",
+  "",
+  "• Benefit Praktis",
+  "Jelaskan tangible benefits yang didapat ketika apply referensi ini dalam daily work. Focus pada measurable outcomes atau observable improvements."
+]
+`
 }
 
 // Keep the existing helper functions
