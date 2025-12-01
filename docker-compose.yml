@@ -1,32 +1,7 @@
-networks:
-  spil_tds:
-    driver: bridge
-
 volumes:
   mysql_data:
 
 services:
-  # MySQL Database
-  tds_db:
-    image: mysql:8.0
-    container_name: tds_db
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_DATABASE: tds
-      MYSQL_USER: tds_user
-      MYSQL_PASSWORD: tds_password
-    ports:
-      - "3306:3306"
-    volumes:
-      - mysql_data:/var/lib/mysql
-    networks:
-      - spil_tds
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
-      timeout: 20s
-      retries: 10
-
   # Backend API
   tds_backend:
     container_name: tds_backend
@@ -38,19 +13,16 @@ services:
       - ./backend/.env
     environment:
       # Override untuk Docker environment
-      DB_HOST: tds_db
+      DB_HOST: 10.184.0.36
       DB_PORT: 3306
       DB_NAME: tds
-      DB_USER: tds_user
-      DB_PASSWORD: tds_password
+      DB_USER: root
+      DB_PASSWORD: 28112016
       GIN_MODE: release
     ports:
-      - "8080:8080"
-    depends_on:
-      tds_db:
-        condition: service_healthy
+      - "8122:8080"
     networks:
-      - spil_tds
+      - tds-net
 
   # Frontend
   tds_frontend:
@@ -64,10 +36,23 @@ services:
     environment:
       # Override untuk Docker environment
       NODE_ENV: production
-      INTERNAL_API_ENDPOINT: http://tds_backend:8080
+      # Client-side API calls (browser to backend via reverse proxy)
+      NEXT_PUBLIC_API_ENDPOINT: https://pe.spil.co.id
+      HOST: "0.0.0.0"
+      PORT: 3000
     ports:
-      - "3000:3000"
+      - "8121:3000"
     depends_on:
       - tds_backend
     networks:
-      - spil_tds
+      - tds-net
+
+networks:
+  tds-net:
+    name: tds-net
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 172.19.51.0/24
+          gateway: 172.19.51.1
