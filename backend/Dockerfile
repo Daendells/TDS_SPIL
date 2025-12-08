@@ -20,8 +20,8 @@ FROM alpine:latest
 
 WORKDIR /app
 
-# Install ca-certificates for HTTPS requests
-RUN apk --no-cache add ca-certificates
+# Install ca-certificates for HTTPS requests and curl for health checks
+RUN apk --no-cache add ca-certificates curl
 
 # Copy binary from builder
 COPY --from=builder /app/main .

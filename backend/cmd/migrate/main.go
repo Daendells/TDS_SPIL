@@ -13,10 +13,12 @@ func main() {
 	log := config.NewLogger(viperConfig)
 	db := config.NewDatabase(viperConfig, log)
 
-	log.Info("Starting GORM auto migration...")
+	log.Info("Starting database migrations...")
 
+	// Run GORM auto migration (handles role column automatically)
+	log.Info("Running GORM auto migration...")
 	if err := runAutoMigrate(db); err != nil {
-		log.Fatalf("migration failed: %v", err)
+		log.Fatalf("GORM migration failed: %v", err)
 	}
 
 	log.Info("Migration completed successfully")

@@ -221,6 +221,16 @@ func (c *RouterConfig) SetupAuthRouter() {
 		auth.POST("/logout", c.UserController.Logout)
 	}
 
+	// User Management Routes (admin only)
+	userMgmt := c.App.Group("api/users").Use(c.AuthMiddleware)
+	{
+		userMgmt.POST("", c.UserController.CreateUser)
+		userMgmt.GET("", c.UserController.GetAllUsers)
+		userMgmt.GET("/:id", c.UserController.GetUserByID)
+		userMgmt.PUT("/:id", c.UserController.UpdateUser)
+		userMgmt.DELETE("/:id", c.UserController.DeleteUser)
+	}
+
 	assessmentAuth := c.App.Group("api/assessments").Use(c.AuthMiddleware)
 	{
 		assessmentAuth.GET("/:role", c.AssessmentController.FindByRole)
