@@ -23,18 +23,16 @@ func main() {
 
 	log.Info("Migration completed successfully")
 
-	// TRIGGERS DISABLED - Reading values directly from Excel columns
-	// log.Info("Creating database triggers...")
-	// if err := createTriggers(db); err != nil {
-	// 	log.Fatalf("trigger creation failed: %v", err)
-	// }
-	// log.Info("Triggers created successfully")
+	log.Info("Creating database triggers...")
+	if err := createTriggers(db); err != nil {
+		log.Fatalf("trigger creation failed: %v", err)
+	}
+	log.Info("Triggers created successfully")
 
-	// log.Info("Updating existing records with calculated values...")
-	// if err := updateExistingRecords(db); err != nil {
-	// 	log.Fatalf("update existing records failed: %v", err)
-	// }
-
+	log.Info("Updating existing records with calculated values...")
+	if err := updateExistingRecords(db); err != nil {
+		log.Fatalf("update existing records failed: %v", err)
+	}
 	log.Info("All migrations completed successfully")
 }
 
@@ -90,19 +88,15 @@ func runAutoMigrate(db *gorm.DB) error {
 
 func createTriggers(db *gorm.DB) error {
 	db.Exec("DROP TRIGGER IF EXISTS calculate_readiness_before_insert")
-	db.Exec("DROP TRIGGER IF EXISTS calculate_readiness_before_update")
-	db.Exec("DROP TRIGGER IF EXISTS after_insert_report_create_report_score")
 	db.Exec("DROP TRIGGER IF EXISTS after_insert_report_create_report_scores")
 	db.Exec("DROP TRIGGER IF EXISTS after_report_insert_populate_gaps")
 	db.Exec("DROP TRIGGER IF EXISTS after_report_update_populate_gaps")
 
-	// Create BEFORE INSERT trigger
 	triggerInsert := `
 CREATE TRIGGER calculate_readiness_before_insert
 BEFORE INSERT ON reports
 FOR EACH ROW
 BEGIN
-    -- 1. Convert readiness string to readiness_month integer
     SET NEW.readiness_month = CASE 
         WHEN NEW.readiness = 'Ready Now' THEN 0
         WHEN NEW.readiness = '6 Months' THEN 6
@@ -111,9 +105,7 @@ BEGIN
         ELSE 0
     END;
     
-    -- 2. Calculate education_fulfillment_months based on idp_program and certificate
     SET NEW.education_fulfillment_months = CASE 
-        -- SDP Program (highest level)
         WHEN NEW.idp_program = 'SDP' THEN
             CASE 
                 WHEN NEW.certificate IN ('ANT-I', 'ATT-I') THEN 0
@@ -121,20 +113,16 @@ BEGIN
                 WHEN NEW.certificate IN ('ANT-III', 'ATT-III') THEN 8
                 ELSE 0
             END
-        -- MDP Program (middle level)
         WHEN NEW.idp_program = 'MDP' THEN
             CASE 
                 WHEN NEW.certificate IN ('ANT-I', 'ATT-I', 'ANT-II', 'ATT-II') THEN 0
                 WHEN NEW.certificate IN ('ANT-III', 'ATT-III') THEN 8
                 ELSE 0
             END
-        -- FDP Program (lowest level - all certificates result in 0)
         WHEN NEW.idp_program = 'FDP' THEN 0
-        -- Default if program is not recognized
         ELSE 0
     END;
-    
-    -- 3. Calculate total_readiness_update_months (sum of readiness_month + education_fulfillment_months)
+
     SET NEW.total_readiness_update_months = 
         COALESCE(NEW.readiness_month, 0) + COALESCE(NEW.education_fulfillment_months, 0);
 END`
@@ -143,54 +131,6 @@ END`
 		return err
 	}
 
-	// Create BEFORE UPDATE trigger
-	triggerUpdate := `
-CREATE TRIGGER calculate_readiness_before_update
-BEFORE UPDATE ON reports
-FOR EACH ROW
-BEGIN
-    -- 1. Convert readiness string to readiness_month integer
-    SET NEW.readiness_month = CASE 
-        WHEN NEW.readiness = 'Ready Now' THEN 0
-        WHEN NEW.readiness = '6 Months' THEN 6
-        WHEN NEW.readiness = '7-12 Months' THEN 12
-        WHEN NEW.readiness = '13-18 Months' THEN 18
-        ELSE 0
-    END;
-    
-    -- 2. Calculate education_fulfillment_months based on idp_program and certificate
-    SET NEW.education_fulfillment_months = CASE 
-        -- SDP Program (highest level)
-        WHEN NEW.idp_program = 'SDP' THEN
-            CASE 
-                WHEN NEW.certificate IN ('ANT-I', 'ATT-I') THEN 0
-                WHEN NEW.certificate IN ('ANT-II', 'ATT-II') THEN 5
-                WHEN NEW.certificate IN ('ANT-III', 'ATT-III') THEN 8
-                ELSE 0
-            END
-        -- MDP Program (middle level)
-        WHEN NEW.idp_program = 'MDP' THEN
-            CASE 
-                WHEN NEW.certificate IN ('ANT-I', 'ATT-I', 'ANT-II', 'ATT-II') THEN 0
-                WHEN NEW.certificate IN ('ANT-III', 'ATT-III') THEN 8
-                ELSE 0
-            END
-        -- FDP Program (lowest level - all certificates result in 0)
-        WHEN NEW.idp_program = 'FDP' THEN 0
-        -- Default if program is not recognized
-        ELSE 0
-    END;
-    
-    -- 3. Calculate total_readiness_update_months (sum of readiness_month + education_fulfillment_months)
-    SET NEW.total_readiness_update_months = 
-        COALESCE(NEW.readiness_month, 0) + COALESCE(NEW.education_fulfillment_months, 0);
-END`
-
-	if err := db.Exec(triggerUpdate).Error; err != nil {
-		return err
-	}
-
-	// Create AFTER INSERT trigger for report_score
 	triggerAfterInsert := `
 CREATE TRIGGER after_insert_report_create_report_scores
 AFTER INSERT ON reports
@@ -198,21 +138,16 @@ FOR EACH ROW
 BEGIN
     DECLARE a_type_id BIGINT;
 
-    -- hanya proses jika value_assessment tidak null
     IF NEW.value_assessment IS NOT NULL THEN
-
-        -- cari assessment_type id untuk 'Value Assessment'
         SELECT id INTO a_type_id
         FROM assessment_types
         WHERE assessment_type_name = 'Value Assessment'
         LIMIT 1;
 
-        -- jika ditemukan, insert ke report_scores
         IF a_type_id IS NOT NULL THEN
             INSERT INTO report_scores (report_id, assessment_type_id, score)
             VALUES (NEW.id, a_type_id, NEW.value_assessment);
         END IF;
-
     END IF;
 END`
 
@@ -254,7 +189,7 @@ BEGIN
                     INSERT INTO gap_competencies (report_id, competency_type_id, gap_level, priority, created_at, updated_at)
                     VALUES (NEW.id, v_competency_id, 'MEDIUM', 1, NOW(), NOW())
                     ON DUPLICATE KEY UPDATE updated_at = NOW();
-                    
+
                     SET v_competency_id = NULL;
                 END IF;
             END IF;
@@ -303,7 +238,7 @@ BEGIN
                         INSERT INTO gap_competencies (report_id, competency_type_id, gap_level, priority, created_at, updated_at)
                         VALUES (NEW.id, v_competency_id, 'MEDIUM', 1, NOW(), NOW())
                         ON DUPLICATE KEY UPDATE updated_at = NOW();
-                        
+
                         SET v_competency_id = NULL;
                     END IF;
                 END IF;
@@ -320,7 +255,6 @@ END`
 }
 
 func updateExistingRecords(db *gorm.DB) error {
-	// Step 1: Update readiness_month based on readiness string
 	updateReadinessMonth := `
 UPDATE reports
 SET readiness_month = CASE 
@@ -336,11 +270,9 @@ WHERE readiness_month IS NULL OR readiness_month = 0`
 		return err
 	}
 
-	// Step 2: Update education_fulfillment_months based on certificate and idp_program
 	updateEducationMonths := `
 UPDATE reports
 SET education_fulfillment_months = CASE 
-    -- SDP Program (highest level)
     WHEN idp_program = 'SDP' THEN
         CASE 
             WHEN certificate IN ('ANT-I', 'ATT-I') THEN 0
@@ -348,16 +280,13 @@ SET education_fulfillment_months = CASE
             WHEN certificate IN ('ANT-III', 'ATT-III') THEN 8
             ELSE 0
         END
-    -- MDP Program (middle level)
     WHEN idp_program = 'MDP' THEN
         CASE 
             WHEN certificate IN ('ANT-I', 'ATT-I', 'ANT-II', 'ATT-II') THEN 0
             WHEN certificate IN ('ANT-III', 'ATT-III') THEN 8
             ELSE 0
         END
-    -- FDP Program (lowest level - all certificates result in 0)
     WHEN idp_program = 'FDP' THEN 0
-    -- Default if program is not recognized
     ELSE 0
 END
 WHERE education_fulfillment_months IS NULL`
@@ -366,7 +295,6 @@ WHERE education_fulfillment_months IS NULL`
 		return err
 	}
 
-	// Step 3: Update total_readiness_update_months as sum of the two columns
 	updateTotalMonths := `
 UPDATE reports
 SET total_readiness_update_months = 
