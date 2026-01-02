@@ -33,6 +33,9 @@ type RouterConfig struct {
 }
 
 func (c *RouterConfig) Setup() {
+	// Health check endpoint (no auth required)
+	c.App.GET("/health", controllers.HealthCheck)
+	
 	c.App.Static("/files", "./public")
 	c.App.Static("/storage", "./storage")
 	c.SetupGuestRouter()

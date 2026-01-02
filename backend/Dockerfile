@@ -1,36 +1,56 @@
+# =========================
 # Build stage
+# =========================
 FROM golang:1.24.0-alpine AS builder
 
 WORKDIR /app
 
-# Copy go mod files
-COPY go.mod go.sum ./
+# Install build dependencies
+RUN apk add --no-cache gcc musl-dev
 
-# Download dependencies
+# Dependencies
+COPY go.mod go.sum ./
 RUN go mod download
 
-# Copy source code
+# Source
 COPY . .
 
-# Build the application
-RUN CGO_ENABLED=0 GOOS=linux go build -o main ./cmd/api
+# Build binaries
+RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/api
+RUN CGO_ENABLED=0 GOOS=linux go build -o migrate ./cmd/migrate
+RUN CGO_ENABLED=0 GOOS=linux go build -o seed ./cmd/seed-csv
+RUN CGO_ENABLED=0 GOOS=linux go build -o clear-data ./cmd/clear-data
 
+
+# =========================
 # Runtime stage
+# =========================
 FROM alpine:latest
 
 WORKDIR /app
 
-# Install ca-certificates for HTTPS requests and curl for health checks
-RUN apk --no-cache add ca-certificates curl
+# Install runtime dependencies
+RUN apk --no-cache add ca-certificates curl netcat-openbsd tzdata
 
-# Copy binary from builder
-COPY --from=builder /app/main .
+# Copy binaries from builder
+COPY --from=builder /app/api .
+COPY --from=builder /app/migrate .
+COPY --from=builder /app/seed .
+COPY --from=builder /app/clear-data .
 
-# Copy .env file (will be overridden by docker-compose env vars)
-COPY .env .env
+# Copy entrypoint script
+COPY entrypoint.sh .
+RUN chmod +x entrypoint.sh
 
-# Expose port
+# Copy necessary resources (fonts, seed data, etc)
+COPY fonts ./fonts
+COPY cmd/seed-csv/data ./cmd/seed-csv/data
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=3s --start-period=40s --retries=3 \
+  CMD curl -f http://localhost:8080/health || exit 1
+
 EXPOSE 8080
 
-# Run the application
-CMD ["./main"]
+# Use entrypoint script instead of direct command
+ENTRYPOINT ["./entrypoint.sh"]
