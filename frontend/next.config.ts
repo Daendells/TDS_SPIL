@@ -4,6 +4,10 @@ const isDevelopment = process.env.NODE_ENV === "development";
 
 const nextConfig: NextConfig = {
   /* config options here */
+
+  // Enable standalone output for Docker production
+  output: process.env.NODE_ENV === "production" ? "standalone" : undefined,
+
   images: {
     remotePatterns: [
       // Development: localhost

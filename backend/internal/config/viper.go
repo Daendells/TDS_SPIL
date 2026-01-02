@@ -1,7 +1,7 @@
 package config
 
 import (
-	"fmt"
+	"log"
 
 	"github.com/spf13/viper"
 )
@@ -9,13 +9,26 @@ import (
 func NewViper() *viper.Viper {
 	config := viper.New()
 
+	// Set default values (optional)
+	config.SetDefault("DB_HOST", "localhost")
+	config.SetDefault("DB_PORT", "3306")
+	config.SetDefault("WEB_PORT", 8080)
+	config.SetDefault("ENV", "development")
+
+	// Try to read .env file (optional for Docker)
 	config.SetConfigFile(".env")
 	config.AddConfigPath("./../")
 	config.AddConfigPath("./")
+	
 	err := config.ReadInConfig()
 	if err != nil {
-		panic(fmt.Errorf("Fatal error config file: %w \n", err))
+		// .env file not found - this is OK in Docker
+		log.Printf("Warning: .env file not found, using environment variables: %v", err)
 	}
+
+	// AutomaticEnv will override .env values with environment variables
+	// This is crucial for Docker where we inject env via docker-compose
+	config.AutomaticEnv()
 
 	return config
 }

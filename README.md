@@ -2,6 +2,12 @@
 
 Sistem manajemen talent development untuk evaluasi dan penilaian crew kapal.
 
+## 📚 Documentation
+
+- **[Development Setup (Docker)](DOCKER_DEV_GUIDE.md)** - Setup development dengan Docker Compose
+- **[Production Deployment](PRODUCTION_DEPLOYMENT.md)** - Deploy ke production server
+- **[Dev vs Prod Comparison](DEV_VS_PROD.md)** - Perbedaan setup dev dan production
+
 ## Tech Stack
 
 - **Backend**: Go (Gin Framework, GORM)
@@ -11,12 +17,41 @@ Sistem manajemen talent development untuk evaluasi dan penilaian crew kapal.
 
 ## Prerequisites
 
+### For Docker Development (Recommended)
+
+- Docker & Docker Compose
+- Git
+
+### For Local Development (Without Docker)
+
 - Go 1.24.0 atau lebih baru
 - Node.js 20 atau lebih baru
-- MySQL 8.0 (untuk development lokal)
-- Docker & Docker Compose (untuk deployment)
+- MySQL 8.0
 
-## Setup Development
+## 🚀 Quick Start (Docker)
+
+```bash
+# Clone repository
+git clone <repository-url>
+cd talent-development-system
+
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Access:
+# Frontend: http://localhost:3001
+# Backend: http://localhost:8081
+# Health: http://localhost:8081/health
+```
+
+Untuk dokumentasi lengkap, lihat [DOCKER_DEV_GUIDE.md](DOCKER_DEV_GUIDE.md)
+
+---
+
+## Setup Development (Lokal tanpa Docker)
 
 ### 1. Clone Repository
 
@@ -83,6 +118,7 @@ go run cmd/migrate/main.go
 ```
 
 Output yang diharapkan:
+
 ```
 Migration completed successfully
 ```
@@ -96,6 +132,7 @@ go run cmd/seed-csv/main.go
 ```
 
 Output yang diharapkan:
+
 ```
 Seeding users...
 Seeding assessments...
@@ -158,6 +195,7 @@ docker-compose up -d --build
 ```
 
 Perintah ini akan:
+
 - Build image untuk backend, frontend
 - Pull image MySQL 8.0
 - Membuat network `spil_tds`
@@ -171,6 +209,7 @@ docker-compose ps
 ```
 
 Output yang diharapkan:
+
 ```
 NAME            IMAGE                                   STATUS
 tds_backend     talent-development-system-tds_backend   Up
@@ -221,6 +260,7 @@ docker-compose down -v
 ## Docker Services
 
 ### tds_db (MySQL)
+
 - **Image**: mysql:8.0
 - **Port**: 3306
 - **Database**: tds
@@ -230,11 +270,13 @@ docker-compose down -v
 - **Volume**: mysql_data (persistent storage)
 
 ### tds_backend (Go API)
+
 - **Port**: 8080
 - **Environment**: Production
 - **Dependencies**: tds_db (menunggu database healthy sebelum start)
 
 ### tds_frontend (Next.js)
+
 - **Port**: 3000
 - **Environment**: Production
 - **Dependencies**: tds_backend
@@ -349,32 +391,33 @@ npm run typecheck
 
 ### Backend (.env)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| WEB_PORT | Port untuk backend server | 8080 |
-| DB_HOST | MySQL host | localhost |
-| DB_PORT | MySQL port | 3306 |
-| DB_NAME | Nama database | tds |
-| DB_USER | MySQL user | root |
-| DB_PASSWORD | MySQL password | - |
-| JWT_SECRET_KEY | Secret key untuk JWT | - |
-| ENV | Environment (development/production) | development |
-| GROQ_API_KEY | API key untuk Groq AI | - |
-| GROQ_MODEL | Model Groq yang digunakan | llama-3.3-70b-versatile |
+| Variable       | Description                          | Default                 |
+| -------------- | ------------------------------------ | ----------------------- |
+| WEB_PORT       | Port untuk backend server            | 8080                    |
+| DB_HOST        | MySQL host                           | localhost               |
+| DB_PORT        | MySQL port                           | 3306                    |
+| DB_NAME        | Nama database                        | tds                     |
+| DB_USER        | MySQL user                           | root                    |
+| DB_PASSWORD    | MySQL password                       | -                       |
+| JWT_SECRET_KEY | Secret key untuk JWT                 | -                       |
+| ENV            | Environment (development/production) | development             |
+| GROQ_API_KEY   | API key untuk Groq AI                | -                       |
+| GROQ_MODEL     | Model Groq yang digunakan            | llama-3.3-70b-versatile |
 
 ### Frontend (.env)
 
-| Variable | Description | Default |
-|----------|-------------|---------|
-| JWT_SECRET | Secret key untuk JWT (harus sama dengan backend) | - |
-| NEXT_PUBLIC_API_ENDPOINT | URL backend API untuk client-side | http://localhost:8080 |
-| GROQ_API_KEY | API key untuk Groq AI | - |
+| Variable                 | Description                                      | Default               |
+| ------------------------ | ------------------------------------------------ | --------------------- |
+| JWT_SECRET               | Secret key untuk JWT (harus sama dengan backend) | -                     |
+| NEXT_PUBLIC_API_ENDPOINT | URL backend API untuk client-side                | http://localhost:8080 |
+| GROQ_API_KEY             | API key untuk Groq AI                            | -                     |
 
 ## Git Workflow
 
 ### Pre-commit Hooks
 
 Project ini menggunakan Husky untuk pre-commit hooks yang akan otomatis menjalankan:
+
 - ESLint
 - Prettier format check
 - TypeScript type check

@@ -24,6 +24,10 @@ lerna-debug.log*
 .env
 .env.*
 !.env.example
+!.env.prod.example
+
+# CRITICAL: Never commit production secrets!
+.env.prod
 
 # Build output
 .next/

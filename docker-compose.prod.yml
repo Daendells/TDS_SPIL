@@ -6,14 +6,14 @@ volumes:
 
 services:
   mysql:
-    container_name: mysql-container
+    container_name: mysql-container-prod
     image: mysql:8.0
-    restart: unless-stopped
+    restart: always
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: tds
-      MYSQL_USER: tds_user
-      MYSQL_PASSWORD: tds_pass
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${DB_NAME:-tds}
+      MYSQL_USER: ${DB_USER}
+      MYSQL_PASSWORD: ${DB_PASSWORD}
     volumes:
       - mysql_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
@@ -29,7 +29,7 @@ services:
           "localhost",
           "-u",
           "root",
-          "-prootpassword",
+          "-p${MYSQL_ROOT_PASSWORD}",
         ]
       interval: 10s
       timeout: 5s
@@ -37,32 +37,34 @@ services:
       start_period: 30s
 
   tds_backend:
-    container_name: tds_backend
+    container_name: tds_backend_prod
     build:
       context: ./backend
       dockerfile: Dockerfile
-    restart: unless-stopped
+    restart: always
     environment:
       # Database connection
-      DB_HOST: mysql-container
+      DB_HOST: mysql-container-prod
       DB_PORT: 3306
-      DB_USER: tds_user
-      DB_PASSWORD: tds_pass
-      DB_NAME: tds
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      DB_NAME: ${DB_NAME:-tds}
 
       # Application settings
       WEB_PORT: 8080
-      ENV: development
-      GIN_MODE: debug
+      ENV: production
+      GIN_MODE: release
 
-      # Add other env vars as needed
-      # JWT_SECRET: your-secret-key
-      # GROQ_API_KEY: your-groq-key
+      # Security
+      JWT_SECRET: ${JWT_SECRET}
+
+      # LLM API (if using)
+      GROQ_API_KEY: ${GROQ_API_KEY}
     ports:
-      - "8081:8080"
+      - "8080:8080"
     volumes:
       - backend_storage:/app/storage
-      - ./backend/public:/app/public:ro
+      # NOTE: NO bind mount untuk source code di production!
     depends_on:
       mysql:
         condition: service_healthy
@@ -76,24 +78,19 @@ services:
       start_period: 40s
 
   tds_frontend:
-    container_name: tds_frontend
+    container_name: tds_frontend_prod
     build:
       context: ./frontend
-      dockerfile: Dockerfile
-    restart: unless-stopped
+      dockerfile: Dockerfile.prod
+      args:
+        NEXT_PUBLIC_API_ENDPOINT: ${NEXT_PUBLIC_API_ENDPOINT:-http://localhost:8080}
+    restart: always
     environment:
-      NODE_ENV: development
-      NEXT_PUBLIC_API_ENDPOINT: http://localhost:8081
-      WATCHPACK_POLLING: true
-      CHOKIDAR_USEPOLLING: true
+      NODE_ENV: production
+      NEXT_PUBLIC_API_ENDPOINT: ${NEXT_PUBLIC_API_ENDPOINT:-http://localhost:8080}
     ports:
-      - "3001:3000"
-    volumes:
-      # Bind mount source code for hot reload
-      - ./frontend:/app
-      # Prevent node_modules from being overwritten
-      - /app/node_modules
-      - /app/.next
+      - "3000:3000"
+    # NOTE: NO volumes/bind mount untuk source code di production!
     depends_on:
       tds_backend:
         condition: service_healthy
