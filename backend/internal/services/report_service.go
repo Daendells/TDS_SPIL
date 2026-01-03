@@ -607,3 +607,222 @@ func (service *ReportService) saveValueAssessmentScores(db *gorm.DB, reports *[]
 		successCount, skippedCount, len(*reports))
 	return nil
 }
+
+func (service *ReportService) GetTrainingDataBySeafarerCode(ctx context.Context, seafarerCode string, apolloService *ApolloAPIService) ([]map[string]interface{}, error) {
+	tx := service.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	var report domain.Report
+	_, err := service.ReportRepository.FindBySeafarerCode(tx, seafarerCode, &report)
+	if err != nil {
+		return nil, fmt.Errorf("report not found: %w", err)
+	}
+
+	var gapCompetencies []domain.GapCompetency
+	if err := tx.Where("report_id = ?", report.ID).Preload("CompetencyType").Find(&gapCompetencies).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch gap competencies: %w", err)
+	}
+
+	var trainingSchedules []domain.TrainingSchedule
+	if err := tx.Where("is_started = ?", true).Find(&trainingSchedules).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch training schedules: %w", err)
+	}
+
+	gapMap := make(map[string]bool)
+	for _, gap := range gapCompetencies {
+		gapMap[gap.CompetencyType.Code] = true
+	}
+
+	var trainingData []map[string]interface{}
+
+	for _, schedule := range trainingSchedules {
+		if !gapMap[schedule.CompetencyCode] {
+			continue
+		}
+
+		courseName := schedule.TrainingTopic
+		if schedule.ApolloCourseName != nil && *schedule.ApolloCourseName != "" {
+			courseName = *schedule.ApolloCourseName
+		}
+
+		apolloResp, err := apolloService.GetTrainingData(report.SeamanCode, courseName)
+		if err != nil {
+			service.Log.Warnf("Failed to get Apollo data for %s - %s: %v", report.SeamanCode, courseName, err)
+			continue
+		}
+
+		if apolloResp != nil && len(apolloResp.OutputParams.CsrResult) > 0 {
+			for _, record := range apolloResp.OutputParams.CsrResult {
+				trainingData = append(trainingData, map[string]interface{}{
+					"courseName":    record.CoursesName,
+					"startDate":     record.StartDate,
+					"finishDate":    record.FinishDate,
+					"pointPre":      record.PointPre,
+					"pointPost":     record.PointPost,
+					"minimumPoint":  record.MinimumPoint,
+					"coursesHours":  record.CoursesHours,
+					"competencyCode": schedule.CompetencyCode,
+				})
+			}
+		}
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return trainingData, nil
+}
+
+func (service *ReportService) GetTrainingSummaryBySeafarerCode(ctx context.Context, seafarerCode string, apolloService *ApolloAPIService) (map[string]interface{}, error) {
+	tx := service.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	var report domain.Report
+	_, err := service.ReportRepository.FindBySeafarerCode(tx, seafarerCode, &report)
+	if err != nil {
+		return nil, fmt.Errorf("report not found: %w", err)
+	}
+
+	var gapCompetencies []domain.GapCompetency
+	if err := tx.Where("report_id = ?", report.ID).Preload("CompetencyType").Find(&gapCompetencies).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch gap competencies: %w", err)
+	}
+
+	var allGapCompetencies []domain.GapCompetency
+	if err := tx.Joins("JOIN reports ON reports.id = gap_competencies.report_id").
+		Where("reports.idp_program = ?", report.IDPProgram).
+		Preload("CompetencyType").
+		Find(&allGapCompetencies).Error; err != nil {
+		return nil, fmt.Errorf("failed to fetch all gap competencies for program: %w", err)
+	}
+
+	reportGaps := make(map[int]map[string]bool)
+	for _, gc := range allGapCompetencies {
+		if reportGaps[gc.ReportID] == nil {
+			reportGaps[gc.ReportID] = make(map[string]bool)
+		}
+		if gc.CompetencyType != nil {
+			reportGaps[gc.ReportID][gc.CompetencyType.Code] = true
+		}
+	}
+
+	totalParticipants := len(reportGaps)
+	competencyCountMap := make(map[string]int)
+
+	for _, gaps := range reportGaps {
+		for code := range gaps {
+			competencyCountMap[code]++
+		}
+	}
+
+	mandatoryGaps := make(map[string]bool)
+	nonMandatoryGaps := make(map[string]bool)
+
+	for _, gap := range gapCompetencies {
+		code := gap.CompetencyType.Code
+		count := competencyCountMap[code]
+		percentage := float64(count) / float64(totalParticipants) * 100
+
+		if percentage >= 60.0 {
+			mandatoryGaps[code] = true
+		} else {
+			nonMandatoryGaps[code] = true
+		}
+	}
+
+	mandatoryCompleted := 0
+	mandatoryNotCompleted := 0
+	nonMandatoryCompleted := 0
+	nonMandatoryNotCompleted := 0
+
+	for _, gap := range gapCompetencies {
+		code := gap.CompetencyType.Code
+		isMandatory := mandatoryGaps[code]
+
+		var trainingSchedule domain.TrainingSchedule
+		err := tx.Where("program = ? AND competency_code = ?", report.IDPProgram, code).First(&trainingSchedule).Error
+		
+		if err != nil {
+			service.Log.Warnf("Training schedule not found for program %s and competency %s: %v", report.IDPProgram, code, err)
+			if isMandatory {
+				mandatoryNotCompleted++
+			} else {
+				nonMandatoryNotCompleted++
+			}
+			continue
+		}
+
+		courseName := trainingSchedule.TrainingTopic
+		if trainingSchedule.IsStarted && trainingSchedule.ApolloCourseName != nil && *trainingSchedule.ApolloCourseName != "" {
+			courseName = *trainingSchedule.ApolloCourseName
+		}
+
+		apolloResp, err := apolloService.GetTrainingData(report.SeamanCode, courseName)
+		isCompleted := false
+
+		if err == nil && apolloResp != nil && len(apolloResp.OutputParams.CsrResult) > 0 {
+			for _, record := range apolloResp.OutputParams.CsrResult {
+				if record.FinishDate != "" && record.FinishDate != "-" {
+					isCompleted = true
+					break
+				}
+			}
+		}
+
+		if isMandatory {
+			if isCompleted {
+				mandatoryCompleted++
+			} else {
+				mandatoryNotCompleted++
+			}
+		} else {
+			if isCompleted {
+				nonMandatoryCompleted++
+			} else {
+				nonMandatoryNotCompleted++
+			}
+		}
+	}
+
+	totalCompleted := mandatoryCompleted + nonMandatoryCompleted
+	totalNotCompleted := mandatoryNotCompleted + nonMandatoryNotCompleted
+	totalTrainings := totalCompleted + totalNotCompleted
+
+	mandatoryPercentage := 0.0
+	if mandatoryCompleted+mandatoryNotCompleted > 0 {
+		mandatoryPercentage = float64(mandatoryCompleted) / float64(mandatoryCompleted+mandatoryNotCompleted) * 100
+	}
+
+	nonMandatoryPercentage := 0.0
+	if nonMandatoryCompleted+nonMandatoryNotCompleted > 0 {
+		nonMandatoryPercentage = float64(nonMandatoryCompleted) / float64(nonMandatoryCompleted+nonMandatoryNotCompleted) * 100
+	}
+
+	totalPercentage := 0.0
+	if totalTrainings > 0 {
+		totalPercentage = float64(totalCompleted) / float64(totalTrainings) * 100
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, fmt.Errorf("failed to commit transaction: %w", err)
+	}
+
+	return map[string]interface{}{
+		"mandatory": map[string]interface{}{
+			"completed":    mandatoryCompleted,
+			"notCompleted": mandatoryNotCompleted,
+			"percentage":   mandatoryPercentage,
+		},
+		"nonMandatory": map[string]interface{}{
+			"completed":    nonMandatoryCompleted,
+			"notCompleted": nonMandatoryNotCompleted,
+			"percentage":   nonMandatoryPercentage,
+		},
+		"total": map[string]interface{}{
+			"completed":    totalCompleted,
+			"notCompleted": totalNotCompleted,
+			"percentage":   totalPercentage,
+		},
+	}, nil
+}
