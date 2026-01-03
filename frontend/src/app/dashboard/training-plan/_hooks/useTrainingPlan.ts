@@ -185,11 +185,15 @@ export function useSwapSchedules() {
 export function useToggleTrainingStarted() {
   const queryClient = useQueryClient();
 
-  return useMutation<void, Error, { scheduleId: number; isStarted: boolean }>({
-    mutationFn: async ({ scheduleId, isStarted }) => {
+  return useMutation<
+    void,
+    Error,
+    { scheduleId: number; isStarted: boolean; apolloCourseName: string }
+  >({
+    mutationFn: async ({ scheduleId, isStarted, apolloCourseName }) => {
       const response = await api.put<ApiResponse<{ message: string }>>(
         `/api/training-plan/toggle-started/${scheduleId}`,
-        { isStarted }
+        { isStarted, apolloCourseName }
       );
 
       if (!response.data || !response.data.success) {

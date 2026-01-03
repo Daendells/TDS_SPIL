@@ -12,8 +12,11 @@ import {
 import { ChevronRightIcon } from "lucide-react";
 import MentoringListDialog from "@/components/mentoring-list-dialog";
 import CoachingListDialog from "@/components/coaching-list-dialog";
+import TrainingListDialog from "@/components/training-list-dialog";
 import AssessmentResultDialog from "@/components/assessment-result-dialog";
 import { useGetReportBySeafarerCode } from "@/app/dashboard/_hooks/useReportData";
+import { useQuery } from "@tanstack/react-query";
+import { api } from "@/app/lib/api";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -28,10 +31,20 @@ export default function TalentProfilePage({ params }: PageProps) {
   const { seafarerCode } = use(params);
   const [mentoringDialogOpen, setMentoringDialogOpen] = useState(false);
   const [coachingDialogOpen, setCoachingDialogOpen] = useState(false);
+  const [trainingDialogOpen, setTrainingDialogOpen] = useState(false);
   const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
 
   // Fetch report data using React Query hook
   const { data: report, isLoading, error } = useGetReportBySeafarerCode(seafarerCode);
+
+  const { data: trainingSummary, isLoading: trainingLoading } = useQuery({
+    queryKey: ["training-summary", seafarerCode],
+    queryFn: async () => {
+      const response = await api.get(`/reports/seafarer-code/${seafarerCode}/training-summary`);
+      return response.data.data;
+    },
+    enabled: !!seafarerCode,
+  });
 
   // Show loading while waiting for seafarerCode to be set or while fetching
   if (!seafarerCode || isLoading) {
@@ -189,56 +202,73 @@ export default function TalentProfilePage({ params }: PageProps) {
             </div>
           </div>
 
-          {/* Training */}
-          <div className="border rounded-xl shadow-sm p-4 bg-white text-sm h-full">
-            <h2 className="font-bold text-lg mb-2">DATA TRAINING</h2>
-            <p>
-              <strong>Sudah diikuti:</strong> {report.trainingCompleted}
-            </p>
-            <p>
-              <strong>Belum diikuti:</strong> {report.trainingPlanned}
-            </p>
-          </div>
-
           {/* Training Data Table */}
-          <div className="border rounded-lg shadow-sm p-4 bg-white">
-            <h2 className="font-bold text-lg mb-4 pb-2 border-b">DATA TRAINING</h2>
-            <div className="overflow-x-auto">
-              <table className="w-full border-collapse text-sm whitespace-nowrap">
-                <thead>
-                  <tr className="bg-gray-100">
-                    <th className="border px-3 py-2 text-left font-semibold">Category</th>
-                    <th className="border px-3 py-2 text-center font-semibold">Completed</th>
-                    <th className="border px-3 py-2 text-center font-semibold">Not Completed</th>
-                    <th className="border px-3 py-2 text-center font-semibold">Percentage</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr className="hover:bg-gray-50">
-                    <td className="border px-3 py-2">Mandatory</td>
-                    <td className="border px-3 py-2 text-center">5</td>
-                    <td className="border px-3 py-2 text-center">2</td>
-                    <td className="border px-3 py-2 text-center font-semibold text-blue-600">
-                      71.4%
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-gray-50">
-                    <td className="border px-3 py-2">Non Mandatory</td>
-                    <td className="border px-3 py-2 text-center">3</td>
-                    <td className="border px-3 py-2 text-center">1</td>
-                    <td className="border px-3 py-2 text-center font-semibold text-blue-600">
-                      75.0%
-                    </td>
-                  </tr>
-                  <tr className="bg-gray-100 font-semibold">
-                    <td className="border px-3 py-2">Total</td>
-                    <td className="border px-3 py-2 text-center">8</td>
-                    <td className="border px-3 py-2 text-center">3</td>
-                    <td className="border px-3 py-2 text-center text-blue-600">72.7%</td>
-                  </tr>
-                </tbody>
-              </table>
+          <div
+            className="border rounded-lg shadow-sm p-4 bg-white cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setTrainingDialogOpen(true)}
+          >
+            <div className="flex items-center justify-between mb-4 pb-2 border-b">
+              <h2 className="font-bold text-lg">DATA TRAINING</h2>
+              <ChevronRightIcon className="h-5 w-5 text-gray-400" />
             </div>
+            {trainingLoading ? (
+              <div className="flex justify-center items-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+              </div>
+            ) : trainingSummary ? (
+              <div className="overflow-x-auto">
+                <table className="w-full border-collapse text-sm whitespace-nowrap">
+                  <thead>
+                    <tr className="bg-gray-100">
+                      <th className="border px-3 py-2 text-left font-semibold">Category</th>
+                      <th className="border px-3 py-2 text-center font-semibold">Completed</th>
+                      <th className="border px-3 py-2 text-center font-semibold">Not Completed</th>
+                      <th className="border px-3 py-2 text-center font-semibold">Percentage</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr className="hover:bg-gray-50">
+                      <td className="border px-3 py-2">Mandatory</td>
+                      <td className="border px-3 py-2 text-center">
+                        {trainingSummary.mandatory.completed}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {trainingSummary.mandatory.notCompleted}
+                      </td>
+                      <td className="border px-3 py-2 text-center font-semibold text-blue-600">
+                        {trainingSummary.mandatory.percentage.toFixed(1)}%
+                      </td>
+                    </tr>
+                    <tr className="hover:bg-gray-50">
+                      <td className="border px-3 py-2">Non Mandatory</td>
+                      <td className="border px-3 py-2 text-center">
+                        {trainingSummary.nonMandatory.completed}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {trainingSummary.nonMandatory.notCompleted}
+                      </td>
+                      <td className="border px-3 py-2 text-center font-semibold text-blue-600">
+                        {trainingSummary.nonMandatory.percentage.toFixed(1)}%
+                      </td>
+                    </tr>
+                    <tr className="bg-gray-100 font-semibold">
+                      <td className="border px-3 py-2">Total</td>
+                      <td className="border px-3 py-2 text-center">
+                        {trainingSummary.total.completed}
+                      </td>
+                      <td className="border px-3 py-2 text-center">
+                        {trainingSummary.total.notCompleted}
+                      </td>
+                      <td className="border px-3 py-2 text-center text-blue-600">
+                        {trainingSummary.total.percentage.toFixed(1)}%
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500 text-center py-4">Tidak ada data training</p>
+            )}
           </div>
 
           {/* Mentoring */}
@@ -414,6 +444,13 @@ export default function TalentProfilePage({ params }: PageProps) {
         open={coachingDialogOpen}
         setOpen={setCoachingDialogOpen}
         reportId={report.id}
+        reportName={report.nama || "Unknown"}
+      />
+
+      <TrainingListDialog
+        open={trainingDialogOpen}
+        setOpen={setTrainingDialogOpen}
+        seafarerCode={report.seafarerCode}
         reportName={report.nama || "Unknown"}
       />
 

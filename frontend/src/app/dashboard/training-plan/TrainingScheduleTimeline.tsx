@@ -15,6 +15,7 @@ import {
 import { toast } from "sonner";
 import { useSwapSchedules, useToggleTrainingStarted } from "./_hooks/useTrainingPlan";
 import type { TrainingPlanSummary } from "./_hooks/useTrainingPlan";
+import CourseNameDialog from "./CourseNameDialog";
 
 interface TrainingScheduleTimelineProps {
   summary: TrainingPlanSummary;
@@ -58,6 +59,8 @@ export default function TrainingScheduleTimeline({
   const [dragOverWeek, setDragOverWeek] = useState<string | null>(null);
   const [editMode, setEditMode] = useState(false);
   const [toggleLoading, setToggleLoading] = useState<number | null>(null);
+  const [showCourseNameDialog, setShowCourseNameDialog] = useState(false);
+  const [selectedSchedule, setSelectedSchedule] = useState<ScheduleItem | null>(null);
   const swapSchedules = useSwapSchedules();
   const toggleTrainingStarted = useToggleTrainingStarted();
 
@@ -281,23 +284,60 @@ export default function TrainingScheduleTimeline({
   };
 
   const handleToggleStarted = async (scheduleId: number, currentStatus: boolean) => {
-    setToggleLoading(scheduleId);
+    const schedule = schedules.find((s) => s.id === scheduleId);
+    if (!schedule) return;
+
+    if (!currentStatus) {
+      setSelectedSchedule(schedule);
+      setShowCourseNameDialog(true);
+    } else {
+      setToggleLoading(scheduleId);
+      try {
+        await toggleTrainingStarted.mutateAsync({
+          scheduleId,
+          isStarted: false,
+          apolloCourseName: "",
+        });
+
+        setSchedules((prev) =>
+          prev.map((s) => (s.id === scheduleId ? { ...s, isStarted: false } : s))
+        );
+        setOriginalSchedules((prev) =>
+          prev.map((s) => (s.id === scheduleId ? { ...s, isStarted: false } : s))
+        );
+
+        toast.success("Training stopped!");
+      } catch {
+        toast.error("Failed to toggle training status");
+      } finally {
+        setToggleLoading(null);
+      }
+    }
+  };
+
+  const handleCourseNameSubmit = async (courseName: string) => {
+    if (!selectedSchedule) return;
+
+    setToggleLoading(selectedSchedule.id);
     try {
       await toggleTrainingStarted.mutateAsync({
-        scheduleId,
-        isStarted: !currentStatus,
+        scheduleId: selectedSchedule.id,
+        isStarted: true,
+        apolloCourseName: courseName,
       });
 
       setSchedules((prev) =>
-        prev.map((s) => (s.id === scheduleId ? { ...s, isStarted: !currentStatus } : s))
+        prev.map((s) => (s.id === selectedSchedule.id ? { ...s, isStarted: true } : s))
       );
       setOriginalSchedules((prev) =>
-        prev.map((s) => (s.id === scheduleId ? { ...s, isStarted: !currentStatus } : s))
+        prev.map((s) => (s.id === selectedSchedule.id ? { ...s, isStarted: true } : s))
       );
 
-      toast.success(`Training ${!currentStatus ? "started" : "stopped"}!`);
+      toast.success("Training started!");
+      setShowCourseNameDialog(false);
+      setSelectedSchedule(null);
     } catch {
-      toast.error("Failed to toggle training status");
+      toast.error("Failed to start training");
     } finally {
       setToggleLoading(null);
     }
@@ -476,6 +516,18 @@ export default function TrainingScheduleTimeline({
           );
         })}
       </div>
+
+      <CourseNameDialog
+        open={showCourseNameDialog}
+        onOpenChange={(open) => {
+          setShowCourseNameDialog(open);
+          if (!open) setSelectedSchedule(null);
+        }}
+        onSubmit={handleCourseNameSubmit}
+        isLoading={toggleLoading !== null}
+        competencyCode={selectedSchedule?.competencyCode || ""}
+        trainingMaterial={selectedSchedule?.trainingMaterial || ""}
+      />
     </div>
   );
 }
