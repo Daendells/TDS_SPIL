@@ -1,6 +1,7 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 
 	"backend/internal/middlewares"
@@ -101,5 +102,156 @@ func (c *UserController) Logout(ctx *gin.Context) {
 		Status: "OK",
 		Code:   http.StatusOK,
 		Data:   "Logged out successfully",
+	})
+}
+
+// CreateUser membuat user baru (admin only)
+func (c *UserController) CreateUser(ctx *gin.Context) {
+	var request web.UserCreateRequest
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	user, err := c.Service.CreateUser(&request)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, web.SuccessResponse{
+		Code:   http.StatusCreated,
+		Status: "User created successfully",
+		Data:   user,
+	})
+}
+
+// GetAllUsers mengambil semua user (admin only)
+func (c *UserController) GetAllUsers(ctx *gin.Context) {
+	users, err := c.Service.GetAllUsers()
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   users,
+	})
+}
+
+// GetUserByID mengambil user berdasarkan ID (admin only)
+func (c *UserController) GetUserByID(ctx *gin.Context) {
+	userID := ctx.Param("id")
+
+	var id int
+	if _, err := fmt.Sscanf(userID, "%d", &id); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  "Invalid user ID",
+		})
+		return
+	}
+
+	user, err := c.Service.GetUserByID(id)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, web.ErrorResponse{
+			Code:   http.StatusNotFound,
+			Status: "Not Found",
+			Error:  "User not found",
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   user,
+	})
+}
+
+// UpdateUser update user (admin only)
+func (c *UserController) UpdateUser(ctx *gin.Context) {
+	userID := ctx.Param("id")
+
+	var id int
+	if _, err := fmt.Sscanf(userID, "%d", &id); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  "Invalid user ID",
+		})
+		return
+	}
+
+	var request web.UserUpdateRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	user, err := c.Service.UpdateUser(id, &request)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "User updated successfully",
+		Data:   user,
+	})
+}
+
+// DeleteUser hapus user (admin only)
+func (c *UserController) DeleteUser(ctx *gin.Context) {
+	userID := ctx.Param("id")
+
+	var id int
+	if _, err := fmt.Sscanf(userID, "%d", &id); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  "Invalid user ID",
+		})
+		return
+	}
+
+	if err := c.Service.DeleteUser(id); err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "User deleted successfully",
+		Data:   nil,
 	})
 }

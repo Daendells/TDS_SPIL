@@ -7,19 +7,19 @@ import (
 
 type TrainingSchedule struct {
 	ID               int       `json:"id" gorm:"column:id;primaryKey;autoIncrement"`
-	Program          string    `json:"program" gorm:"column:program;size:10;not null;default:SDP"` // SDP, MDP, FDP
+	Program          string    `json:"program" gorm:"column:program;size:10;not null;default:SDP"`
 	CompetencyCode   string    `json:"competencyCode" gorm:"column:competency_code;size:10;not null"`
 	CompetencyTypeID *int64    `json:"competencyTypeId" gorm:"column:competency_type_id"`
 	TrainingTopic    string    `json:"trainingTopic" gorm:"column:training_topic;size:255;not null"`
-	Category         string    `json:"category" gorm:"-"` // Dynamically calculated, NOT stored in database
-	MaterialType     int       `json:"materialType" gorm:"column:material_type;not null"`         // 1 or 2 (Materi 1 or Materi 2)
+	Category         string    `json:"category" gorm:"-"`
+	MaterialType     int       `json:"materialType" gorm:"column:material_type;not null"`
 	ScheduledDate    time.Time `json:"scheduledDate" gorm:"column:scheduled_date;not null"`
-	IsStarted        bool      `json:"isStarted" gorm:"column:is_started;not null;default:false"` // Mark if training has started (for Apollo API filtering)
+	IsStarted        bool      `json:"isStarted" gorm:"column:is_started;not null;default:false"`
+	ApolloCourseName *string   `json:"apolloCourseName" gorm:"column:apollo_course_name;size:500"`
 
 	CreatedAt time.Time `json:"createdAt" gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt time.Time `json:"updatedAt" gorm:"column:updated_at;autoUpdateTime"`
 
-	// Relations
 	CompetencyType *CompetencyType `json:"competencyType,omitempty" gorm:"foreignKey:CompetencyTypeID;references:ID"`
 }
 

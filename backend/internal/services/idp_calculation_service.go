@@ -270,18 +270,24 @@ func (s *IDPCalculationService) getActualTrainingCountWithDetails(
 				continue
 			}
 
-			var training domain.Training
-			err := s.DB.Joins("JOIN competency_types ON competency_types.id = training.competency_type_id").
-				Where("competency_types.code = ?", competencyCode).
-				Order("training.lvl DESC").
-				First(&training).Error
+			courseName := ""
+			if schedule.ApolloCourseName != nil && *schedule.ApolloCourseName != "" {
+				courseName = *schedule.ApolloCourseName
+			} else {
+				var training domain.Training
+				err := s.DB.Joins("JOIN competency_types ON competency_types.id = training.competency_type_id").
+					Where("competency_types.code = ?", competencyCode).
+					Order("training.lvl DESC").
+					First(&training).Error
 
-			if err != nil {
-				s.Log.Warnf("Failed to find training material for %s: %v", competencyCode, err)
-				continue
+				if err != nil {
+					s.Log.Warnf("Failed to find training material for %s: %v", competencyCode, err)
+					continue
+				}
+
+				courseName = strings.ToUpper(training.TopikTraining)
 			}
 
-			courseName := strings.ToUpper(training.TopikTraining)
 			if courseName == "" {
 				continue
 			}

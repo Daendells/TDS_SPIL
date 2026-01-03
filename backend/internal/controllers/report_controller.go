@@ -12,14 +12,16 @@ import (
 )
 
 type ReportController struct {
-	Log     *logrus.Logger
-	Service *services.ReportService
+	Log           *logrus.Logger
+	Service       *services.ReportService
+	ApolloService *services.ApolloAPIService
 }
 
-func NewReportController(service *services.ReportService, log *logrus.Logger) *ReportController {
+func NewReportController(service *services.ReportService, log *logrus.Logger, apolloService *services.ApolloAPIService) *ReportController {
 	return &ReportController{
-		Log:     log,
-		Service: service,
+		Log:           log,
+		Service:       service,
+		ApolloService: apolloService,
 	}
 }
 
@@ -169,3 +171,60 @@ func (controller *ReportController) FindBySeafarerCode(ctx *gin.Context) {
 
 	ctx.JSON(response.Code, response)
 }
+
+func (controller *ReportController) GetTrainingData(ctx *gin.Context) {
+	seafarerCode := ctx.Param("seafarerCode")
+	if seafarerCode == "" {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  "Seafarer code is required",
+		})
+		return
+	}
+
+	trainingData, err := controller.Service.GetTrainingDataBySeafarerCode(ctx, seafarerCode, controller.ApolloService)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Status: "Ok",
+		Code:   http.StatusOK,
+		Data:   trainingData,
+	})
+}
+
+func (controller *ReportController) GetTrainingSummary(ctx *gin.Context) {
+	seafarerCode := ctx.Param("seafarerCode")
+	if seafarerCode == "" {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  "Seafarer code is required",
+		})
+		return
+	}
+
+	summary, err := controller.Service.GetTrainingSummaryBySeafarerCode(ctx, seafarerCode, controller.ApolloService)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Status: "Ok",
+		Code:   http.StatusOK,
+		Data:   summary,
+	})
+}
+

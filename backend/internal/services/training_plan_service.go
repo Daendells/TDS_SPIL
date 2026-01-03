@@ -20,7 +20,7 @@ type TrainingPlanService interface {
 	GetCompetencyMapping(program string) map[string]domain.CompetencyMappingItem
 	UpdateScheduledDate(id int, newDate time.Time) error
 	GenerateTrainingPlanExcel(program string) (*bytes.Buffer, error)
-	ToggleTrainingStarted(id int, isStarted bool) error
+	ToggleTrainingStarted(id int, isStarted bool, apolloCourseName string) error
 }
 
 type trainingPlanService struct {
@@ -1312,12 +1312,15 @@ func (s *trainingPlanService) createMatrixSheet(f *excelize.File, sheetName stri
 	return nil
 }
 
-// ToggleTrainingStarted updates the is_started flag for a training schedule
-func (s *trainingPlanService) ToggleTrainingStarted(id int, isStarted bool) error {
+func (s *trainingPlanService) ToggleTrainingStarted(id int, isStarted bool, apolloCourseName string) error {
 	s.log.WithFields(logrus.Fields{
-		"id":         id,
-		"is_started": isStarted,
+		"id":                 id,
+		"is_started":         isStarted,
+		"apollo_course_name": apolloCourseName,
 	}).Info("Toggling training started flag")
 
+	if apolloCourseName != "" {
+		return s.trainingScheduleRepo.UpdateIsStartedWithCourseName(id, isStarted, apolloCourseName)
+	}
 	return s.trainingScheduleRepo.UpdateIsStarted(id, isStarted)
 }

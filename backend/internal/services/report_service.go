@@ -156,62 +156,40 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 			continue
 		}
 
-		// Parse all columns from Excel - PERBAIKAN INDEX
+		// Parse all columns from Excel - Following the correct column order from the image
+		// A=0: No. (skip)
+		// B=1: Vessel Name
+		// C=2: Name
+		// D=3: Position
+		// E=4: Seaman Code
+		// F=5: Seafarer Code
+		// G=6: Certificate
+		// H=7: Age
+		// I=8: Value Assessment
+		// N=13: Competency Gap Analysis
+		// O=14: TOTAL GAP
+		// Q=16: Certificate Eligible
+		// S=18: Program
+
 		vesselName := helpers.SanitizeCell(helpers.GetCell(row, 1))
 		nama := helpers.SanitizeCell(helpers.GetCell(row, 2))
 		jabatan := helpers.SanitizeCell(helpers.GetCell(row, 3))
-		// Column 4: Department (skip)
-		seamanCode := helpers.SanitizeCell(helpers.GetCell(row, 5))
-		seafarerCode := helpers.SanitizeCell(helpers.GetCell(row, 6))
-		certificate := helpers.SanitizeCell(helpers.GetCell(row, 7))
-		age := helpers.SanitizeCell(helpers.GetCell(row, 8))
-		konditeReviewStr := helpers.SanitizeCell(helpers.GetCell(row, 9))
-		kpiVesselStr := helpers.SanitizeCell(helpers.GetCell(row, 10))
-		performanceScoreStr := helpers.SanitizeCell(helpers.GetCell(row, 11))
-		valueAssessmentStr := helpers.SanitizeCell(helpers.GetCell(row, 12))
+		seamanCode := helpers.SanitizeCell(helpers.GetCell(row, 4))
+		seafarerCode := helpers.SanitizeCell(helpers.GetCell(row, 5))
+		certificate := helpers.SanitizeCell(helpers.GetCell(row, 6))
+		age := helpers.SanitizeCell(helpers.GetCell(row, 7))
+		valueAssessmentStr := helpers.SanitizeCell(helpers.GetCell(row, 8))
 		competencyGapAnalysis := helpers.SanitizeCell(helpers.GetCell(row, 13))
 		totalGapStr := helpers.SanitizeCell(helpers.GetCell(row, 14))
-		strengthStr := helpers.SanitizeCell(helpers.GetCell(row, 15))
-		idpProgram := helpers.SanitizeCell(helpers.GetCell(row, 16))
-		havQuadran2Str := helpers.SanitizeCell(helpers.GetCell(row, 17))
-		talentClassified := helpers.SanitizeCell(helpers.GetCell(row, 18))
-		readinessStr := helpers.SanitizeCell(helpers.GetCell(row, 19))
-		certificateEligible := helpers.SanitizeCell(helpers.GetCell(row, 20))
-		educationFulfillmentStr := helpers.SanitizeCell(helpers.GetCell(row, 21))
-		// Column 22: Readiness Bersyarat Pendidikan (skip)
-		totalReadinessUpdateStr := helpers.SanitizeCell(helpers.GetCell(row, 22))
+		certificateEligible := helpers.SanitizeCell(helpers.GetCell(row, 16))
+		idpProgram := helpers.SanitizeCell(helpers.GetCell(row, 18))
 
 		// Convert string values to integers with proper error handling
 		totalGap, _ := strconv.Atoi(totalGapStr)
-		havQuadran2, _ := strconv.Atoi(havQuadran2Str)
-		readinessMonth, _ := strconv.Atoi(readinessStr)
-		educationFulfillmentMonths, _ := strconv.Atoi(educationFulfillmentStr)
-		totalReadinessUpdateMonths, _ := strconv.Atoi(totalReadinessUpdateStr)
-		performanceScore, _ := strconv.Atoi(performanceScoreStr)
 		valueAssessment, _ := strconv.Atoi(valueAssessmentStr)
 
-		// Parse numeric fields that came as strings in excel cells
-		konditeReview, _ := strconv.Atoi(konditeReviewStr)
-		kpiVessel, _ := strconv.Atoi(kpiVesselStr)
-		strength, _ := strconv.Atoi(strengthStr)
-
 		// Fields not in Excel - set to default values
-		talentClassified2 := ""
-
-		// Convert int to *int for pointer fields (only if value > 0)
-		var readinessMonthPtr *int
-		var educationFulfillmentPtr *int
-		var totalReadinessUpdatePtr *int
-
-		if readinessMonth > 0 {
-			readinessMonthPtr = &readinessMonth
-		}
-		if educationFulfillmentMonths > 0 {
-			educationFulfillmentPtr = &educationFulfillmentMonths
-		}
-		if totalReadinessUpdateMonths > 0 {
-			totalReadinessUpdatePtr = &totalReadinessUpdateMonths
-		}
+		// (No additional default fields needed based on the Excel structure)
 
 		// Check if report already exists by seafarerCode
 		var existingReport domain.Report
@@ -237,27 +215,37 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		report.VesselName = vesselName
 		report.Certificate = certificate
 		report.Age = age
-		report.PerformanceScore = performanceScore
 		report.ValueAssessment = valueAssessment
-		report.Strength = strength
-		report.KonditeReview = konditeReview
-		report.KpiVessel = kpiVessel
-		report.TalentClassified = talentClassified
 		report.CompetencyGapAnalysis = competencyGapAnalysis
 		report.TotalGap = totalGap
-		report.IDPProgram = idpProgram
-		report.HavQuadran2 = havQuadran2
-		report.TalentClassified2 = talentClassified2
-		report.Readiness = readinessStr
-		report.ReadinessMonth = readinessMonthPtr
 		report.CertificateEligible = certificateEligible
-		report.EducationFulfillmentMonths = educationFulfillmentPtr
-		report.TotalReadinessUpdateMonths = totalReadinessUpdatePtr
+		report.IDPProgram = idpProgram
+
+		// Calculate readiness-related fields based on logic
+		// If not updating, set default readiness values
+		if !isUpdate {
+			// For new reports, set default readiness to "Ready Now"
+			report.Readiness = "Ready Now"
+			zeroMonths := 0
+			report.ReadinessMonth = &zeroMonths
+		}
+
+		// Calculate education_fulfillment_months based on certificate + idp_program
+		educationMonths := service.calculateEducationFulfillmentMonths(certificate, idpProgram)
+		report.EducationFulfillmentMonths = &educationMonths
+
+		// Calculate total_readiness_update_months
+		readinessMonthValue := 0
+		if report.ReadinessMonth != nil {
+			readinessMonthValue = *report.ReadinessMonth
+		}
+		totalReadinessMonths := readinessMonthValue + educationMonths
+		report.TotalReadinessUpdateMonths = &totalReadinessMonths
 
 		// Log first 3 records for debugging
 		if i <= 3 {
-			service.Log.Infof("Row %d - Name: %s, Vessel: %s, Seaman: %s, Seafarer: %s, Position: %s, ValueAssessment: %d, PerformanceScore: %d, IsUpdate: %v",
-				i, nama, vesselName, seamanCode, seafarerCode, jabatan, valueAssessment, performanceScore, isUpdate)
+			service.Log.Infof("Row %d - Name: %s, Vessel: %s, Seaman: %s, Seafarer: %s, Position: %s, ValueAssessment: %d, IsUpdate: %v",
+				i, nama, vesselName, seamanCode, seafarerCode, jabatan, valueAssessment, isUpdate)
 		}
 
 		// Save or Update the report
@@ -289,7 +277,7 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 	// TODO: Process Gap Competencies from CompetencyGapAnalysis field
 	if err = service.processGapCompetencies(tx, &reports); err != nil {
 		service.Log.Warnf("Failed processing gap competencies: %+v", err)
-		return nil, fmt.Errorf("failed processing gap competencies: %w", err)
+		return nil, fmt.Errorf("failed processing gap compWetencies: %w", err)
 	}
 
 	// TODO: Commit Transaction
@@ -825,4 +813,33 @@ func (service *ReportService) GetTrainingSummaryBySeafarerCode(ctx context.Conte
 			"percentage":   totalPercentage,
 		},
 	}, nil
+}
+
+func (service *ReportService) calculateEducationFulfillmentMonths(certificate, idpProgram string) int {
+	switch idpProgram {
+	case "SDP": // SDP Program (highest level)
+		switch certificate {
+		case "ANT-I", "ATT-I":
+			return 0
+		case "ANT-II", "ATT-II":
+			return 5
+		case "ANT-III", "ATT-III":
+			return 8
+		default:
+			return 0
+		}
+	case "MDP": // MDP Program (middle level)
+		switch certificate {
+		case "ANT-I", "ATT-I", "ANT-II", "ATT-II":
+			return 0
+		case "ANT-III", "ATT-III":
+			return 8
+		default:
+			return 0
+		}
+	case "FDP": // FDP Program (lowest level - all certificates result in 0)
+		return 0
+	default:
+		return 0
+	}
 }

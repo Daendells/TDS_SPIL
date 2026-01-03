@@ -267,7 +267,8 @@ func (c *TrainingPlanController) ToggleTrainingStarted(ctx *gin.Context) {
 	}
 
 	var request struct {
-		IsStarted bool `json:"isStarted"` // No binding:required for boolean (false is valid)
+		IsStarted        bool   `json:"isStarted"`
+		ApolloCourseName string `json:"apolloCourseName"`
 	}
 
 	if err := ctx.ShouldBindJSON(&request); err != nil {
@@ -281,9 +282,9 @@ func (c *TrainingPlanController) ToggleTrainingStarted(ctx *gin.Context) {
 		return
 	}
 
-	c.log.Infof("Toggling training schedule ID %d to is_started=%v", id, request.IsStarted)
+	c.log.Infof("Toggling training schedule ID %d to is_started=%v with course name: %s", id, request.IsStarted, request.ApolloCourseName)
 
-	err = c.trainingPlanService.ToggleTrainingStarted(id, request.IsStarted)
+	err = c.trainingPlanService.ToggleTrainingStarted(id, request.IsStarted, request.ApolloCourseName)
 	if err != nil {
 		c.log.WithError(err).Error("Failed to toggle training started")
 		ctx.JSON(http.StatusInternalServerError, gin.H{

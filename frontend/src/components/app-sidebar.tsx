@@ -1,6 +1,6 @@
 "use client";
 
-import { LaptopMinimal, ChevronUp, Inbox, User2, Settings, Calendar } from "lucide-react";
+import { LaptopMinimal, ChevronUp, Inbox, User2, Settings, Calendar, Users } from "lucide-react";
 
 import {
   Sidebar,
@@ -58,6 +58,11 @@ const items = [
     title: "Assessment Type Manager",
     url: "/assessment-type-manager",
     icon: Settings,
+  },
+  {
+    title: "User Management",
+    url: "/dashboard/users",
+    icon: Users,
   },
 ];
 

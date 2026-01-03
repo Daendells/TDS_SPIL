@@ -113,8 +113,7 @@ func Bootstrap(config *BootstrapConfig) {
 	// --- Cron Service (start at the end)
 	cronService := services.NewCronService(config.Log, idpCalculationService, apolloAPIService)
 
-	// --- Controllers (DB-based)
-	reportController := controllers.NewReportController(reportService, config.Log)
+	reportController := controllers.NewReportController(reportService, config.Log, apolloAPIService)
 	userController := controllers.NewUserController(userService, config.Log)
 	mentoringReportController := controllers.NewMentoringReportController(mentoringReportService, config.Log)
 	coachingReportController := controllers.NewCoachingReportController(coachingReportService, config.Log)

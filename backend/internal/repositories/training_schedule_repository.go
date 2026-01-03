@@ -21,10 +21,11 @@ type TrainingScheduleRepository interface {
 	CreateBatch(schedules []domain.TrainingSchedule) error
 	UpdateScheduledDate(id int, newDate time.Time) error
 	GetByIDList(ids []int) ([]domain.TrainingSchedule, error)
-	GetStartedTrainings() ([]domain.TrainingSchedule, error) // Get all trainings where is_started = true
-	GetStartedTrainingsByProgram(program string) ([]domain.TrainingSchedule, error) // Get started trainings for specific program
-	UpdateIsStarted(id int, isStarted bool) error // Toggle is_started flag
-	GetEarliestTrainingDateByProgram(program string) (*time.Time, error) // Get earliest scheduled_date for a program
+	GetStartedTrainings() ([]domain.TrainingSchedule, error)
+	GetStartedTrainingsByProgram(program string) ([]domain.TrainingSchedule, error)
+	UpdateIsStarted(id int, isStarted bool) error
+	UpdateIsStartedWithCourseName(id int, isStarted bool, apolloCourseName string) error
+	GetEarliestTrainingDateByProgram(program string) (*time.Time, error)
 }
 
 type trainingScheduleRepository struct {
@@ -208,6 +209,26 @@ func (r *trainingScheduleRepository) UpdateIsStarted(id int, isStarted bool) err
 			"id":         id,
 			"is_started": isStarted,
 		}).Error("Failed to update is_started flag")
+		return err
+	}
+
+	return nil
+}
+
+func (r *trainingScheduleRepository) UpdateIsStartedWithCourseName(id int, isStarted bool, apolloCourseName string) error {
+	updates := map[string]interface{}{
+		"is_started":         isStarted,
+		"apollo_course_name": apolloCourseName,
+	}
+
+	if err := r.db.Model(&domain.TrainingSchedule{}).
+		Where("id = ?", id).
+		Updates(updates).Error; err != nil {
+		r.log.WithError(err).WithFields(logrus.Fields{
+			"id":                 id,
+			"is_started":         isStarted,
+			"apollo_course_name": apolloCourseName,
+		}).Error("Failed to update is_started flag with course name")
 		return err
 	}
 
