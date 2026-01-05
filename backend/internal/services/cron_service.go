@@ -10,12 +10,14 @@ type CronService struct {
 	log                   *logrus.Logger
 	IDPCalculationService *IDPCalculationService
 	ApolloAPIService      *ApolloAPIService
+	NanikaAPIService      *NanikaAPIService
 }
 
 func NewCronService(
 	log *logrus.Logger,
 	idpCalculationService *IDPCalculationService,
 	apolloAPIService *ApolloAPIService,
+	nanikaAPIService *NanikaAPIService,
 ) *CronService {
 	// Create cron with seconds support
 	c := cron.New(cron.WithSeconds())
@@ -25,10 +27,10 @@ func NewCronService(
 		log:                   log,
 		IDPCalculationService: idpCalculationService,
 		ApolloAPIService:      apolloAPIService,
+		NanikaAPIService:      nanikaAPIService,
 	}
 }
 
-// Start initializes and starts all cron jobs
 func (s *CronService) Start() error {
 	s.log.Info("Starting cron service...")
 
@@ -40,6 +42,21 @@ func (s *CronService) Start() error {
 		} else {
 			s.log.Info("Daily readiness calculation completed successfully")
 		}
+	})
+	if err != nil {
+		return err
+	}
+
+	// TESTING: Fetch Nanika API every 10 minutes (change to "0 0 2 * * *" for production)
+	_, err = s.cron.AddFunc("0 */10 * * * *", func() {
+		s.log.Info("⏰ [CRON TRIGGERED] Fetching Nanika API every 10 minutes (TESTING MODE)...")
+		if err := s.NanikaAPIService.FetchAndCacheSeamenData(); err != nil {
+			s.log.Errorf("❌ Failed to fetch seamen data: %v", err)
+		}
+		if err := s.NanikaAPIService.FetchAndCacheMutationData(); err != nil {
+			s.log.Errorf("❌ Failed to fetch mutation data: %v", err)
+		}
+		s.log.Info("✅ [CRON FINISHED] Nanika API sync completed")
 	})
 	if err != nil {
 		return err

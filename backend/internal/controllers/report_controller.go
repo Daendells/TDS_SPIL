@@ -228,3 +228,22 @@ func (controller *ReportController) GetTrainingSummary(ctx *gin.Context) {
 	})
 }
 
+func (controller *ReportController) RefreshPersonalData(ctx *gin.Context) {
+	controller.Log.Info("Manual refresh personal data requested")
+
+	if err := controller.Service.RefreshPersonalDataForAllReports(); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"code":    http.StatusInternalServerError,
+			"status":  "Internal Server Error",
+			"message": err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"status":  "OK",
+		"message": "Personal data refreshed successfully",
+	})
+}
+

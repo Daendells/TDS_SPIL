@@ -78,9 +78,11 @@ func Bootstrap(config *BootstrapConfig) {
 	aspectRepository := repositories.NewAspectRepository(config.Log)
 	idpTrackingRepository := repositories.NewIDPTrackingRepository(config.DB, config.Log)
 	apolloTrainingCacheRepository := repositories.NewApolloTrainingCacheRepository(config.DB, config.Log)
+	seamenCacheRepository := repositories.NewSeamenCacheRepository(config.DB, config.Log)
+	mutationCacheRepository := repositories.NewMutationCacheRepository(config.DB, config.Log)
 
 	// --- Services (DB-based)
-	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository, gapCompetencyRepository)
+	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository, gapCompetencyRepository, seamenCacheRepository, mutationCacheRepository)
 	userService := services.NewUserService(config.DB, config.Log, config.Validate, config.Config, userRepository)
 	mentoringReportService := services.NewMentoringReportService(config.DB, config.Log, config.Validate, mentoringReportRepository)
 	coachingReportService := services.NewCoachingReportService(coachingReportRepository, config.Log)
@@ -97,7 +99,7 @@ func Bootstrap(config *BootstrapConfig) {
 	aspectService := services.NewAspectService(config.DB, config.Log, aspectRepository)
 	
 	// --- IDP Tracking Services
-	apolloAPIBaseURL := config.Config.GetString("APOLLO_API_BASE_URL") // Optional: from .env
+	apolloAPIBaseURL := config.Config.GetString("APOLLO_API_BASE_URL")
 	apolloAPIService := services.NewApolloAPIService(config.DB, config.Log, apolloTrainingCacheRepository, apolloAPIBaseURL)
 	idpCalculationService := services.NewIDPCalculationService(
 		config.DB,
@@ -109,9 +111,10 @@ func Bootstrap(config *BootstrapConfig) {
 		mentoringReportRepository,
 		apolloAPIService,
 	)
+
+	nanikaAPIService := services.NewNanikaAPIService(config.DB, config.Log, seamenCacheRepository, mutationCacheRepository)
 	
-	// --- Cron Service (start at the end)
-	cronService := services.NewCronService(config.Log, idpCalculationService, apolloAPIService)
+	cronService := services.NewCronService(config.Log, idpCalculationService, apolloAPIService, nanikaAPIService)
 
 	reportController := controllers.NewReportController(reportService, config.Log, apolloAPIService)
 	userController := controllers.NewUserController(userService, config.Log)

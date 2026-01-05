@@ -94,6 +94,7 @@ export default function MasterPage() {
     deleteReport,
     updateReport,
     refreshAllReadiness,
+    refreshPersonalData,
   } = useMasterReports(10);
 
   const { data: assessmentTypes = [] } = useGetAllAssessmentTypes();
@@ -425,6 +426,24 @@ export default function MasterPage() {
               ) : (
                 <>
                   <RefreshCw className="w-4 h-4" /> Refresh Readiness
+                </>
+              )}
+            </Button>
+
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={refreshPersonalData}
+              disabled={onCallApi}
+              className="flex items-center gap-2"
+            >
+              {onCallApi ? (
+                <>
+                  <Loader2 className="w-4 h-4 animate-spin" /> Refreshing...
+                </>
+              ) : (
+                <>
+                  <RefreshCw className="w-4 h-4" /> Refresh Personal Data
                 </>
               )}
             </Button>

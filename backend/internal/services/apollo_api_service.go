@@ -205,8 +205,7 @@ func (s *ApolloAPIService) GetTrainingCountForMonth(seamanCode, coursesName stri
 	}
 
 	count := 0
-	startOfMonth := time.Date(month.Year(), month.Month(), 1, 0, 0, 0, 0, time.Local)
-	endOfMonth := startOfMonth.AddDate(0, 1, 0).Add(-time.Second)
+	endOfMonth := time.Date(month.Year(), month.Month()+1, 1, 0, 0, 0, 0, time.Local).Add(-time.Second)
 
 	for _, record := range response.OutputParams.CsrResult {
 		// Parse finish date (format: "DD/MM/YYYY")
@@ -216,9 +215,9 @@ func (s *ApolloAPIService) GetTrainingCountForMonth(seamanCode, coursesName stri
 			continue
 		}
 
-		// Check if finish date is within the month
-		if (finishDate.Equal(startOfMonth) || finishDate.After(startOfMonth)) &&
-			(finishDate.Equal(endOfMonth) || finishDate.Before(endOfMonth)) {
+		// Check if training was completed by end of this month (cumulative count)
+		// Training yang selesai sebelum atau di bulan ini tetap dihitung
+		if finishDate.Before(endOfMonth) || finishDate.Equal(endOfMonth) {
 			count++
 		}
 	}

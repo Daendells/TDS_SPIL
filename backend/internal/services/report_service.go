@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"backend/internal/helpers"
 	"backend/internal/models/converter"
@@ -25,15 +26,27 @@ type ReportService struct {
 	Validate                *validator.Validate
 	ReportRepository        *repositories.ReportRepository
 	GapCompetencyRepository repositories.GapCompetencyRepository
+	SeamenCacheRepo         *repositories.SeamenCacheRepository
+	MutationCacheRepo       *repositories.MutationCacheRepository
 }
 
-func NewReportService(db *gorm.DB, log *logrus.Logger, validate *validator.Validate, reportRepository *repositories.ReportRepository, gapCompetencyRepository repositories.GapCompetencyRepository) *ReportService {
+func NewReportService(
+	db *gorm.DB,
+	log *logrus.Logger,
+	validate *validator.Validate,
+	reportRepository *repositories.ReportRepository,
+	gapCompetencyRepository repositories.GapCompetencyRepository,
+	seamenCacheRepo *repositories.SeamenCacheRepository,
+	mutationCacheRepo *repositories.MutationCacheRepository,
+) *ReportService {
 	return &ReportService{
 		DB:                      db,
 		Log:                     log,
 		Validate:                validate,
 		ReportRepository:        reportRepository,
 		GapCompetencyRepository: gapCompetencyRepository,
+		SeamenCacheRepo:         seamenCacheRepo,
+		MutationCacheRepo:       mutationCacheRepo,
 	}
 }
 
@@ -842,4 +855,117 @@ func (service *ReportService) calculateEducationFulfillmentMonths(certificate, i
 	default:
 		return 0
 	}
+}
+
+func (service *ReportService) RefreshPersonalDataForAllReports() error {
+	service.Log.Info("Refreshing personal data for all reports...")
+
+	var reports []domain.Report
+	if err := service.DB.Find(&reports).Error; err != nil {
+		return fmt.Errorf("failed to get reports: %w", err)
+	}
+
+	updatedCount := 0
+	for _, report := range reports {
+		seamenCache, err := service.SeamenCacheRepo.GetBySeamanCode(report.SeamanCode)
+		if err != nil {
+			service.Log.Warnf("Seaman cache not found for %s: %v", report.SeamanCode, err)
+			continue
+		}
+
+		mutations, _ := service.MutationCacheRepo.GetAllBySeamanCode(report.SeamanCode)
+		vesselHistoryJSON := service.buildVesselHistoryJSON(mutations)
+
+		startDate := service.parseStartDate(seamenCache.StartDate)
+
+		updates := map[string]interface{}{
+			"nama":          seamenCache.Name,
+			"tanggal_lahir": seamenCache.Birthdate,
+			"age":           seamenCache.Age,
+			"jabatan":       seamenCache.LastPosition,
+			"vessel_name":   seamenCache.LastLocation,
+			"seafarer_code": seamenCache.SeafarerCode,
+			"certificate":   seamenCache.Certificate,
+			"start_date":    startDate,
+			"vessel_history": vesselHistoryJSON,
+		}
+
+		if err := service.DB.Model(&domain.Report{}).
+			Where("seaman_code = ?", report.SeamanCode).
+			Updates(updates).Error; err != nil {
+			service.Log.Errorf("Failed to update report %s: %v", report.SeamanCode, err)
+			continue
+		}
+
+		updatedCount++
+	}
+
+	service.Log.Infof("✅ Successfully updated %d reports", updatedCount)
+	return nil
+}
+
+func (service *ReportService) buildVesselHistoryJSON(mutations []domain.MutationCache) string {
+	if len(mutations) == 0 {
+		return "[]"
+	}
+
+	// Build full JSON array with all fields
+	type VesselHistoryEntry struct {
+		TransactionDate string `json:"transaction_date"`
+		FromVessel      string `json:"from_vessel"`
+		ToVessel        string `json:"to_vessel"`
+		FromRank        string `json:"from_rank"`
+		ToRank          string `json:"to_rank"`
+		Type            string `json:"type"`
+	}
+
+	var entries []VesselHistoryEntry
+	for _, m := range mutations {
+		// Format transaction date
+		transactionDate := "-"
+		if !m.TransactionDate.IsZero() {
+			transactionDate = m.TransactionDate.Format("2006-01-02")
+		}
+
+		entry := VesselHistoryEntry{
+			TransactionDate: transactionDate,
+			FromVessel:      getStringOrDefault(m.FromVesselName, "-"),
+			ToVessel:        getStringOrDefault(m.ToVesselName, "-"),
+			FromRank:        getStringOrDefault(m.FromRankName, "-"),
+			ToRank:          getStringOrDefault(m.ToRankName, "-"),
+			Type:            getStringOrDefault(m.Jenis, "-"),
+		}
+		entries = append(entries, entry)
+	}
+
+	// Convert to JSON string
+	var result strings.Builder
+	result.WriteString("[")
+	for i, entry := range entries {
+		if i > 0 {
+			result.WriteString(",")
+		}
+		result.WriteString(fmt.Sprintf(`{"transaction_date":"%s","from_vessel":"%s","to_vessel":"%s","from_rank":"%s","to_rank":"%s","type":"%s"}`,
+			entry.TransactionDate, entry.FromVessel, entry.ToVessel, entry.FromRank, entry.ToRank, entry.Type))
+	}
+	result.WriteString("]")
+
+	return result.String()
+}
+
+func getStringOrDefault(value, defaultValue string) string {
+	if value == "" {
+		return defaultValue
+	}
+	return value
+}
+
+func (service *ReportService) parseStartDate(startDate string) *time.Time {
+	formats := []string{"02/01/2006", "2006-01-02", "02-01-2006"}
+	for _, format := range formats {
+		if t, err := time.Parse(format, startDate); err == nil {
+			return &t
+		}
+	}
+	return nil
 }

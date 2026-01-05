@@ -49,7 +49,9 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.AssessmentType{},
 		&domain.CompetencyType{},
 		&domain.Report{},
-		&domain.ApolloTrainingCache{}, // Cache table (no dependencies)
+		&domain.ApolloTrainingCache{},
+		&domain.SeamenCache{},
+		&domain.MutationCache{},
 
 		// Tables with single dependency
 		&domain.Assessment{},

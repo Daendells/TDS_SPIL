@@ -14,6 +14,7 @@ import MentoringListDialog from "@/components/mentoring-list-dialog";
 import CoachingListDialog from "@/components/coaching-list-dialog";
 import TrainingListDialog from "@/components/training-list-dialog";
 import AssessmentResultDialog from "@/components/assessment-result-dialog";
+import VesselHistoryDialog from "@/components/vessel-history-dialog";
 import { useGetReportBySeafarerCode } from "@/app/dashboard/_hooks/useReportData";
 import { useQuery } from "@tanstack/react-query";
 import { api } from "@/app/lib/api";
@@ -33,6 +34,7 @@ export default function TalentProfilePage({ params }: PageProps) {
   const [coachingDialogOpen, setCoachingDialogOpen] = useState(false);
   const [trainingDialogOpen, setTrainingDialogOpen] = useState(false);
   const [assessmentDialogOpen, setAssessmentDialogOpen] = useState(false);
+  const [vesselHistoryDialogOpen, setVesselHistoryDialogOpen] = useState(false);
 
   // Fetch report data using React Query hook
   const { data: report, isLoading, error } = useGetReportBySeafarerCode(seafarerCode);
@@ -177,8 +179,14 @@ export default function TalentProfilePage({ params }: PageProps) {
         {/* Kolom tengah */}
         <div className="lg:col-span-1 flex flex-col gap-6">
           {/* Data history vessel */}
-          <div className="border rounded-lg shadow-sm p-4 bg-white">
-            <h2 className="font-bold text-lg mb-4 pb-2 border-b">DATA HISTORY VESSEL</h2>
+          <div
+            className="border rounded-lg shadow-sm p-4 bg-white cursor-pointer hover:shadow-md transition-shadow"
+            onClick={() => setVesselHistoryDialogOpen(true)}
+          >
+            <div className="flex items-center justify-between mb-4 pb-2 border-b">
+              <h2 className="font-bold text-lg">DATA HISTORY VESSEL</h2>
+              <ChevronRightIcon className="h-5 w-5 text-gray-400" />
+            </div>
             <div className="overflow-x-auto">
               <table className="w-full border text-sm">
                 <thead>
@@ -188,15 +196,34 @@ export default function TalentProfilePage({ params }: PageProps) {
                   </tr>
                 </thead>
                 <tbody>
-                  {report.vesselHistory?.split(";").map((entry: string, idx: number) => {
-                    const [vessel, rank] = entry.split("|");
+                  {(() => {
+                    if (!report.vesselHistory) return null;
+
+                    // Try to parse as JSON array
+                    try {
+                      const history = JSON.parse(report.vesselHistory);
+                      if (Array.isArray(history)) {
+                        return history
+                          .slice(0, 3)
+                          .map((item: { to_vessel?: string; to_rank?: string }, idx: number) => (
+                            <tr key={idx} className="hover:bg-gray-50">
+                              <td className="border px-3 py-2">{item.to_vessel || "-"}</td>
+                              <td className="border px-3 py-2">{item.to_rank || "-"}</td>
+                            </tr>
+                          ));
+                      }
+                    } catch {
+                      // If JSON parse fails, show nothing
+                    }
+
                     return (
-                      <tr key={idx} className="hover:bg-gray-50">
-                        <td className="border px-3 py-2">{vessel?.trim() || "-"}</td>
-                        <td className="border px-3 py-2">{rank?.trim() || "-"}</td>
+                      <tr>
+                        <td colSpan={2} className="border px-3 py-2 text-center text-gray-500">
+                          No vessel history data
+                        </td>
                       </tr>
                     );
-                  })}
+                  })()}
                 </tbody>
               </table>
             </div>
@@ -451,6 +478,13 @@ export default function TalentProfilePage({ params }: PageProps) {
         open={trainingDialogOpen}
         setOpen={setTrainingDialogOpen}
         seafarerCode={report.seafarerCode}
+        reportName={report.nama || "Unknown"}
+      />
+
+      <VesselHistoryDialog
+        open={vesselHistoryDialogOpen}
+        setOpen={setVesselHistoryDialogOpen}
+        vesselHistory={report.vesselHistory || ""}
         reportName={report.nama || "Unknown"}
       />
 

@@ -350,15 +350,12 @@ func (s *IDPCalculationService) getActualTrainingCount(seamanCode, program strin
 			continue
 		}
 
-		// Use the actual topik_training from training table (e.g., "CHANGE LEADERSHIP")
+		// Use the actual topik_training from training table (e.g., "Change Leadership")
 		courseName := training.TopikTraining
 		if courseName == "" {
 			s.Log.Warnf("Empty topik_training for %s, skipping", schedule.CompetencyCode)
 			continue
 		}
-
-		// Convert to uppercase for Apollo API (requires all caps)
-		courseName = strings.ToUpper(courseName)
 
 		count, err := s.ApolloAPIService.GetTrainingCountForMonth(seamanCode, courseName, month)
 		if err != nil {

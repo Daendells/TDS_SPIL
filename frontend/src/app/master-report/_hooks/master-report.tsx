@@ -222,6 +222,28 @@ export function useMasterReports(initialPageSize = 10) {
     }
   };
 
+  const refreshPersonalData = async () => {
+    setOnCallApi(true);
+    try {
+      await api.post("/reports/refresh-personal-data");
+      toast.success("Personal data refreshed successfully!");
+
+      startTransition(() => {
+        setPaginationRequest((prev) => ({
+          ...prev,
+          anchorId: 0,
+          page: "next",
+        }));
+      });
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to refresh personal data");
+      throw err;
+    } finally {
+      setOnCallApi(false);
+    }
+  };
+
   return {
     onCallApi,
     paginationData: deferredData,
@@ -236,5 +258,6 @@ export function useMasterReports(initialPageSize = 10) {
     deleteReport,
     updateReport,
     refreshAllReadiness,
+    refreshPersonalData,
   };
 }
