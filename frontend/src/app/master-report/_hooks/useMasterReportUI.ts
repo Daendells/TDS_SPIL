@@ -92,9 +92,7 @@ export function useMasterReportUI() {
 
   const isEditFormValid = () => {
     return (
-      editingRow &&
-      editingRow.nama?.trim() !== "" &&
-      editingRow.seamanCode?.trim() !== ""
+      editingRow && editingRow.nama?.trim() !== "" && editingRow.seamanCode?.trim() !== ""
       // seafarerCode is now optional
     );
   };

@@ -228,10 +228,9 @@ export interface ICompetencyType {
 
 // models/seaman.ts
 export interface SeamanLookup {
-  name: string
-  seamanCode: string
+  name: string;
+  seamanCode: string;
 }
-
 
 export interface IGapCompetency {
   id?: number;

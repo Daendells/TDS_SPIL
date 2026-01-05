@@ -111,20 +111,20 @@ export default function MasterPage() {
 
   const { data: seamen, loading } = useAvailableSeamen(addForm.search);
 
-const [seamanResults, setSeamanResults] = useState<SeamanLookup[]>([]);
+  const [seamanResults, setSeamanResults] = useState<SeamanLookup[]>([]);
 
   // Sync seamen data from hook to state whenever it changes
   useEffect(() => {
     if (seamen && seamen.length > 0) {
       // Only update if it's different to avoid unnecessary re-renders
-      setSeamanResults(prevResults => {
+      setSeamanResults((prevResults) => {
         const isEqual = JSON.stringify(prevResults) === JSON.stringify(seamen);
         return isEqual ? prevResults : seamen;
       });
     } else {
       setSeamanResults([]);
     }
-  }, [seamen]);;
+  }, [seamen]);
   const { data: assessmentTypes = [] } = useGetAllAssessmentTypes();
 
   // UI hooks
@@ -135,8 +135,6 @@ const [seamanResults, setSeamanResults] = useState<SeamanLookup[]>([]);
     setConfirmDeleteDialog,
     openEditDialog,
     setOpenEditDialog,
-    form,
-    setForm,
     editingRow,
     setEditingRow,
     isEditMode,
@@ -158,7 +156,6 @@ const [seamanResults, setSeamanResults] = useState<SeamanLookup[]>([]);
     setMentoringDetailsDialogOpen,
     selectedPersonForMentoring,
     setSelectedPersonForMentoring,
-    isFormValid,
     isEditFormValid,
     toggleCompetencySelection,
     removeCompetency,
@@ -213,9 +210,11 @@ const [seamanResults, setSeamanResults] = useState<SeamanLookup[]>([]);
   };
 
   const handleAdd = async () => {
-    const toAdd = addForm.bulkAddMode 
-      ? addForm.selectedBulk || [] 
-      : addForm.selected ? [addForm.selected] : [];
+    const toAdd = addForm.bulkAddMode
+      ? addForm.selectedBulk || []
+      : addForm.selected
+        ? [addForm.selected]
+        : [];
 
     if (toAdd.length === 0) {
       toast.error("Pilih seaman terlebih dahulu");
@@ -232,10 +231,10 @@ const [seamanResults, setSeamanResults] = useState<SeamanLookup[]>([]);
       }
 
       toast.success(`${toAdd.length} report(s) added successfully!`);
-      setAddForm({ 
-        search: "", 
-        selectedBulk: [], 
-        bulkAddMode: false 
+      setAddForm({
+        search: "",
+        selectedBulk: [],
+        bulkAddMode: false,
       });
       setOpenDialog(false);
 
@@ -248,25 +247,23 @@ const [seamanResults, setSeamanResults] = useState<SeamanLookup[]>([]);
       const error = err as {
         response?: { data?: { error?: string } };
       };
-      toast.error(
-        error.response?.data?.error || "Failed to add report(s)"
-      );
+      toast.error(error.response?.data?.error || "Failed to add report(s)");
     }
   };
 
   const toggleBulkSelection = (seaman: SeamanLookup) => {
     const currentSelected = addForm.selectedBulk || [];
-    const isSelected = currentSelected.some(s => s.seamanCode === seaman.seamanCode);
-    
+    const isSelected = currentSelected.some((s) => s.seamanCode === seaman.seamanCode);
+
     if (isSelected) {
       setAddForm({
         ...addForm,
-        selectedBulk: currentSelected.filter(s => s.seamanCode !== seaman.seamanCode)
+        selectedBulk: currentSelected.filter((s) => s.seamanCode !== seaman.seamanCode),
       });
     } else {
       setAddForm({
         ...addForm,
-        selectedBulk: [...currentSelected, seaman]
+        selectedBulk: [...currentSelected, seaman],
       });
     }
   };
@@ -276,10 +273,9 @@ const [seamanResults, setSeamanResults] = useState<SeamanLookup[]>([]);
       ...addForm,
       bulkAddMode: !addForm.bulkAddMode,
       selected: undefined,
-      selectedBulk: []
+      selectedBulk: [],
     });
   };
-
 
   const handleEdit = async () => {
     if (!isEditFormValid()) return toast.error("Please fill in all fields!");
@@ -564,159 +560,162 @@ const [seamanResults, setSeamanResults] = useState<SeamanLookup[]>([]);
                 </Button>
               </DialogTrigger>
 
-<DialogContent className="max-w-2xl">
-  <DialogHeader>
-    <DialogTitle>Add New Report</DialogTitle>
-    <DialogDescription>
-      Cari data dari sistem seaman dan pilih untuk ditambahkan.
-    </DialogDescription>
-  </DialogHeader>
+              <DialogContent className="max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Add New Report</DialogTitle>
+                  <DialogDescription>
+                    Cari data dari sistem seaman dan pilih untuk ditambahkan.
+                  </DialogDescription>
+                </DialogHeader>
 
-  <div className="space-y-4 py-2">
-    {/* Search Input */}
-    <div>
-      <Label>Search Seaman *</Label>
-      <Input
-        placeholder="Cari nama atau seaman code..."
-        value={addForm.search}
-        onChange={(e) =>
-          setAddForm({ ...addForm, search: e.target.value })
-        }
-      />
-      <p className="text-xs text-gray-500 mt-1">Ketik minimal 2 karakter untuk mencari</p>
-    </div>
-
-    {/* Bulk Mode Toggle */}
-    {seamanResults.length > 0 && (
-      <div className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          id="bulkMode"
-          checked={addForm.bulkAddMode || false}
-          onChange={toggleBulkMode}
-          className="w-4 h-4 rounded border-gray-300"
-        />
-        <Label htmlFor="bulkMode" className="cursor-pointer text-sm font-medium">
-          Bulk Add Mode (Pilih multiple seaman)
-        </Label>
-      </div>
-    )}
-
-    {/* Search Results */}
-    <div className="max-h-80 overflow-auto border rounded-md bg-white">
-      {loading && (
-        <p className="text-center text-gray-500 py-8">
-          <span className="inline-block">Mencari data...</span>
-        </p>
-      )}
-
-      {!loading && seamanResults.length > 0 && (
-        <div className="divide-y">
-          {seamanResults.map((seaman) => {
-            const isSelected = addForm.bulkAddMode
-              ? (addForm.selectedBulk || []).some(s => s.seamanCode === seaman.seamanCode)
-              : addForm.selected?.seamanCode === seaman.seamanCode;
-
-            return (
-              <div
-                key={seaman.seamanCode}
-                onClick={() => {
-                  if (addForm.bulkAddMode) {
-                    toggleBulkSelection(seaman);
-                  } else {
-                    setAddForm({
-                      ...addForm,
-                      selected: seaman,
-                    });
-                  }
-                }}
-                className={`px-4 py-3 cursor-pointer transition-colors ${
-                  isSelected
-                    ? "bg-blue-50 border-l-4 border-blue-500"
-                    : "hover:bg-gray-50"
-                }`}
-              >
-                <div className="flex items-center gap-3">
-                  {addForm.bulkAddMode && (
-                    <input
-                      type="checkbox"
-                      checked={isSelected}
-                      onChange={() => toggleBulkSelection(seaman)}
-                      onClick={(e) => e.stopPropagation()}
-                      className="w-4 h-4 rounded border-gray-300"
+                <div className="space-y-4 py-2">
+                  {/* Search Input */}
+                  <div>
+                    <Label>Search Seaman *</Label>
+                    <Input
+                      placeholder="Cari nama atau seaman code..."
+                      value={addForm.search}
+                      onChange={(e) => setAddForm({ ...addForm, search: e.target.value })}
                     />
-                  )}
-                  <div className="flex-1">
-                    <div className="font-semibold text-gray-800">{seaman.name}</div>
-                    <div className="text-sm text-gray-500">Seaman Code: {seaman.seamanCode}</div>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Ketik minimal 2 karakter untuk mencari
+                    </p>
                   </div>
+
+                  {/* Bulk Mode Toggle */}
+                  {seamanResults.length > 0 && (
+                    <div className="flex items-center gap-2">
+                      <input
+                        type="checkbox"
+                        id="bulkMode"
+                        checked={addForm.bulkAddMode || false}
+                        onChange={toggleBulkMode}
+                        className="w-4 h-4 rounded border-gray-300"
+                      />
+                      <Label htmlFor="bulkMode" className="cursor-pointer text-sm font-medium">
+                        Bulk Add Mode (Pilih multiple seaman)
+                      </Label>
+                    </div>
+                  )}
+
+                  {/* Search Results */}
+                  <div className="max-h-80 overflow-auto border rounded-md bg-white">
+                    {loading && (
+                      <p className="text-center text-gray-500 py-8">
+                        <span className="inline-block">Mencari data...</span>
+                      </p>
+                    )}
+
+                    {!loading && seamanResults.length > 0 && (
+                      <div className="divide-y">
+                        {seamanResults.map((seaman) => {
+                          const isSelected = addForm.bulkAddMode
+                            ? (addForm.selectedBulk || []).some(
+                                (s) => s.seamanCode === seaman.seamanCode
+                              )
+                            : addForm.selected?.seamanCode === seaman.seamanCode;
+
+                          return (
+                            <div
+                              key={seaman.seamanCode}
+                              onClick={() => {
+                                if (addForm.bulkAddMode) {
+                                  toggleBulkSelection(seaman);
+                                } else {
+                                  setAddForm({
+                                    ...addForm,
+                                    selected: seaman,
+                                  });
+                                }
+                              }}
+                              className={`px-4 py-3 cursor-pointer transition-colors ${
+                                isSelected
+                                  ? "bg-blue-50 border-l-4 border-blue-500"
+                                  : "hover:bg-gray-50"
+                              }`}
+                            >
+                              <div className="flex items-center gap-3">
+                                {addForm.bulkAddMode && (
+                                  <input
+                                    type="checkbox"
+                                    checked={isSelected}
+                                    onChange={() => toggleBulkSelection(seaman)}
+                                    onClick={(e) => e.stopPropagation()}
+                                    className="w-4 h-4 rounded border-gray-300"
+                                  />
+                                )}
+                                <div className="flex-1">
+                                  <div className="font-semibold text-gray-800">{seaman.name}</div>
+                                  <div className="text-sm text-gray-500">
+                                    Seaman Code: {seaman.seamanCode}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {!loading && seamanResults.length === 0 && addForm.search && (
+                      <p className="text-center text-gray-500 py-8">
+                        Tidak ada data seaman yang cocok dengan pencarian &quot;{addForm.search}
+                        &quot;
+                      </p>
+                    )}
+
+                    {!loading && seamanResults.length === 0 && !addForm.search && (
+                      <p className="text-center text-gray-400 py-8">
+                        Mulai ketik untuk mencari seaman
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Selected Info */}
+                  {addForm.bulkAddMode && (addForm.selectedBulk || []).length > 0 && (
+                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                      <p className="text-sm font-medium text-blue-900">
+                        {(addForm.selectedBulk || []).length} seaman dipilih
+                      </p>
+                      <div className="text-xs text-blue-700 mt-2 space-y-1">
+                        {(addForm.selectedBulk || []).map((s) => (
+                          <div key={s.seamanCode} className="flex justify-between items-center">
+                            <span>{s.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => toggleBulkSelection(s)}
+                              className="text-blue-600 hover:text-blue-800 font-medium"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
 
-      {!loading && seamanResults.length === 0 && addForm.search && (
-        <p className="text-center text-gray-500 py-8">
-          Tidak ada data seaman yang cocok dengan pencarian "{addForm.search}"
-        </p>
-      )}
+                <DialogFooter>
+                  <Button variant="outline" onClick={() => setOpenDialog(false)}>
+                    Cancel
+                  </Button>
 
-      {!loading && seamanResults.length === 0 && !addForm.search && (
-        <p className="text-center text-gray-400 py-8">
-          Mulai ketik untuk mencari seaman
-        </p>
-      )}
-    </div>
-
-    {/* Selected Info */}
-    {addForm.bulkAddMode && (addForm.selectedBulk || []).length > 0 && (
-      <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-        <p className="text-sm font-medium text-blue-900">
-          {(addForm.selectedBulk || []).length} seaman dipilih
-        </p>
-        <div className="text-xs text-blue-700 mt-2 space-y-1">
-          {(addForm.selectedBulk || []).map((s) => (
-            <div key={s.seamanCode} className="flex justify-between items-center">
-              <span>{s.name}</span>
-              <button
-                type="button"
-                onClick={() => toggleBulkSelection(s)}
-                className="text-blue-600 hover:text-blue-800 font-medium"
-              >
-                Remove
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    )}
-  </div>
-
-  <DialogFooter>
-    <Button variant="outline" onClick={() => setOpenDialog(false)}>
-      Cancel
-    </Button>
-
-    <Button
-      disabled={
-        addForm.bulkAddMode
-          ? (addForm.selectedBulk || []).length === 0 || onCallApi
-          : !addForm.selected || onCallApi
-      }
-      onClick={handleAdd}
-    >
-      {onCallApi ? "Adding..." : `Add ${
-        addForm.bulkAddMode 
-          ? `(${(addForm.selectedBulk || []).length})` 
-          : ""
-      }`}
-    </Button>
-  </DialogFooter>
-</DialogContent>
-
-
+                  <Button
+                    disabled={
+                      addForm.bulkAddMode
+                        ? (addForm.selectedBulk || []).length === 0 || onCallApi
+                        : !addForm.selected || onCallApi
+                    }
+                    onClick={handleAdd}
+                  >
+                    {onCallApi
+                      ? "Adding..."
+                      : `Add ${
+                          addForm.bulkAddMode ? `(${(addForm.selectedBulk || []).length})` : ""
+                        }`}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
             </Dialog>
           </div>
         </div>
