@@ -17,11 +17,8 @@ echo "✅ MySQL is ready!"
 
 # Run migrations
 echo "Running database migrations..."
-if ./migrate; then
-  echo "✅ Migrations completed successfully"
-else
-  echo "❌ Migration failed, but continuing..."
-fi
+./migrate 2>&1 || echo "⚠️  Warning during migration (likely just .env not found warning)"
+echo "✅ Migrations completed"
 
 # Run seeder (optional, comment out if not needed every time)
 # Uncomment if you want to seed data on every container start

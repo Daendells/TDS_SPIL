@@ -13,7 +13,7 @@ export const api = axios.create({
   },
   timeout: 20000,
   timeoutErrorMessage: "Perikasa Kembali Koneksi Internet Anda.",
-  withCredentials: false,
+  withCredentials: true, // Enable credentials for cookies
 });
 
 let context = <GetServerSidePropsContext>{};

@@ -15,7 +15,7 @@ services:
       DB_HOST: ${DB_HOST} # IP atau hostname database eksternal
       DB_PORT: ${DB_PORT:-3306}
       DB_USER: ${DB_USER}
-      DB_PASSWORD: ${DB_PASSWORD}
+      DB_PASS: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME:-tds}
 
       # Application settings
@@ -24,7 +24,7 @@ services:
       GIN_MODE: release
 
       # Security
-      JWT_SECRET: ${JWT_SECRET}
+      JWT_SECRET_KEY: ${JWT_SECRET}
 
       # LLM API (if using)
       GROQ_API_KEY: ${GROQ_API_KEY}
