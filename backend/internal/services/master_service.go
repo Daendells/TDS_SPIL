@@ -363,9 +363,7 @@ func fillReportDefaults(r *domain.FullReport) error {
 	if r.SeamanCode == nil || *r.SeamanCode == "" {
 		return fmt.Errorf("seamanCode is required")
 	}
-	if r.SeafarerCode == nil || *r.SeafarerCode == "" {
-		return fmt.Errorf("seafarerCode is required")
-	}
+	// SeafarerCode is optional, no longer required
 	return nil
 }
 

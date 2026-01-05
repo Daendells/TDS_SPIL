@@ -226,6 +226,13 @@ export interface ICompetencyType {
   isActive?: boolean;
 }
 
+// models/seaman.ts
+export interface SeamanLookup {
+  name: string
+  seamanCode: string
+}
+
+
 export interface IGapCompetency {
   id?: number;
   competencyTypeId?: number;

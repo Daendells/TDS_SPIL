@@ -29,13 +29,14 @@ type RouterConfig struct {
 	AssignmentController         *controllers.AssignmentController
 	AspectController             *controllers.AspectController
 	IDPTrackingController        *controllers.IDPTrackingController
+	SeamanController             *controllers.SeamanController
 	AuthMiddleware               gin.HandlerFunc
 }
 
 func (c *RouterConfig) Setup() {
 	// Health check endpoint (no auth required)
 	c.App.GET("/health", controllers.HealthCheck)
-	
+
 	c.App.Static("/files", "./public")
 	c.App.Static("/storage", "./storage")
 	c.SetupGuestRouter()
@@ -89,8 +90,8 @@ func (c *RouterConfig) SetupGuestRouter() {
 	// IDP Tracking endpoints (for readiness refresh)
 	idpTracking := c.App.Group("api/idp-tracking")
 	{
-		idpTracking.POST("/refresh/:reportId", c.IDPTrackingController.RefreshReadiness)    // Refresh specific report
-		idpTracking.POST("/refresh-all", c.IDPTrackingController.RefreshAllReadiness)       // Refresh all reports
+		idpTracking.POST("/refresh/:reportId", c.IDPTrackingController.RefreshReadiness) // Refresh specific report
+		idpTracking.POST("/refresh-all", c.IDPTrackingController.RefreshAllReadiness)    // Refresh all reports
 	}
 
 	// Competency Mapping CMS endpoints
@@ -186,6 +187,12 @@ func (c *RouterConfig) SetupGuestRouter() {
 	assessmentResults := c.App.Group("assessment-results")
 	{
 		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
+	}
+
+	// Seamen endpoints (Public - read only)
+	seamen := c.App.Group("api/seamen")
+	{
+		seamen.GET("/available", c.SeamanController.SearchAvailableSeamen)
 	}
 
 	// Register Question and Option routes

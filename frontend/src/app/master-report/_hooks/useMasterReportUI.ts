@@ -94,8 +94,8 @@ export function useMasterReportUI() {
     return (
       editingRow &&
       editingRow.nama?.trim() !== "" &&
-      editingRow.seamanCode?.trim() !== "" &&
-      editingRow.seafarerCode?.trim() !== ""
+      editingRow.seamanCode?.trim() !== ""
+      // seafarerCode is now optional
     );
   };
 

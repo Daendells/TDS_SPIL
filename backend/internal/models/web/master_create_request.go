@@ -7,6 +7,6 @@ type MasterCreateRequest struct {
 	Jabatan      string `json:"jabatan" validate:"required"`
 	User         string `json:"user"` // optional
 	SeamanCode   string `json:"seamanCode" validate:"required"`
-	SeafarerCode string `json:"seafarerCode" validate:"required"`
+	SeafarerCode string `json:"seafarerCode"` // optional
 	Certificate  string `json:"certificate" validate:"required"`
 }
