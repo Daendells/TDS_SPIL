@@ -3,6 +3,7 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"os"
 
 	"backend/internal/middlewares"
 	"backend/internal/models/domain"
@@ -77,8 +78,10 @@ func (c *UserController) Login(ctx *gin.Context) {
 	}
 
 	// TODO: Create HTTP Only Cookie (optional, frontend will handle it)
-	ctx.SetSameSite(http.SameSiteNoneMode)
-	ctx.SetCookie(middlewares.TOKEN_COOKIE, tokenString, 3600*6, "/", "", false, true)
+	// In production with HTTPS, use secure=true
+	isProduction := os.Getenv("ENV") == "production"
+	ctx.SetSameSite(http.SameSiteLaxMode)  // Changed from None to Lax for same-site
+	ctx.SetCookie(middlewares.TOKEN_COOKIE, tokenString, 3600*6, "/", "", isProduction, true)
 
 	// Send token in response body for frontend to store
 	userData := response.Data.(web.UserData)
