@@ -2,40 +2,8 @@ version: "3.8"
 
 volumes:
   backend_storage:
-  mysql_data:
 
 services:
-  mysql:
-    container_name: mysql-container-prod
-    image: mysql:8.0
-    restart: always
-    environment:
-      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
-      MYSQL_DATABASE: ${DB_NAME:-tds}
-      MYSQL_USER: ${DB_USER}
-      MYSQL_PASSWORD: ${DB_PASSWORD}
-    volumes:
-      - mysql_data:/var/lib/mysql
-    command: --default-authentication-plugin=mysql_native_password
-    networks:
-      - tds-net
-    healthcheck:
-      test:
-        [
-          "CMD",
-          "mysqladmin",
-          "ping",
-          "-h",
-          "localhost",
-          "-u",
-          "root",
-          "-p${MYSQL_ROOT_PASSWORD}",
-        ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-      start_period: 30s
-
   tds_backend:
     container_name: tds_backend_prod
     build:
@@ -43,9 +11,9 @@ services:
       dockerfile: Dockerfile
     restart: always
     environment:
-      # Database connection
-      DB_HOST: mysql-container-prod
-      DB_PORT: 3306
+      # Database connection - EXTERNAL DATABASE
+      DB_HOST: ${DB_HOST} # IP atau hostname database eksternal
+      DB_PORT: ${DB_PORT:-3306}
       DB_USER: ${DB_USER}
       DB_PASSWORD: ${DB_PASSWORD}
       DB_NAME: ${DB_NAME:-tds}
@@ -65,9 +33,6 @@ services:
     volumes:
       - backend_storage:/app/storage
       # NOTE: NO bind mount untuk source code di production!
-    depends_on:
-      mysql:
-        condition: service_healthy
     networks:
       - tds-net
     healthcheck:
