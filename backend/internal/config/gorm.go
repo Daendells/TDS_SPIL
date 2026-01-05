@@ -13,7 +13,7 @@ import (
 
 func NewDatabase(viper *viper.Viper, log *logrus.Logger) *gorm.DB {
 	username := viper.GetString("DB_USER")
-	password := viper.GetString("DB_PASSWORD")
+	password := viper.GetString("DB_PASS")
 	host := viper.GetString("DB_HOST")
 	port := viper.GetInt("DB_PORT")
 	database := viper.GetString("DB_NAME")
