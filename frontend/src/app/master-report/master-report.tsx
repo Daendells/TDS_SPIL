@@ -326,6 +326,11 @@ export default function MasterPage() {
         updatePayload.competencies = [];
       }
 
+      // Add assessment type scores if they exist
+      if (editingRow.reportScores && editingRow.reportScores.length > 0) {
+        updatePayload.reportScores = editingRow.reportScores;
+      }
+
       await updateReport(editingRow.id, updatePayload);
 
       setOpenEditDialog(false);
@@ -1034,6 +1039,72 @@ export default function MasterPage() {
                   </Button>
                 </div>
               )}
+            </div>
+
+            <div className="space-y-2">
+              <Label>Assessment Type Scores</Label>
+              <div className="grid grid-cols-2 gap-3">
+                {assessmentTypes.map((assessmentType) => {
+                  const existingScore =
+                    editingRow?.reportScores?.find(
+                      (rs) =>
+                        rs.assessmentType?.assessmentTypeName === assessmentType.assessmentTypeName
+                    )?.score ?? "";
+
+                  return (
+                    <div key={assessmentType.id}>
+                      <Label htmlFor={`score-${assessmentType.id}`} className="text-xs">
+                        {assessmentType.assessmentTypeName}
+                      </Label>
+                      <Input
+                        id={`score-${assessmentType.id}`}
+                        type="number"
+                        placeholder="Score"
+                        value={existingScore}
+                        onChange={(e) => {
+                          if (!editingRow) return;
+                          const newScore =
+                            e.target.value === "" ? 0 : parseInt(e.target.value) || 0;
+
+                          // Get existing scores or initialize empty array
+                          const existingScores = editingRow.reportScores || [];
+
+                          // Check if this assessment type already exists
+                          const scoreExists = existingScores.some(
+                            (rs) =>
+                              rs.assessmentType?.assessmentTypeName ===
+                              assessmentType.assessmentTypeName
+                          );
+
+                          let updatedScores;
+                          if (scoreExists) {
+                            // Update existing score
+                            updatedScores = existingScores.map((rs) =>
+                              rs.assessmentType?.assessmentTypeName ===
+                              assessmentType.assessmentTypeName
+                                ? { ...rs, score: newScore }
+                                : rs
+                            );
+                          } else {
+                            // Add new score entry
+                            updatedScores = [
+                              ...existingScores,
+                              {
+                                score: newScore,
+                                assessmentType: {
+                                  assessmentTypeName: assessmentType.assessmentTypeName,
+                                },
+                              },
+                            ];
+                          }
+
+                          setEditingRow({ ...editingRow, reportScores: updatedScores });
+                        }}
+                      />
+                    </div>
+                  );
+                })}
+              </div>
             </div>
 
             <div className="space-y-2">

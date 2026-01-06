@@ -106,8 +106,10 @@ type UpdateMasterRequest struct {
 	TotalReadinessUpdateMonths *int    `json:"totalReadinessUpdateMonths"`
 	TalentClassified           *string `json:"talentClassified"`
 	MentoringReportID          *int64  `json:"mentoringReportId"` // Link to mentoring report
-	// honly competency types
+	// only competency types
 	CompetencyUpdateRequests []CompetencyUpdateRequest `json:"competencies"`
+	// Assessment type scores
+	ReportScores []ReportScoreData `json:"reportScores"`
 }
 
 func (r *UpdateMasterRequest) ParseID(param string) error {

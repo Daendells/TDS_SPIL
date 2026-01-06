@@ -37,7 +37,7 @@ export interface IReport {
   strength: number;
   talentClassified: string;
   idpProgram: string;
-  idp: string; // 🔥 tambahan
+  idp: string; //  tambahan
   havQuadran2: number;
   talentClassified2: string;
   readiness: string;
@@ -65,6 +65,14 @@ export interface IReport {
   // Mentoring Report Link
   mentoringReportId?: number | null;
   mentoringReport?: IMentoringReport;
+
+  // Assessment Type Scores
+  reportScores?: Array<{
+    score?: number;
+    assessmentType?: {
+      assessmentTypeName?: string;
+    };
+  }>;
 
   competencies: IGapCompetency[];
 }

@@ -10,6 +10,9 @@ func SetupMasterRouter(app *gin.Engine, masterController *controllers.MasterCont
 	group := app.Group("/master-reports")
 	{
 		group.GET("", masterController.FindAll)
+		group.GET("/:id", masterController.FindById)
 		group.POST("", masterController.Create)
+		group.PUT("/:id", masterController.Update)
+		group.DELETE("/:id", masterController.Delete)
 	}
 }

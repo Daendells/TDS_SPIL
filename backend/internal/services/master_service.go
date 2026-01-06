@@ -657,6 +657,74 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 		s.Log.Info("✅ Transaction committed successfully")
 	}
 
+	// UPDATE REPORT SCORES if the field is present in request
+	if len(request.ReportScores) > 0 {
+		s.Log.Infof("Updating report scores for report ID: %d (received %d scores)", id, len(request.ReportScores))
+
+		// Start transaction for atomic operations
+		err := s.DB.Transaction(func(tx *gorm.DB) error {
+			// STEP 1: DELETE ALL existing report scores for this report
+			deleteResult := tx.Where("report_id = ?", id).Delete(&domain.ReportScore{})
+			if deleteResult.Error != nil {
+				s.Log.WithError(deleteResult.Error).Error("failed to delete existing report scores")
+				return fmt.Errorf("failed to delete existing report scores: %w", deleteResult.Error)
+			}
+
+			s.Log.Infof("✅ Deleted %d existing report scores", deleteResult.RowsAffected)
+
+			// STEP 2: CREATE new report scores if array is not empty
+			if len(request.ReportScores) > 0 {
+				s.Log.Infof("📝 Processing %d new report scores", len(request.ReportScores))
+				newReportScores := make([]domain.ReportScore, 0, len(request.ReportScores))
+
+				for i, scoreData := range request.ReportScores {
+					// Get assessment type by name
+					var assessmentType domain.AssessmentType
+					if scoreData.AssessmentType.AssessmentTypeName != "" {
+						if err := tx.Where("assessment_type_name = ?", scoreData.AssessmentType.AssessmentTypeName).First(&assessmentType).Error; err != nil {
+							if errors.Is(err, gorm.ErrRecordNotFound) {
+								s.Log.Warnf("  [%d] ⚠️  Assessment type '%s' not found, skipping", i+1, scoreData.AssessmentType.AssessmentTypeName)
+								continue
+							}
+							return fmt.Errorf("error checking assessment type: %w", err)
+						}
+					} else {
+						s.Log.Warnf("  [%d] ⚠️  Report score has no assessment type name, skipping", i+1)
+						continue
+					}
+
+					// Add to batch
+					newReportScores = append(newReportScores, domain.ReportScore{
+						ReportID:         int64(id),
+						Score:            scoreData.Score,
+						AssessmentTypeID: assessmentType.ID,
+					})
+					s.Log.Infof("  [%d] Added report score: %s = %d", i+1, scoreData.AssessmentType.AssessmentTypeName, scoreData.Score)
+				}
+
+				// Bulk insert
+				if len(newReportScores) > 0 {
+					if err := tx.Create(&newReportScores).Error; err != nil {
+						s.Log.WithError(err).Error("failed to create report scores")
+						return fmt.Errorf("failed to create report scores: %w", err)
+					}
+					s.Log.Infof("✅ Successfully created %d new report scores", len(newReportScores))
+				}
+			} else {
+				s.Log.Infof("📭 Empty report scores array - all scores removed")
+			}
+
+			return nil
+		})
+
+		if err != nil {
+			s.Log.WithError(err).Error("Transaction failed for report scores")
+			return nil, err
+		}
+
+		s.Log.Info("✅ Report scores transaction committed successfully")
+	}
+
 	// CRITICAL FIX: Create a COMPLETELY FRESH database session to avoid cache
 	// This ensures we get the latest data from database
 	freshDB := s.DB.Session(&gorm.Session{NewDB: true})
