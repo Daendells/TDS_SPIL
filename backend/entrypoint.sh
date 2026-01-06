@@ -21,13 +21,12 @@ echo "Running database migrations..."
 echo "✅ Migrations completed"
 
 # Run seeder (optional, comment out if not needed every time)
-# Uncomment if you want to seed data on every container start
-# echo "Running database seeder..."
-# if ./seed; then
-#   echo "✅ Seeding completed successfully"
-# else
-#   echo "⚠️  Seeding failed, but continuing..."
-# fi
+echo "Running database seeder..."
+if ./seed; then
+  echo "✅ Seeding completed successfully"
+else
+  echo "⚠️  Seeding failed, but continuing..."
+fi
 
 # Start the API server
 echo "Starting API server..."
