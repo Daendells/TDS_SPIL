@@ -147,7 +147,7 @@ export default function TalentProfilePage({ params }: PageProps) {
               </div>
 
               {/* Foto */}
-              <div className="flex-shrink-0 flex justify-center lg:justify-start">
+              {/* <div className="flex-shrink-0 flex justify-center lg:justify-start">
                 <Image
                   src="/images/default-photo.png"
                   alt="Foto Profil"
@@ -155,7 +155,7 @@ export default function TalentProfilePage({ params }: PageProps) {
                   height={160}
                   className="w-28 h-36 object-cover border rounded"
                 />
-              </div>
+              </div> */}
             </div>
           </div>
 
@@ -441,7 +441,15 @@ export default function TalentProfilePage({ params }: PageProps) {
           </h2>
           <div className="space-y-2 text-sm">
             <p>
-              <strong>Program (Kategori):</strong> {report.idpProgram}
+              <strong>Program (Kategori):</strong> {report.idpProgram} (
+              {report.idpProgram === "SDP"
+                ? "Strategical Development Program"
+                : report.idpProgram === "MDP"
+                  ? "Managerial Development Program"
+                  : report.idpProgram === "FDP"
+                    ? "Foundational Development Program"
+                    : ""}
+              )
             </p>
             <p>
               <strong>Nama Program:</strong> {report.idp}
