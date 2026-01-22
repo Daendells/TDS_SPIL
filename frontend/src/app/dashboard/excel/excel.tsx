@@ -64,8 +64,9 @@ export default function Excel() {
       {/* DropZone */}
       <Dropzone
         accept={{
-          "application/vnd.ms-excel": [], // .xls
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [], // .xlsx
+          "application/vnd.ms-excel": [".xls"],
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": [".xlsx"],
+          "application/octet-stream": [".xls", ".xlsx"], // penting untuk kasus MIME salah
         }}
         maxSize={1024 * 1024 * 10}
         minSize={1024}
