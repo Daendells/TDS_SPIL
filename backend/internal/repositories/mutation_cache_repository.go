@@ -27,12 +27,13 @@ func (r *MutationCacheRepository) TruncateAndBatchInsert(records []domain.Mutati
 		}
 	}()
 
-	// Count existing records before truncate
+	// Count existing records before delete
 	var oldCount int64
 	tx.Model(&domain.MutationCache{}).Count(&oldCount)
 	r.Log.Infof("      ↳ Deleting %d old records from mutation_cache...", oldCount)
 
-	if err := tx.Exec("TRUNCATE TABLE mutation_cache").Error; err != nil {
+	// Use DELETE instead of TRUNCATE to avoid blocking mysqldump backup
+	if err := tx.Exec("DELETE FROM mutation_cache").Error; err != nil {
 		tx.Rollback()
 		return err
 	}

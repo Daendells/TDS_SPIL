@@ -57,7 +57,7 @@ func (s *NanikaAPIService) FetchAndCacheSeamenData() error {
 		}
 
 		s.Log.Infof("   ↳ Fetched %d records from API (%.2f seconds)", len(records), time.Since(startTime).Seconds())
-		s.Log.Info("   ↳ Truncating old seamen_cache table...")
+		s.Log.Info("   ↳ Deleting old seamen_cache records...")
 		
 		insertStart := time.Now()
 		if err := s.SeamenCacheRepo.TruncateAndBatchInsert(records, 1000); err != nil {
@@ -169,7 +169,7 @@ func (s *NanikaAPIService) fetchSeamenFromAPI() ([]domain.SeamenCache, error) {
 func (s *NanikaAPIService) FetchAndCacheMutationData() error {
 	var lastErr error
 	startTime := time.Now()
-	s.Log.Info("📡 [MUTATION API] Starting fetch from Nanika API...")
+	s.Log.Info(" [MUTATION API] Starting fetch from Nanika API...")
 
 	for attempt := 1; attempt <= 3; attempt++ {
 		s.Log.Infof("   ↳ Attempt %d/3: Calling API...", attempt)
@@ -183,7 +183,7 @@ func (s *NanikaAPIService) FetchAndCacheMutationData() error {
 		}
 
 		s.Log.Infof("   ↳ Fetched %d records from API (%.2f seconds)", len(records), time.Since(startTime).Seconds())
-		s.Log.Info("   ↳ Truncating old mutation_cache table...")
+		s.Log.Info("   ↳ Deleting old mutation_cache records...")
 		
 		insertStart := time.Now()
 		if err := s.MutationCacheRepo.TruncateAndBatchInsert(records, 1000); err != nil {
@@ -192,13 +192,13 @@ func (s *NanikaAPIService) FetchAndCacheMutationData() error {
 			continue
 		}
 
-		s.Log.Infof("✅ [MUTATION API] Successfully cached %d records in %.2f seconds (batch size: 1000)", 
+		s.Log.Infof("[MUTATION API] Successfully cached %d records in %.2f seconds (batch size: 1000)", 
 			len(records), time.Since(insertStart).Seconds())
 		s.Log.Infof("   ↳ Total time: %.2f seconds", time.Since(startTime).Seconds())
 		return nil
 	}
 
-	s.Log.Errorf("❌ [MUTATION API] Failed after 3 attempts: %v", lastErr)
+	s.Log.Errorf("[MUTATION API] Failed after 3 attempts: %v", lastErr)
 	return fmt.Errorf("API error after 3 retries: %w", lastErr)
 }
 

@@ -27,12 +27,13 @@ func (r *SeamenCacheRepository) TruncateAndBatchInsert(records []domain.SeamenCa
 		}
 	}()
 
-	// Count existing records before truncate
+	// Count existing records before delete
 	var oldCount int64
 	tx.Model(&domain.SeamenCache{}).Count(&oldCount)
 	r.Log.Infof("      ↳ Deleting %d old records from seamen_cache...", oldCount)
 
-	if err := tx.Exec("TRUNCATE TABLE seamen_cache").Error; err != nil {
+	// Use DELETE instead of TRUNCATE to avoid blocking mysqldump backup
+	if err := tx.Exec("DELETE FROM seamen_cache").Error; err != nil {
 		tx.Rollback()
 		return err
 	}
