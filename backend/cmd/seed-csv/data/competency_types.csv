@@ -1,24 +1,24 @@
 id,code,name,description,category,is_active
-1,LDC,Leading Change,,M,true
-2,DCM,Decision Making,,M,true
-3,CIO,Continuous Improvement,,M,true
-4,SIO,Self Improvement Orientation,,M,true
-5,FLX,Flexibility,,M,true
-6,LAG,Learning Agility,,M,true
-7,RSC,Resilience,,M,true
-8,CSO,Customer Orientation,,M,true
-9,COM,Communication,,M,true
-10,EMP,Empathy,,M,true
-11,TOR,Team Orientation,,M,true
-12,LDP,Leadership,,M,true
-13,PNO,Planning & Organizing,,M,true
-14,DIR,Directiveness,,M,true
-15,ACH,Achievement Orientation,,M,true
-16,ACT,Accountability,,M,true
-17,IDS,Instructional Discipline,,M,true
-18,CFO,Concern for Order,,M,true
-19,RBG,Relationship Building,,M,true
-20,ING,Integrity,,M,true
-21,RSF,Resourcefulness,,M,true
-22,BAC,Business Acumen,,M,true
-23,PSG,Problem Solving,,M,true
+1,LDC,Leading Change,Kemampuan mengenali melaksanakan dan memimpin perubahan dalam organisasi menuju kondisi yang diinginkan secara berkelanjutan.,M,true
+2,DCM,Decision Making,Kemampuan mengevaluasi berbagai pilihan solusi secara logis dan memilih keputusan terbaik dengan mempertimbangkan akibat tingkat kesulitan dan risiko yang mungkin terjadi.,M,true
+3,CIO,Continuous Improvement,Kemampuan memperbaiki tugas dan tanggung jawab secara terus-menerus termasuk mendorong orang lain untuk menemukan dan mengembangkan cara-cara kreatif dan inovatif dalam meningkatkan hasil kerja.,M,true
+4,SIO,Self Improvement Orientation,Terus menerus berusaha mengembangkan diri sendiri termasuk menunjukkan minat dalam pengembangan diri mencari menerima dan menggunakan kritik yang membangun secara terbuka serta mencari berbagai kesempatan menantang untuk mengembangkan diri.,M,true
+5,FLX,Flexibility,Kemampuan untuk menyesuaikan diri dengan perubahan situasi kerja aturan cara kerja atau orang-orang yang berbeda. Termasuk di dalamnya kemampuan untuk tetap bekerja secara efektif meskipun menghadapi perubahan atau tantangan serta terbuka terhadap pendapat dan cara kerja orang lain.,M,true
+6,LAG,Learning Agility,Kemampuan terus belajar secara aktif dengan mencoba metode atau cara baru saat menghadapi masalah yang belum dikenal serta menggunakan pengalaman keberhasilan dan kegagalan sebagai pembelajaran.,M,true
+7,RSC,Resilience,Kemampuan bekerja secara produktif dan efektif dalam situasi sulit atau kondisi kerja yang penuh tekanan seperti deadline ketat beban kerja berat atau konflik kepentingan.,M,true
+8,CSO,Customer Orientation,Kemampuan mengenali kebutuhan pelanggan dan memberikan pelayanan terbaik untuk memenuhi harapan dan tuntutan pelanggan.,M,true
+9,COM,Communication,Kemampuan berkomunikasi secara efektif dengan orang lain baik secara individu maupun dalam kelompok.,M,true
+10,EMP,Empathy,Kemampuan memperkirakan bagaimana berbagai tindakan dan perkataan akan diterima oleh orang lain dalam situasi individu maupun kelompok kecil.,M,true
+11,TOR,Team Orientation,Kemampuan untuk bekerja secara kolaboratif dalam tim guna mencapai tujuan bersama termasuk berkontribusi dalam pengambilan keputusan menjaga sinergi antar anggota dan memberikan dukungan sesuai kebutuhan.,M,true
+12,LDP,Leadership,Memotivasi dan mempengaruhi orang lain untuk bekerja mencapai tujuan bersama membantu orang lain mempelajari tugas-tugas baru dan berperilaku sebagai contoh atau role model yang baik.,M,true
+13,PNO,Planning & Organizing,Kemampuan merencanakan dan mengatur pekerjaan secara efektif dengan menetapkan tujuan mengurai tugas ke dalam langkah-langkah proses menyusun jadwal dan penugasan serta mengantisipasi hambatan dan mengevaluasi hasil berdasarkan pencapaian target.,M,true
+14,DIR,Directiveness,Kemampuan memberikan arahan atau instruksi yang jelas mendelegasikan tugas secara tepat serta mengenali dan mengatasi hambatan yang mengganggu kelancaran pekerjaan.,M,true
+15,ACH,Achievement Orientation,Kemampuan untuk secara konsisten mencapai hasil yang diharapkan meskipun dalam kondisi yang sulit atau penuh tantangan.,M,true
+16,ACT,Accountability,Kemampuan untuk menunjukkan tanggung jawab dalam menyelesaikan tugas secara konsisten tepat waktu dan sesuai standar.,M,true
+17,IDS,Instructional Discipline,Kemampuan memahami menerima dan secara konsisten melaksanakan instruksi dari atasan atau prosedur kerja yang telah ditetapkan baik secara lisan maupun tertulis untuk memastikan pelaksanaan tugas yang efisien dan sesuai dengan standar yang berlaku.,M,true
+18,CFO,Concern for Order,Kemampuan bekerja sesuai aturan dan prosedur yang berlaku dengan memperhatikan mengelola dan mengatur hal-hal secara detail untuk mencapai hasil yang tepat.,M,true
+19,RBG,Relationship Building,Kemampuan membangun hubungan kerja yang efektif dengan berbagai pihak seperti rekan kerja maupun pihak eksternal terkait.,M,true
+20,ING,Integrity,Bertindak sebagai profesional dengan menjawab pertanyaan secara baik dan jujur memberikan saran kepada rekan kerja dan atasan dengan tulus dan cara yang mudah dimengerti.,M,true
+21,RSF,Resourcefulness,Kemampuan mengelola dan memanfaatkan sumber daya yang tersedia secara efektif dan efisien untuk mencapai hasil yang optimal.,M,true
+22,BAC,Business Acumen,Kemampuan memahami struktur organisasi informal mengenali batasan-batasan organisasi yang tidak terlihat serta mengenali masalah dan peluang yang mempengaruhi organisasi.,M,true
+23,PSG,Problem Solving,Kemampuan untuk mengidentifikasi masalah mengenali penyebab masalah dalam jangka waktu yang dapat diterima dan mengidentifikasi berbagai solusi potensial.,M,true

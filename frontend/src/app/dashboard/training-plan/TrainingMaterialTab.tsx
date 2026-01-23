@@ -197,10 +197,14 @@ export default function TrainingMaterialTab() {
     try {
       // Combine keyword (deskripsi_perilaku) with optional referensi
       let combinedReferensi = item.deskripsi_perilaku || "";
-      if (item.referensi) {
+      
+      // Use existing referensi or generate default
+      const referensiToUse = item.referensi || generateDefaultReferensi(item);
+      
+      if (referensiToUse) {
         combinedReferensi = combinedReferensi
-          ? `${combinedReferensi}\n\nReferensi Tambahan:\n${item.referensi}`
-          : item.referensi;
+          ? `${combinedReferensi}\n\nReferensi Tambahan:\n${referensiToUse}`
+          : referensiToUse;
       }
 
       const res = await fetch(`${apiUrl}/trainings/generate`, {
@@ -342,6 +346,21 @@ export default function TrainingMaterialTab() {
     } finally {
       setCreateLoading(false);
     }
+  };
+
+  // Generate default referensi text based on training data
+  const generateDefaultReferensi = (item: ITraining): string => {
+    const topikTraining = item.topik_training || "topik ini";
+    const competencyName = item.competencyType?.name || "kompetensi ini";
+    const competencyDesc = item.competencyType?.description || "kompetensi yang relevan";
+    const level = item.lvl || 1;
+    const deskripsiPerilaku = item.deskripsi_perilaku || "mencapai kompetensi yang diharapkan";
+
+    return `buatkan slide training online untuk judul ${topikTraining} untuk mengungkap kompetensi ${competencyName} yaitu ${competencyDesc} terutama untuk level ${level} yang ${deskripsiPerilaku}
+
+buatkan ppt antara 13-15 slide ini sebagai ppt video training online, dengan peserta trainingnya adalah perwira kapal container (SPIL) dengan susunan slidenya
+
+yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topik training, slide 4: challenges/tantangan, slide 5-9: 1 tool yang mengungkap ${topikTraining} (jelaskan steps2nya secara detail untuk perslide), slide 11: studi kasus, slide 12: pemecahan masalah dalam studi kasus menggunakan metode/tools yang dijelaskan, slide 13: penutup/closing.`;
   };
 
   const handleSaveReferensi = () => {
@@ -535,7 +554,8 @@ export default function TrainingMaterialTab() {
                                   size="sm"
                                   onClick={() => {
                                     setSelectedTraining(item);
-                                    setTempReferensi(item.referensi || "");
+                                    // Use existing referensi or generate default
+                                    setTempReferensi(item.referensi || generateDefaultReferensi(item));
                                   }}
                                 >
                                   {item.referensi ? "Edit" : "Tambah"}
