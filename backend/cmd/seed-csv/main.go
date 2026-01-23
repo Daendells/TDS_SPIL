@@ -254,8 +254,27 @@ func seedCompetencyTypesFromCSV(db *gorm.DB, filePath string) error {
 			Category:    parseString(record[4]),
 			IsActive:    parseBool(record[5]),
 		}
-		if err := db.FirstOrCreate(&competencyType, domain.CompetencyType{ID: competencyType.ID}).Error; err != nil {
-			return err
+
+		// Use Upsert logic: Create if not exists, Update if exists
+		var existing domain.CompetencyType
+		result := db.First(&existing, competencyType.ID)
+
+		if result.Error == gorm.ErrRecordNotFound {
+			// Create new record
+			if err := db.Create(&competencyType).Error; err != nil {
+				return err
+			}
+		} else {
+			// Update existing record
+			if err := db.Model(&existing).Updates(map[string]interface{}{
+				"code":        competencyType.Code,
+				"name":        competencyType.Name,
+				"description": competencyType.Description,
+				"category":    competencyType.Category,
+				"is_active":   competencyType.IsActive,
+			}).Error; err != nil {
+				return err
+			}
 		}
 	}
 	return nil
