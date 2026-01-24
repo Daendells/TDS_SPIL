@@ -6,7 +6,7 @@ type AssessmentUpdateRequest struct {
 	AssessmentName string `json:"assessmentName" validate:"required"`
 	UsingTimer     bool   `json:"usingTimer"`
 	// TimerLimitMinutes can be null if UsingTimer is false
-	TimerLimitMinutes *uint64 `json:"timerLimitMinutes"`
+	TimerLimitMinutes *float64 `json:"timerLimitMinutes"`
 }
 
 type AssessmentDataRequest struct {
@@ -14,7 +14,7 @@ type AssessmentDataRequest struct {
 	AssessmentName string `json:"assessmentName" validate:"required"`
 	UsingTimer     bool   `json:"usingTimer"`
 	// TimerLimitMinutes can be null if UsingTimer is false
-	TimerLimitMinutes *uint64 `json:"timerLimitMinutes"`
+	TimerLimitMinutes *float64 `json:"timerLimitMinutes"`
 }
 
 type AssessmentCreateRequest struct {
@@ -22,7 +22,7 @@ type AssessmentCreateRequest struct {
 	AssessmentName string `json:"assessmentName" validate:"required"`
 	UsingTimer     bool   `json:"usingTimer"`
 	// TimerLimitMinutes can be null if UsingTimer is false
-	TimerLimitMinutes *uint64 `json:"timerLimitMinutes"`
+	TimerLimitMinutes *float64 `json:"timerLimitMinutes"`
 }
 
 type AssessmentAssignRequest struct {

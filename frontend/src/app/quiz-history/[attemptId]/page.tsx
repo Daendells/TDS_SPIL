@@ -77,132 +77,157 @@ export default function QuizAttemptDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Questions Detail */}
-        <div className="space-y-6">
-          {attempt.answers.map((answer, index) => (
-            <Card
-              key={answer.questionId}
-              className={`border-l-4 ${answer.isCorrect ? "border-l-green-500" : "border-l-red-500"}`}
-            >
-              <CardHeader className="pb-2">
-                <CardTitle className="text-base font-medium flex items-start gap-2">
-                  <span className="text-gray-400 min-w-[24px]">{index + 1}.</span>
-                  <div className="flex-1">
-                    {answer.questionText}
-                    <div className="flex items-center mt-1">
-                      {answer.isCorrect ? (
-                        <span className="text-xs text-green-600 flex items-center font-bold">
-                          <CheckCircle className="h-3 w-3 mr-1" /> Benar (+{answer.scoreEarned})
-                        </span>
-                      ) : (
-                        <span className="text-xs text-red-600 flex items-center font-bold">
-                          <XCircle className="h-3 w-3 mr-1" /> Salah ({answer.scoreEarned} pts)
-                        </span>
-                      )}
-                    </div>
-                  </div>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3 pt-0">
-                {/* Options / Answer Display */}
-                {answer.questionType === "short_answer" ? (
-                  <div className="space-y-2">
-                    <div className="p-3 rounded-md bg-gray-50 border">
-                      <p className="text-xs text-gray-500 mb-1">Jawaban Anda:</p>
-                      <p
-                        className={
-                          answer.isCorrect
-                            ? "text-green-700 font-medium"
-                            : "text-red-700 font-medium"
-                        }
-                      >
-                        {answer.textAnswer || "(Kosong)"}
-                      </p>
-                    </div>
-                    {!answer.isCorrect && (
-                      <div className="p-3 rounded-md bg-green-50 border border-green-100">
-                        <p className="text-xs text-green-600 mb-1">Jawaban yang benar:</p>
-                        <p className="text-green-800">{answer.acceptableAnswers?.join(" atau ")}</p>
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    {answer.options?.map((opt) => {
-                      const isSelected = opt.isSelected;
-                      const isCorrectOption = opt.isCorrect; // Option that gives points
-
-                      let bgClass = "bg-white";
-                      let borderClass = "border-gray-200";
-                      let textClass = "text-gray-700";
-
-                      if (isSelected) {
-                        if (isCorrectOption) {
-                          bgClass = "bg-green-50";
-                          borderClass = "border-green-300";
-                          textClass = "text-green-800";
-                        } else {
-                          bgClass = "bg-red-50";
-                          borderClass = "border-red-300";
-                          textClass = "text-red-800";
-                        }
-                      } else if (isCorrectOption && !answer.isCorrect) {
-                        // Show missed correct option
-                        bgClass = "bg-green-50/50";
-                        borderClass = "border-green-200 dashed";
-                        textClass = "text-green-600";
-                      }
-
-                      return (
-                        <div
-                          key={opt.optionId}
-                          className={`flex items-start p-3 rounded-lg border ${bgClass} ${borderClass} transition-colors`}
-                        >
-                          <div className="mr-3 mt-0.5">
-                            {isSelected ? (
-                              isCorrectOption ? (
-                                <CheckCircle className="h-4 w-4 text-green-600" />
-                              ) : (
-                                <XCircle className="h-4 w-4 text-red-600" />
-                              )
+        {/* Questions Detail Grouped by Assessment Name */}
+        <div className="space-y-8">
+          {Object.entries(
+            attempt.answers.reduce(
+              (groups, answer) => {
+                const key = answer.assessmentName || "General Section";
+                if (!groups[key]) {
+                  groups[key] = [];
+                }
+                groups[key].push(answer);
+                return groups;
+              },
+              {} as Record<string, typeof attempt.answers>
+            )
+          ).map(([assessmentName, answers]) => (
+            <div key={assessmentName} className="space-y-4">
+              <h3 className="text-xl font-bold text-gray-800 border-b pb-2">{assessmentName}</h3>
+              <div className="space-y-4">
+                {answers.map((answer, index) => (
+                  <Card
+                    key={answer.questionId}
+                    className={`border-l-4 ${answer.isCorrect ? "border-l-green-500" : "border-l-red-500"}`}
+                  >
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-base font-medium flex items-start gap-2">
+                        <span className="text-gray-400 min-w-[24px]">Soal {index + 1}.</span>
+                        <div className="flex-1">
+                          {answer.questionText}
+                          <div className="flex items-center mt-1">
+                            {answer.isCorrect ? (
+                              <span className="text-xs text-green-600 flex items-center font-bold">
+                                <CheckCircle className="h-3 w-3 mr-1" /> Benar (+
+                                {answer.scoreEarned})
+                              </span>
                             ) : (
-                              <div className="h-4 w-4 rounded-full border border-gray-300" />
+                              <span className="text-xs text-red-600 flex items-center font-bold">
+                                <XCircle className="h-3 w-3 mr-1" /> Salah ({answer.scoreEarned}{" "}
+                                pts)
+                              </span>
                             )}
                           </div>
-                          <div className={`flex-1 ${textClass}`}>
-                            <div className="flex flex-col">
-                              <span>{opt.optionText}</span>
-                              {opt.optionLetter && (
-                                <span className="text-xs opacity-70">({opt.optionLetter})</span>
-                              )}
-                              {opt.imageUrl && (
-                                <Image
-                                  src={BASE_URL + opt.imageUrl}
-                                  alt="Option Image"
-                                  width={200}
-                                  height={150}
-                                  className="mt-2 rounded border bg-white object-contain max-h-[150px]"
-                                />
-                              )}
-                            </div>
+                        </div>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-3 pt-0">
+                      {/* Options / Answer Display */}
+                      {answer.questionType === "short_answer" ? (
+                        <div className="space-y-2">
+                          <div className="p-3 rounded-md bg-gray-50 border">
+                            <p className="text-xs text-gray-500 mb-1">Jawaban Anda:</p>
+                            <p
+                              className={
+                                answer.isCorrect
+                                  ? "text-green-700 font-medium"
+                                  : "text-red-700 font-medium"
+                              }
+                            >
+                              {answer.textAnswer || "(Kosong)"}
+                            </p>
                           </div>
-                          {isCorrectOption && !isSelected && (
-                            <span className="text-xs text-green-600 font-medium ml-2">
-                              Jawaban Benar
-                            </span>
-                          )}
-                          {isSelected && (
-                            <span className="text-xs font-medium ml-2">
-                              {isCorrectOption ? "Dipilih (Benar)" : "Dipilih (Salah)"}
-                            </span>
+                          {!answer.isCorrect && (
+                            <div className="p-3 rounded-md bg-green-50 border border-green-100">
+                              <p className="text-xs text-green-600 mb-1">Jawaban yang benar:</p>
+                              <p className="text-green-800">
+                                {answer.acceptableAnswers?.join(" atau ")}
+                              </p>
+                            </div>
                           )}
                         </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                      ) : (
+                        <div className="space-y-2">
+                          {answer.options?.map((opt) => {
+                            const isSelected = opt.isSelected;
+                            const isCorrectOption = opt.isCorrect; // Option that gives points
+
+                            let bgClass = "bg-white";
+                            let borderClass = "border-gray-200";
+                            let textClass = "text-gray-700";
+
+                            if (isSelected) {
+                              if (isCorrectOption) {
+                                bgClass = "bg-green-50";
+                                borderClass = "border-green-300";
+                                textClass = "text-green-800";
+                              } else {
+                                bgClass = "bg-red-50";
+                                borderClass = "border-red-300";
+                                textClass = "text-red-800";
+                              }
+                            } else if (isCorrectOption && !answer.isCorrect) {
+                              // Show missed correct option
+                              bgClass = "bg-green-50/50";
+                              borderClass = "border-green-200 dashed";
+                              textClass = "text-green-600";
+                            }
+
+                            return (
+                              <div
+                                key={opt.optionId}
+                                className={`flex items-start p-3 rounded-lg border ${bgClass} ${borderClass} transition-colors`}
+                              >
+                                <div className="mr-3 mt-0.5">
+                                  {isSelected ? (
+                                    isCorrectOption ? (
+                                      <CheckCircle className="h-4 w-4 text-green-600" />
+                                    ) : (
+                                      <XCircle className="h-4 w-4 text-red-600" />
+                                    )
+                                  ) : (
+                                    <div className="h-4 w-4 rounded-full border border-gray-300" />
+                                  )}
+                                </div>
+                                <div className={`flex-1 ${textClass}`}>
+                                  <div className="flex flex-col">
+                                    <span>{opt.optionText}</span>
+                                    {opt.optionLetter && (
+                                      <span className="text-xs opacity-70">
+                                        ({opt.optionLetter})
+                                      </span>
+                                    )}
+                                    {opt.imageUrl && (
+                                      <Image
+                                        src={BASE_URL + opt.imageUrl}
+                                        alt="Option Image"
+                                        width={200}
+                                        height={150}
+                                        className="mt-2 rounded border bg-white object-contain max-h-[150px]"
+                                      />
+                                    )}
+                                  </div>
+                                </div>
+                                {isCorrectOption && !isSelected && (
+                                  <span className="text-xs text-green-600 font-medium ml-2">
+                                    Jawaban Benar
+                                  </span>
+                                )}
+                                {isSelected && (
+                                  <span className="text-xs font-medium ml-2">
+                                    {isCorrectOption ? "Dipilih (Benar)" : "Dipilih (Salah)"}
+                                  </span>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </div>
           ))}
         </div>
       </div>
