@@ -4,8 +4,9 @@ import { QuestionResponse } from "./question";
 export type AssessmentResponse = {
   assessmentId: number;
   role: string;
+  assessmentName: string;
   usingTimer: boolean;
-  timerLimitMinutes: number;
+  timerLimitMinutes: number | null;
   questions?: QuestionOptionResponse[];
 };
 

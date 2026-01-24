@@ -8,6 +8,7 @@ export interface AssessmentType {
   startTime?: string;
   endTime?: string;
   maxAttempts?: number;
+  assignedAssessments: string[];
 }
 
 export interface AssessmentTypeUpdateRequest {
@@ -32,6 +33,31 @@ export function useGetAllAssessmentTypes() {
       }
     },
     staleTime: 5 * 60 * 1000, // 5 minutes
+  });
+}
+
+// Create assessment type
+export interface AssessmentTypeCreateRequest {
+  assessmentTypeName: string;
+  startTime?: string;
+  endTime?: string;
+  maxAttempts?: number;
+}
+
+export function useCreateAssessmentType() {
+  return useMutation({
+    mutationFn: async (payload: AssessmentTypeCreateRequest) => {
+      try {
+        const response = await api.post<ApiReturn<AssessmentType>>(
+          "/api/assessment-types",
+          payload
+        );
+        return response.data.data;
+      } catch (error) {
+        console.error("Error creating assessment type:", error);
+        throw error;
+      }
+    },
   });
 }
 

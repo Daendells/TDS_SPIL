@@ -81,6 +81,7 @@ func Bootstrap(config *BootstrapConfig) {
 	seamenCacheRepository := repositories.NewSeamenCacheRepository(config.DB, config.Log)
 	mutationCacheRepository := repositories.NewMutationCacheRepository(config.DB, config.Log)
 	seamanRepository := repositories.NewSeamanRepository(config.DB)
+	assessmentRepository := repositories.NewAssessmentRepository()
 
 	// --- Services (DB-based)
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository, gapCompetencyRepository, seamenCacheRepository, mutationCacheRepository)
@@ -91,9 +92,11 @@ func Bootstrap(config *BootstrapConfig) {
 	questionService := services.NewQuestionService(questionRepository, config.Validate)
 	optionService := services.NewOptionService(optionRepository, config.Validate)
 	assessmentResultService := services.NewAssessmentResultService(assessmentResultRepository, questionRepository, optionRepository, reportRepository, config.Log, config.Validate)
-	assessmentService := services.NewAssessmentService(repositories.NewAssessmentRepository(), assessmentTypeRepository, config.Validate)
+
+	assessmentService := services.NewAssessmentService(assessmentRepository, assessmentTypeRepository, config.Validate)
 	assessmentTypeService := services.NewAssessmentTypeService(assessmentTypeRepository, config.Validate)
 	seafarerAssessmentService := services.NewSeafarerAssessmentService(seafarerAssessmentRepository, reportRepository, config.Validate)
+	quizService := services.NewQuizService(assessmentTypeRepository, assessmentRepository, questionRepository, optionRepository, config.Validate)
 	masterService := services.NewMasterService(config.DB, config.Log, config.Validate, masterRepository)
 	trainingServiceDB := services.NewTrainingService(config.DB, config.Log, config.Validate, trainingRepository)
 	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, competencyProgramMappingRepository, competencyTypeRepository, *reportRepository, config.DB, config.Log)
@@ -136,8 +139,10 @@ func Bootstrap(config *BootstrapConfig) {
 	assignmentController := controllers.NewAssignmentController(config.DB, assignmentService)
 	competencyTypeController := controllers.NewCompetencyTypeController(competencyTypeRepository, config.Log)
 	aspectController := controllers.NewAspectController(config.Log, aspectService)
+
 	idpTrackingController := controllers.NewIDPTrackingController(config.Log, idpCalculationService)
 	seamanController := controllers.NewSeamanController(seamanService)
+	quizController := controllers.NewQuizController(config.Log, config.DB, quizService)
 
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(
@@ -179,8 +184,10 @@ func Bootstrap(config *BootstrapConfig) {
 		AspectController:             aspectController,
 		AuthMiddleware:               authMiddleware,
 		AssignmentController:         assignmentController,
+
 		IDPTrackingController:        idpTrackingController,
 		SeamanController:             seamanController,
+		QuizController:               quizController,
 	}
 	routerConfig.Setup()
 

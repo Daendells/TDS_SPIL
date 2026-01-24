@@ -5,4 +5,6 @@ export type QuestionResponse = {
   isImage: number;
   imageUrl: string;
   aspectId?: number;
+  questionType?: string;
+  acceptableAnswers?: string;
 };

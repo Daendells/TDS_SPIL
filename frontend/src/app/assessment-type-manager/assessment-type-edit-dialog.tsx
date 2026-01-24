@@ -26,8 +26,10 @@ import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
   useUpdateAssessmentType,
+  useCreateAssessmentType,
   AssessmentType,
   AssessmentTypeUpdateRequest,
+  AssessmentTypeCreateRequest,
 } from "./_hooks/useAssessmentType";
 
 const FormSchema = z.object({
@@ -52,6 +54,7 @@ export default function AssessmentTypeEditDialog({
 }: AssessmentTypeEditDialogProps) {
   const queryClient = useQueryClient();
   const updateMutation = useUpdateAssessmentType();
+  const createMutation = useCreateAssessmentType();
   const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<z.infer<typeof FormSchema>>({
@@ -65,38 +68,59 @@ export default function AssessmentTypeEditDialog({
   });
 
   useEffect(() => {
-    if (assessmentType && open) {
-      form.reset({
-        assessmentTypeName: assessmentType.assessmentTypeName,
-        startTime: assessmentType.startTime ? assessmentType.startTime.split("T")[0] : "",
-        endTime: assessmentType.endTime ? assessmentType.endTime.split("T")[0] : "",
-        maxAttempts: assessmentType.maxAttempts || undefined,
-      });
+    if (open) {
+      if (assessmentType) {
+        form.reset({
+          assessmentTypeName: assessmentType.assessmentTypeName,
+          startTime: assessmentType.startTime ? assessmentType.startTime.split("T")[0] : "",
+          endTime: assessmentType.endTime ? assessmentType.endTime.split("T")[0] : "",
+          maxAttempts: assessmentType.maxAttempts || undefined,
+        });
+      } else {
+        form.reset({
+          assessmentTypeName: "",
+          startTime: undefined,
+          endTime: undefined,
+          maxAttempts: undefined,
+        });
+      }
     }
   }, [assessmentType, open, form]);
 
   const onSubmit = async (data: z.infer<typeof FormSchema>) => {
-    if (!assessmentType) return;
-
     setIsLoading(true);
     try {
-      const payload: AssessmentTypeUpdateRequest = {
-        id: assessmentType.id,
-        assessmentTypeName: data.assessmentTypeName,
-        startTime: data.startTime ? new Date(data.startTime).toISOString() : undefined,
-        endTime: data.endTime ? new Date(data.endTime).toISOString() : undefined,
-        maxAttempts: data.maxAttempts || undefined,
-      };
+      if (assessmentType) {
+        // Update
+        const payload: AssessmentTypeUpdateRequest = {
+          id: assessmentType.id,
+          assessmentTypeName: data.assessmentTypeName,
+          startTime: data.startTime ? new Date(data.startTime).toISOString() : undefined,
+          endTime: data.endTime ? new Date(data.endTime).toISOString() : undefined,
+          maxAttempts: data.maxAttempts || undefined,
+        };
+        await updateMutation.mutateAsync(payload);
+        toast.success("Assessment type berhasil diperbarui");
+      } else {
+        // Create
+        const payload: AssessmentTypeCreateRequest = {
+          assessmentTypeName: data.assessmentTypeName,
+          startTime: data.startTime ? new Date(data.startTime).toISOString() : undefined,
+          endTime: data.endTime ? new Date(data.endTime).toISOString() : undefined,
+          maxAttempts: data.maxAttempts || undefined,
+        };
+        await createMutation.mutateAsync(payload);
+        toast.success("Assessment type berhasil dibuat");
+      }
 
-      await updateMutation.mutateAsync(payload);
-
-      toast.success("Assessment type berhasil diperbarui");
       queryClient.invalidateQueries({ queryKey: ["assessment-types"] });
       onOpenChange(false);
       onSuccess?.();
     } catch (error) {
-      console.error("Error updating assessment type:", error);
-      toast.error("Gagal memperbarui assessment type");
+      console.error("Error saving assessment type:", error);
+      toast.error(
+        assessmentType ? "Gagal memperbarui assessment type" : "Gagal membuat assessment type"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -106,8 +130,14 @@ export default function AssessmentTypeEditDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Edit Assessment Type</DialogTitle>
-          <DialogDescription>Ubah informasi assessment type berikut</DialogDescription>
+          <DialogTitle>
+            {assessmentType ? "Edit Assessment Type" : "Buat Assessment Type Baru"}
+          </DialogTitle>
+          <DialogDescription>
+            {assessmentType
+              ? "Ubah informasi assessment type berikut"
+              : "Isi informasi untuk assessment type baru"}
+          </DialogDescription>
         </DialogHeader>
 
         <Form {...form}>
@@ -185,7 +215,11 @@ export default function AssessmentTypeEditDialog({
                 Batal
               </Button>
               <Button type="submit" disabled={isLoading}>
-                {isLoading ? "Menyimpan..." : "Simpan Perubahan"}
+                {isLoading
+                  ? "Menyimpan..."
+                  : assessmentType
+                    ? "Simpan Perubahan"
+                    : "Buat Assessment Type"}
               </Button>
             </DialogFooter>
           </form>

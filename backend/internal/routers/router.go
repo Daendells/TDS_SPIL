@@ -30,6 +30,7 @@ type RouterConfig struct {
 	AspectController             *controllers.AspectController
 	IDPTrackingController        *controllers.IDPTrackingController
 	SeamanController             *controllers.SeamanController
+	QuizController               *controllers.QuizController
 	AuthMiddleware               gin.HandlerFunc
 }
 
@@ -42,7 +43,9 @@ func (c *RouterConfig) Setup() {
 	c.SetupGuestRouter()
 	c.SetupAuthRouter()
 	c.SetupAssignmentRouter()
+
 	c.SetupMasterRouter()
+	c.SetupQuizRouter()
 }
 
 func (c *RouterConfig) SetupGuestRouter() {
@@ -246,6 +249,8 @@ func (c *RouterConfig) SetupAuthRouter() {
 
 	assessmentAuth := c.App.Group("api/assessments").Use(c.AuthMiddleware)
 	{
+		assessmentAuth.GET("/unassigned-list", c.AssessmentController.FindUnassigned)
+		assessmentAuth.POST("/assign", c.AssessmentController.AssignToType)
 		assessmentAuth.GET("/:role", c.AssessmentController.FindByRole)
 		assessmentAuth.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
 		assessmentAuth.POST("", c.AssessmentController.CreateAssessment)
@@ -282,5 +287,15 @@ func (c *RouterConfig) SetupAuthRouter() {
 		questionsWithOptionsAuth.PUT("/:questionId", c.QuestionOptionController.UpdateQuestionWithOptions)
 		questionsWithOptionsAuth.DELETE("/:questionId", c.QuestionOptionController.DeleteQuestionWithOptions)
 		questionsWithOptionsAuth.DELETE("/bulk-delete", c.QuestionOptionController.BulkDelete)
+	}
+}
+
+func (r *RouterConfig) SetupQuizRouter() {
+	group := r.App.Group("/api/quiz")
+	{
+		group.GET("/history", r.QuizController.GetQuizHistory)
+		group.GET("/history/:attemptId", r.QuizController.GetQuizAttempt)
+		group.GET("/:assessmentTypeId", r.QuizController.GetQuizData)
+		group.POST("/submit", r.QuizController.SubmitQuiz)
 	}
 }

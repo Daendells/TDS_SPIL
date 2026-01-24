@@ -18,23 +18,27 @@ type AssessmentResponse struct {
 }
 
 type QuestionOptionResponse struct {
-	QuestionId   int          `json:"questionId"`
-	QuestionText string       `json:"questionText"`
-	Category     string       `json:"category"`
-	IsImage      string       `json:"isImage"`
-	ImageUrl     string       `json:"imageUrl"`
-	AspectId     *int64       `json:"aspectId"`
-	Options      []OptionData `json:"options"`
+	QuestionId        int          `json:"questionId"`
+	QuestionText      string       `json:"questionText"`
+	Category          string       `json:"category"`
+	IsImage           string       `json:"isImage"`
+	ImageUrl          string       `json:"imageUrl"`
+	AspectId          *int64       `json:"aspectId"`
+	QuestionType      string       `json:"questionType"`
+	AcceptableAnswers *string      `json:"acceptableAnswers"`
+	Options           []OptionData `json:"options"`
 }
 
 // Public response untuk assessment public (tanpa questionId)
 type QuestionOptionPublicResponse struct {
-	QuestionId   int                    `json:"questionId"`
-	QuestionText string                 `json:"questionText"`
-	Category     string                 `json:"category"`
-	IsImage      string                 `json:"isImage"`
-	ImageUrl     string                 `json:"imageUrl"`
-	Options      []OptionPublicResponse `json:"options"`
+	QuestionId        int                    `json:"questionId"`
+	QuestionText      string                 `json:"questionText"`
+	Category          string                 `json:"category"`
+	IsImage           string                 `json:"isImage"`
+	ImageUrl          string                 `json:"imageUrl"`
+	QuestionType      string                 `json:"questionType"`
+	AcceptableAnswers *string                `json:"acceptableAnswers"` // Hidden in public but needed for validation
+	Options           []OptionPublicResponse `json:"options"`
 }
 
 type AssessmentPublicResponse struct {

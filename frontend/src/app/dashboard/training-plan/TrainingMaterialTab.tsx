@@ -197,10 +197,10 @@ export default function TrainingMaterialTab() {
     try {
       // Combine keyword (deskripsi_perilaku) with optional referensi
       let combinedReferensi = item.deskripsi_perilaku || "";
-      
+
       // Use existing referensi or generate default
       const referensiToUse = item.referensi || generateDefaultReferensi(item);
-      
+
       if (referensiToUse) {
         combinedReferensi = combinedReferensi
           ? `${combinedReferensi}\n\nReferensi Tambahan:\n${referensiToUse}`
@@ -555,7 +555,9 @@ yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topi
                                   onClick={() => {
                                     setSelectedTraining(item);
                                     // Use existing referensi or generate default
-                                    setTempReferensi(item.referensi || generateDefaultReferensi(item));
+                                    setTempReferensi(
+                                      item.referensi || generateDefaultReferensi(item)
+                                    );
                                   }}
                                 >
                                   {item.referensi ? "Edit" : "Tambah"}

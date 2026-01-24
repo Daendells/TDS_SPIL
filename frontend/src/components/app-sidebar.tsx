@@ -1,6 +1,15 @@
 "use client";
 
-import { LaptopMinimal, ChevronUp, Inbox, User2, Settings, Calendar, Users } from "lucide-react";
+import {
+  LaptopMinimal,
+  ChevronUp,
+  Inbox,
+  User2,
+  Settings,
+  Calendar,
+  Users,
+  History,
+} from "lucide-react";
 
 import {
   Sidebar,
@@ -63,6 +72,11 @@ const items = [
     title: "User Management",
     url: "/dashboard/users",
     icon: Users,
+  },
+  {
+    title: "Quiz History",
+    url: "/quiz-history",
+    icon: History,
   },
 ];
 

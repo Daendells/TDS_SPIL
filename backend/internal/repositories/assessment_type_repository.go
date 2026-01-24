@@ -24,7 +24,7 @@ func NewAssessmentTypeRepository() AssessmentTypeRepository {
 
 func (repository *assessmentTypeRepositoryImpl) FindAll(db *gorm.DB) ([]domain.AssessmentType, error) {
 	var assessmentTypes []domain.AssessmentType
-	err := db.Find(&assessmentTypes).Error
+	err := db.Preload("Assessments").Find(&assessmentTypes).Error
 	return assessmentTypes, err
 }
 

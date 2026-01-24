@@ -13,6 +13,7 @@ type AssessmentRepository interface {
 	FindAll(db *gorm.DB) ([]domain.Assessment, error)
 	Delete(db *gorm.DB, id uint64) error
 	ExistsByRole(db *gorm.DB, role string) bool
+	FindUnassigned(db *gorm.DB) ([]domain.Assessment, error)
 }
 
 type assessmentRepositoryImpl struct {
@@ -51,4 +52,10 @@ func (repository *assessmentRepositoryImpl) FindAll(db *gorm.DB) ([]domain.Asses
 
 func (repository *assessmentRepositoryImpl) Delete(db *gorm.DB, id uint64) error {
 	return db.Delete(&domain.Assessment{}, id).Error
+}
+
+func (repository *assessmentRepositoryImpl) FindUnassigned(db *gorm.DB) ([]domain.Assessment, error) {
+	var assessments []domain.Assessment
+	err := db.Where("assess_type_id IS NULL").Find(&assessments).Error
+	return assessments, err
 }
