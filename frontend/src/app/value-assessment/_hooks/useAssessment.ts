@@ -26,6 +26,7 @@ export function useGetAssessmentByRole(role: string) {
           return {
             assessmentId: 0,
             role: role,
+            assessmentName: "",
             usingTimer: false,
             timerLimitMinutes: 60,
             questions: [],

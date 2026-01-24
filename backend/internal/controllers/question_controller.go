@@ -153,6 +153,8 @@ func (controller *QuestionController) FindByAssessmentId(ctx *gin.Context) {
 		questionWithOptions := web.QuestionOptionResponse{
 			QuestionId:   question.QuestionID,
 			QuestionText: question.QuestionText,
+			QuestionType: question.QuestionType,
+			AcceptableAnswers: question.AcceptableAnswers,
 			Category:     helpers.PtrToString(question.Category),
 			IsImage:      helpers.PtrToString(question.IsImage),
 			ImageUrl:     helpers.PtrToString(question.ImageURL),

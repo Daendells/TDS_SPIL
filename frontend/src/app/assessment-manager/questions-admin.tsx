@@ -440,39 +440,71 @@ export default function QuestionsAdmin() {
 
                     <Separator className="my-3" />
 
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium">Opsi:</h4>
-                      {question.options.length === 0 ? (
-                        <p className="text-sm text-muted-foreground">Tidak ada opsi tersedia</p>
+                    <div className="mt-4">
+                      <p className="text-sm font-medium mb-2">Opsi:</p>
+
+                      {question.questionType === "short_answer" ? (
+                        <div className="p-3 bg-muted/50 rounded text-sm">
+                          <span className="font-semibold">Kunci Jawaban:</span>{" "}
+                          {question.acceptableAnswers
+                            ? // Try to parse if it looks like JSON array, otherwise display as string
+                              question.acceptableAnswers.startsWith("[")
+                              ? (() => {
+                                  try {
+                                    return JSON.parse(question.acceptableAnswers).join(", ");
+                                  } catch {
+                                    return question.acceptableAnswers;
+                                  }
+                                })()
+                              : question.acceptableAnswers
+                            : "-"}
+                        </div>
                       ) : (
-                        <div className="grid gap-2">
-                          {question.options.map((option) => (
-                            <div
-                              key={option.optionId}
-                              className="flex items-center justify-between p-2 bg-muted/50 rounded"
-                            >
-                              <div className="flex items-center gap-2">
-                                <Badge variant="outline" className="text-xs">
-                                  {option.optionLetter.toUpperCase()}
-                                </Badge>
-                                <div className="flex flex-col gap-2">
-                                  {isValidImageUrl(option.imageUrl) && (
-                                    <Image
-                                      src={BASE_URL + option.imageUrl}
-                                      alt={option.optionLetter}
-                                      width={300}
-                                      height={200}
-                                      className="rounded"
-                                    />
-                                  )}
-                                  <span className="text-sm">{option.optionText}</span>
+                        <div className="grid grid-cols-1 gap-2">
+                          {question.options
+                            .filter(
+                              (option) => option.optionText || isValidImageUrl(option.imageUrl)
+                            )
+                            .map((option) => (
+                              <div
+                                key={option.optionId}
+                                className="flex items-center justify-between p-2 bg-muted/50 rounded"
+                              >
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {option.optionLetter.toUpperCase()}
+                                  </Badge>
+                                  <div className="flex flex-col gap-2">
+                                    {isValidImageUrl(option.imageUrl) && (
+                                      <Image
+                                        src={BASE_URL + option.imageUrl}
+                                        alt={option.optionLetter}
+                                        width={300}
+                                        height={200}
+                                        className="rounded"
+                                      />
+                                    )}
+                                    <span className="text-sm">{option.optionText}</span>
+                                  </div>
                                 </div>
+
+                                {question.questionType === "multiple_choice" ||
+                                question.questionType === "match_choice" ? (
+                                  <Checkbox
+                                    checked={(option.score || 0) > 0}
+                                    disabled
+                                    className="data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground"
+                                  />
+                                ) : (
+                                  <Badge
+                                    variant={(option.score || 0) > 0 ? "default" : "secondary"}
+                                    className="text-xs"
+                                  >
+                                    Skor: {option.score || 0}
+                                  </Badge>
+                                )}
                               </div>
-                              <Badge variant="secondary" className="text-xs">
-                                Skor: {option.score}
-                              </Badge>
-                            </div>
-                          ))}
+                            ))}
                         </div>
                       )}
                     </div>
@@ -497,9 +529,12 @@ export default function QuestionsAdmin() {
                 isImage: editingQuestion.isImage.toString(),
                 imageUrl: editingQuestion.imageUrl,
                 aspectId: editingQuestion.aspectId,
+                questionType: editingQuestion.questionType,
+                acceptableAnswers: editingQuestion.acceptableAnswers,
                 options: editingQuestion.options.map((option) => ({
                   ...option,
                   score: option.score ?? 0,
+                  scorePercentage: 0,
                 })),
               }
             : null

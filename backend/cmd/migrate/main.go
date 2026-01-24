@@ -73,6 +73,7 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.Option{},
 		&domain.AssessmentResult{},
 		&domain.UserAnswer{},
+		&domain.QuizAttempt{},
 
 		// Final dependent tables
 		&domain.ScoreResult{},

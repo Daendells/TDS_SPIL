@@ -8,6 +8,9 @@ type AssessmentType struct {
 	StartTime            *time.Time `gorm:"column:start_time" json:"startTime"`
 	EndTime              *time.Time `gorm:"column:end_time" json:"endTime"`
 	MaxAttempts          *int       `gorm:"column:max_attempts" json:"maxAttempts"`
+
+	// Relations
+	Assessments []Assessment `gorm:"foreignKey:AssessTypeID" json:"assessments,omitempty"`
 }
 
 func (AssessmentType) TableName() string {

@@ -20,6 +20,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 
 import { Plus, Trash2, Upload, X } from "lucide-react";
 import Image from "next/image";
@@ -34,12 +35,13 @@ interface Option {
   optionLetter: string;
   optionText: string;
   score: number;
+  scorePercentage: number; // Moodle-style: +100 for correct, negative for wrong
   isImage: number;
   imageUrl?: string;
   imageFile?: File | null;
   imagePreview?: string;
-  action?: "create" | "update" | "delete"; // Track operation type
-  isNew?: boolean; // Track if this is a newly added option
+  action?: "create" | "update" | "delete";
+  isNew?: boolean;
 }
 
 interface Question {
@@ -51,7 +53,16 @@ interface Question {
   imageUrl?: string;
   options?: Option[];
   aspectId?: number;
+  questionType?: string;
+  acceptableAnswers?: string;
 }
+
+const QUESTION_TYPES = [
+  { value: "single_choice", label: "Pilihan Tunggal (Single Choice)" },
+  { value: "multiple_choice", label: "Pilihan Ganda (Multiple Choice)" },
+  { value: "match_choice", label: "Pilihan Berpasangan (2 Jawaban Benar)" },
+  { value: "short_answer", label: "Isian Singkat (Short Answer)" },
+] as const;
 
 interface QuestionDialogProps {
   open: boolean;
@@ -113,6 +124,8 @@ export default function QuestionDialog({
     isImage: "0",
     imageUrl: "",
     aspectId: 0,
+    questionType: "single_choice",
+    acceptableAnswers: "", // JSON array string for short_answer
   });
   const [options, setOptions] = useState<Option[]>([]);
 
@@ -127,23 +140,69 @@ export default function QuestionDialog({
     if (open) {
       if (question) {
         // Editing existing question
+        // Infer question type from options if it appears to be single_choice but has multiple correct answers
+        // This handles legacy data or cases where questionType might be missing
+        // Also handle cases where scorePercentage is 0 but score is > 0
+        let inferredType = question.questionType || "single_choice";
+        if (
+          (!question.questionType || question.questionType === "single_choice") &&
+          question.options &&
+          question.options.length > 0
+        ) {
+          const correctCount = question.options.filter(
+            (o) => (o.scorePercentage || o.score || 0) > 0
+          ).length;
+          if (
+            correctCount === 2 &&
+            question.options.every(
+              (o) =>
+                (o.scorePercentage || o.score || 0) === 0 ||
+                (o.scorePercentage || o.score || 0) === 50
+            )
+          ) {
+            inferredType = "match_choice";
+          } else if (correctCount > 1) {
+            inferredType = "multiple_choice";
+          }
+        }
+
         setFormData({
           questionText: question.questionText,
           category: question.category || "",
           isImage: question.isImage || "0",
           imageUrl: question.imageUrl || "",
           aspectId: question.aspectId || 0,
+          questionType: inferredType,
+          acceptableAnswers: question.acceptableAnswers || "",
         });
 
         // If question has existing image, don't show preview (keep as URL only)
         setQuestionImageFile(null);
         setQuestionImagePreview("");
 
-        const existingOptions = (question.options || []).map((option) => ({
+        let existingOptions = (question.options || []).map((option) => ({
           ...option,
+          scorePercentage: option.scorePercentage || option.score || 0,
           action: "update" as const,
           isNew: false,
         }));
+
+        // Recalculate percentages for multiple/match choice to ensure correct display
+        if (inferredType === "multiple_choice" || inferredType === "match_choice") {
+          const selectedIndices = existingOptions
+            .map((opt, i) => (opt.scorePercentage > 0 ? i : -1))
+            .filter((i) => i !== -1);
+
+          if (selectedIndices.length > 0) {
+            const newPercentage = 100 / selectedIndices.length;
+            existingOptions = existingOptions.map((opt, i) => {
+              if (selectedIndices.includes(i)) {
+                return { ...opt, scorePercentage: newPercentage };
+              }
+              return opt;
+            });
+          }
+        }
 
         setOptions(existingOptions);
       } else {
@@ -155,6 +214,8 @@ export default function QuestionDialog({
           isImage: "0",
           imageUrl: "",
           aspectId: 0,
+          questionType: "single_choice",
+          acceptableAnswers: "",
         });
 
         // Reset image upload state for new question
@@ -165,6 +226,7 @@ export default function QuestionDialog({
           optionLetter: letter,
           optionText: defaults.defaultTexts[index],
           score: defaults.defaultScores[index],
+          scorePercentage: defaults.defaultScores[index] > 0 ? 100 : 0, // Default: first correct option is 100%
           isImage: 0,
           action: "create" as const,
           isNew: true,
@@ -215,14 +277,35 @@ export default function QuestionDialog({
       return;
     }
 
-    if (options.length === 0) {
+    if (formData.questionType !== "short_answer" && options.length === 0) {
       toast.error("At least one option is required");
+      return;
+    }
+
+    if (formData.questionType === "short_answer" && !formData.acceptableAnswers) {
+      toast.error("Acceptable answers are required for short answer questions");
       return;
     }
 
     if (role === "va_1" && !formData.category) {
       toast.error("Category is required for VA_1 questions");
       return;
+    }
+
+    if (formData.questionType === "match_choice") {
+      const correctOptions = options.filter((opt) => opt.scorePercentage > 0);
+      if (correctOptions.length !== 2) {
+        toast.error("Untuk Pilihan Berpasangan, harus ada tepat 2 jawaban benar.");
+        return;
+      }
+    }
+
+    if (formData.questionType === "multiple_choice") {
+      const correctOptions = options.filter((opt) => opt.scorePercentage > 0);
+      if (correctOptions.length < 1) {
+        toast.error("Pilih setidaknya satu jawaban benar.");
+        return;
+      }
     }
 
     setLoading(true);
@@ -242,7 +325,7 @@ export default function QuestionDialog({
       }
 
       // Upload option images if any
-      const optionsWithUploadedImages = await Promise.all(
+      let optionsWithUploadedImages = await Promise.all(
         options.map(async (option) => {
           let optionImageUrl = option.imageUrl || "";
 
@@ -264,8 +347,27 @@ export default function QuestionDialog({
         })
       );
 
+      // Normalize scores for match_choice to ensure 50-50 split regardless of previous state
+      if (formData.questionType === "match_choice") {
+        optionsWithUploadedImages = optionsWithUploadedImages.map((opt) => ({
+          ...opt,
+          scorePercentage: opt.scorePercentage > 0 ? 50 : 0,
+          score: opt.scorePercentage > 0 ? 1 : 0,
+        }));
+      }
+
       if (question?.questionId) {
         // Update existing question using combined endpoint
+        // Convert acceptable answers from comma-separated to JSON array
+        let acceptableAnswersJson: string | null = null;
+        if (formData.questionType === "short_answer" && formData.acceptableAnswers) {
+          const answers = formData.acceptableAnswers
+            .split(",")
+            .map((a) => a.trim())
+            .filter((a) => a);
+          acceptableAnswersJson = JSON.stringify(answers);
+        }
+
         const updateData = {
           role,
           assessmentId,
@@ -274,6 +376,8 @@ export default function QuestionDialog({
           isImage: formData.isImage,
           imageUrl: imageUrl || null,
           aspectId: formData.aspectId || null,
+          questionType: formData.questionType,
+          acceptableAnswers: acceptableAnswersJson,
           options: optionsWithUploadedImages.map((option) => {
             // Determine action based on option state
             let action = option.action || "update";
@@ -288,6 +392,7 @@ export default function QuestionDialog({
               optionLetter: option.optionLetter,
               optionText: option.optionText,
               score: option.score,
+              scorePercentage: option.scorePercentage,
               isImage: option.isImage,
               imageUrl: option.imageUrl || null,
               action: action,
@@ -299,6 +404,16 @@ export default function QuestionDialog({
         toast.success("Pertanyaan berhasil diperbarui");
       } else {
         // Create new question using combined endpoint
+        // Convert acceptable answers from comma-separated to JSON array
+        let createAcceptableAnswersJson: string | null = null;
+        if (formData.questionType === "short_answer" && formData.acceptableAnswers) {
+          const answers = formData.acceptableAnswers
+            .split(",")
+            .map((a) => a.trim())
+            .filter((a) => a);
+          createAcceptableAnswersJson = JSON.stringify(answers);
+        }
+
         const createData = {
           role,
           assessmentId,
@@ -307,10 +422,13 @@ export default function QuestionDialog({
           isImage: formData.isImage,
           imageUrl: imageUrl || "",
           aspectId: formData.aspectId || null,
+          questionType: formData.questionType,
+          acceptableAnswers: createAcceptableAnswersJson,
           options: optionsWithUploadedImages.map((option) => ({
             optionLetter: option.optionLetter,
             optionText: option.optionText,
             score: option.score,
+            scorePercentage: option.scorePercentage,
             isImage: option.isImage,
             imageUrl: option.imageUrl || null,
           })),
@@ -340,6 +458,7 @@ export default function QuestionDialog({
         optionLetter: nextLetter,
         optionText: `Opsi ${nextLetter.toUpperCase()}`,
         score: 0,
+        scorePercentage: 0,
         isImage: 0,
         action: "create" as const,
         isNew: true,
@@ -364,6 +483,39 @@ export default function QuestionDialog({
     const updatedOptions = [...options];
     updatedOptions[index] = { ...updatedOptions[index], [field]: value };
     setOptions(updatedOptions);
+  };
+
+  const updateOptionFields = (index: number, updates: Partial<Option>) => {
+    const updatedOptions = [...options];
+    updatedOptions[index] = { ...updatedOptions[index], ...updates };
+    setOptions(updatedOptions);
+  };
+
+  const handleMultipleChoiceChange = (index: number, checked: boolean) => {
+    const currentOptions = [...options];
+    const selectedIndices = new Set<number>();
+
+    // Determine which indices will be selected after this change
+    currentOptions.forEach((opt, i) => {
+      if (i === index) {
+        if (checked) selectedIndices.add(i);
+      } else {
+        if (opt.scorePercentage > 0) selectedIndices.add(i);
+      }
+    });
+
+    const count = selectedIndices.size;
+    const newPercentage = count > 0 ? 100 / count : 0;
+
+    const newOptions = currentOptions.map((opt, i) => {
+      if (selectedIndices.has(i)) {
+        return { ...opt, scorePercentage: newPercentage, score: 1 };
+      } else {
+        return { ...opt, scorePercentage: 0, score: 0 };
+      }
+    });
+
+    setOptions(newOptions);
   };
 
   const handleOptionImageChange = (e: React.ChangeEvent<HTMLInputElement>, index: number) => {
@@ -441,6 +593,57 @@ export default function QuestionDialog({
                     className="min-h-[120px] mt-2"
                   />
                 </div>
+
+                <div>
+                  <Label htmlFor="questionType" className="text-sm font-medium">
+                    Tipe Pertanyaan <span className="text-red-500">*</span>
+                  </Label>
+                  <Select
+                    value={formData.questionType}
+                    onValueChange={(value) => setFormData({ ...formData, questionType: value })}
+                  >
+                    <SelectTrigger className="mt-2">
+                      <SelectValue placeholder="Pilih tipe pertanyaan..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {QUESTION_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-gray-500 mt-1">
+                    {formData.questionType === "single_choice" &&
+                      "Satu jawaban benar dari beberapa pilihan"}
+                    {formData.questionType === "multiple_choice" &&
+                      "Beberapa jawaban benar, skor persentase per opsi"}
+                    {formData.questionType === "match_choice" &&
+                      "Harus memilih tepat 2 jawaban yang benar"}
+                    {formData.questionType === "short_answer" &&
+                      "Jawaban teks bebas, cocokkan dengan jawaban yang diterima"}
+                  </p>
+                </div>
+
+                {formData.questionType === "short_answer" && (
+                  <div>
+                    <Label htmlFor="acceptableAnswers" className="text-sm font-medium">
+                      Jawaban yang Diterima (pisahkan dengan koma)
+                    </Label>
+                    <Input
+                      id="acceptableAnswers"
+                      value={formData.acceptableAnswers}
+                      onChange={(e) =>
+                        setFormData({ ...formData, acceptableAnswers: e.target.value })
+                      }
+                      placeholder="jawaban1, jawaban2, jawaban3..."
+                      className="mt-2"
+                    />
+                    <p className="text-xs text-gray-500 mt-1">
+                      Jawaban tidak case-sensitive. Pisahkan beberapa jawaban dengan koma.
+                    </p>
+                  </div>
+                )}
 
                 {aspectsData && aspectsData.length > 0 && (
                   <div>
@@ -540,116 +743,192 @@ export default function QuestionDialog({
             </div>
           </div>
 
-          {/* Right Column - Options */}
-          <div className="flex flex-col gap-6">
-            <div className="border rounded-xl shadow-sm p-6 bg-white h-full">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-bold text-lg">Opsi Jawaban</h2>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={addOption}
-                  className="flex items-center gap-2"
-                >
-                  <Plus className="h-4 w-4" />
-                  Tambah Opsi
-                </Button>
-              </div>
+          {/* Right Column - Options (Hidden for Short Answer) */}
+          {formData.questionType !== "short_answer" && (
+            <div className="flex flex-col gap-6">
+              <div className="border rounded-xl shadow-sm p-6 bg-white h-full">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-bold text-lg">Opsi Jawaban</h2>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={addOption}
+                    className="flex items-center gap-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    Tambah Opsi
+                  </Button>
+                </div>
 
-              <div className="space-y-3 h-full overflow-y-auto">
-                {options.map((option, index) => (
-                  <div key={index} className="border rounded-lg p-4 bg-gray-50">
-                    <div className="flex items-center justify-between mb-3">
-                      <Badge variant="outline" className="bg-white">
-                        Opsi {option.optionLetter.toUpperCase()}
-                      </Badge>
-                      {options.length > 1 && (
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => removeOption(index)}
-                          className="text-red-600 hover:text-red-700"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
-                    </div>
-
-                    <div className="space-y-3">
-                      <div>
-                        <Label className="text-sm font-medium">Teks Opsi</Label>
-                        <Input
-                          value={option.optionText}
-                          onChange={(e) => updateOption(index, "optionText", e.target.value)}
-                          placeholder="Masukkan teks opsi..."
-                          className="mt-1"
-                        />
-                      </div>
-                      <div>
-                        <Label className="text-sm font-medium">Skor</Label>
-                        <Input
-                          type="number"
-                          value={option.score === 0 ? "" : option.score}
-                          onChange={(e) => {
-                            const value = e.target.value;
-                            updateOption(index, "score", value === "" ? 0 : parseInt(value));
-                          }}
-                          onWheel={(e) => e.currentTarget.blur()}
-                          placeholder="0"
-                          className="mt-1 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-                        />
-                      </div>
-
-                      {/* Image Upload for Option */}
-                      <div>
-                        <Label className="text-sm font-medium mb-2 block">
-                          Gambar Opsi (Opsional)
-                        </Label>
-
-                        {option.imagePreview && (
-                          <div className="relative w-full h-28 bg-gray-100 rounded-lg overflow-hidden mb-2">
-                            <Image
-                              src={option.imagePreview}
-                              alt={`Preview Opsi ${option.optionLetter}`}
-                              fill
-                              unoptimized
-                              className="object-cover"
-                            />
-                            <button
-                              onClick={() => handleRemoveOptionImage(index)}
-                              className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
-                              type="button"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </div>
+                <div className="space-y-3 h-full overflow-y-auto">
+                  {options.map((option, index) => (
+                    <div key={index} className="border rounded-lg p-4 bg-gray-50">
+                      <div className="flex items-center justify-between mb-3">
+                        <Badge variant="outline" className="bg-white">
+                          Opsi {option.optionLetter.toUpperCase()}
+                        </Badge>
+                        {options.length > 1 && (
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => removeOption(index)}
+                            className="text-red-600 hover:text-red-700"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
                         )}
+                      </div>
 
-                        <label
-                          htmlFor={`optionImage-${index}`}
-                          className="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 bg-gray-50"
-                        >
-                          <div className="flex flex-col items-center justify-center pt-3 pb-3">
-                            <Upload className="h-5 w-5 text-gray-400 mb-1" />
-                            <p className="text-xs text-gray-500">Klik untuk upload</p>
-                          </div>
+                      <div className="space-y-3">
+                        <div>
+                          <Label className="text-sm font-medium">Teks Opsi</Label>
                           <Input
-                            id={`optionImage-${index}`}
-                            type="file"
-                            accept="image/*"
-                            onChange={(e) => handleOptionImageChange(e, index)}
-                            disabled={loading}
-                            className="hidden"
+                            value={option.optionText}
+                            onChange={(e) => updateOption(index, "optionText", e.target.value)}
+                            placeholder="Masukkan teks opsi..."
+                            className="mt-1"
                           />
-                        </label>
+                        </div>
+                        <div>
+                          {formData.questionType === "single_choice" ? (
+                            <>
+                              <Label className="text-sm font-medium">Skor</Label>
+                              <Input
+                                type="number"
+                                value={option.score === 0 ? "" : option.score}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  updateOption(index, "score", value === "" ? 0 : parseInt(value));
+                                }}
+                                onWheel={(e) => e.currentTarget.blur()}
+                                placeholder="0"
+                                className="mt-1 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                            </>
+                          ) : formData.questionType === "match_choice" ? (
+                            <div className="flex items-center space-x-2 mt-4">
+                              <Checkbox
+                                id={`correct-${index}`}
+                                checked={option.scorePercentage > 0}
+                                onCheckedChange={(checked) => {
+                                  if (checked) {
+                                    const currentCheckedCount = options.filter(
+                                      (opt) => opt.scorePercentage > 0
+                                    ).length;
+                                    if (currentCheckedCount >= 2) {
+                                      toast.error("Hanya boleh memilih tepat 2 jawaban benar.");
+                                      return;
+                                    }
+                                  }
+                                  updateOptionFields(index, {
+                                    scorePercentage: checked ? 50 : 0,
+                                    score: checked ? 1 : 0,
+                                  });
+                                }}
+                              />
+                              <Label
+                                htmlFor={`correct-${index}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                Jawaban Benar
+                              </Label>
+                            </div>
+                          ) : formData.questionType === "multiple_choice" ? (
+                            <div className="flex items-center space-x-2 mt-4">
+                              <Checkbox
+                                id={`correct-mc-${index}`}
+                                checked={option.scorePercentage > 0}
+                                onCheckedChange={(checked) => {
+                                  handleMultipleChoiceChange(index, checked as boolean);
+                                }}
+                              />
+                              <Label
+                                htmlFor={`correct-mc-${index}`}
+                                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                              >
+                                Jawaban Benar (
+                                {option.scorePercentage > 0
+                                  ? `${parseFloat(option.scorePercentage.toFixed(2))}%`
+                                  : "0%"}
+                                )
+                              </Label>
+                            </div>
+                          ) : (
+                            <>
+                              <Label className="text-sm font-medium">Persentase Skor (%)</Label>
+                              <Input
+                                type="number"
+                                value={option.scorePercentage === 0 ? "" : option.scorePercentage}
+                                onChange={(e) => {
+                                  const value = e.target.value;
+                                  updateOption(
+                                    index,
+                                    "scorePercentage",
+                                    value === "" ? 0 : parseFloat(value)
+                                  );
+                                }}
+                                onWheel={(e) => e.currentTarget.blur()}
+                                placeholder="Contoh: 33.33 atau -50"
+                                className="mt-1 [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                              />
+                              <p className="text-[10px] text-gray-500 mt-1">
+                                (+) untuk jawaban benar, (-) untuk jawaban salah
+                              </p>
+                            </>
+                          )}
+                        </div>
+
+                        {/* Image Upload for Option */}
+                        <div>
+                          <Label className="text-sm font-medium mb-2 block">
+                            Gambar Opsi (Opsional)
+                          </Label>
+
+                          {option.imagePreview && (
+                            <div className="relative w-full h-28 bg-gray-100 rounded-lg overflow-hidden mb-2">
+                              <Image
+                                src={option.imagePreview}
+                                alt={`Preview Opsi ${option.optionLetter}`}
+                                fill
+                                unoptimized
+                                className="object-cover"
+                              />
+                              <button
+                                onClick={() => handleRemoveOptionImage(index)}
+                                className="absolute top-1 right-1 bg-red-500 text-white rounded-full p-1 hover:bg-red-600"
+                                type="button"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          )}
+
+                          <label
+                            htmlFor={`optionImage-${index}`}
+                            className="flex items-center justify-center w-full h-24 border-2 border-dashed border-gray-300 rounded-lg cursor-pointer hover:border-gray-400 bg-gray-50"
+                          >
+                            <div className="flex flex-col items-center justify-center pt-3 pb-3">
+                              <Upload className="h-5 w-5 text-gray-400 mb-1" />
+                              <p className="text-xs text-gray-500">Klik untuk upload</p>
+                            </div>
+                            <Input
+                              id={`optionImage-${index}`}
+                              type="file"
+                              accept="image/*"
+                              onChange={(e) => handleOptionImageChange(e, index)}
+                              disabled={loading}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
 
         <DialogFooter className="mt-6 pt-4 border-t">

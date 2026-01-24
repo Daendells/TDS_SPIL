@@ -103,6 +103,8 @@ func (controller *AssessmentController) FindByRole (ctx *gin.Context) {
 			Category: helpers.PtrToString(question.Category),
 			IsImage: helpers.PtrToString(question.IsImage),
 			ImageUrl: helpers.PtrToString(question.ImageURL),
+			QuestionType: question.QuestionType,
+			AcceptableAnswers: question.AcceptableAnswers,
 			Options: options,
 		}
 		questionsWithOptions = append(questionsWithOptions, questionWithOptions)
@@ -179,6 +181,7 @@ func (controller *AssessmentController) FindByRolePublic(ctx *gin.Context) {
 			Category: helpers.PtrToString(question.Category),
 			IsImage: helpers.PtrToString(question.IsImage),
 			ImageUrl: helpers.PtrToString(question.ImageURL),
+			QuestionType: question.QuestionType,
 			Options: publicOptions,
 		}
 		questionsWithOptions = append(questionsWithOptions, questionWithOptions)
@@ -366,4 +369,53 @@ func (controller *AssessmentController) UploadAssessmentImage(ctx *gin.Context) 
 		},
 	})
 
+}
+
+func (controller *AssessmentController) FindUnassigned(ctx *gin.Context) {
+	assessments, err := controller.AssessmentService.FindUnassigned(controller.DB)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code: http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error: err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code: http.StatusOK,
+		Status: "Fetch unassigned assessments successfully",
+		Data: assessments,
+	})
+}
+
+func (controller *AssessmentController) AssignToType(ctx *gin.Context) {
+	var request web.AssessmentAssignRequest
+
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code: http.StatusBadRequest,
+			Status: "Bad Request",
+			Error: err.Error(),
+		})
+		return
+	}
+
+	err := controller.AssessmentService.AssignAssessment(controller.DB, request.AssessmentID, request.AssessmentTypeID)
+
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code: http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error: err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code: http.StatusOK,
+		Status: "Assign assessment successfully",
+		Data: nil,
+	})
 }

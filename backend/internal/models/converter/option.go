@@ -7,36 +7,39 @@ import (
 
 func OptionToOptionData(option *domain.Option) web.OptionData {
 	return web.OptionData{
-		OptionID:     option.OptionID,
-		QuestionID:   option.QuestionID,
-		OptionLetter: option.OptionLetter,
-		OptionText:   option.OptionText,
-		Score:        option.Score,
-		IsImage:      option.IsImage,
-		ImageUrl: option.ImageUrl,
+		OptionID:        option.OptionID,
+		QuestionID:      option.QuestionID,
+		OptionLetter:    option.OptionLetter,
+		OptionText:      option.OptionText,
+		Score:           option.Score,
+		ScorePercentage: option.ScorePercentage,
+		IsImage:         option.IsImage,
+		ImageUrl:        option.ImageUrl,
 	}
 }
 
-
 func OptionCreateRequestToOption(request *web.OptionCreateRequest) domain.Option {
 	return domain.Option{
-		QuestionID:   request.QuestionID,
-		OptionLetter: request.OptionLetter,
-		OptionText:   request.OptionText,
-		Score:        request.Score,
-		IsImage:      request.IsImage,
-		ImageUrl:     request.ImageURL,
+		QuestionID:      request.QuestionID,
+		OptionLetter:    request.OptionLetter,
+		OptionText:      request.OptionText,
+		Score:           request.Score,
+		ScorePercentage: request.ScorePercentage,
+		IsImage:         request.IsImage,
+		ImageUrl:        request.ImageURL,
 	}
 }
 
 func OptionUpdateRequestToOption(request *web.OptionUpdateRequest) domain.Option {
 	return domain.Option{
-		OptionID:     request.OptionID,
-		QuestionID:   request.QuestionID,
-		OptionLetter: request.OptionLetter,
-		OptionText:   request.OptionText,
-		Score:        request.Score,
-		IsImage:      request.IsImage,
-		ImageUrl:     request.ImageURL,
+		OptionID:        request.OptionID,
+		QuestionID:      request.QuestionID,
+		OptionLetter:    request.OptionLetter,
+		OptionText:      request.OptionText,
+		Score:           request.Score,
+		ScorePercentage: request.ScorePercentage,
+		IsImage:         request.IsImage,
+		ImageUrl:        request.ImageURL,
 	}
 }
+

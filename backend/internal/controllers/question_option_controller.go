@@ -71,13 +71,15 @@ func (controller *QuestionOptionController) FindAllQuestionsWithOptions(ctx *gin
 		}
 
 		questionWithOptions := web.QuestionWithOptionsData{
-			QuestionId:   question.QuestionID,
-			Role:         question.Role,
-			QuestionText: question.QuestionText,
-			Category:     helpers.PtrToString(question.Category),
-			IsImage:      helpers.PtrToString(question.IsImage),
-			ImageUrl:     helpers.PtrToString(question.ImageURL),
-			Options:      options,
+			QuestionId:        question.QuestionID,
+			Role:              question.Role,
+			QuestionText:      question.QuestionText,
+			QuestionType:      question.QuestionType,
+			AcceptableAnswers: question.AcceptableAnswers,
+			Category:          helpers.PtrToString(question.Category),
+			IsImage:           helpers.PtrToString(question.IsImage),
+			ImageUrl:          helpers.PtrToString(question.ImageURL),
+			Options:           options,
 		}
 
 		questionsWithOptions = append(questionsWithOptions, questionWithOptions)
@@ -135,14 +137,15 @@ func (controller *QuestionOptionController) CreateQuestionWithOptions(ctx *gin.C
 
 	// Create question within transaction
 	questionRequest := web.QuestionCreateRequest{
-		Role:         request.Role,
-		AssessmentID: request.AssessmentID,
-		QuestionText: request.QuestionText,
-		Category:     helpers.StringToPtr(request.Category),
-		IsImage:      helpers.StringToPtr(request.IsImage),
-		ImageURL:     helpers.StringToPtr(request.ImageUrl),
-		AspectID:     aspectID,
-
+		Role:              request.Role,
+		AssessmentID:      request.AssessmentID,
+		QuestionText:      request.QuestionText,
+		QuestionType:      request.QuestionType,
+		AcceptableAnswers: request.AcceptableAnswers,
+		Category:          helpers.StringToPtr(request.Category),
+		IsImage:           helpers.StringToPtr(request.IsImage),
+		ImageURL:          helpers.StringToPtr(request.ImageUrl),
+		AspectID:          aspectID,
 	}
 
 	questionData, err := controller.QuestionService.Create(tx, &questionRequest)
@@ -199,13 +202,15 @@ func (controller *QuestionOptionController) CreateQuestionWithOptions(ctx *gin.C
 
 	// Prepare response
 	questionWithOptions := web.QuestionWithOptionsData{
-		QuestionId:   questionData.QuestionID,
-		Role:         questionData.Role,
-		QuestionText: questionData.QuestionText,
-		Category:     helpers.PtrToString(questionData.Category),
-		IsImage:      helpers.PtrToString(questionData.IsImage),
-		ImageUrl:     helpers.PtrToString(questionData.ImageURL),
-		Options:      createdOptions,
+		QuestionId:        questionData.QuestionID,
+		Role:              questionData.Role,
+		QuestionText:      questionData.QuestionText,
+		QuestionType:      questionData.QuestionType,
+		AcceptableAnswers: questionData.AcceptableAnswers,
+		Category:          helpers.PtrToString(questionData.Category),
+		IsImage:           helpers.PtrToString(questionData.IsImage),
+		ImageUrl:          helpers.PtrToString(questionData.ImageURL),
+		Options:           createdOptions,
 	}
 
 	ctx.JSON(http.StatusCreated, web.SuccessResponse{
@@ -261,11 +266,13 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 		QuestionID:   questionId,
 		Role:         request.Role,
 		AssessmentID: request.AssessmentID,
-		QuestionText: request.QuestionText,
-		Category:     request.Category,
-		IsImage:      request.IsImage,
-		ImageURL:     request.ImageURL,
-		AspectID:     aspectID,
+		QuestionText:      request.QuestionText,
+		QuestionType:      request.QuestionType,
+		AcceptableAnswers: request.AcceptableAnswers,
+		Category:          request.Category,
+		IsImage:           request.IsImage,
+		ImageURL:          request.ImageURL,
+		AspectID:          aspectID,
 	}
 
 	questionData, err := controller.QuestionService.Update(tx, &questionRequest)
@@ -506,13 +513,15 @@ func (controller *QuestionOptionController) UpdateQuestionWithOptions(ctx *gin.C
 
 	// Response
 	questionDataWithOptions := web.QuestionWithOptionsData{
-		QuestionId:   questionData.QuestionID,
-		Role:         questionData.Role,
-		QuestionText: questionData.QuestionText,
-		Category:     helpers.PtrToString(questionData.Category),
-		IsImage:      helpers.PtrToString(questionData.IsImage),
-		ImageUrl:     helpers.PtrToString(questionData.ImageURL),
-		Options:      resultOptions,
+		QuestionId:        questionData.QuestionID,
+		Role:              questionData.Role,
+		QuestionText:      questionData.QuestionText,
+		QuestionType:      questionData.QuestionType,
+		AcceptableAnswers: questionData.AcceptableAnswers,
+		Category:          helpers.PtrToString(questionData.Category),
+		IsImage:           helpers.PtrToString(questionData.IsImage),
+		ImageUrl:          helpers.PtrToString(questionData.ImageURL),
+		Options:           resultOptions,
 	}
 
 	ctx.JSON(http.StatusOK, web.SuccessResponse{

@@ -24,6 +24,7 @@ export function useGetAssessmentByRole(role: string) {
           return {
             assessmentId: 0,
             role: role,
+            assessmentName: "Assessment Not Found",
             usingTimer: false,
             timerLimitMinutes: 60,
             questions: [],
@@ -176,6 +177,27 @@ export function useUploadAssessmentImage() {
       }
 
       return response.data.data;
+    },
+  });
+}
+
+export function useGetUnassignedAssessments() {
+  return useQuery<AssessmentResponse[]>({
+    queryKey: ["assessments", "unassigned"],
+    queryFn: async () => {
+      const response = await api.get<ApiReturn<AssessmentResponse[]>>(
+        "/api/assessments/unassigned-list"
+      );
+      if (!response.data) throw new Error("Failed to fetch unassigned assessments");
+      return response.data.data;
+    },
+  });
+}
+
+export function useAssignAssessment() {
+  return useMutation<void, Error, { assessmentId: number; assessmentTypeId: number | null }>({
+    mutationFn: async ({ assessmentId, assessmentTypeId }) => {
+      await api.post("/api/assessments/assign", { assessmentId, assessmentTypeId });
     },
   });
 }

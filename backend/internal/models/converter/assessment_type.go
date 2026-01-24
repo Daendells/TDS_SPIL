@@ -6,12 +6,20 @@ import (
 )
 
 func AssessmentTypeToAssessmentTypeData(assessmentType *domain.AssessmentType) web.AssessmentTypeData {
+	var assignedAssessments []string
+	if assessmentType.Assessments != nil {
+		for _, assessment := range assessmentType.Assessments {
+			assignedAssessments = append(assignedAssessments, assessment.AssessmentName)
+		}
+	}
+
 	return web.AssessmentTypeData{
 		ID:                 assessmentType.ID,
 		AssessmentTypeName: assessmentType.AssessmentTypeName,
 		StartTime:          assessmentType.StartTime,
 		EndTime:            assessmentType.EndTime,
 		MaxAttempts:        assessmentType.MaxAttempts,
+		AssignedAssessments: assignedAssessments,
 	}
 }
 

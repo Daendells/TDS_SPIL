@@ -8,4 +8,5 @@ type AssessmentTypeData struct {
 	StartTime          *time.Time `json:"startTime"`
 	EndTime            *time.Time `json:"endTime"`
 	MaxAttempts        *int       `json:"maxAttempts"`
+	AssignedAssessments []string `json:"assignedAssessments"`
 }

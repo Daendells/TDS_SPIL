@@ -13,13 +13,16 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Edit, AlertCircle } from "lucide-react";
+import { Edit, AlertCircle, Plus, ExternalLink } from "lucide-react";
 import { useGetAllAssessmentTypes, AssessmentType } from "./_hooks/useAssessmentType";
 import AssessmentTypeEditDialog from "./assessment-type-edit-dialog";
+import AssessmentAssignmentDialog from "./assessment-assignment-dialog";
 import Image from "next/image";
+import Link from "next/link";
 
 export default function AssessmentTypeAdmin() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
+  const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
   const [selectedAssessmentType, setSelectedAssessmentType] = useState<AssessmentType | null>(null);
 
   const { data: assessmentTypes, isLoading, error } = useGetAllAssessmentTypes();
@@ -32,6 +35,21 @@ export default function AssessmentTypeAdmin() {
   const handleEditDialogClose = () => {
     setEditDialogOpen(false);
     setSelectedAssessmentType(null);
+  };
+
+  const handleAssignmentClick = (assessmentType: AssessmentType) => {
+    setSelectedAssessmentType(assessmentType);
+    setAssignmentDialogOpen(true);
+  };
+
+  const handleAssignmentDialogClose = () => {
+    setAssignmentDialogOpen(false);
+    setSelectedAssessmentType(null);
+  };
+
+  const handleCreateClick = () => {
+    setSelectedAssessmentType(null);
+    setEditDialogOpen(true);
   };
 
   const formatDate = (dateString?: string) => {
@@ -50,6 +68,17 @@ export default function AssessmentTypeAdmin() {
     const start = new Date(startTime);
     const end = new Date(endTime);
     return now >= start && now <= end;
+  };
+
+  const getAssessmentLink = (name: string, id: number) => {
+    const lowerName = name.trim().toLowerCase();
+    if (lowerName === "value assessment") {
+      return "/value-assessment";
+    }
+    if (lowerName === "ces") {
+      return "/crew-evaluation-system";
+    }
+    return `/quiz/${id}`;
   };
 
   return (
@@ -77,6 +106,12 @@ export default function AssessmentTypeAdmin() {
             alt="Logo Kanan"
             className="h-12 w-auto ml-auto"
           />
+        </div>
+        <div className="flex justify-end mb-4">
+          <Button onClick={handleCreateClick} className="flex items-center gap-2">
+            <Plus className="h-4 w-4" />
+            Buat Assessment Type Baru
+          </Button>
         </div>
         <Separator />
       </div>
@@ -110,9 +145,11 @@ export default function AssessmentTypeAdmin() {
                 <TableHeader>
                   <TableRow>
                     <TableHead>Nama Assessment</TableHead>
+                    <TableHead>Link</TableHead>
                     <TableHead>Tanggal Mulai</TableHead>
                     <TableHead>Tanggal Berakhir</TableHead>
                     <TableHead>Max Attempts</TableHead>
+                    <TableHead>Assigned Assessments</TableHead>
                     <TableHead>Status</TableHead>
                     <TableHead className="text-right">Aksi</TableHead>
                   </TableRow>
@@ -133,9 +170,41 @@ export default function AssessmentTypeAdmin() {
                         <TableCell className="font-medium">
                           {assessmentType.assessmentTypeName}
                         </TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm" className="h-8 gap-2" asChild>
+                            <Link
+                              href={getAssessmentLink(
+                                assessmentType.assessmentTypeName,
+                                assessmentType.id
+                              )}
+                              target="_blank"
+                            >
+                              Buka
+                              <ExternalLink className="h-3 w-3" />
+                            </Link>
+                          </Button>
+                        </TableCell>
                         <TableCell>{formatDate(assessmentType.startTime)}</TableCell>
                         <TableCell>{formatDate(assessmentType.endTime)}</TableCell>
                         <TableCell>{assessmentType.maxAttempts || "-"}</TableCell>
+                        <TableCell>
+                          {assessmentType.assignedAssessments &&
+                          assessmentType.assignedAssessments.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {assessmentType.assignedAssessments.map((assessmentName, index) => (
+                                <Badge
+                                  key={index}
+                                  variant="outline"
+                                  className="text-xs bg-slate-50"
+                                >
+                                  {assessmentName}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400 italic text-xs">Tidak ada</span>
+                          )}
+                        </TableCell>
                         <TableCell>
                           {isActive && <Badge className="bg-green-100 text-green-800">Aktif</Badge>}
                           {hasNotStarted && (
@@ -149,6 +218,14 @@ export default function AssessmentTypeAdmin() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleAssignmentClick(assessmentType)}
+                            className="hover:bg-blue-50 text-blue-600 mr-1"
+                          >
+                            Kelola Assessment
+                          </Button>
                           <Button
                             variant="ghost"
                             size="sm"
@@ -199,6 +276,16 @@ export default function AssessmentTypeAdmin() {
         assessmentType={selectedAssessmentType}
         onOpenChange={handleEditDialogClose}
       />
+
+      {/* Assignment Dialog */}
+      {selectedAssessmentType && (
+        <AssessmentAssignmentDialog
+          open={assignmentDialogOpen}
+          onOpenChange={handleAssignmentDialogClose}
+          assessmentTypeId={selectedAssessmentType.id}
+          assessmentTypeName={selectedAssessmentType.assessmentTypeName}
+        />
+      )}
     </div>
   );
 }
