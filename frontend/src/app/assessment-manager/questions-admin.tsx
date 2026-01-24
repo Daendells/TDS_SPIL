@@ -13,7 +13,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Plus, Edit, Trash2, Trash, FileText, Settings } from "lucide-react";
+import { Plus, Edit, Trash2, Trash, Settings } from "lucide-react";
 import { toast } from "sonner";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -96,14 +96,6 @@ export default function QuestionsAdmin() {
   const handleAddQuestion = () => {
     setEditingQuestion(null);
     setDialogOpen(true);
-  };
-
-  const handleCrewEvaluationForm = () => {
-    window.open("/crew-evaluation-system", "_blank");
-  };
-
-  const handleValueAssessmentForm = () => {
-    window.open("/value-assessment", "_blank");
   };
 
   const handleConfigClick = () => {
@@ -289,24 +281,6 @@ export default function QuestionsAdmin() {
                   Konfigurasi Assessment
                 </Button>
               </>
-            )}
-            {selectedRole && ["va_1", "va_2", "va_3"].includes(selectedRole) && (
-              <Button
-                onClick={handleValueAssessmentForm}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
-              >
-                <FileText className="h-4 w-4" />
-                Value Assessment Form
-              </Button>
-            )}
-            {selectedRole && !["va_1", "va_2", "va_3"].includes(selectedRole) && (
-              <Button
-                onClick={handleCrewEvaluationForm}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 text-white"
-              >
-                <FileText className="h-4 w-4" />
-                Crew Evaluation Form
-              </Button>
             )}
           </div>
         </CardContent>

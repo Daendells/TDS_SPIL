@@ -55,6 +55,8 @@ type QuizAnswerDetailResponse struct {
 	IsCorrect        bool                 `json:"isCorrect"`
 	ScoreEarned      float64              `json:"scoreEarned"`
 	MaxScore         float64              `json:"maxScore"`
+	AssessmentID     int                  `json:"assessmentId"`
+	AssessmentName   string               `json:"assessmentName"`
 	Options          []OptionHistoryData  `json:"options,omitempty"`
 }
 
@@ -82,6 +84,6 @@ type QuizAssessmentSection struct {
 	AssessmentID      uint64                         `json:"assessmentId"`
 	AssessmentName    string                         `json:"assessmentName"`
 	UsingTimer        bool                           `json:"usingTimer"`
-	TimerLimitMinutes *uint64                        `json:"timerLimitMinutes"`
+	TimerLimitMinutes *float64                        `json:"timerLimitMinutes"`
 	Questions         []QuestionOptionPublicResponse `json:"questions"`
 }

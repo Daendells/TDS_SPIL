@@ -130,10 +130,11 @@ export default function AddAssessmentDialog({
                 <Input
                   id="timerLimit"
                   type="number"
-                  min="1"
+                  step="0.1"
+                  min="0.1"
                   max="480"
                   value={timerLimitMinutes}
-                  onChange={(e) => setTimerLimitMinutes(parseInt(e.target.value))}
+                  onChange={(e) => setTimerLimitMinutes(parseFloat(e.target.value))}
                   disabled={loading}
                 />
                 <p className="text-xs text-gray-500">

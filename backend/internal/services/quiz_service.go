@@ -104,7 +104,7 @@ func (service *quizServiceImpl) GetQuizData(db *gorm.DB, assessmentTypeId uint64
 			totalQuestions++
 		}
 		
-		timerLimit := uint64(0)
+		timerLimit := float64(0)
 		if assessment.TimerLimitMinutes != nil {
 			timerLimit = *assessment.TimerLimitMinutes
 		}
@@ -365,7 +365,8 @@ func (service *quizServiceImpl) GetQuizAttempt(db *gorm.DB, attemptId int) (web.
 	
 	var userAnswers []domain.UserAnswer
 	// Preload Question to get text and type
-	if err := db.Preload("Question").Where("attempt_id = ?", attemptId).Find(&userAnswers).Error; err != nil {
+	// Also Preload Assessment to separate sections
+	if err := db.Preload("Question.Assessment").Where("attempt_id = ?", attemptId).Find(&userAnswers).Error; err != nil {
 		return web.QuizAttemptDetailResponse{}, err
 	}
 	
@@ -433,6 +434,8 @@ func (service *quizServiceImpl) GetQuizAttempt(db *gorm.DB, attemptId int) (web.
 			IsCorrect:         ans.IsCorrect,
 			ScoreEarned:       ans.ScoreEarned,
 			MaxScore:          100.0, // Hardcoded per question
+			AssessmentID:      int(q.Assessment.AssessmentID),
+			AssessmentName:    q.Assessment.AssessmentName,
 			Options:           optionHistory,
 		})
 	}

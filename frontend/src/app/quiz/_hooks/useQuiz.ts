@@ -68,6 +68,8 @@ export type QuizAnswerDetailResponse = {
   isCorrect: boolean;
   scoreEarned: number;
   maxScore: number;
+  assessmentId?: number;
+  assessmentName?: string;
   options?: OptionHistoryData[];
 };
 
