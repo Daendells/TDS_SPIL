@@ -150,6 +150,14 @@ func parseUint64Ptr(s string) *uint64 {
 	return &val
 }
 
+func parseFloat64(s string) *float64 {
+	if s == "" || s == "NULL" {
+		return nil
+	}
+	val, _ := strconv.ParseFloat(s, 64)
+	return &val
+}
+
 func parseBool(s string) bool {
 	s = strings.ToLower(s)
 	return s == "true" || s == "1" || s == "yes"
@@ -236,7 +244,7 @@ func seedAssessmentsFromCSV(db *gorm.DB, filePath string) error {
 			Role:              parseString(record[2]),
 			AssessmentName:    parseString(record[3]),
 			UsingTimer:        parseBool(record[4]),
-			TimerLimitMinutes: parseUint64Ptr(record[5]),
+			TimerLimitMinutes: parseFloat64(record[5]),
 		}
 		if err := db.FirstOrCreate(&assessment, domain.Assessment{AssessmentID: assessment.AssessmentID}).Error; err != nil {
 			return err
