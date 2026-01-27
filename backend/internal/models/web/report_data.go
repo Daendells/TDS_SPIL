@@ -41,13 +41,15 @@ type ReportData struct {
 	HavMapping            string `json:"havMapping" gorm:"column:hav_mapping"`
 	CompetencyGapAnalysis string `json:"competencyGapAnalysis" gorm:"column:competency_gap_analysis"`
 	TotalGap              int    `json:"totalGap" gorm:"column:total_gap"`
-	Strength              int    `json:"strength" gorm:"column:strength"`
+	Strength              string `json:"strength" gorm:"column:strength"`
 	TalentClassified      string `json:"talentClassified" gorm:"column:talent_classified"`
 	IDPProgram            string `json:"idpProgram" gorm:"column:idp_program"`
 	HavQuadran2           int    `json:"havQuadran2" gorm:"column:hav_quadran2"`
 	TalentClassified2     string `json:"talentClassified2" gorm:"column:talent_classified2"`
 	Readiness             string `json:"readiness" gorm:"column:readiness"`
-	TotalReadinessUpdateMonths *int `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness"`
+	ReadinessMonth             *int   `json:"readinessMonth" gorm:"column:readiness_month"`
+	EducationFulfillmentMonths *int   `json:"educationFulfillmentMonths" gorm:"column:education_fulfillment_months"`
+	TotalReadinessUpdateMonths *int   `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness_update_months"`
 	CertificateEligible   string `json:"certificateEligible" gorm:"column:certificate_eligible"`
 
 	// Training, Mentoring, Coaching

@@ -1327,12 +1327,12 @@ export default function MasterPage() {
                       "-"
                     )}
                   </TableCell>
-                  <TableCell className="text-center">{row.totalGap || "-"}</TableCell>
-                  <TableCell className="text-center">{row.strength || "-"}</TableCell>
-                  <TableCell className="text-center">{row.havQuadran2 || "-"}</TableCell>
+                  <TableCell className="text-center">{row.totalGap ?? "-"}</TableCell>
+                  <TableCell className="text-center">{row.strength ?? "-"}</TableCell>
+                  <TableCell className="text-center">{row.havQuadran2 ?? "-"}</TableCell>
                   <TableCell className="text-center">{row.talentClassified || "-"}</TableCell>
                   <TableCell className="text-center">
-                    {row.totalReadinessUpdateMonths || "-"}
+                    {row.totalReadinessUpdateMonths ?? "-"}
                   </TableCell>
                   <TableCell className="text-center">{row.certificateEligible || "-"}</TableCell>
 

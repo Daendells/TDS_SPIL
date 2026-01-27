@@ -51,7 +51,7 @@ type MasterReportData struct {
 	HavMapping                 string               `json:"havMapping"`
 	CompetencyGapAnalysis      string               `json:"competencyGapAnalysis"`
 	TotalGap                   int                  `json:"totalGap"`
-	Strength                   int                  `json:"strength"`
+	Strength                   string               `json:"strength"`
 	TalentClassified           string               `json:"talentClassified"`
 	IDPProgram                 string               `json:"idpProgram"`
 	HavQuadran2                int                  `json:"havQuadran2"`
@@ -154,7 +154,7 @@ type FullReportResponse struct {
 	HavMapping                 *string             `json:"havMapping"`
 	CompetencyGapAnalysis      *string             `json:"competencyGapAnalysis"`
 	TotalGap                   *int                `json:"totalGap"`
-	Strength                   *int                `json:"strength"`
+	Strength                   *string             `json:"strength"`
 	TalentClassified           *string             `json:"talentClassified"`
 	IDPProgram                 *string             `json:"idpProgram"`
 	HavQuadran2                *int                `json:"havQuadran2"`

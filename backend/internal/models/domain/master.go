@@ -24,7 +24,7 @@ type MasterReport struct {
 	HavMapping                 string  `json:"havMapping" gorm:"column:hav_mapping"`
 	CompetencyGapAnalysis      string  `json:"competencyGapAnalysis" gorm:"column:competency_gap_analysis"`
 	TotalGap                   int     `json:"totalGap" gorm:"column:total_gap"`
-	Strength                   int     `json:"strength" gorm:"column:strength"`
+	Strength                   string  `json:"strength" gorm:"column:strength"`
 	TalentClassified           string  `json:"talentClassified" gorm:"column:talent_classified"`
 	IDPProgram                 string  `json:"idpProgram" gorm:"column:idp_program"`
 	HavQuadran2                int     `json:"havQuadran2" gorm:"column:hav_quadran2"`
@@ -74,7 +74,7 @@ type FullReport struct {
 	HavMapping            *string `gorm:"column:hav_mapping;default:null"`
 	CompetencyGapAnalysis *string `gorm:"column:competency_gap_analysis;default:null"`
 	TotalGap              *int    `gorm:"column:total_gap;default:0"`
-	Strength              *int    `gorm:"column:strength;default:0"`
+	Strength              *string `gorm:"column:strength;default:null"`
 	TalentClassified      *string `gorm:"column:talent_classified;default:null"`
 	IDPProgram            *string `gorm:"column:idp_program;default:null"`
 	HavQuadran2           *int    `gorm:"column:hav_quadran2;default:0"`

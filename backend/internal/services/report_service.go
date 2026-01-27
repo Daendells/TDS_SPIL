@@ -169,40 +169,77 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 			continue
 		}
 
-		// Parse all columns from Excel - Following the correct column order from the image
-		// A=0: No. (skip)
-		// B=1: Vessel Name
-		// C=2: Name
-		// D=3: Position
-		// E=4: Seaman Code
-		// F=5: Seafarer Code
-		// G=6: Certificate
-		// H=7: Age
-		// I=8: Value Assessment
-		// N=13: Competency Gap Analysis
-		// O=14: TOTAL GAP
-		// Q=16: Certificate Eligible
-		// S=18: Program
+		// Parse all columns from Excel - Following frontend excel.tsx column order
+		// Col 0: No (skip)
+		// Col 1: Vessel Name
+		// Col 2: Name
+		// Col 3: Position
+		// Col 4: Department (skip - not in model)
+		// Col 5: Seaman Code
+		// Col 6: Seafarer Code
+		// Col 7: Certificate
+		// Col 8: Age
+		// Col 9: Kondite Review
+		// Col 10: KPI Vessel
+		// Col 11: Performance Score
+		// Col 12: Value Assessment
+		// Col 13: Competency Gap Analysis
+		// Col 14: TOTAL GAP
+		// Col 15: Strength Analysis
+		// Col 16: IDP Program
+		// Col 17: HAV Quadran 2
+		// Col 18: Talent Classified 2
+		// Col 19: Readiness (Month)
+		// Col 20: Certificate Eligible
+		// Col 21: Durasi Pemenuhan Pendidikan (Month)
+		// Col 22: Total Readiness Update (Month)
 
 		vesselName := helpers.SanitizeCell(helpers.GetCell(row, 1))
 		nama := helpers.SanitizeCell(helpers.GetCell(row, 2))
 		jabatan := helpers.SanitizeCell(helpers.GetCell(row, 3))
-		seamanCode := helpers.SanitizeCell(helpers.GetCell(row, 4))
-		seafarerCode := helpers.SanitizeCell(helpers.GetCell(row, 5))
-		certificate := helpers.SanitizeCell(helpers.GetCell(row, 6))
-		age := helpers.SanitizeCell(helpers.GetCell(row, 7))
-		valueAssessmentStr := helpers.SanitizeCell(helpers.GetCell(row, 8))
+		seamanCode := helpers.SanitizeCell(helpers.GetCell(row, 5))
+		seafarerCode := helpers.SanitizeCell(helpers.GetCell(row, 6))
+		certificate := helpers.SanitizeCell(helpers.GetCell(row, 7))
+		age := helpers.SanitizeCell(helpers.GetCell(row, 8))
+		konditeReviewStr := helpers.SanitizeCell(helpers.GetCell(row, 9))
+		kpiVesselStr := helpers.SanitizeCell(helpers.GetCell(row, 10))
+		performanceScoreStr := helpers.SanitizeCell(helpers.GetCell(row, 11))
+		valueAssessmentStr := helpers.SanitizeCell(helpers.GetCell(row, 12))
 		competencyGapAnalysis := helpers.SanitizeCell(helpers.GetCell(row, 13))
 		totalGapStr := helpers.SanitizeCell(helpers.GetCell(row, 14))
-		certificateEligible := helpers.SanitizeCell(helpers.GetCell(row, 16))
-		idpProgram := helpers.SanitizeCell(helpers.GetCell(row, 18))
+		strengthStr := helpers.SanitizeCell(helpers.GetCell(row, 15))
+		idpProgram := helpers.SanitizeCell(helpers.GetCell(row, 16))
+		havQuadran2Str := helpers.SanitizeCell(helpers.GetCell(row, 17))
+		talentClassified2 := helpers.SanitizeCell(helpers.GetCell(row, 18))
+		readinessMonthStr := helpers.SanitizeCell(helpers.GetCell(row, 19))
+		certificateEligible := helpers.SanitizeCell(helpers.GetCell(row, 20))
+		educationFulfillmentMonthsStr := helpers.SanitizeCell(helpers.GetCell(row, 21))
+		totalReadinessUpdateMonthsStr := helpers.SanitizeCell(helpers.GetCell(row, 22))
+
+		// DEBUG: Log raw Excel values for specific seafarers
+		if seafarerCode == "6200517179" || seafarerCode == "6200391496" {
+			service.Log.Infof("🔍 Row %d [%s / %s] - READINESS RAW: col19='%s', col20='%s', col21='%s', col22='%s'", 
+				i+1, nama, seafarerCode, readinessMonthStr, certificateEligible, educationFulfillmentMonthsStr, totalReadinessUpdateMonthsStr)
+		}
 
 		// Convert string values to integers with proper error handling
 		totalGap, _ := strconv.Atoi(totalGapStr)
 		valueAssessment, _ := strconv.Atoi(valueAssessmentStr)
+		konditeReview, _ := strconv.Atoi(konditeReviewStr)
+		kpiVessel, _ := strconv.Atoi(kpiVesselStr)
+		performanceScore, _ := strconv.Atoi(performanceScoreStr)
+		// Strength is a string (contains competency codes like "BAC; DCM; ING")
+		strength := strengthStr
+		havQuadran2, _ := strconv.Atoi(havQuadran2Str)
+		readinessMonth, _ := strconv.Atoi(readinessMonthStr)
+		educationFulfillmentMonths, _ := strconv.Atoi(educationFulfillmentMonthsStr)
+		totalReadinessUpdateMonths, _ := strconv.Atoi(totalReadinessUpdateMonthsStr)
 
-		// Fields not in Excel - set to default values
-		// (No additional default fields needed based on the Excel structure)
+		// DEBUG: Log parsed integer values for specific seafarers
+		if seafarerCode == "6200517179" || seafarerCode == "6200391496" {
+			service.Log.Infof("🔍 Row %d [%s / %s] - READINESS PARSED: ReadinessMonth=%d, Education=%d, Total=%d", 
+				i+1, nama, seafarerCode, readinessMonth, educationFulfillmentMonths, totalReadinessUpdateMonths)
+		}
 
 		// Check if report already exists by seafarerCode
 		var existingReport domain.Report
@@ -220,7 +257,7 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 			service.Log.Infof("Row %d - Creating new report for Seafarer Code: %s", i, seafarerCode)
 		}
 
-		// Update all fields from Excel
+		// Update all fields from Excel (non-readiness fields)
 		report.SeamanCode = seamanCode
 		report.SeafarerCode = seafarerCode
 		report.Nama = nama
@@ -228,37 +265,47 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		report.VesselName = vesselName
 		report.Certificate = certificate
 		report.Age = age
+		report.KonditeReview = konditeReview
+		report.KpiVessel = kpiVessel
+		report.PerformanceScore = performanceScore
 		report.ValueAssessment = valueAssessment
 		report.CompetencyGapAnalysis = competencyGapAnalysis
 		report.TotalGap = totalGap
-		report.CertificateEligible = certificateEligible
+		report.Strength = strength
 		report.IDPProgram = idpProgram
+		report.HavQuadran2 = havQuadran2
+		report.TalentClassified2 = talentClassified2
 
-		// Calculate readiness-related fields based on logic
-		// If not updating, set default readiness values
+		// For readiness-related fields:
+		// - NEW reports: Read from Excel
+		// - UPDATE reports: Keep existing values (don't overwrite from Excel)
 		if !isUpdate {
-			// For new reports, set default readiness to "Ready Now"
-			report.Readiness = "Ready Now"
-			zeroMonths := 0
-			report.ReadinessMonth = &zeroMonths
-		}
+			// New report - read readiness fields from Excel
+			report.ReadinessMonth = &readinessMonth
+			report.CertificateEligible = certificateEligible
+			report.EducationFulfillmentMonths = &educationFulfillmentMonths
+			report.TotalReadinessUpdateMonths = &totalReadinessUpdateMonths
 
-		// Calculate education_fulfillment_months based on certificate + idp_program
-		educationMonths := service.calculateEducationFulfillmentMonths(certificate, idpProgram)
-		report.EducationFulfillmentMonths = &educationMonths
-
-		// Calculate total_readiness_update_months
-		readinessMonthValue := 0
-		if report.ReadinessMonth != nil {
-			readinessMonthValue = *report.ReadinessMonth
+			// Set Readiness status based on ReadinessMonth value
+			if readinessMonth == 0 {
+				report.Readiness = "Ready Now"
+			} else if readinessMonth <= 12 {
+				report.Readiness = "Ready 1 Year"
+			} else if readinessMonth <= 24 {
+				report.Readiness = "Ready 2 Years"
+			} else {
+				report.Readiness = "Ready 3+ Years"
+			}
 		}
-		totalReadinessMonths := readinessMonthValue + educationMonths
-		report.TotalReadinessUpdateMonths = &totalReadinessMonths
+		// For UPDATE: readiness fields are preserved from existingReport (already copied above)
 
 		// Log first 3 records for debugging
 		if i <= 3 {
 			service.Log.Infof("Row %d - Name: %s, Vessel: %s, Seaman: %s, Seafarer: %s, Position: %s, ValueAssessment: %d, IsUpdate: %v",
 				i, nama, vesselName, seamanCode, seafarerCode, jabatan, valueAssessment, isUpdate)
+			// Debug: Log readiness values being parsed
+			service.Log.Infof("Row %d - READINESS DEBUG: col19='%s'→ReadinessMonth=%d, col20='%s', col21='%s'→EducationMonths=%d, col22='%s'→TotalReadinessMonths=%d",
+				i, readinessMonthStr, readinessMonth, certificateEligible, educationFulfillmentMonthsStr, educationFulfillmentMonths, totalReadinessUpdateMonthsStr, totalReadinessUpdateMonths)
 		}
 
 		// Save or Update the report

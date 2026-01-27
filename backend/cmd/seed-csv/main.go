@@ -467,7 +467,7 @@ func seedReportsFromCSV(db *gorm.DB, filePath string) error {
 			HavMapping:                 parseString(record[22]),
 			CompetencyGapAnalysis:      parseString(record[23]),
 			TotalGap:                   parseInt(record[24]),
-			Strength:                   parseInt(record[25]),
+			Strength:                   parseString(record[25]),
 			TalentClassified:           parseString(record[26]),
 			IDPProgram:                 parseString(record[27]),
 			HavQuadran2:                parseInt(record[28]),

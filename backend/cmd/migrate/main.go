@@ -126,8 +126,10 @@ BEGIN
         ELSE 0
     END;
 
-    SET NEW.total_readiness_update_months = 
-        COALESCE(NEW.readiness_month, 0) + COALESCE(NEW.education_fulfillment_months, 0);
+    -- DISABLED: total_readiness_update_months is now read directly from Excel upload
+    -- No longer auto-calculated by trigger
+    -- SET NEW.total_readiness_update_months = 
+    --     COALESCE(NEW.readiness_month, 0) + COALESCE(NEW.education_fulfillment_months, 0);
 END`
 
 	if err := db.Exec(triggerInsert).Error; err != nil {

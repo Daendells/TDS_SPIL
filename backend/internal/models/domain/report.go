@@ -34,7 +34,7 @@ type Report struct {
 	HavMapping            string `json:"havMapping" gorm:"column:hav_mapping"`
 	CompetencyGapAnalysis string `json:"competencyGapAnalysis" gorm:"column:competency_gap_analysis"`
 	TotalGap              int    `json:"totalGap" gorm:"column:total_gap"`
-	Strength              int    `json:"strength" gorm:"column:strength"`
+	Strength              string `json:"strength" gorm:"column:strength"`
 	TalentClassified      string `json:"talentClassified" gorm:"column:talent_classified"`
 	IDPProgram            string `json:"idpProgram" gorm:"column:idp_program"`
 	HavQuadran2           int    `json:"havQuadran2" gorm:"column:hav_quadran2"`
