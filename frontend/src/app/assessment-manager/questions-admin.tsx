@@ -225,13 +225,23 @@ export default function QuestionsAdmin() {
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Assessment Manager</h1>
         </div>
-        <Button
-          onClick={() => setAddAssessmentDialogOpen(true)}
-          className="flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Tambah Assessment
-        </Button>
+        <div className="flex items-center gap-3">
+          <Button
+            onClick={() => window.open("/report-mentoring", "_blank")}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            Report Coaching & Mentoring
+          </Button>
+
+          <Button
+            onClick={() => setAddAssessmentDialogOpen(true)}
+            className="flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" />
+            Tambah Assessment
+          </Button>
+        </div>
       </div>
 
       <Card>

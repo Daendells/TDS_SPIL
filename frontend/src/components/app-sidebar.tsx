@@ -90,22 +90,18 @@ export function AppSidebar() {
       <SidebarHeader>
         <SidebarMenu>
           <SidebarMenuItem className="py-2">
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="py-6 px-2">
-                  <div className="flex gap-x-2 items-center">
-                    <Image
-                      src="/images/spil_logo.svg"
-                      alt="Logo SPIL"
-                      width={34}
-                      height={34}
-                      className="mr-2 w-[30%]"
-                    />
-                    <h2 className="text-2xl font-bold text-center">SPIL</h2>
-                  </div>
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-            </DropdownMenu>
+            <SidebarMenuButton className="py-6 px-2">
+              <div className="flex gap-x-2 items-center">
+                <Image
+                  src="/images/spil_logo.svg"
+                  alt="Logo SPIL"
+                  width={34}
+                  height={34}
+                  className="mr-2 w-[30%]"
+                />
+                <h2 className="text-2xl font-bold text-center">SPIL</h2>
+              </div>
+            </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarHeader>
