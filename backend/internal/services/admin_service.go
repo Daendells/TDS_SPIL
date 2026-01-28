@@ -64,6 +64,8 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 		GapCompetencies   int64 `json:"gapCompetencies"`
 		AssessmentResults int64 `json:"assessmentResults"`
 		UserAnswers       int64 `json:"userAnswers"`
+		CoachingReports   int64 `json:"coachingReports"`
+		MentoringReports  int64 `json:"mentoringReports"`
 	}
 
 	tx.Table("reports").Count(&deletedCounts.Reports)
@@ -72,6 +74,8 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 	tx.Table("gap_competencies").Count(&deletedCounts.GapCompetencies)
 	tx.Table("assessment_results").Count(&deletedCounts.AssessmentResults)
 	tx.Table("user_answers").Count(&deletedCounts.UserAnswers)
+	tx.Table("coaching_reports").Count(&deletedCounts.CoachingReports)
+	tx.Table("mentoring_reports").Count(&deletedCounts.MentoringReports)
 
 	if err := tx.Exec("DELETE FROM user_answers").Error; err != nil {
 		tx.Rollback()
@@ -97,6 +101,18 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 		return nil, fmt.Errorf("failed to delete gap_competencies: %w", err)
 	}
 
+	if err := tx.Exec("DELETE FROM coaching_reports").Error; err != nil {
+		tx.Rollback()
+		s.Log.Errorf("Failed to delete coaching_reports: %v", err)
+		return nil, fmt.Errorf("failed to delete coaching_reports: %w", err)
+	}
+
+	if err := tx.Exec("DELETE FROM mentoring_reports").Error; err != nil {
+		tx.Rollback()
+		s.Log.Errorf("Failed to delete mentoring_reports: %v", err)
+		return nil, fmt.Errorf("failed to delete mentoring_reports: %w", err)
+	}
+
 	if err := tx.Exec("DELETE FROM report_scores").Error; err != nil {
 		tx.Rollback()
 		s.Log.Errorf("Failed to delete report_scores: %v", err)
@@ -109,6 +125,8 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 		return nil, fmt.Errorf("failed to delete reports: %w", err)
 	}
 
+		"coaching_reports_deleted":   deletedCounts.CoachingReports,
+		"mentoring_reports_deleted":  deletedCounts.MentoringReports,
 	if err := tx.Commit().Error; err != nil {
 		s.Log.Errorf("Failed to commit transaction: %v", err)
 		return nil, err
