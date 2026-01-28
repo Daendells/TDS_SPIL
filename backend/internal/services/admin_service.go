@@ -125,8 +125,6 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 		return nil, fmt.Errorf("failed to delete reports: %w", err)
 	}
 
-		"coaching_reports_deleted":   deletedCounts.CoachingReports,
-		"mentoring_reports_deleted":  deletedCounts.MentoringReports,
 	if err := tx.Commit().Error; err != nil {
 		s.Log.Errorf("Failed to commit transaction: %v", err)
 		return nil, err
@@ -139,6 +137,8 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 		"gap_competencies_deleted":   deletedCounts.GapCompetencies,
 		"assessment_results_deleted": deletedCounts.AssessmentResults,
 		"user_answers_deleted":       deletedCounts.UserAnswers,
+		"coaching_reports_deleted":   deletedCounts.CoachingReports,
+		"mentoring_reports_deleted":  deletedCounts.MentoringReports,
 	}).Info("Successfully deleted all reports and related data")
 
 	return &web.SuccessResponse{
