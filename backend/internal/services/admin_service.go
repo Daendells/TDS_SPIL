@@ -58,14 +58,15 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 	}
 
 	var deletedCounts struct {
-		Reports           int64 `json:"reports"`
-		ReportScores      int64 `json:"reportScores"`
-		IDPTracking       int64 `json:"idpTracking"`
-		GapCompetencies   int64 `json:"gapCompetencies"`
-		AssessmentResults int64 `json:"assessmentResults"`
-		UserAnswers       int64 `json:"userAnswers"`
-		CoachingReports   int64 `json:"coachingReports"`
-		MentoringReports  int64 `json:"mentoringReports"`
+		Reports                  int64 `json:"reports"`
+		ReportScores             int64 `json:"reportScores"`
+		IDPTracking              int64 `json:"idpTracking"`
+		GapCompetencies          int64 `json:"gapCompetencies"`
+		AssessmentResults        int64 `json:"assessmentResults"`
+		UserAnswers              int64 `json:"userAnswers"`
+		CoachingReports          int64 `json:"coachingReports"`
+		MentoringReports         int64 `json:"mentoringReports"`
+		MentoringReportRelations int64 `json:"mentoringReportRelations"`
 	}
 
 	tx.Table("reports").Count(&deletedCounts.Reports)
@@ -76,6 +77,7 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 	tx.Table("user_answers").Count(&deletedCounts.UserAnswers)
 	tx.Table("coaching_reports").Count(&deletedCounts.CoachingReports)
 	tx.Table("mentoring_reports").Count(&deletedCounts.MentoringReports)
+	tx.Table("mentoring_report_relations").Count(&deletedCounts.MentoringReportRelations)
 
 	if err := tx.Exec("DELETE FROM user_answers").Error; err != nil {
 		tx.Rollback()
@@ -107,6 +109,12 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 		return nil, fmt.Errorf("failed to delete coaching_reports: %w", err)
 	}
 
+	if err := tx.Exec("DELETE FROM mentoring_report_relations").Error; err != nil {
+		tx.Rollback()
+		s.Log.Errorf("Failed to delete mentoring_report_relations: %v", err)
+		return nil, fmt.Errorf("failed to delete mentoring_report_relations: %w", err)
+	}
+
 	if err := tx.Exec("DELETE FROM mentoring_reports").Error; err != nil {
 		tx.Rollback()
 		s.Log.Errorf("Failed to delete mentoring_reports: %v", err)
@@ -131,14 +139,15 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 	}
 
 	s.Log.WithFields(logrus.Fields{
-		"reports_deleted":            deletedCounts.Reports,
-		"report_scores_deleted":      deletedCounts.ReportScores,
-		"idp_tracking_deleted":       deletedCounts.IDPTracking,
-		"gap_competencies_deleted":   deletedCounts.GapCompetencies,
-		"assessment_results_deleted": deletedCounts.AssessmentResults,
-		"user_answers_deleted":       deletedCounts.UserAnswers,
-		"coaching_reports_deleted":   deletedCounts.CoachingReports,
-		"mentoring_reports_deleted":  deletedCounts.MentoringReports,
+		"reports_deleted":                     deletedCounts.Reports,
+		"report_scores_deleted":               deletedCounts.ReportScores,
+		"idp_tracking_deleted":                deletedCounts.IDPTracking,
+		"gap_competencies_deleted":            deletedCounts.GapCompetencies,
+		"assessment_results_deleted":          deletedCounts.AssessmentResults,
+		"user_answers_deleted":                deletedCounts.UserAnswers,
+		"coaching_reports_deleted":            deletedCounts.CoachingReports,
+		"mentoring_reports_deleted":           deletedCounts.MentoringReports,
+		"mentoring_report_relations_deleted": deletedCounts.MentoringReportRelations,
 	}).Info("Successfully deleted all reports and related data")
 
 	return &web.SuccessResponse{
