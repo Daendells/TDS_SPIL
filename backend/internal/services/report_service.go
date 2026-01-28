@@ -216,12 +216,6 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		educationFulfillmentMonthsStr := helpers.SanitizeCell(helpers.GetCell(row, 21))
 		totalReadinessUpdateMonthsStr := helpers.SanitizeCell(helpers.GetCell(row, 22))
 
-		// DEBUG: Log raw Excel values for specific seafarers
-		if seafarerCode == "6200517179" || seafarerCode == "6200391496" {
-			service.Log.Infof("🔍 Row %d [%s / %s] - READINESS RAW: col19='%s', col20='%s', col21='%s', col22='%s'", 
-				i+1, nama, seafarerCode, readinessMonthStr, certificateEligible, educationFulfillmentMonthsStr, totalReadinessUpdateMonthsStr)
-		}
-
 		// Convert string values to integers with proper error handling
 		totalGap, _ := strconv.Atoi(totalGapStr)
 		valueAssessment, _ := strconv.Atoi(valueAssessmentStr)
@@ -234,12 +228,6 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		readinessMonth, _ := strconv.Atoi(readinessMonthStr)
 		educationFulfillmentMonths, _ := strconv.Atoi(educationFulfillmentMonthsStr)
 		totalReadinessUpdateMonths, _ := strconv.Atoi(totalReadinessUpdateMonthsStr)
-
-		// DEBUG: Log parsed integer values for specific seafarers
-		if seafarerCode == "6200517179" || seafarerCode == "6200391496" {
-			service.Log.Infof("🔍 Row %d [%s / %s] - READINESS PARSED: ReadinessMonth=%d, Education=%d, Total=%d", 
-				i+1, nama, seafarerCode, readinessMonth, educationFulfillmentMonths, totalReadinessUpdateMonths)
-		}
 
 		// Check if report already exists by seafarerCode
 		var existingReport domain.Report
@@ -303,9 +291,6 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 		if i <= 3 {
 			service.Log.Infof("Row %d - Name: %s, Vessel: %s, Seaman: %s, Seafarer: %s, Position: %s, ValueAssessment: %d, IsUpdate: %v",
 				i, nama, vesselName, seamanCode, seafarerCode, jabatan, valueAssessment, isUpdate)
-			// Debug: Log readiness values being parsed
-			service.Log.Infof("Row %d - READINESS DEBUG: col19='%s'→ReadinessMonth=%d, col20='%s', col21='%s'→EducationMonths=%d, col22='%s'→TotalReadinessMonths=%d",
-				i, readinessMonthStr, readinessMonth, certificateEligible, educationFulfillmentMonthsStr, educationFulfillmentMonths, totalReadinessUpdateMonthsStr, totalReadinessUpdateMonths)
 		}
 
 		// Save or Update the report

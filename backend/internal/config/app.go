@@ -84,6 +84,7 @@ func Bootstrap(config *BootstrapConfig) {
 	assessmentRepository := repositories.NewAssessmentRepository()
 
 	// --- Services (DB-based)
+	adminService := services.NewAdminService(config.DB, config.Log)
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository, gapCompetencyRepository, seamenCacheRepository, mutationCacheRepository)
 	seamanService := services.NewSeamanService(seamanRepository)
 	userService := services.NewUserService(config.DB, config.Log, config.Validate, config.Config, userRepository)
@@ -143,6 +144,7 @@ func Bootstrap(config *BootstrapConfig) {
 	idpTrackingController := controllers.NewIDPTrackingController(config.Log, idpCalculationService)
 	seamanController := controllers.NewSeamanController(seamanService)
 	quizController := controllers.NewQuizController(config.Log, config.DB, quizService)
+	adminController := controllers.NewAdminController(adminService, config.Log)
 
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(
@@ -190,6 +192,8 @@ func Bootstrap(config *BootstrapConfig) {
 		QuizController:               quizController,
 	}
 	routerConfig.Setup()
+
+	routers.SetupAdminRouter(config.App, adminController)
 
 	// --- Start Cron Service
 	if err := cronService.Start(); err != nil {
