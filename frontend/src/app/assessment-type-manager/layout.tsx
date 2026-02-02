@@ -16,7 +16,7 @@ import { formatSegmet } from "@/lib/utils";
 
 export default function Layout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const segments = pathname.split("/").filter(Boolean);
+  const segments = ["assessment-activation"];
 
   return (
     <SidebarProvider>
