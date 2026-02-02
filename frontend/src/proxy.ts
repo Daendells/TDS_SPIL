@@ -3,7 +3,7 @@ import { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET?.trim());
-export async function middleware(request: NextRequest) {
+export async function proxy(request: NextRequest) {
   const token = request.cookies.get("Authorization")?.value;
   console.log("TOKEN:", token);
   const url = request.nextUrl;

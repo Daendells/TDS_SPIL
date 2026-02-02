@@ -5,6 +5,12 @@ import (
 	"backend/internal/models/web"
 	"backend/internal/repositories"
 	"encoding/json"
+	"fmt"
+	"go/ast"
+	"go/parser"
+	"go/token"
+	"math"
+	"strconv"
 	"strings"
 	"time"
 
@@ -17,6 +23,7 @@ type QuizService interface {
 	SubmitQuiz(db *gorm.DB, request web.QuizSubmitRequest) (web.QuizAttemptResponse, error)
 	GetQuizHistory(db *gorm.DB, seamanCode string) ([]web.QuizAttemptResponse, error)
 	GetQuizAttempt(db *gorm.DB, attemptId int) (web.QuizAttemptDetailResponse, error)
+	ValidateFormula(formula string, testScore, testMaxScore float64) (float64, error)
 }
 
 type quizServiceImpl struct {
@@ -293,8 +300,17 @@ func (service *quizServiceImpl) SubmitQuiz(db *gorm.DB, request web.QuizSubmitRe
 		CompletedAt:      time.Now(),
 	}
 	
-	err = db.Create(&quizAttempt).Error
+	// Start database transaction for atomicity
+	tx := db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	err = tx.Create(&quizAttempt).Error
 	if err != nil {
+		tx.Rollback()
 		return web.QuizAttemptResponse{}, err
 	}
 	
@@ -302,7 +318,22 @@ func (service *quizServiceImpl) SubmitQuiz(db *gorm.DB, request web.QuizSubmitRe
 	attemptIDInt := int(quizAttempt.ID)
 	for i := range userAnswers {
 		userAnswers[i].AttemptID = &attemptIDInt
-		db.Create(&userAnswers[i])
+		if err := tx.Create(&userAnswers[i]).Error; err != nil {
+			tx.Rollback()
+			return web.QuizAttemptResponse{}, err
+		}
+	}
+
+	// Create AssessmentResult and ReportScores
+	err = service.createReportScores(tx, quizAttempt, userAnswers, questionDetailsMap)
+	if err != nil {
+		tx.Rollback()
+		return web.QuizAttemptResponse{}, err
+	}
+
+	// Commit transaction
+	if err = tx.Commit().Error; err != nil {
+		return web.QuizAttemptResponse{}, err
 	}
 	
 	percentageScore := 0.0
@@ -464,4 +495,233 @@ func safeString(s *string) string {
 		return ""
 	}
 	return *s
+}
+
+// createReportScores creates or updates report scores for quiz results
+func (service *quizServiceImpl) createReportScores(tx *gorm.DB, quizAttempt domain.QuizAttempt, userAnswers []domain.UserAnswer, questionDetailsMap map[int]domain.Question) error {
+	// Get assessment type configuration
+	var assessmentType domain.AssessmentType
+	err := tx.Where("id = ?", quizAttempt.AssessmentTypeID).First(&assessmentType).Error
+	if err != nil {
+		return err
+	}
+
+	// Find or create Report for the seaman
+	var report domain.Report
+	err = tx.Where("seaman_code = ? OR seafarer_code = ?", quizAttempt.SeamanCode, quizAttempt.SeamanCode).First(&report).Error
+	
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// Create basic report record for the seaman if not exists
+			report = domain.Report{
+				SeamanCode:   quizAttempt.SeamanCode,
+				SeafarerCode: quizAttempt.SeamanCode,
+			}
+			if err := tx.Create(&report).Error; err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	// Calculate score based on configuration
+	finalScore, err := service.calculateFinalScore(quizAttempt, assessmentType)
+	if err != nil {
+		return err
+	}
+
+	// Create or update ReportScore
+	var reportScore domain.ReportScore
+	err = tx.Where("report_id = ? AND assessment_type_id = ?", report.ID, quizAttempt.AssessmentTypeID).First(&reportScore).Error
+	
+	if err != nil {
+		if err == gorm.ErrRecordNotFound {
+			// Create new ReportScore
+			reportScore = domain.ReportScore{
+				ReportID:         int64(report.ID),
+				AssessmentTypeID: quizAttempt.AssessmentTypeID,
+				Score:            finalScore,
+			}
+			if err := tx.Create(&reportScore).Error; err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	} else {
+		// Update existing ReportScore (take the latest/highest score)
+		if finalScore > reportScore.Score {
+			reportScore.Score = finalScore
+			if err := tx.Save(&reportScore).Error; err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
+// calculateFinalScore calculates the final score based on assessment type configuration
+func (service *quizServiceImpl) calculateFinalScore(quizAttempt domain.QuizAttempt, assessmentType domain.AssessmentType) (int, error) {
+	totalScore := quizAttempt.TotalScore
+	maxScore := quizAttempt.MaxScore
+	
+	// Convert to normalized score (0-100 range for calculation)
+	var normalizedScore float64
+	if maxScore > 0 {
+		normalizedScore = (totalScore / maxScore) * 100
+	} else {
+		normalizedScore = 0
+	}
+	
+	// Default result starts with percentage
+	var result float64 = normalizedScore
+
+	// Apply custom formula if configured
+	if assessmentType.ScoringType == "custom" && assessmentType.ScoringFormula != nil {
+		// For custom formulas, pass the actual raw scores
+		customResult, err := service.evaluateFormula(*assessmentType.ScoringFormula, totalScore, maxScore)
+		if err == nil {
+			result = customResult
+		}
+		// If formula evaluation fails, fallback to default percentage calculation
+	}
+
+	// Apply percentage configuration
+	// if !assessmentType.UsePercentage {
+	// 	// If not using percentage, return raw score
+	// 	result = totalScore
+	// }
+
+	// Round and convert to int
+	return int(math.Round(result)), nil
+}
+
+// evaluateFormula evaluates a custom scoring formula
+// Supported variables: score, max_score
+// Supported operations: +, -, *, /, (), numbers
+func (service *quizServiceImpl) evaluateFormula(formula string, score, maxScore float64) (float64, error) {
+	// Replace variables with actual values using word boundaries to avoid partial replacements
+	scoreStr := service.formatNumber(score)
+	maxScoreStr := service.formatNumber(maxScore)
+	
+	// Use word boundary replacement to avoid replacing part of other words
+	formula = strings.ReplaceAll(formula, "max_score", maxScoreStr) // Replace max_score first
+	formula = strings.ReplaceAll(formula, "score", scoreStr)        // Then replace score
+	
+	// Simple expression evaluation
+	result, err := service.evaluateExpression(formula)
+	if err != nil {
+		return 0, fmt.Errorf("invalid formula: %v", err)
+	}
+	
+	return result, nil
+}
+
+// formatNumber formats a number for the Go parser
+func (service *quizServiceImpl) formatNumber(num float64) string {
+	// If it's a whole number, format as integer to avoid parsing issues
+	if num == math.Trunc(num) {
+		return fmt.Sprintf("%.0f", num)
+	}
+	// Otherwise, format with minimal decimal places
+	return strings.TrimRight(strings.TrimRight(fmt.Sprintf("%.6f", num), "0"), ".")
+}
+
+// evaluateExpression safely evaluates a mathematical expression
+func (service *quizServiceImpl) evaluateExpression(expr string) (float64, error) {
+	// Clean up the expression
+	expr = strings.TrimSpace(expr)
+	if expr == "" {
+		return 0, fmt.Errorf("empty expression")
+	}
+	
+	// Parse the expression as a Go expression
+	parsedExpr, err := parser.ParseExpr(expr)
+	if err != nil {
+		return 0, fmt.Errorf("syntax error in formula: %v", err)
+	}
+	
+	// Evaluate the parsed expression
+	result, err := service.evalNode(parsedExpr)
+	if err != nil {
+		return 0, err
+	}
+	
+	// Check for invalid results
+	if math.IsNaN(result) {
+		return 0, fmt.Errorf("formula resulted in NaN (not a number)")
+	}
+	if math.IsInf(result, 0) {
+		return 0, fmt.Errorf("formula resulted in infinity")
+	}
+	
+	return result, nil
+}
+
+// evalNode evaluates an AST node
+func (service *quizServiceImpl) evalNode(node ast.Node) (float64, error) {
+	switch n := node.(type) {
+	case *ast.BasicLit:
+		if n.Kind == token.INT || n.Kind == token.FLOAT {
+			val, err := strconv.ParseFloat(n.Value, 64)
+			if err != nil {
+				return 0, err
+			}
+			return val, nil
+		}
+		return 0, fmt.Errorf("unsupported literal type")
+		
+	case *ast.BinaryExpr:
+		left, err := service.evalNode(n.X)
+		if err != nil {
+			return 0, err
+		}
+		right, err := service.evalNode(n.Y)
+		if err != nil {
+			return 0, err
+		}
+		
+		switch n.Op {
+		case token.ADD:
+			return left + right, nil
+		case token.SUB:
+			return left - right, nil
+		case token.MUL:
+			return left * right, nil
+		case token.QUO:
+			if right == 0 {
+				return 0, fmt.Errorf("division by zero")
+			}
+			return left / right, nil
+		default:
+			return 0, fmt.Errorf("unsupported operator: %s", n.Op)
+		}
+		
+	case *ast.ParenExpr:
+		return service.evalNode(n.X)
+		
+	case *ast.UnaryExpr:
+		val, err := service.evalNode(n.X)
+		if err != nil {
+			return 0, err
+		}
+		switch n.Op {
+		case token.SUB:
+			return -val, nil
+		case token.ADD:
+			return val, nil
+		default:
+			return 0, fmt.Errorf("unsupported unary operator: %s", n.Op)
+		}
+		
+	default:
+		return 0, fmt.Errorf("unsupported expression type: %T", node)
+	}
+}
+
+// ValidateFormula validates a scoring formula with test values
+func (service *quizServiceImpl) ValidateFormula(formula string, testScore, testMaxScore float64) (float64, error) {
+	return service.evaluateFormula(formula, testScore, testMaxScore)
 }

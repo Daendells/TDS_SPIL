@@ -13,16 +13,18 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Edit, AlertCircle, Plus, ExternalLink } from "lucide-react";
+import { Edit, AlertCircle, Plus, ExternalLink, Calculator } from "lucide-react";
 import { useGetAllAssessmentTypes, AssessmentType } from "./_hooks/useAssessmentType";
 import AssessmentTypeEditDialog from "./assessment-type-edit-dialog";
 import AssessmentAssignmentDialog from "./assessment-assignment-dialog";
+import ScoringConfigDialog from "./scoring-config-dialog";
 import Image from "next/image";
 import Link from "next/link";
 
 export default function AssessmentTypeAdmin() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
+  const [scoringConfigDialogOpen, setScoringConfigDialogOpen] = useState(false);
   const [selectedAssessmentType, setSelectedAssessmentType] = useState<AssessmentType | null>(null);
 
   const { data: assessmentTypes, isLoading, error } = useGetAllAssessmentTypes();
@@ -44,6 +46,16 @@ export default function AssessmentTypeAdmin() {
 
   const handleAssignmentDialogClose = () => {
     setAssignmentDialogOpen(false);
+    setSelectedAssessmentType(null);
+  };
+
+  const handleScoringConfigClick = (assessmentType: AssessmentType) => {
+    setSelectedAssessmentType(assessmentType);
+    setScoringConfigDialogOpen(true);
+  };
+
+  const handleScoringConfigDialogClose = () => {
+    setScoringConfigDialogOpen(false);
     setSelectedAssessmentType(null);
   };
 
@@ -129,7 +141,7 @@ export default function AssessmentTypeAdmin() {
             </div>
           ) : error ? (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex gap-3">
-              <AlertCircle className="h-5 w-5 text-red-500 flex-shrink-0" />
+              <AlertCircle className="h-5 w-5 text-red-500 shrink-0" />
               <div>
                 <p className="text-sm font-medium text-red-900">Gagal memuat assessment types</p>
                 <p className="text-sm text-red-700">Silakan coba lagi nanti</p>
@@ -218,22 +230,35 @@ export default function AssessmentTypeAdmin() {
                           )}
                         </TableCell>
                         <TableCell className="text-right">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleAssignmentClick(assessmentType)}
-                            className="hover:bg-blue-50 text-blue-600 mr-1"
-                          >
-                            Kelola Assessment
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleEditClick(assessmentType)}
-                            className="hover:bg-gray-100"
-                          >
-                            <Edit className="h-4 w-4" />
-                          </Button>
+                          <div className="flex justify-end gap-1">
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleScoringConfigClick(assessmentType)}
+                              className="hover:bg-purple-50 text-purple-600"
+                              title="Configure Scoring"
+                            >
+                              <Calculator className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleAssignmentClick(assessmentType)}
+                              className="hover:bg-blue-50 text-blue-600"
+                              title="Kelola Assessment"
+                            >
+                              Kelola
+                            </Button>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleEditClick(assessmentType)}
+                              className="hover:bg-gray-100"
+                              title="Edit Assessment Type"
+                            >
+                              <Edit className="h-4 w-4" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     );
@@ -267,6 +292,10 @@ export default function AssessmentTypeAdmin() {
             • <span className="font-medium">Max Attempts:</span> Batas maksimal user dapat mencoba
             assessment
           </p>
+          <p>
+            • <span className="font-medium">Configure Scoring:</span> Atur cara menghitung skor
+            (default/custom formula)
+          </p>
         </CardContent>
       </Card>
 
@@ -282,6 +311,16 @@ export default function AssessmentTypeAdmin() {
         <AssessmentAssignmentDialog
           open={assignmentDialogOpen}
           onOpenChange={handleAssignmentDialogClose}
+          assessmentTypeId={selectedAssessmentType.id}
+          assessmentTypeName={selectedAssessmentType.assessmentTypeName}
+        />
+      )}
+
+      {/* Scoring Configuration Dialog */}
+      {selectedAssessmentType && (
+        <ScoringConfigDialog
+          open={scoringConfigDialogOpen}
+          onOpenChange={handleScoringConfigDialogClose}
           assessmentTypeId={selectedAssessmentType.id}
           assessmentTypeName={selectedAssessmentType.assessmentTypeName}
         />
