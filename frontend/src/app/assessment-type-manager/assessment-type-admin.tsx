@@ -106,7 +106,7 @@ export default function AssessmentTypeAdmin() {
             className="h-12 w-auto"
           />
           <div>
-            <h1 className="text-3xl font-bold tracking-tight">Assessment Type Manager</h1>
+            <h1 className="text-3xl font-bold tracking-tight">Assessment Activation</h1>
             <p className="text-gray-500 mt-1">
               Kelola tanggal, durasi, dan maksimal attempts untuk setiap assessment
             </p>
