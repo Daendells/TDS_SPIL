@@ -145,6 +145,7 @@ func Bootstrap(config *BootstrapConfig) {
 	seamanController := controllers.NewSeamanController(seamanService)
 	quizController := controllers.NewQuizController(config.Log, config.DB, quizService)
 	adminController := controllers.NewAdminController(adminService, config.Log)
+	scoringConfigController := controllers.NewScoringConfigController(config.Log, config.DB, quizService)
 
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(
@@ -190,6 +191,7 @@ func Bootstrap(config *BootstrapConfig) {
 		IDPTrackingController:        idpTrackingController,
 		SeamanController:             seamanController,
 		QuizController:               quizController,
+		ScoringConfigController:      scoringConfigController,
 	}
 	routerConfig.Setup()
 

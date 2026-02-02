@@ -31,6 +31,7 @@ type RouterConfig struct {
 	IDPTrackingController        *controllers.IDPTrackingController
 	SeamanController             *controllers.SeamanController
 	QuizController               *controllers.QuizController
+	ScoringConfigController      *controllers.ScoringConfigController
 	AuthMiddleware               gin.HandlerFunc
 }
 
@@ -46,6 +47,7 @@ func (c *RouterConfig) Setup() {
 
 	c.SetupMasterRouter()
 	c.SetupQuizRouter()
+	c.SetupScoringConfigRouter()
 }
 
 func (c *RouterConfig) SetupGuestRouter() {
@@ -297,5 +299,14 @@ func (r *RouterConfig) SetupQuizRouter() {
 		group.GET("/history/:attemptId", r.QuizController.GetQuizAttempt)
 		group.GET("/:assessmentTypeId", r.QuizController.GetQuizData)
 		group.POST("/submit", r.QuizController.SubmitQuiz)
+	}
+}
+
+func (r *RouterConfig) SetupScoringConfigRouter() {
+	group := r.App.Group("/api/scoring-config")
+	{
+		group.GET("/:assessmentTypeId", r.ScoringConfigController.GetScoringConfig)
+		group.PUT("/:assessmentTypeId", r.ScoringConfigController.UpdateScoringConfig)
+		group.POST("/validate-formula", r.ScoringConfigController.ValidateFormula)
 	}
 }
