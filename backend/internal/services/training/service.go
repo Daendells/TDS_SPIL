@@ -32,10 +32,10 @@ type Service struct {
 
 func NewTrainingService(log *logrus.Logger, apiKey, model, pubBase string) *Service {
 	if apiKey == "" {
-		log.Warn("GROQ_API_KEY kosong - panggilan LLM akan gagal")
+		log.Warn("GEMINI_API_KEY kosong - panggilan LLM akan gagal")
 	}
 	if model == "" {
-		model = "llama-3.3-70b-versatile"
+		model = "gemini-2.0-flash"
 	}
 	if pubBase == "" {
 		pubBase = "http://localhost:8080"
@@ -46,7 +46,7 @@ func NewTrainingService(log *logrus.Logger, apiKey, model, pubBase string) *Serv
 
 	return &Service{
 		log:     log,
-		http:    &http.Client{Timeout: 120 * time.Second},
+		http:    &http.Client{Timeout: 180 * time.Second},
 		apiKey:  apiKey,
 		model:   model,
 		pubBase: strings.TrimRight(pubBase, "/"),
@@ -718,28 +718,37 @@ func extractOptionalReferensi(referensi string) string {
 	return optional
 }
 
-func (s *Service) callGroq(ctx context.Context, prompt string) (*Plan, error) {
+func (s *Service) callGemini(ctx context.Context, prompt string) (*Plan, error) {
 	if s.apiKey == "" {
-		return nil, errors.New("GROQ_API_KEY tidak di-set")
+		return nil, errors.New("GEMINI_API_KEY tidak di-set")
 	}
 
+	systemInstruction := "You are an expert instructional designer creating DETAILED training content. Each bullet point must have 3-5 sentences with examples. Respond ONLY with valid JSON. No markdown, no code fences, no explanations. Just pure JSON."
+
 	body := map[string]any{
-		"model": s.model,
-		"messages": []map[string]string{
-			{"role": "system", "content": "You are an expert instructional designer creating DETAILED training content. Each bullet point must have 3-5 sentences with examples. Respond ONLY with valid JSON. No markdown, no code fences, no explanations. Just pure JSON."},
-			{"role": "user", "content": prompt},
+		"system_instruction": map[string]any{
+			"parts": []map[string]string{
+				{"text": systemInstruction},
+			},
 		},
-		"temperature": 0.6,
-		"top_p":       0.9,
-		"max_tokens":  8000,
+		"contents": []map[string]any{
+			{
+				"parts": []map[string]string{
+					{"text": prompt},
+				},
+			},
+		},
+		"generationConfig": map[string]any{
+			"temperature":      0.6,
+			"topP":             0.9,
+			"maxOutputTokens":  65536,
+			"responseMimeType": "application/json",
+		},
 	}
 
 	b, _ := json.Marshal(body)
-	req, _ := http.NewRequestWithContext(ctx, http.MethodPost,
-		"https://api.groq.com/openai/v1/chat/completions",
-		bytes.NewReader(b),
-	)
-	req.Header.Set("Authorization", "Bearer "+s.apiKey)
+	apiURL := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", s.model, s.apiKey)
+	req, _ := http.NewRequestWithContext(ctx, http.MethodPost, apiURL, bytes.NewReader(b))
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := s.http.Do(req)
@@ -750,25 +759,27 @@ func (s *Service) callGroq(ctx context.Context, prompt string) (*Plan, error) {
 
 	if resp.StatusCode >= 300 {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		s.log.Errorf("Groq API error: status=%d body=%s", resp.StatusCode, string(bodyBytes))
-		return nil, fmt.Errorf("groq status %d", resp.StatusCode)
+		s.log.Errorf("Gemini API error: status=%d body=%s", resp.StatusCode, string(bodyBytes))
+		return nil, fmt.Errorf("gemini status %d", resp.StatusCode)
 	}
 
 	var raw struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
+		Candidates []struct {
+			Content struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"content"`
+		} `json:"candidates"`
 	}
 	if err := json.NewDecoder(resp.Body).Decode(&raw); err != nil {
 		return nil, err
 	}
-	if len(raw.Choices) == 0 {
-		return nil, errors.New("no choices from groq")
+	if len(raw.Candidates) == 0 || len(raw.Candidates[0].Content.Parts) == 0 {
+		return nil, errors.New("no candidates from gemini")
 	}
 
-	content := strings.TrimSpace(raw.Choices[0].Message.Content)
+	content := strings.TrimSpace(raw.Candidates[0].Content.Parts[0].Text)
 	content = strings.TrimPrefix(content, "```json")
 	content = strings.TrimPrefix(content, "```")
 	content = strings.TrimSuffix(content, "```")
@@ -1637,16 +1648,28 @@ PENTING:
 	return basePrompt
 }
 
-// callGroqForDetailedContent calls LLM for detailed content
-func (s *Service) callGroqForDetailedContent(ctx context.Context, prompt string) (*DetailedContent, error) {
+// callGeminiForDetailedContent calls LLM for detailed content
+func (s *Service) callGeminiForDetailedContent(ctx context.Context, prompt string) (*DetailedContent, error) {
+	systemInstruction := "You are an expert educational content writer. Always respond with valid JSON only, no markdown formatting."
+
 	payload := map[string]interface{}{
-		"model": s.model,
-		"messages": []map[string]string{
-			{"role": "system", "content": "You are an expert educational content writer. Always respond with valid JSON only, no markdown formatting."},
-			{"role": "user", "content": prompt},
+		"system_instruction": map[string]any{
+			"parts": []map[string]string{
+				{"text": systemInstruction},
+			},
 		},
-		"temperature": 0.8,
-		"max_tokens": 16000, // Much higher for detailed content
+		"contents": []map[string]any{
+			{
+				"parts": []map[string]string{
+					{"text": prompt},
+				},
+			},
+		},
+		"generationConfig": map[string]any{
+			"temperature":      0.8,
+			"maxOutputTokens":  65536,
+			"responseMimeType": "application/json",
+		},
 	}
 
 	jsonData, err := json.Marshal(payload)
@@ -1654,13 +1677,13 @@ func (s *Service) callGroqForDetailedContent(ctx context.Context, prompt string)
 		return nil, err
 	}
 
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.groq.com/openai/v1/chat/completions", bytes.NewReader(jsonData))
+	apiURL := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", s.model, s.apiKey)
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewReader(jsonData))
 	if err != nil {
 		return nil, err
 	}
 
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+s.apiKey)
 
 	resp, err := s.http.Do(req)
 	if err != nil {
@@ -1671,26 +1694,28 @@ func (s *Service) callGroqForDetailedContent(ctx context.Context, prompt string)
 	body, _ := io.ReadAll(resp.Body)
 
 	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("groq API error: %d - %s", resp.StatusCode, string(body))
+		return nil, fmt.Errorf("gemini API error: %d - %s", resp.StatusCode, string(body))
 	}
 
-	var groqResp struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
+	var geminiResp struct {
+		Candidates []struct {
+			Content struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"content"`
+		} `json:"candidates"`
 	}
 
-	if err := json.Unmarshal(body, &groqResp); err != nil {
+	if err := json.Unmarshal(body, &geminiResp); err != nil {
 		return nil, err
 	}
 
-	if len(groqResp.Choices) == 0 {
-		return nil, errors.New("no choices in groq response")
+	if len(geminiResp.Candidates) == 0 || len(geminiResp.Candidates[0].Content.Parts) == 0 {
+		return nil, errors.New("no candidates in gemini response")
 	}
 
-	content := groqResp.Choices[0].Message.Content
+	content := geminiResp.Candidates[0].Content.Parts[0].Text
 	content = strings.TrimPrefix(content, "```json")
 	content = strings.TrimPrefix(content, "```")
 	content = strings.TrimSuffix(content, "```")
@@ -2052,7 +2077,7 @@ func (s *Service) GenerateAndBuildPDF(ctx context.Context, in GenerateInput) (li
 	s.log.Infof("[GenerateAndBuildPDF] Input: %+v", in)
 
 	prompt := s.buildPrompt(in)
-	plan, err := s.callGroq(ctx, prompt)
+	plan, err := s.callGemini(ctx, prompt)
 	if err != nil {
 		return "", GenerateMeta{}, err
 	}
@@ -2093,7 +2118,7 @@ func (s *Service) GenerateAndBuildPPTX(ctx context.Context, in GenerateInput, ol
 	// Generate PPTX (enhanced dengan lebih banyak konten)
 	s.log.Info("Generating enhanced presentation slides...")
 	promptPPTX := s.buildPrompt(in)
-	plan, err := s.callGroq(ctx, promptPPTX)
+	plan, err := s.callGemini(ctx, promptPPTX)
 	if err != nil {
 		return "", "", GenerateMeta{}, fmt.Errorf("failed to generate PPTX content: %w", err)
 	}
@@ -2112,7 +2137,7 @@ func (s *Service) GenerateAndBuildPPTX(ctx context.Context, in GenerateInput, ol
 	// Generate comprehensive PDF guide
 	s.log.Info("Generating detailed PDF learning guide...")
 	promptPDF := s.buildDetailedPrompt(in)
-	detailedContent, err := s.callGroqForDetailedContent(ctx, promptPDF)
+	detailedContent, err := s.callGeminiForDetailedContent(ctx, promptPDF)
 	if err != nil {
 		s.log.WithError(err).Warn("Failed to generate detailed PDF content, using basic PDF instead")
 		// Fallback to basic PDF if detailed generation fails

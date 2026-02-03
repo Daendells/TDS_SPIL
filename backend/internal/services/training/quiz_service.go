@@ -28,10 +28,10 @@ type QuizService struct {
 
 func NewQuizService(log *logrus.Logger, apiKey, model, pubBase string) *QuizService {
 	if apiKey == "" {
-		log.Warn("GROQ_API_KEY kosong - panggilan LLM akan gagal")
+		log.Warn("GEMINI_API_KEY kosong - panggilan LLM akan gagal")
 	}
 	if model == "" {
-		model = "llama-3.3-70b-versatile"
+		model = "gemini-2.0-flash"
 	}
 	if pubBase == "" {
 		pubBase = "http://localhost:8080"
@@ -70,7 +70,7 @@ func (s *QuizService) GenerateQuizFromMaterial(ctx context.Context, materialCont
 		"competency": competency,
 	}).Info("Starting quiz generation from material")
 
-	questions, err := s.callGroqForQuiz(ctx, materialContent, topicTitle, competency)
+	questions, err := s.callGeminiForQuiz(ctx, materialContent, topicTitle, competency)
 	if err != nil {
 		return "", fmt.Errorf("failed to generate quiz questions: %w", err)
 	}
@@ -90,25 +90,31 @@ func (s *QuizService) GenerateQuizFromMaterial(ctx context.Context, materialCont
 	return publicURL, nil
 }
 
-func (s *QuizService) callGroqForQuiz(ctx context.Context, materialContent, topicTitle, competency string) ([]QuizQuestion, error) {
+func (s *QuizService) callGeminiForQuiz(ctx context.Context, materialContent, topicTitle, competency string) ([]QuizQuestion, error) {
 	prompt := s.buildQuizPrompt(materialContent, topicTitle, competency)
 
 	payload := map[string]interface{}{
-		"model": s.model,
-		"messages": []map[string]string{
-			{"role": "user", "content": prompt},
+		"contents": []map[string]any{
+			{
+				"parts": []map[string]string{
+					{"text": prompt},
+				},
+			},
 		},
-		"temperature": 0.7,
-		"max_tokens":  6000,
+		"generationConfig": map[string]any{
+			"temperature":      0.7,
+			"maxOutputTokens":  16000,
+			"responseMimeType": "application/json",
+		},
 	}
 
 	body, _ := json.Marshal(payload)
-	req, err := http.NewRequestWithContext(ctx, "POST", "https://api.groq.com/openai/v1/chat/completions", bytes.NewReader(body))
+	apiURL := fmt.Sprintf("https://generativelanguage.googleapis.com/v1beta/models/%s:generateContent?key=%s", s.model, s.apiKey)
+	req, err := http.NewRequestWithContext(ctx, "POST", apiURL, bytes.NewReader(body))
 	if err != nil {
 		return nil, err
 	}
 
-	req.Header.Set("Authorization", "Bearer "+s.apiKey)
 	req.Header.Set("Content-Type", "application/json")
 
 	resp, err := s.http.Do(req)
@@ -119,26 +125,28 @@ func (s *QuizService) callGroqForQuiz(ctx context.Context, materialContent, topi
 
 	if resp.StatusCode != http.StatusOK {
 		bodyBytes, _ := io.ReadAll(resp.Body)
-		return nil, fmt.Errorf("groq API error (status %d): %s", resp.StatusCode, string(bodyBytes))
+		return nil, fmt.Errorf("gemini API error (status %d): %s", resp.StatusCode, string(bodyBytes))
 	}
 
 	var result struct {
-		Choices []struct {
-			Message struct {
-				Content string `json:"content"`
-			} `json:"message"`
-		} `json:"choices"`
+		Candidates []struct {
+			Content struct {
+				Parts []struct {
+					Text string `json:"text"`
+				} `json:"parts"`
+			} `json:"content"`
+		} `json:"candidates"`
 	}
 
 	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
 		return nil, err
 	}
 
-	if len(result.Choices) == 0 {
+	if len(result.Candidates) == 0 || len(result.Candidates[0].Content.Parts) == 0 {
 		return nil, errors.New("no response from LLM")
 	}
 
-	content := result.Choices[0].Message.Content
+	content := result.Candidates[0].Content.Parts[0].Text
 	content = strings.TrimSpace(content)
 	
 	if strings.HasPrefix(content, "```json") {

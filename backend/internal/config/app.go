@@ -149,14 +149,14 @@ func Bootstrap(config *BootstrapConfig) {
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(
 		config.Log,
-		config.Config.GetString("GROQ_API_KEY"),
-		config.Config.GetString("GROQ_MODEL"),
+		config.Config.GetString("GEMINI_API_KEY"),
+		config.Config.GetString("GEMINI_MODEL"),
 		config.Config.GetString("BACKEND_PUBLIC_URL"),
 	)
 	quizGenService := trainingService.NewQuizService(
 		config.Log,
-		config.Config.GetString("GROQ_API_KEY"),
-		config.Config.GetString("GROQ_MODEL"),
+		config.Config.GetString("GEMINI_API_KEY"),
+		config.Config.GetString("GEMINI_MODEL"),
 		config.Config.GetString("BACKEND_PUBLIC_URL"),
 	)
 	trainingGenController := trainingController.NewTrainingController(trainingServiceDB, trainingGenService, quizGenService, config.Log)
