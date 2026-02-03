@@ -17,14 +17,7 @@ import {
 } from "@/components/ui/command";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Input } from "@/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
   ChevronLeftIcon,
@@ -1221,11 +1214,11 @@ export default function MasterPage() {
           onCallApi ? "opacity-70" : "opacity-100"
         }`}
       >
-        <Table className="min-w-[2000px] border-collapse">
+        <table className="w-full caption-bottom text-sm min-w-[2000px] border-collapse">
           <TableHeader className="sticky top-0 bg-background z-50 shadow-sm">
             <TableRow className="bg-background">
               {isEditMode && (
-                <TableHead className="text-center sticky left-0 z-40 bg-background w-[50px]">
+                <TableHead className="text-center sticky top-0 left-0 z-50 bg-background w-[50px]">
                   <button
                     onClick={toggleSelectAll}
                     className="aspect-square h-4 w-4 rounded-full border border-primary inline-flex items-center justify-center"
@@ -1239,7 +1232,10 @@ export default function MasterPage() {
               {TABLE_COLUMNS.map((col, i) => (
                 <TableHead
                   key={col}
-                  className={cn("text-center bg-background border", i < 2 ? "sticky z-40" : "")}
+                  className={cn(
+                    "text-center bg-background border sticky top-0",
+                    i < 2 ? "z-50" : "z-40"
+                  )}
                   style={i < 2 ? { left: `${offsets[i] || 0}px` } : {}}
                 >
                   {col}
@@ -1369,7 +1365,7 @@ export default function MasterPage() {
               </TableRow>
             )}
           </TableBody>
-        </Table>
+        </table>
       </div>
 
       {/* Pagination */}

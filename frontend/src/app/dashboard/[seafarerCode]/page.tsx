@@ -114,48 +114,42 @@ export default function TalentProfilePage({ params }: PageProps) {
           {/* DATA PRIBADI */}
           <div className="border rounded-lg shadow-sm p-4 bg-white">
             <h2 className="font-bold text-lg mb-4 pb-2 border-b">DATA PRIBADI</h2>
-            <div className="flex flex-col md:flex-row lg:flex-col gap-4">
-              {/* Informasi teks */}
-              <div className="flex-1 space-y-2 text-sm">
-                <p>
-                  <strong>Nama:</strong> {report.nama}
-                </p>
-                <p>
-                  <strong>Tanggal Lahir:</strong> {report.tanggalLahir}
-                </p>
-                <p>
-                  <strong>Usia:</strong> {report.age}
-                </p>
-                <p>
-                  <strong>Jabatan:</strong> {report.jabatan}
-                </p>
-                <p>
-                  <strong>Vessel:</strong> {report.vesselName}
-                </p>
-                <p>
-                  <strong>Seaman Code:</strong> {report.seamanCode}
-                </p>
-                <p>
-                  <strong>Seafarer Code:</strong> {report.seafarerCode}
-                </p>
-                <p>
-                  <strong>Start Date:</strong> {report.startDate}
-                </p>
-                <p>
-                  <strong>Pendidikan:</strong> {report.certificate}
-                </p>
-              </div>
+            <div className="grid grid-cols-[140px_10px_1fr] gap-y-2 text-sm w-full">
+              <strong className="text-gray-700">Nama</strong>
+              <span className="text-gray-500">:</span>
+              <span className="text-gray-900 font-medium">{report.nama}</span>
 
-              {/* Foto */}
-              {/* <div className="flex-shrink-0 flex justify-center lg:justify-start">
-                <Image
-                  src="/images/default-photo.png"
-                  alt="Foto Profil"
-                  width={128}
-                  height={160}
-                  className="w-28 h-36 object-cover border rounded"
-                />
-              </div> */}
+              <strong className="text-gray-700">Tanggal Lahir</strong>
+              <span className="text-gray-500">:</span>
+              <span className="text-gray-900">{report.tanggalLahir}</span>
+
+              <strong className="text-gray-700">Usia</strong>
+              <span className="text-gray-500">:</span>
+              <span className="text-gray-900">{report.age}</span>
+
+              <strong className="text-gray-700">Jabatan</strong>
+              <span className="text-gray-500">:</span>
+              <span className="text-gray-900">{report.jabatan}</span>
+
+              <strong className="text-gray-700">Vessel</strong>
+              <span className="text-gray-500">:</span>
+              <span className="text-gray-900">{report.vesselName}</span>
+
+              <strong className="text-gray-700">Seaman Code</strong>
+              <span className="text-gray-500">:</span>
+              <span className="text-gray-900">{report.seamanCode}</span>
+
+              <strong className="text-gray-700">Seafarer Code</strong>
+              <span className="text-gray-500">:</span>
+              <span className="text-gray-900">{report.seafarerCode}</span>
+
+              <strong className="text-gray-700">Start Date</strong>
+              <span className="text-gray-500">:</span>
+              <span className="text-gray-900">{report.startDate}</span>
+
+              <strong className="text-gray-700">Pendidikan</strong>
+              <span className="text-gray-500">:</span>
+              <span className="text-gray-900">{report.certificate}</span>
             </div>
           </div>
 

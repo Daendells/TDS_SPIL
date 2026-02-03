@@ -64,7 +64,7 @@ const items = [
     icon: Settings,
   },
   {
-    title: "Assessment Type Manager",
+    title: "Assessment Activation",
     url: "/assessment-type-manager",
     icon: Settings,
   },

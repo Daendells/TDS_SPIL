@@ -9,4 +9,9 @@ type AssessmentTypeData struct {
 	EndTime            *time.Time `json:"endTime"`
 	MaxAttempts        *int       `json:"maxAttempts"`
 	AssignedAssessments []string `json:"assignedAssessments"`
+	
+	// Scoring Configuration
+	ScoringType    string  `json:"scoringType"`    // 'default' or 'custom'
+	ScoringFormula *string `json:"scoringFormula"` // Formula untuk custom scoring
+	UsePercentage  bool    `json:"usePercentage"`  // Output sebagai persentase
 }
