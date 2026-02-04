@@ -185,14 +185,16 @@ export default function TrainingMaterialTab() {
     if (searchTerm) {
       const matchedGroups = filteredGroupedData.map((group) => group.competencyCode);
       setExpandedGroups(matchedGroups);
-    } else {
-      setExpandedGroups([]);
     }
+    // Note: Don't reset to [] when searchTerm is empty, to preserve manually expanded groups
   }, [searchTerm, filteredGroupedData]);
 
   const handleGenerate = async (item: ITraining, isRegenerate = false) => {
     setGenerating(item.no);
     setRegenerateDialog(null);
+
+    // Save current expanded groups before refresh
+    const currentExpandedGroups = [...expandedGroups];
 
     try {
       // Combine keyword (deskripsi_perilaku) with optional referensi
@@ -235,6 +237,9 @@ export default function TrainingMaterialTab() {
         const refreshJson = await refreshRes.json();
         setData(refreshJson.data);
         groupTrainings(refreshJson.data);
+
+        // Restore expanded groups after refresh
+        setExpandedGroups(currentExpandedGroups);
       } else {
         toast.error(result.error || "Gagal generate materi.");
       }
@@ -253,6 +258,9 @@ export default function TrainingMaterialTab() {
     }
 
     setGeneratingQuiz(item.no);
+
+    // Save current expanded groups before refresh
+    const currentExpandedGroups = [...expandedGroups];
 
     try {
       // First, fetch the material content from the PDF URL
@@ -285,6 +293,9 @@ export default function TrainingMaterialTab() {
         const refreshJson = await refreshRes.json();
         setData(refreshJson.data);
         groupTrainings(refreshJson.data);
+
+        // Restore expanded groups after refresh
+        setExpandedGroups(currentExpandedGroups);
       } else {
         toast.error(result.error || "Gagal generate quiz.");
       }
@@ -322,6 +333,10 @@ export default function TrainingMaterialTab() {
     }
 
     setCreateLoading(true);
+
+    // Save current expanded groups before refresh
+    const currentExpandedGroups = [...expandedGroups];
+
     try {
       const res = await fetch(`${apiUrl}/trainings`, {
         method: "POST",
@@ -337,6 +352,10 @@ export default function TrainingMaterialTab() {
         const refreshJson = await refreshRes.json();
         setData(refreshJson.data);
         groupTrainings(refreshJson.data);
+
+        // Restore expanded groups after refresh
+        setExpandedGroups(currentExpandedGroups);
+
         setCreateDialogOpen(false);
       } else {
         toast.error(result.error || "Gagal menambahkan training.");
@@ -363,16 +382,35 @@ buatkan ppt antara 13-15 slide ini sebagai ppt video training online, dengan pes
 yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topik training, slide 4: challenges/tantangan, slide 5-9: 1 tool yang mengungkap ${topikTraining} (jelaskan steps2nya secara detail untuk perslide), slide 11: studi kasus, slide 12: pemecahan masalah dalam studi kasus menggunakan metode/tools yang dijelaskan, slide 13: penutup/closing.`;
   };
 
-  const handleSaveReferensi = () => {
-    if (selectedTraining) {
-      const updatedData = data.map((item) =>
-        item.kode === selectedTraining.kode ? { ...item, referensi: tempReferensi } : item
-      );
-      setData(updatedData);
-      groupTrainings(updatedData);
+  const handleSaveReferensi = async () => {
+    if (!selectedTraining) return;
 
-      setSelectedTraining(null);
-      setTempReferensi("");
+    try {
+      // Save referensi to database via API
+      const res = await fetch(`${apiUrl}/trainings/${selectedTraining.no}/referensi`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ referensi: tempReferensi }),
+      });
+
+      if (res.ok) {
+        toast.success("Referensi berhasil disimpan!");
+
+        // Update local state with new referensi
+        const updatedData = data.map((item) =>
+          item.no === selectedTraining.no ? { ...item, referensi: tempReferensi } : item
+        );
+        setData(updatedData);
+        groupTrainings(updatedData);
+
+        setSelectedTraining(null);
+        setTempReferensi("");
+      } else {
+        const result = await res.json();
+        toast.error(result.error || "Gagal menyimpan referensi.");
+      }
+    } catch {
+      toast.error("Terjadi kesalahan saat menyimpan referensi.");
     }
   };
 
@@ -395,6 +433,10 @@ yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topi
     if (!editingTraining) return;
 
     setEditLoading(true);
+
+    // Save current expanded groups before refresh
+    const currentExpandedGroups = [...expandedGroups];
+
     try {
       const res = await fetch(`${apiUrl}/trainings/${editingTraining.no}`, {
         method: "PUT",
@@ -413,6 +455,10 @@ yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topi
         );
         setData(updatedData);
         groupTrainings(updatedData);
+
+        // Restore expanded groups after refresh
+        setExpandedGroups(currentExpandedGroups);
+
         setEditingTraining(null);
       } else {
         toast.error(result.error || "Gagal update training.");
@@ -433,6 +479,10 @@ yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topi
     if (!deletingTraining) return;
 
     setDeleteLoading(true);
+
+    // Save current expanded groups before refresh
+    const currentExpandedGroups = [...expandedGroups];
+
     try {
       const res = await fetch(`${apiUrl}/trainings/${deletingTraining.no}`, {
         method: "DELETE",
@@ -448,6 +498,10 @@ yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topi
         const updatedData = data.filter((row) => row.no !== deletingTraining.no);
         setData(updatedData);
         groupTrainings(updatedData);
+
+        // Restore expanded groups after refresh
+        setExpandedGroups(currentExpandedGroups);
+
         setDeleteDialogOpen(false);
         setDeletingTraining(null);
       } else {

@@ -97,3 +97,31 @@ func (c *TrainingController) Delete(ctx *gin.Context) {
 	}
 	ctx.JSON(resp.Code, resp)
 }
+
+func (c *TrainingController) UpdateReferensi(ctx *gin.Context) {
+	no := ctx.Param("no")
+	
+	var request struct {
+		Referensi string `json:"referensi"`
+	}
+	
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	resp, err := c.Service.UpdateReferensi(no, request.Referensi)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+	ctx.JSON(resp.Code, resp)
+}

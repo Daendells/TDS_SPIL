@@ -515,9 +515,20 @@ func (s *trainingPlanService) generateOptimalScheduleWithStartDate(program strin
 		}).Warn("Schedule generation attempt failed, retrying with new randomization")
 	}
 
-	// After max attempts, return error
-	return nil, fmt.Errorf("failed to generate valid schedules after %d attempts - deadline constraint too tight for %d Mandatory competencies within %d months",
-		maxAttempts, len(mandatoryCompetencies), deadlineMonths)
+	// After max attempts, fallback to random placement without strict deadline constraint
+	s.log.WithFields(logrus.Fields{
+		"mandatory_count": len(mandatoryCompetencies),
+		"deadline_months": deadlineMonths,
+	}).Warn("All attempts failed with deadline constraint, falling back to random placement without strict deadline")
+
+	return s.generateRandomSchedules(
+		mandatoryCompetencies,
+		nonMandatoryCompetencies,
+		participantGaps,
+		competencyMapping,
+		program,
+		startDate,
+	)
 }
 
 func (s *trainingPlanService) tryGenerateSchedules(
@@ -700,6 +711,129 @@ func (s *trainingPlanService) tryGenerateSchedules(
 		"attempt":        attempt,
 		"total_schedules": len(schedules),
 	}).Info("Successfully completed schedule generation with interleaved randomization")
+
+	return schedules, nil
+}
+
+// generateRandomSchedules creates schedules without strict deadline constraints (fallback method)
+func (s *trainingPlanService) generateRandomSchedules(
+	mandatoryCompetencies []string,
+	nonMandatoryCompetencies []string,
+	participantGaps map[int][]string,
+	competencyMapping map[string]domain.CompetencyMappingItem,
+	program string,
+	startDate time.Time,
+) ([]domain.TrainingSchedule, error) {
+
+	s.log.Info("Generating schedules with relaxed constraints (random placement fallback)")
+
+	var schedules []domain.TrainingSchedule
+	usedDates := make(map[string]bool)
+	materi1Dates := make(map[string]time.Time)
+	currentDate := alignToWeekSlotStart(startDate)
+
+	// Shuffle both lists separately
+	mandatoryCopy := make([]string, len(mandatoryCompetencies))
+	copy(mandatoryCopy, mandatoryCompetencies)
+	rand.Shuffle(len(mandatoryCopy), func(i, j int) {
+		mandatoryCopy[i], mandatoryCopy[j] = mandatoryCopy[j], mandatoryCopy[i]
+	})
+
+	nonMandatoryCopy := make([]string, len(nonMandatoryCompetencies))
+	copy(nonMandatoryCopy, nonMandatoryCompetencies)
+	rand.Shuffle(len(nonMandatoryCopy), func(i, j int) {
+		nonMandatoryCopy[i], nonMandatoryCopy[j] = nonMandatoryCopy[j], nonMandatoryCopy[i]
+	})
+
+	// Interleave M and NM with 2:1 ratio (prioritize M but keep them mixed)
+	// This ensures Mandatory trainings finish earlier but are still mixed with NM
+	var interleavedM1 []string
+	mIndex := 0
+	nmIndex := 0
+	
+	s.log.WithFields(logrus.Fields{
+		"mandatory_count":     len(mandatoryCopy),
+		"non_mandatory_count": len(nonMandatoryCopy),
+	}).Debug("Interleaving M and NM with 2:1 ratio for faster M completion")
+
+	for mIndex < len(mandatoryCopy) || nmIndex < len(nonMandatoryCopy) {
+		// Add 2 Mandatory for every 1 Non-Mandatory (or until M runs out)
+		for i := 0; i < 2 && mIndex < len(mandatoryCopy); i++ {
+			interleavedM1 = append(interleavedM1, mandatoryCopy[mIndex])
+			mIndex++
+		}
+		
+		// Add 1 Non-Mandatory
+		if nmIndex < len(nonMandatoryCopy) {
+			interleavedM1 = append(interleavedM1, nonMandatoryCopy[nmIndex])
+			nmIndex++
+		}
+	}
+
+	s.log.WithField("total_m1", len(interleavedM1)).Debug("Scheduling Materi 1 with M-prioritized interleaving")
+
+	for _, code := range interleavedM1 {
+		// Find next available date (simple increment, no strict conflict checking)
+		for usedDates[currentDate.Format("2006-01-02")] {
+			currentDate = nextWeekSlotStart(currentDate)
+		}
+
+		trainingTopic := ""
+		if mapping, exists := competencyMapping[code]; exists && len(mapping.TrainingTopics) > 0 {
+			trainingTopic = mapping.TrainingTopics[0]
+		}
+
+		schedule := domain.TrainingSchedule{
+			Program:        program,
+			CompetencyCode: code,
+			TrainingTopic:  trainingTopic,
+			MaterialType:   1,
+			ScheduledDate:  currentDate,
+		}
+		schedules = append(schedules, schedule)
+		materi1Dates[code] = currentDate
+		usedDates[currentDate.Format("2006-01-02")] = true
+
+		currentDate = nextWeekSlotStart(currentDate)
+	}
+
+	s.log.WithField("scheduled_m1", len(interleavedM1)).Debug("All Materi 1 scheduled with M priority")
+
+	// Schedule all Materi 2 (60 days after M1) - use same interleaved order
+	s.log.WithField("total_m2", len(interleavedM1)).Debug("Scheduling all Materi 2 without deadline constraint")
+
+	for _, code := range interleavedM1 {
+		m1Date := materi1Dates[code]
+		m2MinDate := alignToWeekSlotStart(m1Date.AddDate(0, 0, 60))
+
+		// Find next available date after minimum date
+		for usedDates[m2MinDate.Format("2006-01-02")] {
+			m2MinDate = nextWeekSlotStart(m2MinDate)
+		}
+
+		trainingTopic := ""
+		if mapping, exists := competencyMapping[code]; exists && len(mapping.TrainingTopics) > 1 {
+			trainingTopic = mapping.TrainingTopics[1]
+		}
+
+		schedule := domain.TrainingSchedule{
+			Program:        program,
+			CompetencyCode: code,
+			TrainingTopic:  trainingTopic,
+			MaterialType:   2,
+			ScheduledDate:  m2MinDate,
+		}
+		schedules = append(schedules, schedule)
+		usedDates[m2MinDate.Format("2006-01-02")] = true
+	}
+
+	s.log.WithFields(logrus.Fields{
+		"total_schedules":     len(schedules),
+		"m1_count":            len(interleavedM1),
+		"m2_count":            len(interleavedM1),
+		"mandatory_finished":  len(mandatoryCopy),
+		"interleaving_ratio":  "2:1 (M:NM)",
+	}).Warn("Successfully generated schedules with relaxed constraints and M-priority interleaving")
 
 	return schedules, nil
 }

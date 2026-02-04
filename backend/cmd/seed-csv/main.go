@@ -4,6 +4,7 @@ import (
 	"backend/internal/config"
 	"backend/internal/models/domain"
 	"encoding/csv"
+	"fmt"
 	"os"
 	"path/filepath"
 	"strconv"
@@ -307,19 +308,50 @@ func seedTrainingsFromCSV(db *gorm.DB, filePath string) error {
 		if len(record) < 9 {
 			continue
 		}
+		
+		competencyTypeID := parseInt(record[1])
+		level := parseInt(record[2])
+		deskripsiPerilaku := parseString(record[3])
+		toolsTraining := parseString(record[4])
+		kode := parseString(record[5])
+		topikTraining := parseString(record[6])
+		
+		// Parse referensi (index 7) - generate exact format as specified
+		referensi := parseStringPtr(record[7])
+		if referensi == nil || *referensi == "" || *referensi == "-" {
+			// Fetch competency type for referensi generation
+			var competencyType domain.CompetencyType
+			if err := db.First(&competencyType, competencyTypeID).Error; err == nil {
+				// Generate referensi with exact format specified by user
+				defaultReferensi := fmt.Sprintf(
+					"buatkan slide training online untuk judul %s untuk mengungkap kompetensi %s yaitu %s terutama untuk level %d yang %s\n\n"+
+						"buatkan ppt antara 13-15 slide ini sebagai ppt video training online, dengan peserta trainingnya adalah perwira kapal container (SPIL) dengan susunan slidenya\n\n"+
+						"yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topik training, slide 4: challenges/tantangan, slide 5-9: 1 tool yang mengungkap %s (jelaskan steps2nya secara detail untuk perslide), slide 11: studi kasus, slide 12: pemecahan masalah dalam studi kasus menggunakan metode/tools yang dijelaskan, slide 13: penutup/closing.",
+					topikTraining,
+					competencyType.Name,
+					competencyType.Description,
+					level,
+					deskripsiPerilaku,
+					topikTraining,
+				)
+				referensi = &defaultReferensi
+			}
+		}
+		
 		training := domain.Training{
 			No:                parseInt(record[0]),
-			CompetencyTypeID:  parseInt(record[1]),
-			Level:             parseInt(record[2]),
-			DeskripsiPerilaku: parseString(record[3]),
-			ToolsTraining:     parseString(record[4]),
-			Kode:              parseString(record[5]),
-			TopikTraining:     parseString(record[6]),
-			GeneratedFileURL:  parseStringPtr(record[7]),
-			GeneratedPdfURL:   parseStringPtr(record[8]),
+			CompetencyTypeID:  competencyTypeID,
+			Level:             level,
+			DeskripsiPerilaku: deskripsiPerilaku,
+			ToolsTraining:     toolsTraining,
+			Kode:              kode,
+			TopikTraining:     topikTraining,
+			Referensi:         referensi,
+			GeneratedFileURL:  parseStringPtr(record[8]),
+			GeneratedPdfURL:   parseStringPtr(record[9]),
 		}
-		if len(record) > 9 {
-			training.GeneratedAt = parseTime(record[9])
+		if len(record) > 10 {
+			training.GeneratedAt = parseTime(record[10])
 		}
 		if err := db.FirstOrCreate(&training, domain.Training{No: training.No}).Error; err != nil {
 			return err

@@ -289,16 +289,21 @@ func (s *Service) buildFocusSection(in GenerateInput) string {
    - Assessment harus measure apakah peserta bisa exhibit perilaku ini
    - Action items di closing harus actionable untuk develop perilaku ini
 
-4. ⭐ REFERENSI TAMBAHAN (Opsional - PENTING!):
+4. ⭐ REFERENSI TAMBAHAN (Opsional - SANGAT PENTING!):
    %s
    %s
    
-   ⚠️ CATATAN PENTING UNTUK REFERENSI TAMBAHAN:
-   - Jika ada referensi tambahan, WAJIB diintegrasikan ke dalam materi
-   - Buat 1 SLIDE KHUSUS tentang referensi tambahan (di bagian KONSEP atau setelahnya)
-   - Jelaskan bagaimana referensi ini memperkaya pemahaman topik
-   - Berikan contoh konkret dari referensi tersebut
-   - Tunjukkan aplikasi praktis dari referensi dalam konteks topik training
+   CATATAN KRITIS UNTUK REFERENSI TAMBAHAN:
+   %s
+   
+   INSTRUKSI KHUSUS PENGGUNAAN REFERENSI:
+   - SEMUA konten WAJIB strictly follow dan based on referensi yang disebutkan
+   - Mention nama buku/sumber/author secara eksplisit di MINIMAL 3 slide berbeda
+   - Gunakan konsep, framework, atau terminologi PERSIS dari referensi tersebut
+   - Berikan quote atau highlight key points dari referensi (jika applicable)
+   - Tunjukkan bagaimana referensi ini applicable dalam konteks maritime/kapal SPIL
+   - Jangan generic - harus specific ke referensi yang disebutkan
+   - Setiap contoh dan studi kasus harus mengacu pada framework/konsep dari referensi
 
 INTEGRASI KETIGA ELEMEN:
 Topik Training + Tools/Metode + Deskripsi Perilaku = Materi Training yang Kohesif
@@ -321,9 +326,38 @@ Contoh flow yang baik:
 		}(),
 		func() string {
 			if optionalRef != "-" {
-				return "Gunakan referensi ini untuk memperkaya contoh dan memperdalam pembahasan."
+				return "PENTING: Gunakan referensi ini sebagai SUMBER UTAMA untuk seluruh materi training."
 			}
 			return "Fokus sepenuhnya pada Topik Training, Tools/Metode, dan Deskripsi Perilaku."
+		}(),
+		func() string {
+			if optionalRef != "-" {
+				return `JIKA ADA REFERENSI SPESIFIK (BUKU/SUMBER):
+   1. Buat 1-2 SLIDE KHUSUS membahas framework/konsep dari referensi tersebut
+   2. WAJIB mention nama buku/author/sumber di minimal 3 slide berbeda:
+      - Di Slide Objective: "Berdasarkan framework dari [Nama Buku/Author]..."
+      - Di Slide Konsep: "Menurut [Nama Buku], konsep ini..."
+      - Di Slide Tools/Steps: "Seperti yang dijelaskan dalam [Referensi]..."
+      - Di Slide Studi Kasus: "Implementasi konsep [Nama Buku] dalam kasus..."
+   3. Gunakan terminologi PERSIS dari referensi (tidak diparafrase)
+   4. Berikan quote singkat atau key takeaway dari referensi di speaker notes
+   5. SEMUA contoh dan analisis HARUS based on framework/konsep dari referensi
+   6. Adaptasikan konsep referensi ke konteks maritime/kapal SPIL secara eksplisit
+   7. Jangan tambah teori lain yang tidak dari referensi tersebut
+   
+   CONTOH MENTION YANG BENAR:
+   SALAH: "Ada beberapa framework untuk komunikasi..."
+   BENAR: "Framework GRPI dari Patrick Lencioni menjelaskan 4 komponen teamwork..."
+   
+   SALAH: "Komunikasi efektif memerlukan..."
+   BENAR: "Menurut buku 'Crucial Conversations', komunikasi efektif memerlukan..."
+   
+   SALAH: "Ada teknik untuk meningkatkan trust..."
+   BENAR: "Stephen Covey dalam 'The Speed of Trust' mengidentifikasi 13 perilaku trust..."
+   
+   INTI: Setiap slide harus clearly reference the source material!`
+			}
+			return ""
 		}(),
 	)
 }
@@ -333,7 +367,7 @@ func (s *Service) buildStructureSection() string {
 	return `STRUKTUR SLIDE WAJIB (13-15 SLIDE):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-⚠️ PENTING: WAJIB BUAT MINIMAL 13 SLIDE, MAKSIMAL 15 SLIDE!
+PENTING: WAJIB BUAT MINIMAL 13 SLIDE, MAKSIMAL 15 SLIDE!
 Ini adalah PPT untuk video training online dengan peserta perwira kapal container (SPIL).
 
 SLIDE 1: JUDUL (slide_type: "opening")
@@ -346,13 +380,15 @@ SLIDE 2: OBJECTIVE (slide_type: "objective")
    ├─ Tujuan pembelajaran yang SMART (Specific, Measurable, Achievable, Relevant, Time-bound)
    ├─ Kompetensi yang akan dikembangkan
    ├─ Learning outcomes yang konkret dan terukur
-   └─ Benefit yang akan didapat peserta setelah mengikuti training
+   ├─ Benefit yang akan didapat peserta setelah mengikuti training
+   └─ JIKA ADA REFERENSI: Mention framework/buku yang menjadi basis training
 
 SLIDE 3: KONSEP (slide_type: "concept")
    ├─ Definisi dan penjelasan detail tentang topik training
+   ├─ JIKA ADA REFERENSI: Jelaskan konsep DARI referensi tersebut dengan mention eksplisit
    ├─ Mengapa topik ini penting untuk perwira kapal
    ├─ Konteks dan relevansi dengan pekerjaan sehari-hari di kapal
-   └─ Framework atau model yang akan digunakan
+   └─ Framework atau model yang akan digunakan (DARI REFERENSI jika ada)
 
 SLIDE 4: CHALLENGES/TANTANGAN (slide_type: "challenges")
    ├─ Tantangan umum yang dihadapi terkait topik ini
@@ -364,6 +400,7 @@ SLIDE 5-9: LANGKAH-LANGKAH TOOLS (5 slide terpisah, slide_type: "steps")
    
    SLIDE 5: LANGKAH 1 - [Nama Step Pertama]
    ├─ Penjelasan detail step pertama dari tools/metode
+   ├─ JIKA ADA REFERENSI: Gunakan terminologi dari referensi
    ├─ Contoh konkret penerapan di kapal
    ├─ Tips praktis untuk step ini
    └─ Common mistakes yang harus dihindari
@@ -371,12 +408,13 @@ SLIDE 5-9: LANGKAH-LANGKAH TOOLS (5 slide terpisah, slide_type: "steps")
    SLIDE 6: LANGKAH 2 - [Nama Step Kedua]
    ├─ Penjelasan detail step kedua
    ├─ Hubungan dengan step sebelumnya
-   ├─ Contoh penerapan praktis
+   ├─ Contoh penerapan praktis (based on referensi jika ada)
    └─ Best practices
 
    SLIDE 7: LANGKAH 3 - [Nama Step Ketiga]
    ├─ Penjelasan detail step ketiga
    ├─ Contoh dan ilustrasi
+   ├─ JIKA ADA REFERENSI: Mention cara referensi menjelaskan step ini
    ├─ Potensi hambatan dan cara mengatasinya
    └─ Tips untuk maksimalisasi hasil
 
@@ -400,15 +438,17 @@ SLIDE 10: RINGKASAN TOOLS (slide_type: "summary")
 
 SLIDE 11: STUDI KASUS (slide_type: "case_study")
    ├─ Skenario nyata di kapal container
+   ├─ JIKA ADA REFERENSI: Gunakan contoh/kasus yang aligned dengan framework referensi
    ├─ Konteks situasi: siapa, apa, dimana, kapan
    ├─ Masalah/tantangan yang dihadapi
    └─ Pertanyaan untuk refleksi peserta
 
 SLIDE 12: PEMECAHAN MASALAH (slide_type: "solution")
    ├─ Solusi menggunakan tools/metode yang telah dijelaskan
+   ├─ JIKA ADA REFERENSI: Tunjukkan bagaimana solusi mengikuti framework dari referensi
    ├─ Langkah-langkah penerapan dalam studi kasus
    ├─ Hasil yang dicapai
-   └─ Lessons learned dan best practices
+   └─ Lessons learned dan best practices (quote dari referensi jika applicable)
 
 SLIDE 13: PENUTUP/CLOSING (slide_type: "closing")
    ├─ Summary keseluruhan training
@@ -433,7 +473,7 @@ OPSIONAL - SLIDE 14-15 (jika diperlukan):
 
 // buildContentRequirements specifies content quality standards
 func (s *Service) buildContentRequirements() string {
-	return `PERSYARATAN KONTEN BERKUALITAS TINGGI:
+	return `PERSYARATAN KONTEN UNTUK PPT:
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 ⚠️ JUMLAH SLIDE WAJIB: MINIMAL 13 SLIDE, MAKSIMAL 15 SLIDE!
@@ -441,34 +481,33 @@ Jangan buat kurang dari 13 slide. Ikuti struktur yang sudah ditentukan.
 
 CRITICAL REQUIREMENTS:
 ✓ WAJIB buat 13-15 slide sesuai struktur yang diberikan
-✓ Setiap slide: 5-7 bullet points yang SUBSTANTIF dan DETAIL
-✓ Setiap bullet: 3-5 kalimat yang INFORMATIF dan BERMAKNA (bukan hanya 1-2 kalimat pendek!)
-✓ JANGAN buat bullet yang hanya keyword atau 1 kalimat saja - HARUS ada elaborasi!
+✓ Setiap slide: 4-6 bullet points yang JELAS dan RINGKAS (ini untuk PPT, bukan dokumen!)
+✓ Setiap bullet: 1-2 kalimat yang PADAT dan INFORMATIF (PPT harus concise!)
 ✓ Format heading: "JUDUL:", "OBJECTIVE:", "KONSEP:", "CHALLENGES:", "LANGKAH 1:", "LANGKAH 2:", dst, "RINGKASAN:", "STUDI KASUS:", "PEMECAHAN MASALAH:", "PENUTUP:" (untuk styling hijau)
-✓ Setiap poin harus punya: definisi/penjelasan + contoh konkret + tips praktis
-✓ Bahasa Indonesia profesional, detail, engaging (substantif tapi tetap fokus)
+✓ Setiap poin harus punya: poin utama + 1 contoh singkat atau aplikasi praktis
+✓ Bahasa Indonesia profesional, ringkas, engaging
 ✓ Konteks: Perwira kapal container SPIL (gunakan contoh maritim yang spesifik)
 
-FORMAT BULLET POINTS YANG DIHARAPKAN (WAJIB IKUTI!):
+FORMAT BULLET POINTS UNTUK PPT (WAJIB IKUTI!):
 
-⚠️ SETIAP BULLET HARUS 3-5 KALIMAT, BUKAN 1-2 KALIMAT!
+⚠️ INI PPT - SETIAP BULLET HARUS RINGKAS (1-2 KALIMAT SAJA!)
 
-1. Sub-judul + Penjelasan LENGKAP (3-5 kalimat):
+1. Sub-judul + Penjelasan RINGKAS (1-2 kalimat):
    "Definisi Problem Analysis dalam Konteks Maritim
-   Problem analysis adalah metodologi sistematis untuk mengidentifikasi dan memahami akar penyebab masalah operasional, bukan sekadar menangani gejala permukaan yang terlihat. Di kapal container, metode ini sangat krusial karena masalah kecil yang tidak ditangani dengan benar dapat berkembang menjadi insiden besar yang mengancam keselamatan crew dan cargo. Pendekatan ini mengharuskan kita untuk terus bertanya 'mengapa' hingga menemukan sumber masalah yang sebenarnya. Dengan demikian, solusi yang diterapkan bersifat fundamental dan mencegah masalah berulang di masa depan, menghemat waktu, biaya, dan resources kapal."
+   Problem analysis adalah metodologi sistematis untuk mengidentifikasi akar penyebab masalah operasional di kapal. Metode ini mencegah masalah berulang dengan menangani penyebab utama, bukan hanya gejala."
 
-2. Poin Utama dengan Elaborasi DETAIL (3-5 kalimat):
+2. Poin Utama dengan Elaborasi SINGKAT (1-2 kalimat):
    "• Fokus pada Sistem dan Proses, Bukan Individu
-   Pendekatan yang efektif adalah melihat setiap masalah sebagai hasil dari kegagalan sistem, prosedur, atau proses kerja - bukan kesalahan personal dari satu atau dua orang. Ketika kita menyalahkan individu, crew menjadi defensif dan menyembunyikan informasi penting yang sebenarnya bisa membantu investigasi. Sebaliknya, ketika kita fokus pada sistem, crew merasa aman untuk berbagi fakta dan pengalaman tanpa takut dihukum. Perspektif ini memungkinkan kita mengidentifikasi gap dalam SOP, training, atau tools yang perlu diperbaiki untuk mencegah kejadian serupa."
+   Lihat masalah sebagai hasil kegagalan sistem atau prosedur kerja, bukan kesalahan personal crew. Pendekatan ini membuat crew lebih terbuka berbagi informasi untuk investigasi yang efektif."
 
-3. Langkah dengan Penjelasan KOMPREHENSIF (3-5 kalimat):
+3. Langkah dengan Penjelasan PADAT (1-2 kalimat):
    "Langkah 1: Identifikasi dan Definisikan Masalah Secara Spesifik
-   Langkah pertama adalah menyatakan masalah dalam satu kalimat yang jelas, objektif, terukur, dan berbasis fakta - hindari pernyataan yang ambigu atau terlalu umum. Libatkan semua stakeholder yang relevan (Chief Officer, Engineer, atau ABK yang terlibat langsung) untuk memastikan pemahaman yang sama tentang apa sebenarnya masalah yang terjadi. Dokumentasikan dengan lengkap menggunakan format 5W1H: What happened, When, Where, Who was involved, Why it matters, How it occurred. Contoh yang BAIK: 'Pompa ballast No.2 berhenti beroperasi pada tanggal 15 Januari pukul 14:00 WIB saat proses loading di Pelabuhan Tanjung Priok, menyebabkan delay bongkar muat selama 3 jam dan kerugian operasional estimasi Rp 50 juta.' Contoh yang BURUK: 'Pompa sering rusak' (terlalu umum dan tidak actionable)."
+   Nyatakan masalah dalam satu kalimat yang jelas, terukur, dan berbasis fakta menggunakan format 5W1H. Contoh: 'Pompa ballast No.2 berhenti beroperasi pada 15 Jan pukul 14:00 saat loading di Tanjung Priok, menyebabkan delay 3 jam.'"
 
 DURASI DAN AKTIVITAS:
-├─ Total durasi: 90-120 menit (untuk 13-15 slide yang SUBSTANTIF dan DETAIL)
-├─ Konten per slide: MINIMAL 200-400 kata (jangan kurang!)
-├─ Speaker notes per slide: 150-300 kata (guidance lengkap untuk fasilitator)
+├─ Total durasi: 90-120 menit (untuk 13-15 slide PPT)
+├─ Konten per slide: 80-150 kata (ringkas untuk PPT, detail ada di speaker notes!)
+├─ Speaker notes per slide: 100-150 kata (guidance untuk fasilitator)
 ├─ 3-4 aktivitas interaktif (clear instructions + time allocation)
 ├─ 6-8 assessment questions (test pemahaman aplikatif + comprehensive answers)
 └─ Referensi credible, up-to-date, relevant (konteks maritim Indonesia)
@@ -478,34 +517,31 @@ Jika ada referensi tambahan, buat 1 slide tersendiri dengan format:
 {
   "heading": "REFERENSI TAMBAHAN: [Nama Referensi]",
   "bullets": [
-    "🔖 SUMBER REFERENSI",
+    "SUMBER REFERENSI",
     "[Nama referensi/artikel/buku/framework yang disebutkan user]",
     "",
     "• Relevansi dengan Topik Training",
-    "Jelaskan bagaimana referensi ini memperkaya pemahaman topik dalam 2-3 kalimat fokus.",
+    "Referensi ini memperkaya pemahaman topik dengan perspektif tambahan yang relevan untuk operasional kapal.",
     "",
     "• Konsep Kunci dari Referensi",
-    "Highlight 2-3 konsep utama dari referensi yang directly applicable ke topik training.",
+    "Highlight 2-3 konsep utama yang directly applicable ke topik training dalam 1-2 kalimat.",
     "",
     "• Aplikasi Praktis",
-    "Tunjukkan bagaimana mengintegrasikan referensi ini dengan tools/metode dalam konteks pekerjaan.",
-    "",
-    "• Contoh Implementasi",
-    "Berikan 1 contoh konkret bagaimana referensi ini dapat diaplikasikan dalam scenario real."
+    "Tunjukkan cara mengintegrasikan referensi dengan tools/metode dalam konteks pekerjaan sehari-hari."
   ],
-  "speaker_notes": "Guidance 150-200 kata tentang cara membahas referensi tambahan",
+  "speaker_notes": "Guidance 100-150 kata tentang cara membahas referensi tambahan",
   "slide_type": "concept"
 }
 
 LARANGAN:
 ✗ JANGAN buat kurang dari 13 slide - INI WAJIB!
-✗ JANGAN buat bullet yang PENDEK (hanya 1-2 kalimat) - MINIMAL 3-4 kalimat per bullet!
-✗ JANGAN buat konten yang dangkal atau surface-level - HARUS ada depth dan detail!
-✗ JANGAN gunakan emoji dalam konten apapun (kecuali slide referensi tambahan)
-✗ JANGAN buat bullet point terlalu panjang (max 5-6 kalimat per bullet)
-✗ JANGAN gunakan jargon tanpa penjelasan memadai
-✗ JANGAN konten terlalu teoretis tanpa aplikasi praktis - SELALU sertakan contoh konkret!
-✗ JANGAN bahasa ambigu atau tidak jelas
+✗ JANGAN buat bullet yang TERLALU PANJANG - ini PPT, bukan essay! (max 2 kalimat per bullet)
+✗ JANGAN buat konten yang dangkal - tetap harus informatif meski ringkas
+✗ JANGAN gunakan emoji dalam konten apapun
+✗ JANGAN buat bullet point terlalu panjang (max 2 kalimat per bullet untuk PPT!)
+✗ JANGAN gunakan jargon tanpa penjelasan
+✗ JANGAN konten terlalu teoretis - selalu sertakan aplikasi praktis
+✗ JANGAN bahasa ambigu
 ✗ JANGAN abaikan konteks perwira kapal container SPIL
 ✗ JANGAN gabungkan langkah-langkah tools - WAJIB 1 langkah = 1 slide (slide 5-9)
 `
@@ -513,75 +549,77 @@ LARANGAN:
 
 // getExampleSection provides quality content examples
 func (s *Service) getExampleSection() string {
-	return `CONTOH KONTEN BERKUALITAS (13-15 SLIDE):
+	return `CONTOH KONTEN PPT BERKUALITAS (13-15 SLIDE):
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Contoh Slide 3 - KONSEP (PERHATIKAN: setiap bullet 3-5 kalimat!):
+⚠️ PENTING: Ini contoh untuk PPT (RINGKAS!), bukan dokumen training lengkap!
+
+Contoh Slide 3 - KONSEP (setiap bullet 1-2 kalimat saja!):
 
 {
   "heading": "KONSEP: PROBLEM ANALYSIS SISTEMATIS",
   "bullets": [
     "Definisi Problem Analysis dalam Konteks Maritim",
-    "Problem analysis adalah metodologi sistematis untuk mengidentifikasi dan memahami akar penyebab masalah operasional di kapal, bukan sekadar menangani gejala permukaan yang terlihat. Berbeda dengan troubleshooting biasa yang hanya fokus pada 'apa yang rusak', problem analysis menggali lebih dalam untuk menjawab pertanyaan 'mengapa ini bisa terjadi' dan 'bagaimana mencegah terulang'. Di industri maritim, metode ini sangat krusial karena satu masalah kecil yang tidak ditangani dengan benar dapat berkembang menjadi insiden keselamatan yang serius. Dengan pendekatan sistematis, perwira dapat menghasilkan solusi yang sustainable dan preventive, menghemat waktu dan biaya operasional kapal dalam jangka panjang.",
+    "Problem analysis adalah metodologi sistematis untuk mengidentifikasi akar penyebab masalah operasional di kapal. Metode ini mencegah masalah berulang dengan menangani root cause, bukan hanya gejala permukaan.",
     "",
-    "• Mengapa Problem Analysis Sangat Penting untuk Perwira Kapal Container?",
-    "Di kapal container, masalah operasional yang tidak diselesaikan sampai akarnya dapat menyebabkan berbagai dampak negatif: delay bongkar muat yang merugikan perusahaan, kerusakan cargo yang bernilai miliaran rupiah, bahkan risiko keselamatan crew dan kapal. Sebagai perwira, Anda bertanggung jawab tidak hanya menyelesaikan masalah saat ini, tetapi juga memastikan masalah serupa tidak terulang di voyage berikutnya. Kemampuan menganalisis masalah secara sistematis membedakan perwira yang biasa-biasa saja dengan perwira yang outstanding. Skill ini juga sangat dihargai oleh manajemen karena menunjukkan kemampuan berpikir strategis dan leadership.",
+    "• Mengapa Penting untuk Perwira Kapal Container?",
+    "Masalah yang tidak diselesaikan sampai akarnya dapat menyebabkan delay bongkar muat, kerusakan cargo, dan risiko keselamatan. Kemampuan menganalisis masalah secara sistematis membedakan perwira outstanding dengan yang biasa-biasa saja.",
     "",
-    "• Tools yang Akan Dipelajari: 5 Whys Method dari Toyota Production System",
-    "5 Whys adalah teknik iteratif yang dikembangkan oleh Sakichi Toyoda dan digunakan secara luas di Toyota Production System untuk menemukan root cause masalah dengan bertanya 'Mengapa?' secara berulang (biasanya 5 kali, tapi bisa lebih atau kurang tergantung kompleksitas). Metode ini sangat cocok untuk lingkungan maritim karena sederhana, tidak membutuhkan tools khusus, dan dapat dilakukan oleh siapa saja di kapal. Kunci keberhasilan metode ini adalah disiplin untuk tidak berhenti di jawaban pertama yang muncul, melainkan terus menggali hingga menemukan faktor sistemik yang menjadi penyebab utama. Dengan 5 Whys, crew dapat menemukan underlying system issues yang sering tersembunyi di balik masalah-masalah yang terlihat di permukaan."
+    "• Tools yang Akan Dipelajari: 5 Whys Method",
+    "5 Whys adalah teknik bertanya 'Mengapa?' secara berulang untuk menemukan root cause. Metode ini sederhana, tidak butuh tools khusus, dan sangat efektif untuk lingkungan maritim."
   ],
-  "speaker_notes": "Jelaskan konteks problem analysis di dunia maritim dengan contoh konkret. Tekankan bahwa ini bukan teori akademis tapi skill praktis yang akan sangat membantu karir mereka sebagai perwira. Berikan contoh kasus nyata jika ada.",
+  "speaker_notes": "Jelaskan konteks problem analysis di maritim dengan contoh konkret. Tekankan bahwa ini skill praktis yang akan membantu karir mereka. Alokasikan 7-8 menit untuk slide ini.",
   "slide_type": "concept"
 }
 
-Contoh Slide 5 - LANGKAH 1 (WAJIB 1 langkah = 1 slide, setiap bullet 3-5 kalimat!):
+Contoh Slide 5 - LANGKAH 1 (setiap bullet 1-2 kalimat!):
 
 {
   "heading": "LANGKAH 1: IDENTIFIKASI DAN DEFINISIKAN MASALAH SECARA SPESIFIK",
   "bullets": [
-    "Apa yang Harus Dilakukan di Langkah Pertama Ini?",
-    "Langkah pertama dan paling krusial adalah menyatakan masalah dalam satu kalimat yang jelas, objektif, terukur, dan berbasis fakta - bukan opini atau asumsi. Libatkan semua stakeholder yang relevan (Chief Officer, Engineer, ABK yang terlibat langsung) untuk memastikan semua orang memiliki pemahaman yang sama tentang apa sebenarnya masalah yang sedang dihadapi. Dokumentasikan dengan lengkap menggunakan format 5W1H: What happened, When, Where, Who was involved, Why it matters, How did it occur. Jangan terburu-buru melompat ke solusi sebelum masalah didefinisikan dengan crystal clear - banyak kasus di mana tim menghabiskan waktu dan resources untuk menyelesaikan 'masalah yang salah'.",
+    "Apa yang Harus Dilakukan di Langkah Ini?",
+    "Nyatakan masalah dalam satu kalimat yang jelas, terukur, dan berbasis fakta. Libatkan stakeholder relevan dan dokumentasikan lengkap dengan format 5W1H.",
     "",
-    "• Contoh Identifikasi Masalah yang BAIK vs BURUK di Kapal Container",
-    "Contoh BAIK: 'Pompa ballast No.2 berhenti beroperasi pada tanggal 15 Januari pukul 14:00 WIB saat proses loading di Pelabuhan Tanjung Priok, menyebabkan delay bongkar muat selama 3 jam dan estimasi kerugian operasional Rp 50 juta.' Pernyataan ini spesifik, terukur, dan memberikan konteks lengkap. Contoh BURUK: 'Pompa sering rusak' atau 'Ada masalah dengan sistem ballast'. Pernyataan seperti ini terlalu umum, tidak spesifik kapan dan di mana, dan tidak menunjukkan dampak. Dengan identifikasi yang buruk, tim akan kesulitan melakukan investigasi yang efektif.",
+    "• Contoh Identifikasi Masalah: BAIK vs BURUK",
+    "BAIK: 'Pompa ballast No.2 berhenti pada 15 Jan pukul 14:00 saat loading di Tanjung Priok, delay 3 jam, kerugian Rp 50 juta.' BURUK: 'Pompa sering rusak' (terlalu umum, tidak actionable).",
     "",
-    "• Tips Praktis untuk Identifikasi Masalah yang Efektif",
-    "Gunakan log book sebagai referensi utama karena berisi data faktual dan timestamped. Ambil foto kondisi equipment atau situasi sebagai dokumentasi visual yang tidak bisa diperdebatkan. Wawancarai crew yang terlibat langsung dengan pertanyaan terbuka seperti 'Ceritakan apa yang terjadi?' bukan 'Apakah kamu yang menyebabkan ini?'. Hindari bahasa yang judgmental atau menyalahkan - ini akan membuat crew defensive dan menyembunyikan informasi. Catat semua informasi dengan detail, bahkan yang tampaknya tidak relevan, karena bisa jadi penting saat analisis lebih lanjut.",
+    "• Tips Praktis",
+    "Gunakan log book sebagai referensi faktual, ambil foto kondisi equipment sebagai dokumentasi visual. Wawancarai crew dengan pertanyaan terbuka, hindari bahasa menyalahkan.",
     "",
-    "• Common Mistake yang Harus Dihindari di Langkah Ini",
-    "Kesalahan paling fatal adalah langsung menyalahkan individu sebelum investigasi selesai - ini adalah budaya blame game yang toxic dan kontraproduktif. Ketika crew merasa akan disalahkan, mereka akan menyembunyikan fakta dan memberikan informasi yang tidak akurat untuk melindungi diri. Kesalahan lain adalah buru-buru menyimpulkan dan langsung loncat ke solusi tanpa memahami masalah dengan benar. Ingat prinsip: 'A problem well-defined is half solved.' Luangkan waktu yang cukup di langkah ini karena fondasi yang kuat akan memudahkan langkah-langkah selanjutnya."
+    "• Common Mistake yang Harus Dihindari",
+    "Jangan langsung menyalahkan individu sebelum investigasi selesai - ini menciptakan blame game yang toxic. Jangan buru-buru loncat ke solusi tanpa memahami masalah dengan benar."
   ],
-  "speaker_notes": "Tekankan pentingnya spesifisitas dalam identifikasi masalah. Berikan waktu untuk peserta menulis contoh masalah dari pengalaman mereka sendiri. Review beberapa contoh dan berikan feedback apakah sudah cukup spesifik atau belum.",
+  "speaker_notes": "Tekankan pentingnya spesifisitas. Minta peserta menulis contoh masalah dari pengalaman mereka, review dan berikan feedback. Alokasikan 8-10 menit.",
   "slide_type": "steps"
 }
 
-Contoh Slide 11 - STUDI KASUS (bullet harus 3-5 kalimat!):
+Contoh Slide 11 - STUDI KASUS (bullet 1-2 kalimat!):
 
 {
   "heading": "STUDI KASUS: MASALAH POMPA BALLAST BERULANG DI KM. SPIL NUSANTARA",
   "bullets": [
-    "Konteks Situasi di Kapal",
-    "KM. SPIL Nusantara, kapal container berkapasitas 1.200 TEU yang beroperasi di rute Surabaya-Makassar, mengalami kegagalan pompa ballast secara berulang dalam 3 bulan terakhir - tepatnya sudah 4 kali kejadian. Setiap kegagalan menyebabkan delay rata-rata 4 jam karena kapal tidak bisa melakukan operasi ballasting yang diperlukan untuk stabilitas saat loading/unloading. Total kerugian finansial diestimasi mencapai Rp 200 juta dari accumulated delay dan biaya emergency repair. Crew mulai frustrasi dan moral di kapal menurun karena merasa masalah tidak pernah terselesaikan dengan benar.",
+    "Konteks Situasi",
+    "KM. SPIL Nusantara (1.200 TEU, rute Surabaya-Makassar) mengalami kegagalan pompa ballast 4 kali dalam 3 bulan. Setiap kejadian menyebabkan delay 4 jam, total kerugian Rp 200 juta.",
     "",
     "• Masalah yang Dihadapi Chief Officer",
-    "Chief Officer sebagai penanggung jawab operasional cargo dan ballast sangat frustrasi karena sudah mengganti pompa 2 kali dengan unit baru namun masalah tetap berulang setelah beberapa minggu. Tim engine room menyalahkan tim deck karena dianggap mengoperasikan pompa dengan cara yang salah, sementara tim deck menyalahkan engine room karena dianggap tidak melakukan maintenance dengan benar. Captain sudah mendapat teguran dari kantor pusat dan diminta menyelesaikan masalah ini secepatnya. Situasi semakin tegang dan komunikasi antar departemen menjadi tidak sehat.",
+    "Sudah ganti pompa 2 kali dengan unit baru tapi masalah tetap berulang. Tim deck dan engine saling menyalahkan, Captain dapat teguran dari kantor pusat.",
     "",
-    "• Pertanyaan Refleksi untuk Peserta",
-    "Jika Anda adalah Chief Officer di KM. SPIL Nusantara, bagaimana Anda akan memulai proses problem analysis menggunakan 5 Whys? Langkah apa yang pertama Anda lakukan sebelum mulai bertanya 'Mengapa?'. Siapa saja yang perlu Anda libatkan dalam investigasi ini? Bagaimana Anda mengatasi situasi blame game yang sudah terjadi antar crew? Apa yang akan Anda lakukan berbeda dari pendekatan sebelumnya yang hanya mengganti pompa?",
+    "• Pertanyaan Refleksi",
+    "Jika Anda Chief Officer, bagaimana memulai problem analysis dengan 5 Whys? Siapa yang perlu Anda libatkan dan bagaimana mengatasi blame game?",
     "",
-    "• Hint untuk Memulai Analisis",
-    "Perhatikan pola yang ada: masalah berulang meski pompa sudah diganti 2 kali - ini strong indication bahwa root cause BUKAN di pompanya sendiri. Pikirkan faktor-faktor lain: Apakah ada masalah dengan supply listrik ke pompa? Apakah filter atau strainer tersumbat? Apakah ada masalah dengan prosedur operasional atau SOP yang tidak diikuti? Apakah ada faktor lingkungan seperti kualitas air laut di rute tertentu? Gunakan data dari log book untuk mencari pattern kapan dan di kondisi apa pompa biasanya gagal."
+    "• Hint untuk Analisis",
+    "Masalah berulang meski pompa diganti 2x - ini indikasi strong bahwa root cause BUKAN di pompanya. Pikirkan: supply listrik, filter tersumbat, SOP tidak diikuti, atau faktor lingkungan?"
   ],
-  "speaker_notes": "Beri waktu 3-5 menit untuk peserta memikirkan jawaban sebelum melanjutkan ke slide pemecahan masalah. Minta beberapa peserta untuk share pendekatan mereka. Highlight pendekatan yang baik dan berikan koreksi untuk yang kurang tepat.",
+  "speaker_notes": "Beri waktu 3-5 menit untuk peserta berpikir sebelum melanjutkan ke slide pemecahan. Minta beberapa peserta share pendekatan mereka.",
   "slide_type": "case_study"
 }
 
 ⚠️ PENTING: 
-- Buat 13-15 slide dengan KUALITAS KONTEN seperti contoh di atas
+- Buat 13-15 slide dengan KUALITAS seperti contoh di atas
 - Setiap LANGKAH harus di slide terpisah (5 langkah = 5 slide)
-- Setiap bullet WAJIB 3-5 kalimat, BUKAN 1-2 kalimat!
-- Sertakan contoh konkret di setiap slide
-- Konten harus SUBSTANTIF dan BERMAKNA, bukan generik
+- Setiap bullet WAJIB 1-2 kalimat saja (ini PPT, bukan dokumen!)
+- Tetap sertakan contoh konkret di setiap slide
+- Konten harus PADAT dan INFORMATIF meski ringkas
 `
 }
 
@@ -723,7 +761,7 @@ func (s *Service) callGemini(ctx context.Context, prompt string) (*Plan, error) 
 		return nil, errors.New("GEMINI_API_KEY tidak di-set")
 	}
 
-	systemInstruction := "You are an expert instructional designer creating DETAILED training content. Each bullet point must have 3-5 sentences with examples. Respond ONLY with valid JSON. No markdown, no code fences, no explanations. Just pure JSON."
+	systemInstruction := "You are an expert instructional designer creating CONCISE PowerPoint training content in Indonesian. This is for PPT slides, NOT a full document - keep each bullet point to 1-2 sentences maximum. Be informative but CONCISE. Respond ONLY with valid JSON. No markdown, no code fences, no explanations. Just pure JSON."
 
 	body := map[string]any{
 		"system_instruction": map[string]any{
@@ -1503,7 +1541,7 @@ func (s *Service) buildDetailedPrompt(in GenerateInput) string {
 	keyword := extractKeyword(in.Referensi)
 	additionalRef := extractOptionalReferensi(in.Referensi)
 
-	basePrompt := fmt.Sprintf(`You are an expert educational content writer creating a COMPREHENSIVE, IN-DEPTH LEARNING GUIDE in Indonesian. This is NOT a presentation - it's a detailed study guide that provides complete understanding of the topic.
+	basePrompt := fmt.Sprintf(`You are an expert educational content writer creating a COMPREHENSIVE LEARNING GUIDE in Indonesian. This is a DETAILED STUDY GUIDE (bukan presentation slides) - lebih mendalam dari PPT dengan penjelasan lengkap, banyak contoh, dan aplikasi praktis.
 
 KONTEKS PELATIHAN:
 - Topik: %s
@@ -1516,81 +1554,85 @@ KONTEKS PELATIHAN:
 
 %s
 
-STRUKTUR KONTEN DETAIL (SUPER LENGKAP):
+STRUKTUR KONTEN (LENGKAP & MENDALAM):
 
-1. INTRODUCTION (800-1200 kata):
-   - Konteks dan latar belakang topik secara mendalam
-   - Mengapa topik ini penting di workplace modern Indonesia
-   - Bagaimana topik ini relevan dengan level kompetensi yang ditargetkan
+1. INTRODUCTION (500-700 kata):
+   - Konteks dan latar belakang topik secara menyeluruh
+   - Mengapa topik ini penting di workplace modern
+   - Relevansi dengan level kompetensi yang ditargetkan
    - Overview lengkap apa yang akan dipelajari
-   - Manfaat konkret yang akan didapat setelah mempelajari materi ini
+   - Manfaat konkret yang akan didapat
+   - Challenge umum yang akan dihadapi
 
-2. CORE CONCEPTS (4-6 SECTIONS, masing-masing 800-1500 kata):
+2. CORE CONCEPTS (4 SECTIONS, masing-masing 500-800 kata):
    Setiap section harus mencakup:
    - Penjelasan konsep secara detail dan mendalam
-   - Teori dan framework yang mendasari
-   - Contoh-contoh konkret dan relatable (minimal 3 per section)
-   - Best practices dan proven strategies
-   - Common mistakes dan cara menghindarinya
-   - Tips implementasi praktis
-   - Latihan refleksi atau self-assessment
+   - Teori dan framework yang mendasari dengan elaborasi
+   - Contoh-contoh konkret dan relatable (minimal 2-3 per section)
+   - Best practices dan proven strategies dengan penjelasan
+   - Common mistakes dan cara menghindarinya (dijelaskan detail)
+   - Tips implementasi praktis dengan context
+   - Refleksi atau self-assessment questions
 
-3. PRACTICAL IMPLEMENTATION GUIDE (1500-2500 kata):
-   - Step-by-step guide yang sangat detail
-   - Setiap step dijelaskan dengan lengkap (150-300 kata per step)
+3. PRACTICAL IMPLEMENTATION GUIDE (800-1000 kata):
+   - Step-by-step guide yang detail dan jelas
+   - Setiap step dijelaskan lengkap (120-180 kata per step)
    - Contoh implementasi di berbagai konteks
    - Checklist dan tools yang bisa digunakan
-   - Troubleshooting guide untuk masalah umum
+   - Troubleshooting guide untuk masalah umum (dijelaskan detail)
    - Success metrics dan cara mengukur progress
+   - Tips optimasi untuk setiap step
 
-4. CASE STUDIES (3-5 studi kasus, masing-masing 400-600 kata):
-   - Studi kasus lengkap dari dunia nyata
+4. CASE STUDIES (3 studi kasus, masing-masing 200-250 kata):
+   - Studi kasus lengkap dari dunia nyata (preferably Indonesia atau maritime context)
    - Context, challenge, solution, outcome yang detail
    - Analysis mendalam tentang mengapa berhasil/gagal
-   - Key lessons dan takeaways
+   - Key lessons dan takeaways yang actionable
    - Aplikasi ke situasi lain
 
-5. COMPREHENSIVE FAQ (15-25 pertanyaan):
+5. FAQ (5 pertanyaan):
    - Pertanyaan umum yang sering muncul
-   - Jawaban super detail dan lengkap (100-200 kata per jawaban)
-   - Include edge cases dan situasi khusus
-   - Cross-references ke bagian lain dalam guide
+   - Jawaban lengkap dan detail (70-120 kata per jawaban)
+   - Include berbagai skenario dan situasi
+   - Tips tambahan dalam jawaban
 
 6. RESOURCES & FURTHER LEARNING:
-   - Books (minimal 5) dengan deskripsi singkat
-   - Articles dan research papers
-   - Online courses dan tutorials
-   - Tools dan templates
-   - Communities dan forums
+   - Books (4-6 buku) dengan deskripsi dan key takeaways
+   - Articles dan research papers penting
+   - Online courses atau video resources
+   - Tools dan templates yang bisa langsung digunakan
+   - Communities atau forums untuk networking
 
-7. CONCLUSION & ACTION PLAN (500-800 kata):
-   - Summary komprehensif
-   - Immediate action steps
+7. CONCLUSION & ACTION PLAN (350-500 kata):
+   - Summary komprehensif dari semua konsep utama
+   - Immediate action steps (24-48 jam pertama)
+   - Short-term goals (1-3 bulan)
    - Long-term development roadmap
-   - Self-assessment tools
+   - Self-assessment checklist
    - Next steps untuk continuing education
 
 REQUIREMENTS:
-- Total content harus SANGAT PANJANG dan DETAIL (8000-12000+ kata total)
-- Setiap konsep dijelaskan secara menyeluruh dengan multiple perspectives
-- Banyak contoh konkret, real-world applications, dan practical tips
+- Total content harus LENGKAP dan MENDALAM (5000-7000 kata total)
+- Ini BUKAN summary atau overview - ini learning guide yang comprehensive
+- Setiap konsep dijelaskan dengan depth dan multiple perspectives
+- Banyak contoh konkret, real-world applications, dan practical scenarios
 - Bahasa Indonesia yang jelas, engaging, dan mudah dipahami
-- Include analogies, metaphors, dan storytelling untuk clarity
-- Cross-reference antar sections untuk comprehensive understanding
-- Actionable insights di setiap bagian
-- Focus pada deep understanding, bukan hanya surface-level knowledge
+- Include analogies dan storytelling untuk clarity
+- Actionable insights dan practical tips di setiap bagian
+- Focus pada deep understanding DAN aplikasi praktis
+- Lebih detail dari PPT slides tapi tidak bertele-tele
 
 OUTPUT FORMAT - JSON VALID:
 {
   "title": "Panduan Lengkap: [Topik Training]",
-  "introduction": "Penjelasan panjang dan mendalam tentang topik (800-1200 kata)...",
+  "introduction": "Penjelasan menyeluruh tentang topik (500-700 kata)...",
   "sections": [
     {
       "title": "Judul Section",
-      "content": "Konten super lengkap dan detail (800-1500 kata)...",
-      "key_points": ["Poin penting 1", "Poin penting 2", ...],
-      "examples": ["Contoh detail 1", "Contoh detail 2", "Contoh detail 3"],
-      "exercises": "Latihan atau pertanyaan refleksi untuk section ini"
+      "content": "Konten lengkap dan mendalam (500-800 kata)...",
+      "key_points": ["Poin penting 1 dengan elaborasi", "Poin penting 2 dengan elaborasi", ...],
+      "examples": ["Contoh detail 1 dengan context", "Contoh detail 2"],
+      "exercises": "Latihan refleksi atau self-assessment untuk section ini"
     }
   ],
   "practical_guide": {
@@ -1598,44 +1640,45 @@ OUTPUT FORMAT - JSON VALID:
       {
         "step_number": 1,
         "title": "Judul Step",
-        "description": "Penjelasan super detail step ini (150-300 kata)...",
-        "examples": ["Contoh implementasi 1", "Contoh implementasi 2"]
+        "description": "Penjelasan detail step ini (120-180 kata) dengan context, rationale, dan tips...",
+        "examples": ["Contoh implementasi 1 dengan context", "Contoh implementasi 2"]
       }
     ],
-    "tips": ["Tips praktis 1", "Tips praktis 2", ...],
-    "common_pitfalls": ["Kesalahan umum 1 dan cara menghindarinya", ...]
+    "tips": ["Tips praktis 1 dengan penjelasan", "Tips praktis 2 dengan context", ...],
+    "common_pitfalls": ["Kesalahan umum 1: penjelasan dan cara menghindarinya", ...]
   },
   "case_studies": [
     {
       "title": "Judul Case Study",
-      "context": "Konteks lengkap (100-150 kata)",
-      "challenge": "Tantangan yang dihadapi (80-120 kata)",
-      "solution": "Solusi yang diterapkan (150-200 kata)",
-      "outcome": "Hasil yang didapat (80-120 kata)",
-      "lessons": ["Pelajaran 1", "Pelajaran 2", "Pelajaran 3"]
+      "context": "Konteks lengkap (70-100 kata)",
+      "challenge": "Tantangan yang dihadapi (60-90 kata)",
+      "solution": "Solusi yang diterapkan (100-150 kata)",
+      "outcome": "Hasil yang didapat (50-80 kata)",
+      "lessons": ["Pelajaran 1 dengan elaborasi", "Pelajaran 2", "Pelajaran 3"]
     }
   ],
   "faq": [
     {
       "question": "Pertanyaan yang relevan?",
-      "answer": "Jawaban super detail dan lengkap (100-200 kata)..."
+      "answer": "Jawaban lengkap dan detail (70-120 kata) dengan examples dan tips..."
     }
   ],
   "resources": {
-    "books": ["Buku 1: Deskripsi", "Buku 2: Deskripsi", ...],
-    "articles": ["Artikel 1", "Artikel 2", ...],
-    "videos": ["Video 1", "Video 2", ...],
-    "tools": ["Tool 1", "Tool 2", ...],
-    "additional": ["Resource tambahan 1", "Resource tambahan 2", ...]
+    "books": ["Buku 1: Deskripsi dan key takeaways", "Buku 2: Deskripsi", ...],
+    "articles": ["Artikel 1 dengan deskripsi", "Artikel 2", ...],
+    "videos": ["Video/Course 1", "Video 2", ...],
+    "tools": ["Tool 1: Deskripsi penggunaan", "Tool 2", ...]
   },
-  "conclusion": "Kesimpulan komprehensif dan action plan (500-800 kata)..."
+  "conclusion": "Kesimpulan komprehensif dan action plan (350-500 kata)..."
 }
 
 PENTING: 
-- Hasilkan konten yang SANGAT LENGKAP dan DETAIL
-- Setiap bagian harus substantif dan value-adding
-- Ini bukan summary, tapi comprehensive learning guide
-- Peserta harus bisa menguasai topik HANYA dari membaca guide ini`, 
+- Hasilkan konten yang LENGKAP dan MENDALAM
+- Ini LEARNING GUIDE yang comprehensive, bukan summary
+- Setiap bagian harus substantif dengan value yang jelas
+- Lebih detail dan lengkap dari PPT slides
+- Peserta harus bisa deeply understand dan apply topik dari guide ini
+- Balance antara theory (pemahaman) dan practice (aplikasi)`, 
 		in.TopikTraining, 
 		in.Kompetensi, 
 		in.Level, 

@@ -78,6 +78,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		trainings.POST("/generate", c.TrainingGenController.Generate)
 		trainings.POST("/generate-quiz", c.TrainingGenController.GenerateQuiz)
 		trainings.PUT("/:no", c.TrainingController.Update)
+		trainings.PUT("/:no/referensi", c.TrainingController.UpdateReferensi)
 		trainings.DELETE("/:no", c.TrainingController.Delete)
 	}
 

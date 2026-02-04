@@ -23,6 +23,12 @@ func main() {
 
 	log.Info("Migration completed successfully")
 
+	log.Info("Populating default referensi for existing trainings...")
+	if err := populateDefaultReferensi(db); err != nil {
+		log.Fatalf("populate default referensi failed: %v", err)
+	}
+	log.Info("Default referensi populated successfully")
+
 	log.Info("Creating database triggers...")
 	if err := createTriggers(db); err != nil {
 		log.Fatalf("trigger creation failed: %v", err)
@@ -84,6 +90,28 @@ func runAutoMigrate(db *gorm.DB) error {
 		if err := db.AutoMigrate(model); err != nil {
 			return err
 		}
+	}
+
+	return nil
+}
+
+func populateDefaultReferensi(db *gorm.DB) error {
+	// Populate default referensi for existing training records where referensi IS NULL
+	// Uses exact format specified by user without modification
+	updateReferensi := `
+UPDATE training t
+INNER JOIN competency_types ct ON t.competency_type_id = ct.id
+SET t.referensi = CONCAT(
+    'buatkan slide training online untuk judul ', t.topik_training, ' untuk mengungkap kompetensi ', ct.name, ' yaitu ', ct.description, ' terutama untuk level ', t.lvl, ' yang ', t.deskripsi_perilaku, '\n\n',
+    'buatkan ppt antara 13-15 slide ini sebagai ppt video training online, dengan peserta trainingnya adalah perwira kapal container (SPIL) dengan susunan slidenya\n\n',
+    'yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topik training, slide 4: challenges/tantangan, slide 5-9: 1 tool yang mengungkap ', t.topik_training, ' (jelaskan steps2nya secara detail untuk perslide), slide 11: studi kasus, slide 12: pemecahan masalah dalam studi kasus menggunakan metode/tools yang dijelaskan, slide 13: penutup/closing.'
+)
+WHERE t.referensi IS NULL
+   OR t.referensi = ''
+   OR t.referensi = '-'`
+
+	if err := db.Exec(updateReferensi).Error; err != nil {
+		return err
 	}
 
 	return nil

@@ -159,3 +159,25 @@ func (s *TrainingService) Delete(no string) (*web.SuccessResponse, error) {
 		},
 	}, nil
 }
+
+func (s *TrainingService) UpdateReferensi(no string, referensi string) (*web.SuccessResponse, error) {
+	var training domain.Training
+	if err := s.DB.Where("no = ?", no).First(&training).Error; err != nil {
+		s.Log.Errorf("Training tidak ditemukan: %v", err)
+		return nil, err
+	}
+
+	training.Referensi = &referensi
+	if err := s.DB.Save(&training).Error; err != nil {
+		s.Log.Errorf("Gagal update referensi: %v", err)
+		return nil, err
+	}
+
+	return &web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data: map[string]string{
+			"message": "Referensi berhasil diupdate",
+		},
+	}, nil
+}

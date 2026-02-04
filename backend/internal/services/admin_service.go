@@ -27,6 +27,7 @@ func (s *AdminService) GetDataStatistics() (*web.SuccessResponse, error) {
 		Reports            int64 `json:"reports"`
 		IDPTracking        int64 `json:"idp_tracking"`
 		GapCompetencies    int64 `json:"gap_competencies"`
+		ScoreResults       int64 `json:"score_results"`
 		AssessmentResults  int64 `json:"assessment_results"`
 		UserAnswers        int64 `json:"user_answers"`
 		CoachingReports    int64 `json:"coaching_reports"`
@@ -37,6 +38,7 @@ func (s *AdminService) GetDataStatistics() (*web.SuccessResponse, error) {
 	s.DB.Table("reports").Count(&stats.Reports)
 	s.DB.Table("idp_tracking").Count(&stats.IDPTracking)
 	s.DB.Table("gap_competencies").Count(&stats.GapCompetencies)
+	s.DB.Table("score_results").Count(&stats.ScoreResults)
 	s.DB.Table("assessment_results").Count(&stats.AssessmentResults)
 	s.DB.Table("user_answers").Count(&stats.UserAnswers)
 	s.DB.Table("coaching_reports").Count(&stats.CoachingReports)
@@ -62,6 +64,7 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 		ReportScores             int64 `json:"reportScores"`
 		IDPTracking              int64 `json:"idpTracking"`
 		GapCompetencies          int64 `json:"gapCompetencies"`
+		ScoreResults             int64 `json:"scoreResults"`
 		AssessmentResults        int64 `json:"assessmentResults"`
 		UserAnswers              int64 `json:"userAnswers"`
 		CoachingReports          int64 `json:"coachingReports"`
@@ -73,6 +76,7 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 	tx.Table("report_scores").Count(&deletedCounts.ReportScores)
 	tx.Table("idp_tracking").Count(&deletedCounts.IDPTracking)
 	tx.Table("gap_competencies").Count(&deletedCounts.GapCompetencies)
+	tx.Table("score_results").Count(&deletedCounts.ScoreResults)
 	tx.Table("assessment_results").Count(&deletedCounts.AssessmentResults)
 	tx.Table("user_answers").Count(&deletedCounts.UserAnswers)
 	tx.Table("coaching_reports").Count(&deletedCounts.CoachingReports)
@@ -83,6 +87,12 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 		tx.Rollback()
 		s.Log.Errorf("Failed to delete user_answers: %v", err)
 		return nil, fmt.Errorf("failed to delete user_answers: %w", err)
+	}
+
+	if err := tx.Exec("DELETE FROM score_results").Error; err != nil {
+		tx.Rollback()
+		s.Log.Errorf("Failed to delete score_results: %v", err)
+		return nil, fmt.Errorf("failed to delete score_results: %w", err)
 	}
 
 	if err := tx.Exec("DELETE FROM assessment_results").Error; err != nil {
@@ -143,6 +153,7 @@ func (s *AdminService) DeleteAllReports() (*web.SuccessResponse, error) {
 		"report_scores_deleted":               deletedCounts.ReportScores,
 		"idp_tracking_deleted":                deletedCounts.IDPTracking,
 		"gap_competencies_deleted":            deletedCounts.GapCompetencies,
+		"score_results_deleted":               deletedCounts.ScoreResults,
 		"assessment_results_deleted":          deletedCounts.AssessmentResults,
 		"user_answers_deleted":                deletedCounts.UserAnswers,
 		"coaching_reports_deleted":            deletedCounts.CoachingReports,
@@ -182,22 +193,50 @@ func (s *AdminService) DeleteAllIDPTracking() (*web.SuccessResponse, error) {
 }
 
 func (s *AdminService) DeleteAllAssessmentResults() (*web.SuccessResponse, error) {
-	var count int64
-	s.DB.Table("assessment_results").Count(&count)
-
-	if err := s.DB.Exec("DELETE FROM assessment_results").Error; err != nil {
-		s.Log.Errorf("Failed to delete assessment results: %v", err)
-		return nil, fmt.Errorf("failed to delete assessment results: %w", err)
+	tx := s.DB.Begin()
+	if tx.Error != nil {
+		s.Log.Errorf("Failed to begin transaction: %v", tx.Error)
+		return nil, tx.Error
 	}
 
-	s.Log.WithField("records_deleted", count).Info("Successfully deleted all assessment results")
+	var deletedCounts struct {
+		ScoreResults      int64 `json:"scoreResults"`
+		AssessmentResults int64 `json:"assessmentResults"`
+	}
+
+	tx.Table("score_results").Count(&deletedCounts.ScoreResults)
+	tx.Table("assessment_results").Count(&deletedCounts.AssessmentResults)
+
+	// Delete score_results first (child table)
+	if err := tx.Exec("DELETE FROM score_results").Error; err != nil {
+		tx.Rollback()
+		s.Log.Errorf("Failed to delete score_results: %v", err)
+		return nil, fmt.Errorf("failed to delete score_results: %w", err)
+	}
+
+	// Then delete assessment_results (parent table)
+	if err := tx.Exec("DELETE FROM assessment_results").Error; err != nil {
+		tx.Rollback()
+		s.Log.Errorf("Failed to delete assessment_results: %v", err)
+		return nil, fmt.Errorf("failed to delete assessment_results: %w", err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		s.Log.Errorf("Failed to commit transaction: %v", err)
+		return nil, err
+	}
+
+	s.Log.WithFields(logrus.Fields{
+		"score_results_deleted":      deletedCounts.ScoreResults,
+		"assessment_results_deleted": deletedCounts.AssessmentResults,
+	}).Info("Successfully deleted all assessment results and score results")
 
 	return &web.SuccessResponse{
 		Code:   http.StatusOK,
 		Status: "OK",
 		Data: map[string]interface{}{
-			"message":        "All assessment results deleted successfully",
-			"deletedRecords": count,
+			"message":        "All assessment results and score results deleted successfully",
+			"deletedRecords": deletedCounts,
 		},
 	}, nil
 }
