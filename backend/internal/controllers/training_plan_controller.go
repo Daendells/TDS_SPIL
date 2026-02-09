@@ -252,6 +252,48 @@ func (c *TrainingPlanController) ExportTrainingPlanExcel(ctx *gin.Context) {
 	}).Info("Successfully exported training plan to Excel")
 }
 
+// GetOverdueCount handles GET /api/training-plan/overdue-count?program=SDP
+func (c *TrainingPlanController) GetOverdueCount(ctx *gin.Context) {
+	program := ctx.Query("program")
+	if program == "" {
+		program = "SDP" // Default to SDP if not specified
+	}
+
+	// Validate program
+	validPrograms := map[string]bool{"SDP": true, "MDP": true, "FDP": true}
+	if !validPrograms[program] {
+		c.log.WithField("program", program).Warn("Invalid program requested for overdue count")
+		ctx.JSON(http.StatusBadRequest, gin.H{
+			"success": false,
+			"error":   fmt.Sprintf("Invalid program: %s. Must be one of: SDP, MDP, FDP", program),
+		})
+		return
+	}
+
+	count, err := c.trainingPlanService.GetOverdueUnstartedCount(program)
+	if err != nil {
+		c.log.WithError(err).WithField("program", program).Error("Failed to get overdue count")
+		ctx.JSON(http.StatusInternalServerError, gin.H{
+			"success": false,
+			"error":   "Failed to get overdue training count",
+		})
+		return
+	}
+
+	c.log.WithFields(logrus.Fields{
+		"program": program,
+		"count":   count,
+	}).Info("Successfully retrieved overdue count")
+
+	ctx.JSON(http.StatusOK, gin.H{
+		"success": true,
+		"data": gin.H{
+			"program": program,
+			"count":   count,
+		},
+	})
+}
+
 // ToggleTrainingStarted toggles the is_started flag for a training schedule
 // PUT /api/training-plan/toggle-started/:id
 func (c *TrainingPlanController) ToggleTrainingStarted(ctx *gin.Context) {

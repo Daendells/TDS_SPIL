@@ -21,6 +21,7 @@ type TrainingPlanService interface {
 	UpdateScheduledDate(id int, newDate time.Time) error
 	GenerateTrainingPlanExcel(program string) (*bytes.Buffer, error)
 	ToggleTrainingStarted(id int, isStarted bool, apolloCourseName string) error
+	GetOverdueUnstartedCount(program string) (int, error)
 }
 
 type trainingPlanService struct {
@@ -1457,4 +1458,24 @@ func (s *trainingPlanService) ToggleTrainingStarted(id int, isStarted bool, apol
 		return s.trainingScheduleRepo.UpdateIsStartedWithCourseName(id, isStarted, apolloCourseName)
 	}
 	return s.trainingScheduleRepo.UpdateIsStarted(id, isStarted)
+}
+
+// GetOverdueUnstartedCount returns count of trainings that are overdue (scheduled_date < today) and not started yet
+func (s *trainingPlanService) GetOverdueUnstartedCount(program string) (int, error) {
+	var count int64
+	err := s.db.Model(&domain.TrainingSchedule{}).
+		Where("program = ? AND is_started = false AND scheduled_date < CURDATE()", program).
+		Count(&count).Error
+
+	if err != nil {
+		s.log.WithError(err).WithField("program", program).Error("Failed to get overdue unstarted count")
+		return 0, err
+	}
+
+	s.log.WithFields(logrus.Fields{
+		"program": program,
+		"count":   count,
+	}).Info("Retrieved overdue unstarted training count")
+
+	return int(count), nil
 }

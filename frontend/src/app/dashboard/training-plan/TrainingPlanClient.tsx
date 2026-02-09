@@ -49,6 +49,7 @@ import {
   useGetCompetencyMapping,
   useGetPrograms,
   useGenerateSchedules,
+  useGetOverdueCount,
   type TrainingPlanParticipant,
 } from "./_hooks/useTrainingPlan";
 import TrainingScheduleTimeline from "./TrainingScheduleTimeline";
@@ -71,7 +72,28 @@ export default function TrainingPlanClient() {
     error: planError,
   } = useGetTrainingPlan(selectedProgram);
   const { data: competencyMapping } = useGetCompetencyMapping(selectedProgram);
+  const { data: overdueCount } = useGetOverdueCount(selectedProgram);
+
+  // Fetch overdue counts for all programs (for dropdown badges)
+  const { data: sdpOverdueCount } = useGetOverdueCount("SDP");
+  const { data: mdpOverdueCount } = useGetOverdueCount("MDP");
+  const { data: fdpOverdueCount } = useGetOverdueCount("FDP");
+
   const generateSchedules = useGenerateSchedules();
+
+  // Get overdue count for a specific program code
+  const getOverdueCountForProgram = (programCode: string): number => {
+    switch (programCode) {
+      case "SDP":
+        return sdpOverdueCount || 0;
+      case "MDP":
+        return mdpOverdueCount || 0;
+      case "FDP":
+        return fdpOverdueCount || 0;
+      default:
+        return 0;
+    }
+  };
 
   // Handle program change
   const handleProgramChange = (program: string) => {
@@ -190,15 +212,28 @@ export default function TrainingPlanClient() {
         </div>
         <div className="flex items-center gap-4">
           <Select value={selectedProgram} onValueChange={handleProgramChange}>
-            <SelectTrigger className="w-[180px]">
+            <SelectTrigger className="w-[320px]">
               <SelectValue placeholder="Select Program" />
             </SelectTrigger>
-            <SelectContent>
-              {programs?.map((program) => (
-                <SelectItem key={program.code} value={program.code}>
-                  {program.name}
-                </SelectItem>
-              ))}
+            <SelectContent className="w-[320px]">
+              {programs?.map((program) => {
+                const programOverdueCount = getOverdueCountForProgram(program.code);
+                return (
+                  <SelectItem key={program.code} value={program.code} className="cursor-pointer">
+                    <div className="flex items-center justify-between w-full">
+                      <span className="flex-1 pr-3">{program.name}</span>
+                      {programOverdueCount > 0 && (
+                        <Badge
+                          variant="destructive"
+                          className="h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] font-medium flex-shrink-0"
+                        >
+                          {programOverdueCount}
+                        </Badge>
+                      )}
+                    </div>
+                  </SelectItem>
+                );
+              })}
             </SelectContent>
           </Select>
           <Button
@@ -309,7 +344,17 @@ export default function TrainingPlanClient() {
           <TabsTrigger value="summary">Gap Summary</TabsTrigger>
           <TabsTrigger value="materials">Training Materials</TabsTrigger>
           <TabsTrigger value="mapping">Competency Mapping</TabsTrigger>
-          <TabsTrigger value="schedules">Training Plan</TabsTrigger>
+          <TabsTrigger value="schedules" className="relative">
+            Training Plan
+            {overdueCount && overdueCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="ml-2 h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] font-medium"
+              >
+                {overdueCount}
+              </Badge>
+            )}
+          </TabsTrigger>
         </TabsList>
 
         {/* Participants Tab */}

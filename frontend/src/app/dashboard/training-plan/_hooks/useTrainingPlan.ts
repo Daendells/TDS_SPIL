@@ -52,6 +52,7 @@ export const trainingPlanKeys = {
   competencyMapping: (program: string) =>
     [...trainingPlanKeys.all, "competency-mapping", program] as const,
   programs: () => [...trainingPlanKeys.all, "programs"] as const,
+  overdueCount: (program: string) => [...trainingPlanKeys.all, "overdue-count", program] as const,
 };
 
 // React Query hook for fetching training plan data
@@ -206,4 +207,30 @@ export function useToggleTrainingStarted() {
       });
     },
   });
+}
+
+// React Query hook for fetching overdue unstarted training count
+export function useGetOverdueCount(program: string = "SDP") {
+  const response = useQuery<number, Error>({
+    queryKey: trainingPlanKeys.overdueCount(program),
+    queryFn: async () => {
+      const response = await api.get<ApiResponse<{ program: string; count: number }>>(
+        `/api/training-plan/overdue-count`,
+        {
+          params: { program },
+        }
+      );
+
+      if (!response.data || !response.data.success) {
+        throw new Error("Failed to fetch overdue count");
+      }
+
+      return response.data.data.count;
+    },
+    staleTime: 1 * 60 * 1000, // 1 minute (notifications should be fresh)
+    gcTime: 5 * 60 * 1000, // 5 minutes
+    refetchOnWindowFocus: true, // Refetch when user returns to window
+  });
+
+  return response;
 }

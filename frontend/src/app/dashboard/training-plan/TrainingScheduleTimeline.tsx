@@ -11,6 +11,7 @@ import {
   Edit,
   Download,
   PlayCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
 import { useSwapSchedules, useToggleTrainingStarted } from "./_hooks/useTrainingPlan";
@@ -90,6 +91,14 @@ export default function TrainingScheduleTimeline({
     const topics = competencyMapping?.[competencyCode]?.training_topics;
     if (!topics || topics.length === 0) return "Training Material";
     return topics[materialType - 1] || topics[0] || "Training Material";
+  };
+
+  const isOverdue = (schedule: ScheduleItem): boolean => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0); // Reset time to compare dates only
+    const scheduledDate = new Date(schedule.scheduledDate);
+    scheduledDate.setHours(0, 0, 0, 0);
+    return scheduledDate < today && !schedule.isStarted;
   };
 
   const parseSchedules = (): ScheduleItem[] => {
@@ -449,55 +458,63 @@ export default function TrainingScheduleTimeline({
 
                               <div className="flex-1 space-y-2">
                                 {weekSchedules.length > 0 ? (
-                                  weekSchedules.map((schedule) => (
-                                    <div
-                                      key={schedule.id}
-                                      draggable={editMode}
-                                      onDragStart={(e) => editMode && handleDragStart(e, schedule)}
-                                      onDragEnd={editMode ? handleDragEnd : undefined}
-                                      className={`flex items-center gap-3 p-2 rounded-md transition-all ${
-                                        editMode
-                                          ? `cursor-move ${
-                                              draggedItem?.id === schedule.id
-                                                ? "opacity-50 bg-blue-200"
-                                                : "bg-white hover:bg-gray-50 shadow-sm"
-                                            }`
-                                          : "bg-white shadow-sm"
-                                      }`}
-                                    >
-                                      <Badge
-                                        variant={
-                                          schedule.category === "M" ? "destructive" : "secondary"
+                                  weekSchedules.map((schedule) => {
+                                    const isScheduleOverdue = isOverdue(schedule);
+                                    return (
+                                      <div
+                                        key={schedule.id}
+                                        draggable={editMode}
+                                        onDragStart={(e) =>
+                                          editMode && handleDragStart(e, schedule)
                                         }
-                                        className={`font-medium ${schedule.category !== "M" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}`}
+                                        onDragEnd={editMode ? handleDragEnd : undefined}
+                                        className={`flex items-center gap-3 p-2 rounded-md transition-all ${
+                                          editMode
+                                            ? `cursor-move ${
+                                                draggedItem?.id === schedule.id
+                                                  ? "opacity-50 bg-blue-200"
+                                                  : "bg-white hover:bg-gray-50 shadow-sm"
+                                              }`
+                                            : "bg-white shadow-sm"
+                                        } ${isScheduleOverdue ? "border border-red-300" : ""}`}
                                       >
-                                        {schedule.category}
-                                      </Badge>
-                                      <div className="flex-1">
-                                        <div className="font-medium text-sm">
-                                          {schedule.trainingMaterial}
+                                        {isScheduleOverdue && (
+                                          <AlertTriangle className="h-4 w-4 text-red-500 flex-shrink-0" />
+                                        )}
+                                        <Badge
+                                          variant={
+                                            schedule.category === "M" ? "destructive" : "secondary"
+                                          }
+                                          className={`font-medium ${schedule.category !== "M" ? "bg-blue-500 text-white hover:bg-blue-600" : ""}`}
+                                        >
+                                          {schedule.category}
+                                        </Badge>
+                                        <div className="flex-1">
+                                          <div className="font-medium text-sm">
+                                            {schedule.trainingMaterial}
+                                          </div>
+                                          <div className="text-xs text-muted-foreground">
+                                            {schedule.competencyCode} - {schedule.competencyName}
+                                          </div>
                                         </div>
-                                        <div className="text-xs text-muted-foreground">
-                                          {schedule.competencyCode} - {schedule.competencyName}
+                                        <div className="flex items-center gap-2">
+                                          <div className="flex items-center gap-1.5">
+                                            <PlayCircle
+                                              className={`h-3.5 w-3.5 ${schedule.isStarted ? "text-green-600" : "text-gray-400"}`}
+                                            />
+                                            <Switch
+                                              checked={schedule.isStarted}
+                                              onCheckedChange={() =>
+                                                handleToggleStarted(schedule.id, schedule.isStarted)
+                                              }
+                                              disabled={toggleLoading === schedule.id}
+                                              className="scale-75"
+                                            />
+                                          </div>
                                         </div>
                                       </div>
-                                      <div className="flex items-center gap-2">
-                                        <div className="flex items-center gap-1.5">
-                                          <PlayCircle
-                                            className={`h-3.5 w-3.5 ${schedule.isStarted ? "text-green-600" : "text-gray-400"}`}
-                                          />
-                                          <Switch
-                                            checked={schedule.isStarted}
-                                            onCheckedChange={() =>
-                                              handleToggleStarted(schedule.id, schedule.isStarted)
-                                            }
-                                            disabled={toggleLoading === schedule.id}
-                                            className="scale-75"
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))
+                                    );
+                                  })
                                 ) : (
                                   <div className="text-xs text-muted-foreground italic py-2">
                                     {editMode ? "Drop training here" : "No training scheduled"}

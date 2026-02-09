@@ -91,6 +91,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		trainingPlan.GET("/programs", c.TrainingPlanController.GetAvailablePrograms)
 		trainingPlan.GET("/export-excel", c.TrainingPlanController.ExportTrainingPlanExcel)
 		trainingPlan.PUT("/toggle-started/:id", c.TrainingPlanController.ToggleTrainingStarted) // Toggle is_started flag
+		trainingPlan.GET("/overdue-count", c.TrainingPlanController.GetOverdueCount)          // Get overdue unstarted count
 	}
 
 	// IDP Tracking endpoints (for readiness refresh)

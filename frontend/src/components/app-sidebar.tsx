@@ -29,12 +29,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "./ui/dropdown-menu";
+import { Badge } from "./ui/badge";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useAuth } from "@/context/AuthContext";
 import { Button } from "./ui/button";
 import { useLogout } from "@/app/(auth)/_hooks/useLogin";
+import { useGetOverdueCount } from "@/app/dashboard/training-plan/_hooks/useTrainingPlan";
 
 // Menu items.
 const items = [
@@ -85,6 +87,14 @@ export function AppSidebar() {
   const { user } = useAuth();
   const logoutMutation = useLogout();
 
+  // Fetch overdue count for all programs
+  const { data: sdpCount } = useGetOverdueCount("SDP");
+  const { data: mdpCount } = useGetOverdueCount("MDP");
+  const { data: fdpCount } = useGetOverdueCount("FDP");
+
+  // Calculate total overdue across all programs
+  const totalOverdueCount = (sdpCount || 0) + (mdpCount || 0) + (fdpCount || 0);
+
   return (
     <Sidebar collapsible="icon" variant="floating">
       <SidebarHeader>
@@ -116,7 +126,15 @@ export function AppSidebar() {
                   <SidebarMenuButton asChild isActive={pathname === item.url}>
                     <Link key={item.url} href={item.url}>
                       <item.icon />
-                      {item.title}
+                      <span className="flex-1">{item.title}</span>
+                      {item.title === "Training Plan" && totalOverdueCount > 0 && (
+                        <Badge
+                          variant="destructive"
+                          className="ml-auto h-4 w-4 rounded-full p-0 flex items-center justify-center text-[10px] font-medium"
+                        >
+                          {totalOverdueCount}
+                        </Badge>
+                      )}
                     </Link>
                   </SidebarMenuButton>
                 </SidebarMenuItem>

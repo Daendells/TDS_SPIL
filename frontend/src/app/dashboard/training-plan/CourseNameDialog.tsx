@@ -51,7 +51,7 @@ export default function CourseNameDialog({
         <DialogHeader>
           <DialogTitle>Activate Training - Course Name Required</DialogTitle>
           <DialogDescription>
-            Enter the course name that will be sent to Apollo API for tracking training completion.
+            Enter the course name that will be sent for tracking training completion.
           </DialogDescription>
         </DialogHeader>
 
@@ -68,18 +68,18 @@ export default function CourseNameDialog({
 
           <div className="space-y-2">
             <Label htmlFor="course-name" className="text-sm font-medium">
-              Course Name for Apollo API <span className="text-destructive">*</span>
+              Course Name <span className="text-destructive">*</span>
             </Label>
             <Input
               id="course-name"
-              placeholder="e.g., N025 GARBAGE & WASTE MANAGEMENT"
+              placeholder="e.g., GARBAGE & WASTE MANAGEMENT"
               value={courseName}
               onChange={(e) => setCourseName(e.target.value)}
               disabled={isLoading}
               className="font-mono"
             />
             <p className="text-xs text-muted-foreground">
-              This name must match exactly with the course name in Apollo system
+              This name must match exactly with the course name in the system
             </p>
           </div>
         </div>
