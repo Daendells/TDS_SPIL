@@ -246,6 +246,27 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 		isFirstPage = (count == 0)
 	}
 
+	// --- Get total count matching current filters (search + batch) ---
+	var totalCount int64
+	countDB := s.DB.Model(&domain.MasterReport{})
+	if req.Query != "" {
+		q := strings.ToLower(req.Query)
+		countDB = countDB.Where(
+			s.DB.
+				Where("LOWER(nama) LIKE ?", "%"+q+"%").
+				Or("seafarer_code LIKE ?", "%"+req.Query+"%"),
+		)
+	}
+	if req.BatchID > 0 {
+		countDB = countDB.Where("batch_id = ?", req.BatchID)
+	} else if req.BatchID == -1 {
+		countDB = countDB.Where("batch_id IS NULL")
+	}
+
+	if err := countDB.Count(&totalCount).Error; err != nil {
+		s.Log.WithError(err).Warn("failed to count total records")
+	}
+
 	// NOTE: Mentoring reports will be fetched per-person on the frontend using
 	// GET /api/master-reports/mentoring-programs?personName=<NAME>
 	// This avoids fetching all mentoring reports which could be expensive
@@ -255,6 +276,7 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 		PageSize:                  limit,
 		HasMore:                   len(result) >= limit,
 		FirstPage:                 isFirstPage,
+		Total:                     int(totalCount),
 		AvailableMentoringReports: []web.MentoringReportData{}, // Empty, fetch per-person instead
 	}
 

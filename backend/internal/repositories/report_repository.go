@@ -133,9 +133,11 @@ func (r *ReportRepository) SelectAll(db *gorm.DB, filter *web.DashboardRequest, 
 	}
 
 	// Batch Filter
-	if filter.BatchID > 0 {
+	if (filter.BatchID > 0) {
 		queryBuilder.WriteString(" AND batch_id = ?")
 		args = append(args, filter.BatchID)
+	} else if (filter.BatchID == -1) {
+		queryBuilder.WriteString(" AND batch_id IS NULL")
 	}
 
 	// Order + limit
@@ -171,9 +173,11 @@ func (r *ReportRepository) IDPCount(db *gorm.DB, filter *web.DashboardRequest, d
 		WHERE 1=1
 	`)
 
-	if filter != nil && filter.BatchID > 0 {
+	if (filter != nil && filter.BatchID > 0) {
 		queryBuilder.WriteString(" AND batch_id = ?")
 		args = append(args, filter.BatchID)
+	} else if (filter != nil && filter.BatchID == -1) {
+		queryBuilder.WriteString(" AND batch_id IS NULL")
 	}
 
 	if err := db.Raw(queryBuilder.String(), args...).Scan(data).Error; err != nil {

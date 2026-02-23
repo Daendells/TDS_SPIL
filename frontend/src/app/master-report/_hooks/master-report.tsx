@@ -85,6 +85,7 @@ export function useMasterReports(initialPageSize = 10) {
           page_size: apiMeta?.page_size ?? paginationRequest.pageSize,
           has_more: apiMeta?.has_more ?? parsedReports.length >= paginationRequest.pageSize,
           first_page: apiMeta?.first_page ?? false,
+          total: apiMeta?.total ?? 0,
         };
 
         // Extract available mentoring reports from response

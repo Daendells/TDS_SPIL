@@ -2,8 +2,10 @@
 import { useState, useMemo } from "react";
 import { useAssignments } from "./_hooks/useAssigments";
 import { useCatalogs } from "./_hooks/useCatalogs";
+import { useBatches } from "../master-report/_hooks/useBatch";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -19,6 +21,21 @@ import {
   TableCell,
   TableBody,
 } from "@/components/ui/table";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationLink,
+} from "@/components/ui/pagination";
 import { PlusIcon, EditIcon, TrashIcon, Search } from "lucide-react";
 import { toast } from "sonner";
 import { IAssignmentFlat } from "@/types/global-types";
@@ -39,9 +56,15 @@ export default function AssignmentTable() {
     setFilterAssessment,
     filterStatus,
     setFilterStatus,
+    filterBatch,
+    setFilterBatch,
+    currentPage,
+    navigatePage,
+    filteredCount,
   } = useAssignments();
 
   const { assessments, users } = useCatalogs();
+  const { batches } = useBatches();
 
   const [openDialog, setOpenDialog] = useState(false);
   const [editing, setEditing] = useState<IAssignmentFlat | null>(null);
@@ -145,43 +168,62 @@ export default function AssignmentTable() {
         {/* FILTERS */}
         <div className="flex items-center gap-3">
           {/* Filter Assessment */}
-          <select
-            className="border px-3 py-2 rounded-md"
-            value={filterAssessment}
-            onChange={(e) => setFilterAssessment(e.target.value)}
-          >
-            <option value="ALL">All Assessments</option>
-            {assessments.map((a) => (
-              <option key={a.assessmentId} value={a.assessmentId}>
-                {a.assessmentName}
-              </option>
-            ))}
-          </select>
+          <Select value={filterAssessment} onValueChange={setFilterAssessment}>
+            <SelectTrigger className="w-[180px]">
+              <SelectValue placeholder="All Assessments" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Assessments</SelectItem>
+              {assessments.map((a) => (
+                <SelectItem key={a.assessmentId} value={a.assessmentId?.toString() || ""}>
+                  {a.assessmentName}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
 
           {/* Filter Status */}
-          <select
-            className="border px-3 py-2 rounded-md"
-            value={filterStatus}
-            onChange={(e) => setFilterStatus(e.target.value)}
-          >
-            <option value="ALL">All Status</option>
-            <option value="ASSIGNED">Assigned</option>
-            <option value="IN_PROGRESS">In Progress</option>
-            <option value="COMPLETED">Completed</option>
-          </select>
+          <Select value={filterStatus} onValueChange={setFilterStatus}>
+            <SelectTrigger className="w-[150px]">
+              <SelectValue placeholder="All Status" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">All Status</SelectItem>
+              <SelectItem value="ASSIGNED">Assigned</SelectItem>
+              <SelectItem value="IN_PROGRESS">In Progress</SelectItem>
+              <SelectItem value="COMPLETED">Completed</SelectItem>
+            </SelectContent>
+          </Select>
 
-          {/* Page Size Popover */}
-          <select
-            className="border px-3 py-2 rounded-md"
-            value={pageSize}
-            onChange={(e) => setPageSize(Number(e.target.value))}
-          >
-            <option value="10">10 rows</option>
-            <option value="20">20 rows</option>
-            <option value="50">50 rows</option>
-            <option value="100">100 rows</option>
-            <option value="-1">Show All</option>
-          </select>
+          {/* Filter Batch */}
+          <Select value={filterBatch} onValueChange={setFilterBatch}>
+            <SelectTrigger className="w-[160px]">
+              <SelectValue placeholder="Semua Batch" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="ALL">Semua Batch</SelectItem>
+              <SelectItem value="-1">Tanpa Batch</SelectItem>
+              {batches.map((b) => (
+                <SelectItem key={b.id} value={b.id.toString()}>
+                  Batch {b.batchNo}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {/* Page Size selector */}
+          <Select value={pageSize.toString()} onValueChange={(val) => setPageSize(Number(val))}>
+            <SelectTrigger className="w-[120px]">
+              <SelectValue placeholder="Page Size" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="10">10 rows</SelectItem>
+              <SelectItem value="20">20 rows</SelectItem>
+              <SelectItem value="50">50 rows</SelectItem>
+              <SelectItem value="100">100 rows</SelectItem>
+              <SelectItem value="-1">Show All</SelectItem>
+            </SelectContent>
+          </Select>
 
           {/* New Assignment */}
           <Button
@@ -199,6 +241,60 @@ export default function AssignmentTable() {
             <PlusIcon className="w-4 h-4 mr-2" /> New Assignment
           </Button>
         </div>
+      </div>
+
+      {/* Pagination Dashboard */}
+      <div className="flex items-center justify-between mt-4 text-xs text-muted-foreground bg-slate-50 p-3 rounded-lg border border-slate-100">
+        <div className="flex items-center gap-2">
+          <span>
+            Menampilkan <strong>{assignments.length}</strong> dari <strong>{filteredCount}</strong>{" "}
+            records
+          </span>
+          {pageSize !== -1 && <span className="text-slate-300">|</span>}
+          {pageSize !== -1 && (
+            <span>
+              Halaman <strong>{currentPage}</strong> dari{" "}
+              <strong>{Math.ceil(filteredCount / pageSize)}</strong>
+            </span>
+          )}
+        </div>
+
+        {pageSize !== -1 && (
+          <Pagination className="mx-0 w-auto">
+            <PaginationContent>
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage > 1) navigatePage("prev");
+                  }}
+                  className={cn(
+                    "cursor-pointer",
+                    currentPage <= 1 && "pointer-events-none opacity-50"
+                  )}
+                />
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationLink isActive className="cursor-default hover:bg-background">
+                  {currentPage}
+                </PaginationLink>
+              </PaginationItem>
+              <PaginationItem>
+                <PaginationNext
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (currentPage < Math.ceil(filteredCount / pageSize)) navigatePage("next");
+                  }}
+                  className={cn(
+                    "cursor-pointer",
+                    currentPage >= Math.ceil(filteredCount / pageSize) &&
+                      "pointer-events-none opacity-50"
+                  )}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+        )}
       </div>
 
       {/* Table */}

@@ -106,6 +106,7 @@ export interface IPaginationData<T> {
   page_size: number;
   has_more: boolean;
   first_page: boolean;
+  total?: number;
 }
 
 export interface IPaginationRequest {
