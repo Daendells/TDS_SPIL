@@ -26,7 +26,15 @@ export function useGetIdpCount() {
   const response = useQuery<IdpCountData, Error>({
     queryKey: reportKeys.idpCount(),
     queryFn: async () => {
-      const response = await api.get<ApiResponse<IdpCountData>>("/reports/idp-count");
+      // Add required Page and PageSize parameters matching DashboardRequest structure
+      const params = new URLSearchParams({
+        page: "next", // Must be "next" or "prev" according to backend validation
+        page_size: "1000", // Use a large page size since we just need the count
+        anchor_id: "0", // Optional but good to include
+      });
+      const response = await api.get<ApiResponse<IdpCountData>>(
+        `/reports/idp-count?${params.toString()}`
+      );
 
       if (!response.data) {
         throw new Error("Failed to fetch IDP count data");

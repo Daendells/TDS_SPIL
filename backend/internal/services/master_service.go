@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -107,6 +108,13 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 				Where("LOWER(nama) LIKE ?", "%"+q+"%").
 				Or("seafarer_code LIKE ?", "%"+req.Query+"%"),
 		)
+	}
+
+	// --- batch filter ---
+	if req.BatchID > 0 {
+		db = db.Where("batch_id = ?", req.BatchID)
+	} else if req.BatchID == -1 {
+		db = db.Where("batch_id IS NULL")
 	}
 
 	// --- cursor pagination logic ---
@@ -350,6 +358,31 @@ func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 	}, nil
 }
 
+// BulkAssignBatch assigns a batch to multiple reports
+func (s *MasterService) BulkAssignBatch(ctx context.Context, request *web.BulkAssignBatchRequest) (*web.SuccessResponse, error) {
+	if err := s.Validate.Struct(request); err != nil {
+		return nil, fmt.Errorf("validation error: %w", err)
+	}
+
+	tx := s.DB.WithContext(ctx).Begin()
+	defer tx.Rollback()
+
+	if err := s.MasterRepository.BulkAssignBatch(tx, request.ReportIDs, request.BatchID); err != nil {
+		s.Log.WithError(err).Error("failed to bulk assign batch")
+		return nil, fmt.Errorf("failed to bulk assign batch: %w", err)
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return nil, err
+	}
+
+	return &web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   map[string]interface{}{"assigned_count": len(request.ReportIDs)},
+	}, nil
+}
+
 //
 // ---------------------- CREATE ----------------------
 //
@@ -374,6 +407,12 @@ func (s *MasterService) Create(request *web.MasterReportData) (*web.SuccessRespo
 	}
 
 	master := converter.MasterReportRequestToDomain(request)
+
+	// Context: User wants new reports to be assigned to the currently filtered batch (if any)
+	// We assume the BatchID is passed in the request body (MasterReportData)
+	if request.BatchID != nil && *request.BatchID > 0 {
+		master.BatchID = request.BatchID
+	}
 
 	if err := fillReportDefaults(master); err != nil {
 		return nil, err

@@ -66,6 +66,7 @@ type MasterReportData struct {
 	MentoringReport            *MentoringReportData `json:"mentoringReport,omitempty"`
 	Competencies               []GapCompetencyData  `json:"competencies,omitempty"`
 	ReportScores               []ReportScoreData    `json:"reportScores,omitempty"`
+	BatchID                    *int                 `json:"batchId"`
 }
 
 type MasterListRequest struct {
@@ -75,6 +76,7 @@ type MasterListRequest struct {
 	Name         string `form:"name"`
 	SeafarerCode string `form:"seafarer_code"`
 	Query        string `form:"query"`
+	BatchID      int    `form:"batch_id"`
 }
 
 type DeleteMasterRequest struct {
@@ -167,6 +169,7 @@ type FullReportResponse struct {
 	TmNm                       *string             `json:"tmNm"`
 	Competencies               []GapCompetencyData `json:"competencies"`
 	ReportScores               []ReportScoreData   `json:"reportScores,omitempty"`
+	BatchID                    *int                `json:"batchId"`
 }
 
 // CreateReportResponse is the response after creating a report
@@ -192,4 +195,9 @@ type CompetencyUpdateRequest struct {
 	Name             *string `json:"name,omitempty"`             // Name for new/update competency type
 	Description      *string `json:"description,omitempty"`      // Description for new/update
 	Category         *string `json:"category,omitempty"`         // M or NM
+}
+
+type BulkAssignBatchRequest struct {
+	ReportIDs []uint `json:"reportIds" binding:"required,min=1" validate:"required,min=1"`
+	BatchID   *int   `json:"batchId"` // Pointer to allow nullifying batch assignment
 }

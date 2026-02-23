@@ -59,6 +59,7 @@ func ToMasterReport(d *domain.MasterReport) web.MasterReportData {
 		Keterangan:                 d.Keterangan,
 		TmNm:                       d.TmNm,
 		Competencies:               competencies,
+		BatchID:                    d.BatchID,
 	}
 }
 
@@ -124,6 +125,7 @@ func ToFullReportResponse(d *domain.FullReport) web.FullReportResponse {
 		Keterangan:                 d.Keterangan,
 		TmNm:                       d.TmNm,
 		Competencies:               competencies,
+		BatchID:                    d.BatchID,
 	}
 }
 
@@ -136,6 +138,7 @@ func MasterReportRequestToDomain(req *web.MasterReportData) *domain.FullReport {
 		SeamanCode:   &req.SeamanCode,
 		SeafarerCode: &req.SeafarerCode,
 		Certificate:  &req.Certificate,
+		BatchID:      req.BatchID,
 	}
 
 	// Map competencies if provided

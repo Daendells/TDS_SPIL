@@ -33,6 +33,7 @@ type RouterConfig struct {
 	QuizController               *controllers.QuizController
 	ScoringConfigController      *controllers.ScoringConfigController
 	AuthMiddleware               gin.HandlerFunc
+	BatchController              *controllers.BatchController
 }
 
 func (c *RouterConfig) Setup() {
@@ -46,6 +47,7 @@ func (c *RouterConfig) Setup() {
 	c.SetupAssignmentRouter()
 
 	c.SetupMasterRouter()
+	c.SetupBatchRouter()
 	c.SetupQuizRouter()
 	c.SetupScoringConfigRouter()
 }
@@ -216,6 +218,7 @@ func (r *RouterConfig) SetupMasterRouter() {
 		group.POST("", r.MasterController.Create)
 		group.PUT("/:id", r.MasterController.Update)
 		group.DELETE("/:id", r.MasterController.Delete)
+		group.POST("/bulk-assign-batch", r.MasterController.BulkAssignBatch)
 
 	}
 }
@@ -308,5 +311,13 @@ func (r *RouterConfig) SetupScoringConfigRouter() {
 		group.GET("/:assessmentTypeId", r.ScoringConfigController.GetScoringConfig)
 		group.PUT("/:assessmentTypeId", r.ScoringConfigController.UpdateScoringConfig)
 		group.POST("/validate-formula", r.ScoringConfigController.ValidateFormula)
+	}
+}
+
+func (r *RouterConfig) SetupBatchRouter() {
+	group := r.App.Group("/api/batches")
+	{
+		group.GET("", r.BatchController.FindAll)
+		group.POST("", r.BatchController.Create)
 	}
 }

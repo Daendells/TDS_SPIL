@@ -340,14 +340,14 @@ func (service *ReportService) CreateAll(ctx context.Context, request *web.Report
 	}, nil
 }
 
-func (service *ReportService) IDPCount(ctx context.Context) (*web.SuccessResponse, error) {
+func (service *ReportService) IDPCount(ctx context.Context, request *web.DashboardRequest) (*web.SuccessResponse, error) {
 	// TODO: Create Transaction
 	tx := service.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
 	// TODO: Get IDP Count
 	var data web.IDPCountData
-	err := service.ReportRepository.IDPCount(tx, &data)
+	err := service.ReportRepository.IDPCount(tx, request, &data)
 	if err != nil {
 		return nil, err
 	}

@@ -60,6 +60,8 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.MentoringReport{},
 		&domain.CoachingReport{},
 		&domain.IDPTracking{}, // Depends on Report
+		&domain.Batch{},       // Independent/Parent of Report (optional, but sticking to basics)
+
 
 		// Tables with multiple dependencies
 		&domain.CompetencyProgramMapping{}, // Depends on CompetencyType and Training

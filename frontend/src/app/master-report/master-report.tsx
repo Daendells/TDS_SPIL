@@ -49,6 +49,16 @@ import { useMasterReportUI } from "./_hooks/useMasterReportUI";
 import { useGetAllAssessmentTypes } from "./_hooks/useAssessmentType";
 import type { IReport, SeamanLookup } from "@/types/global-types";
 import { useAvailableSeamen } from "./_hooks/useAvailableSeamen";
+import { useBatches } from "./_hooks/useBatch";
+import { format } from "date-fns";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /* Dynamic sticky offset calculator */
 function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pinnedCount = 2) {
@@ -87,9 +97,14 @@ export default function MasterPage() {
     createReport,
     deleteReport,
     updateReport,
+    bulkAssignBatch,
     refreshAllReadiness,
     refreshPersonalData,
   } = useMasterReports(10);
+
+  // Bulk assign to batch dialog state
+  const [bulkAssignBatchOpen, setBulkAssignBatchOpen] = useState(false);
+  const [selectedBatchForAssign, setSelectedBatchForAssign] = useState<string>("");
 
   const [addForm, setAddForm] = useState<{
     search: string;
@@ -119,6 +134,43 @@ export default function MasterPage() {
     }
   }, [seamen]);
   const { data: assessmentTypes = [] } = useGetAllAssessmentTypes();
+
+  // Batch hooks
+  const { batches, createBatch, isCreating, loading: loadingBatches } = useBatches();
+  const [createBatchOpen, setCreateBatchOpen] = useState(false);
+  const [batchForm, setBatchForm] = useState<{
+    startDate: Date | undefined;
+    endDate: Date | undefined;
+  }>({
+    startDate: undefined,
+    endDate: undefined,
+  });
+
+  // Track whether we've already set the initial default batch
+  const defaultBatchSet = useRef(false);
+
+  // Set default batch ID to the latest batch when first loaded — only once
+  useEffect(() => {
+    if (!defaultBatchSet.current && batches && batches.length > 0) {
+      defaultBatchSet.current = true;
+      setPaginationRequest((prev) => ({
+        ...prev,
+        batchId: batches[0].id,
+      }));
+    }
+  }, [batches, setPaginationRequest]);
+
+  const handleCreateBatch = async () => {
+    if (!batchForm.startDate || !batchForm.endDate) {
+      toast.error("Format tanggal harus diisi lengkap");
+      return;
+    }
+    const success = await createBatch(batchForm.startDate, batchForm.endDate);
+    if (success) {
+      setCreateBatchOpen(false);
+      setBatchForm({ startDate: undefined, endDate: undefined });
+    }
+  };
 
   // UI hooks
   const {
@@ -522,11 +574,114 @@ export default function MasterPage() {
               )}
             </Button>
 
+            <div className="flex items-center gap-2 border-l pl-4 ml-2">
+              <Select
+                value={
+                  paginationRequest.batchId === null
+                    ? "all"
+                    : paginationRequest.batchId === -1
+                      ? "no-batch"
+                      : paginationRequest.batchId?.toString() || "all"
+                }
+                onValueChange={(val) => {
+                  let batchId: number | null = null;
+                  if (val === "all") {
+                    batchId = null;
+                  } else if (val === "no-batch") {
+                    batchId = -1;
+                  } else {
+                    batchId = parseInt(val);
+                  }
+                  setPaginationRequest((prev) => ({
+                    ...prev,
+                    batchId,
+                    anchorId: 0,
+                    page: "next",
+                  }));
+                }}
+                disabled={loadingBatches}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Pilih Batch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Batch</SelectItem>
+                  <SelectItem value="no-batch">Tanpa Batch</SelectItem>
+                  {batches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id.toString()}>
+                      Batch {batch.batchNo} ({format(new Date(batch.startDate), "MMM yyyy")})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Dialog open={createBatchOpen} onOpenChange={setCreateBatchOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="icon" title="Buat Batch Baru">
+                    <PlusIcon className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Buat Batch Baru</DialogTitle>
+                    <DialogDescription>
+                      Tentukan periode awal dan akhir untuk batch baru.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label>Tanggal Mulai</Label>
+                      <Input
+                        type="date"
+                        className="w-full"
+                        value={batchForm.startDate ? format(batchForm.startDate, "yyyy-MM-dd") : ""}
+                        onChange={(e) =>
+                          setBatchForm((prev) => ({
+                            ...prev,
+                            startDate: e.target.value ? new Date(e.target.value) : undefined,
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Tanggal Selesai</Label>
+                      <Input
+                        type="date"
+                        className="w-full"
+                        value={batchForm.endDate ? format(batchForm.endDate, "yyyy-MM-dd") : ""}
+                        onChange={(e) =>
+                          setBatchForm((prev) => ({
+                            ...prev,
+                            endDate: e.target.value ? new Date(e.target.value) : undefined,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setCreateBatchOpen(false)}>
+                      Batal
+                    </Button>
+                    <Button
+                      onClick={handleCreateBatch}
+                      disabled={!batchForm.startDate || !batchForm.endDate || isCreating}
+                    >
+                      {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Buat Batch
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+
             <Button
               size="lg"
               variant={isEditMode ? "destructive" : "outline"}
               onClick={toggleEditMode}
-              className="flex items-center gap-2"
+              className="flex items-center gap-2 ml-4"
             >
               {isEditMode ? (
                 <>
@@ -540,15 +695,29 @@ export default function MasterPage() {
             </Button>
 
             {isEditMode && (
-              <Button
-                size="lg"
-                variant="destructive"
-                onClick={confirmDelete}
-                disabled={selectedIds.size === 0}
-                className="flex items-center gap-2"
-              >
-                <TrashIcon className="w-4 h-4" /> Delete ({selectedIds.size})
-              </Button>
+              <>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedBatchForAssign("");
+                    setBulkAssignBatchOpen(true);
+                  }}
+                  disabled={selectedIds.size === 0}
+                  className="flex items-center gap-2"
+                >
+                  Assign ke Batch ({selectedIds.size})
+                </Button>
+                <Button
+                  size="lg"
+                  variant="destructive"
+                  onClick={confirmDelete}
+                  disabled={selectedIds.size === 0}
+                  className="flex items-center gap-2"
+                >
+                  <TrashIcon className="w-4 h-4" /> Delete ({selectedIds.size})
+                </Button>
+              </>
             )}
 
             <Dialog open={openDialog} onOpenChange={setOpenDialog}>
@@ -720,6 +889,62 @@ export default function MasterPage() {
 
         <Separator />
       </div>
+
+      {/* Bulk Assign to Batch Dialog */}
+      <Dialog open={bulkAssignBatchOpen} onOpenChange={setBulkAssignBatchOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign ke Batch</DialogTitle>
+            <DialogDescription>
+              Pilih batch tujuan untuk {selectedIds.size} report yang dipilih. Pilih &quot;Tanpa
+              Batch&quot; untuk melepas batch.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label>Batch Tujuan</Label>
+            <Select value={selectedBatchForAssign} onValueChange={setSelectedBatchForAssign}>
+              <SelectTrigger className="w-full mt-2">
+                <SelectValue placeholder="Pilih batch..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="null">Tanpa Batch (lepas dari batch)</SelectItem>
+                {batches.map((batch) => (
+                  <SelectItem key={batch.id} value={batch.id.toString()}>
+                    Batch {batch.batchNo} ({format(new Date(batch.startDate), "MMM yyyy")})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkAssignBatchOpen(false)}>
+              Batal
+            </Button>
+            <Button
+              disabled={!selectedBatchForAssign || onCallApi}
+              onClick={async () => {
+                try {
+                  const batchId =
+                    selectedBatchForAssign === "null" ? null : parseInt(selectedBatchForAssign);
+                  await bulkAssignBatch(Array.from(selectedIds), batchId);
+                  setBulkAssignBatchOpen(false);
+                  setSelectedIds(new Set());
+                } catch {
+                  // error already shown in hook
+                }
+              }}
+            >
+              {onCallApi ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Menyimpan...
+                </>
+              ) : (
+                "Assign"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={confirmDeleteDialog} onOpenChange={setConfirmDeleteDialog}>
