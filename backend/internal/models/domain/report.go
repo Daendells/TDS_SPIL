@@ -68,4 +68,7 @@ type Report struct {
 	TotalReadinessUpdateMonths *int   `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness_update_months"`
 	Keterangan                 string `json:"keterangan" gorm:"column:keterangan"`
 	TMNM                       string `json:"tmnm" gorm:"column:tm_nm"`
+	ReportScores               []ReportScore   `json:"reportScores,omitempty" gorm:"foreignKey:ReportID"`
+	BatchID                    *int            `json:"batchId" gorm:"column:batch_id"`
+	Batch                      *Batch          `json:"batch,omitempty" gorm:"foreignKey:BatchID;references:ID"`
 }

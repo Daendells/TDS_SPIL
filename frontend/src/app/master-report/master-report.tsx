@@ -20,8 +20,6 @@ import { Input } from "@/components/ui/input";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import {
-  ChevronLeftIcon,
-  ChevronRightIcon,
   CheckIcon,
   ChevronsUpDownIcon,
   PlusIcon,
@@ -32,7 +30,14 @@ import {
   Loader2,
   RefreshCw,
 } from "lucide-react";
-import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationItem,
+  PaginationPrevious,
+  PaginationNext,
+  PaginationLink,
+} from "@/components/ui/pagination";
 import {
   Dialog,
   DialogTrigger,
@@ -49,6 +54,16 @@ import { useMasterReportUI } from "./_hooks/useMasterReportUI";
 import { useGetAllAssessmentTypes } from "./_hooks/useAssessmentType";
 import type { IReport, SeamanLookup } from "@/types/global-types";
 import { useAvailableSeamen } from "./_hooks/useAvailableSeamen";
+import { useBatches } from "./_hooks/useBatch";
+import { format } from "date-fns";
+
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 /* Dynamic sticky offset calculator */
 function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pinnedCount = 2) {
@@ -87,9 +102,14 @@ export default function MasterPage() {
     createReport,
     deleteReport,
     updateReport,
+    bulkAssignBatch,
     refreshAllReadiness,
     refreshPersonalData,
   } = useMasterReports(10);
+
+  // Bulk assign to batch dialog state
+  const [bulkAssignBatchOpen, setBulkAssignBatchOpen] = useState(false);
+  const [selectedBatchForAssign, setSelectedBatchForAssign] = useState<string>("");
 
   const [addForm, setAddForm] = useState<{
     search: string;
@@ -119,6 +139,43 @@ export default function MasterPage() {
     }
   }, [seamen]);
   const { data: assessmentTypes = [] } = useGetAllAssessmentTypes();
+
+  // Batch hooks
+  const { batches, createBatch, isCreating, loading: loadingBatches } = useBatches();
+  const [createBatchOpen, setCreateBatchOpen] = useState(false);
+  const [batchForm, setBatchForm] = useState<{
+    startDate: Date | undefined;
+    endDate: Date | undefined;
+  }>({
+    startDate: undefined,
+    endDate: undefined,
+  });
+
+  // Track whether we've already set the initial default batch
+  const defaultBatchSet = useRef(false);
+
+  // Set default batch ID to the latest batch when first loaded — only once
+  useEffect(() => {
+    if (!defaultBatchSet.current && batches && batches.length > 0) {
+      defaultBatchSet.current = true;
+      setPaginationRequest((prev) => ({
+        ...prev,
+        batchId: batches[0].id,
+      }));
+    }
+  }, [batches, setPaginationRequest]);
+
+  const handleCreateBatch = async () => {
+    if (!batchForm.startDate || !batchForm.endDate) {
+      toast.error("Format tanggal harus diisi lengkap");
+      return;
+    }
+    const success = await createBatch(batchForm.startDate, batchForm.endDate);
+    if (success) {
+      setCreateBatchOpen(false);
+      setBatchForm({ startDate: undefined, endDate: undefined });
+    }
+  };
 
   // UI hooks
   const {
@@ -191,8 +248,8 @@ export default function MasterPage() {
   const navigatePage = (page: "prev" | "next") => {
     if (!paginationData) return;
     setCurrentPage((prev) => {
-      if (page === "prev" && prev <= 1) return 1;
-      return page === "next" ? prev + 1 : prev - 1;
+      const newPage = page === "prev" ? Math.max(1, prev - 1) : prev + 1;
+      return newPage;
     });
 
     setPaginationRequest({
@@ -441,32 +498,32 @@ export default function MasterPage() {
     paginationData?.results?.every((r) => selectedIds.has(r.id)) ?? false;
 
   return (
-    <div className="mt-8 p-4 m-6">
+    <div className="mt-6 px-6 pb-8">
       {/* Header Section */}
-      <div className="space-y-6 mb-6">
+      <div className="space-y-5 mb-6">
         <div>
-          <div className="flex items-center gap-4 mb-6">
+          <div className="flex items-center gap-4 mb-5">
             <Image
-              width={64}
-              height={64}
+              width={56}
+              height={56}
               src="/images/logo1.png"
               alt="Company Logo"
-              className="h-12 w-auto"
+              className="h-11 w-auto"
             />
 
             <div>
-              <h1 className="text-3xl font-bold tracking-tight">Master Table</h1>
-              <p className="text-gray-500 mt-1">
+              <h1 className="text-2xl font-bold tracking-tight text-gray-900">Master Table</h1>
+              <p className="text-sm text-gray-500 mt-0.5">
                 Kelola data induk pelaut, performa, dan rencana pengembangan individu.
               </p>
             </div>
 
             <Image
-              width={64}
-              height={64}
+              width={56}
+              height={56}
               src="/images/logo2.png"
               alt="Partner Logo"
-              className="h-12 w-auto ml-auto"
+              className="h-11 w-auto ml-auto"
             />
           </div>
 
@@ -474,20 +531,20 @@ export default function MasterPage() {
         </div>
 
         {/* Toolbar */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center gap-3 p-3 bg-gray-50 border rounded-xl">
           <Input
-            placeholder="Search by Name or Seafarer Code..."
+            placeholder="🔍 Search by Name or Seafarer Code..."
             value={searchName}
             onChange={(e) => {
               setSearchName(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-[300px]"
+            className="w-[280px] bg-white shadow-sm"
           />
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 ml-auto">
             <Button
-              size="lg"
+              size="sm"
               variant="default"
               onClick={refreshAllReadiness}
               disabled={onCallApi}
@@ -505,7 +562,7 @@ export default function MasterPage() {
             </Button>
 
             <Button
-              size="lg"
+              size="sm"
               variant="outline"
               onClick={refreshPersonalData}
               disabled={onCallApi}
@@ -522,38 +579,167 @@ export default function MasterPage() {
               )}
             </Button>
 
+            <div className="flex items-center gap-2 border-l pl-4 ml-2">
+              <Select
+                value={
+                  paginationRequest.batchId === null
+                    ? "all"
+                    : paginationRequest.batchId === -1
+                      ? "no-batch"
+                      : paginationRequest.batchId?.toString() || "all"
+                }
+                onValueChange={(val) => {
+                  let batchId: number | null = null;
+                  if (val === "all") {
+                    batchId = null;
+                  } else if (val === "no-batch") {
+                    batchId = -1;
+                  } else {
+                    batchId = parseInt(val);
+                  }
+                  setPaginationRequest((prev) => ({
+                    ...prev,
+                    batchId,
+                    anchorId: 0,
+                    page: "next",
+                  }));
+                }}
+                disabled={loadingBatches}
+              >
+                <SelectTrigger className="w-[200px]">
+                  <SelectValue placeholder="Pilih Batch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Batch</SelectItem>
+                  <SelectItem value="no-batch">Tanpa Batch</SelectItem>
+                  {batches.map((batch) => (
+                    <SelectItem key={batch.id} value={batch.id.toString()}>
+                      Batch {batch.batchNo} ({format(new Date(batch.startDate), "MMM yyyy")})
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Dialog open={createBatchOpen} onOpenChange={setCreateBatchOpen}>
+                <DialogTrigger asChild>
+                  <Button variant="outline" size="icon" title="Buat Batch Baru">
+                    <PlusIcon className="w-4 h-4" />
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Buat Batch Baru</DialogTitle>
+                    <DialogDescription>
+                      Tentukan periode awal dan akhir untuk batch baru.
+                    </DialogDescription>
+                  </DialogHeader>
+
+                  <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                      <Label>Tanggal Mulai</Label>
+                      <Input
+                        type="date"
+                        className="w-full"
+                        value={batchForm.startDate ? format(batchForm.startDate, "yyyy-MM-dd") : ""}
+                        onChange={(e) =>
+                          setBatchForm((prev) => ({
+                            ...prev,
+                            startDate: e.target.value ? new Date(e.target.value) : undefined,
+                          }))
+                        }
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label>Tanggal Selesai</Label>
+                      <Input
+                        type="date"
+                        className="w-full"
+                        value={batchForm.endDate ? format(batchForm.endDate, "yyyy-MM-dd") : ""}
+                        onChange={(e) =>
+                          setBatchForm((prev) => ({
+                            ...prev,
+                            endDate: e.target.value ? new Date(e.target.value) : undefined,
+                          }))
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setCreateBatchOpen(false)}>
+                      Batal
+                    </Button>
+                    <Button
+                      onClick={handleCreateBatch}
+                      disabled={!batchForm.startDate || !batchForm.endDate || isCreating}
+                    >
+                      {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                      Buat Batch
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </div>
+
+            <div className="w-px h-6 bg-gray-300 mx-1" />
             <Button
-              size="lg"
+              size="sm"
               variant={isEditMode ? "destructive" : "outline"}
               onClick={toggleEditMode}
               className="flex items-center gap-2"
             >
               {isEditMode ? (
                 <>
-                  <XIcon className="w-4 h-4" /> Cancel
+                  <XIcon className="w-4 h-4" /> Batal Edit
                 </>
               ) : (
                 <>
-                  <EditIcon className="w-4 h-4" /> Edit
+                  <EditIcon className="w-4 h-4" /> Edit Mode
                 </>
               )}
             </Button>
 
             {isEditMode && (
-              <Button
-                size="lg"
-                variant="destructive"
-                onClick={confirmDelete}
-                disabled={selectedIds.size === 0}
-                className="flex items-center gap-2"
-              >
-                <TrashIcon className="w-4 h-4" /> Delete ({selectedIds.size})
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedBatchForAssign("");
+                    setBulkAssignBatchOpen(true);
+                  }}
+                  disabled={selectedIds.size === 0}
+                  className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+                >
+                  Assign ke Batch
+                  {selectedIds.size > 0 && (
+                    <span className="ml-1 bg-blue-100 text-blue-800 text-xs font-semibold px-1.5 py-0.5 rounded-full">
+                      {selectedIds.size}
+                    </span>
+                  )}
+                </Button>
+                <Button
+                  size="sm"
+                  variant="destructive"
+                  onClick={confirmDelete}
+                  disabled={selectedIds.size === 0}
+                  className="flex items-center gap-2"
+                >
+                  <TrashIcon className="w-4 h-4" /> Delete
+                  {selectedIds.size > 0 && (
+                    <span className="ml-1 bg-red-700 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full">
+                      {selectedIds.size}
+                    </span>
+                  )}
+                </Button>
+              </>
             )}
 
+            <div className="w-px h-6 bg-gray-300 mx-1" />
             <Dialog open={openDialog} onOpenChange={setOpenDialog}>
               <DialogTrigger asChild>
-                <Button size="lg" className="flex items-center gap-2">
+                <Button size="sm" className="flex items-center gap-2">
                   <PlusIcon className="w-4 h-4" /> Add Report
                 </Button>
               </DialogTrigger>
@@ -717,9 +903,63 @@ export default function MasterPage() {
             </Dialog>
           </div>
         </div>
-
-        <Separator />
       </div>
+
+      {/* Bulk Assign to Batch Dialog */}
+      <Dialog open={bulkAssignBatchOpen} onOpenChange={setBulkAssignBatchOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign ke Batch</DialogTitle>
+            <DialogDescription>
+              Pilih batch tujuan untuk {selectedIds.size} report yang dipilih. Pilih &quot;Tanpa
+              Batch&quot; untuk melepas batch.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <Label>Batch Tujuan</Label>
+            <Select value={selectedBatchForAssign} onValueChange={setSelectedBatchForAssign}>
+              <SelectTrigger className="w-full mt-2">
+                <SelectValue placeholder="Pilih batch..." />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="null">Tanpa Batch (lepas dari batch)</SelectItem>
+                {batches.map((batch) => (
+                  <SelectItem key={batch.id} value={batch.id.toString()}>
+                    Batch {batch.batchNo} ({format(new Date(batch.startDate), "MMM yyyy")})
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setBulkAssignBatchOpen(false)}>
+              Batal
+            </Button>
+            <Button
+              disabled={!selectedBatchForAssign || onCallApi}
+              onClick={async () => {
+                try {
+                  const batchId =
+                    selectedBatchForAssign === "null" ? null : parseInt(selectedBatchForAssign);
+                  await bulkAssignBatch(Array.from(selectedIds), batchId);
+                  setBulkAssignBatchOpen(false);
+                  setSelectedIds(new Set());
+                } catch {
+                  // error already shown in hook
+                }
+              }}
+            >
+              {onCallApi ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Menyimpan...
+                </>
+              ) : (
+                "Assign"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete Confirmation Dialog */}
       <Dialog open={confirmDeleteDialog} onOpenChange={setConfirmDeleteDialog}>
@@ -1210,22 +1450,20 @@ export default function MasterPage() {
       {/* Table */}
       <div
         ref={tableRef}
-        className={`overflow-auto max-h-[70vh] border rounded-lg transition-opacity ${
-          onCallApi ? "opacity-70" : "opacity-100"
+        className={`overflow-auto max-h-[70vh] border rounded-xl shadow-sm transition-opacity ${
+          onCallApi ? "opacity-60" : "opacity-100"
         }`}
       >
         <table className="w-full caption-bottom text-sm min-w-[2000px] border-collapse">
-          <TableHeader className="sticky top-0 bg-background z-50 shadow-sm">
-            <TableRow className="bg-background">
+          <TableHeader className="sticky top-0 z-50">
+            <TableRow className="bg-slate-900 hover:bg-slate-900">
               {isEditMode && (
-                <TableHead className="text-center sticky top-0 left-0 z-50 bg-background w-[50px]">
+                <TableHead className="text-center sticky top-0 left-0 z-50 bg-slate-900 w-[50px] text-white">
                   <button
                     onClick={toggleSelectAll}
-                    className="aspect-square h-4 w-4 rounded-full border border-primary inline-flex items-center justify-center"
+                    className="aspect-square h-4 w-4 rounded border border-white/60 inline-flex items-center justify-center hover:border-white transition-colors"
                   >
-                    {isAllCurrentPageSelected() && (
-                      <div className="h-2.5 w-2.5 rounded-full bg-current" />
-                    )}
+                    {isAllCurrentPageSelected() && <div className="h-2.5 w-2.5 rounded bg-white" />}
                   </button>
                 </TableHead>
               )}
@@ -1233,8 +1471,8 @@ export default function MasterPage() {
                 <TableHead
                   key={col}
                   className={cn(
-                    "text-center bg-background border sticky top-0",
-                    i < 2 ? "z-50" : "z-40"
+                    "text-center sticky top-0 text-white font-semibold text-xs uppercase tracking-wide whitespace-nowrap px-3 py-3 border-r border-white/10",
+                    i < 2 ? "z-50 bg-slate-900" : "z-40 bg-slate-900"
                   )}
                   style={i < 2 ? { left: `${offsets[i] || 0}px` } : {}}
                 >
@@ -1259,48 +1497,100 @@ export default function MasterPage() {
               paginationData.results.map((row, i) => (
                 <TableRow
                   key={row.id}
-                  className={`${selectedIds.has(row.id) ? "bg-blue-50" : ""} ${
-                    isEditMode ? "cursor-pointer hover:bg-gray-50" : ""
-                  }`}
+                  className={`transition-colors ${
+                    selectedIds.has(row.id)
+                      ? "bg-blue-50 border-l-2 border-l-blue-500"
+                      : i % 2 === 0
+                        ? "bg-white"
+                        : "bg-gray-50/60"
+                  } ${isEditMode ? "cursor-pointer hover:bg-blue-50/40" : "hover:bg-gray-100/50"}`}
                   onClick={() => handleRowClick(row)}
                 >
                   {isEditMode && (
                     <TableCell
-                      className="text-center sticky left-0 z-40 bg-background border-r"
+                      className="text-center sticky left-0 z-40 bg-inherit border-r"
                       onClick={(e) => {
                         e.stopPropagation();
                         toggleRowSelection(row.id);
                       }}
                     >
-                      <button className="aspect-square h-4 w-4 rounded-full border border-primary inline-flex items-center justify-center">
+                      <button className="aspect-square h-4 w-4 rounded border border-primary inline-flex items-center justify-center hover:bg-primary/10 transition-colors">
                         {selectedIds.has(row.id) && (
-                          <div className="h-2.5 w-2.5 rounded-full bg-current" />
+                          <div className="h-2.5 w-2.5 rounded bg-primary" />
                         )}
                       </button>
                     </TableCell>
                   )}
                   <TableCell
-                    className="text-center bg-background border sticky z-30"
+                    className="text-center bg-inherit border-r sticky z-30 text-gray-500 text-xs font-medium"
                     style={{ left: `${offsets[0] || 0}px`, width: "60px", pointerEvents: "none" }}
                   >
                     <span className="pointer-events-auto">{getRowNumber(i)}</span>
                   </TableCell>
                   <TableCell
-                    className="text-center bg-background border sticky z-30"
+                    className="bg-inherit border-r sticky z-30 font-medium text-gray-900"
                     style={{ left: `${offsets[1] || 0}px`, width: "200px", pointerEvents: "none" }}
                   >
                     <span className="pointer-events-auto">{row.nama}</span>
                   </TableCell>
-                  <TableCell className="text-center">{row.seamanCode || "-"}</TableCell>
-                  <TableCell className="text-center">{row.seafarerCode || "-"}</TableCell>
-                  <TableCell className="text-center">{row.vesselName || "-"}</TableCell>
-                  <TableCell className="text-center">{row.jabatan || "-"}</TableCell>
-                  <TableCell className="text-center">{row.idpProgram || "-"}</TableCell>
-                  <TableCell className="text-center">{row.age || "-"}</TableCell>
-                  <TableCell className="text-center">{row.certificate || "-"}</TableCell>
-                  <TableCell className="text-center">{row.konditeReview || "-"}</TableCell>
-                  <TableCell className="text-center">{row.kpiVessel || "-"}</TableCell>
-                  <TableCell className="text-center">{row.performanceScore || "-"}</TableCell>
+                  <TableCell className="text-center text-xs font-mono text-gray-600">
+                    {row.seamanCode || "-"}
+                  </TableCell>
+                  <TableCell className="text-center text-xs font-mono text-gray-600">
+                    {row.seafarerCode || "-"}
+                  </TableCell>
+                  <TableCell className="text-center text-xs text-gray-700 whitespace-nowrap">
+                    {row.vesselName || "-"}
+                  </TableCell>
+                  <TableCell className="text-center text-xs text-gray-700 whitespace-nowrap">
+                    {row.jabatan || "-"}
+                  </TableCell>
+                  <TableCell className="text-center text-xs">{row.idpProgram || "-"}</TableCell>
+                  <TableCell className="text-center">
+                    {row.age ? (
+                      <span className="inline-block bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                        {row.age}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center text-xs">{row.certificate || "-"}</TableCell>
+                  <TableCell className="text-center">
+                    {row.konditeReview ? (
+                      <span className="inline-block bg-purple-50 text-purple-700 text-xs font-medium px-2 py-0.5 rounded-full border border-purple-100">
+                        {row.konditeReview}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.kpiVessel ? (
+                      <span className="inline-block bg-orange-50 text-orange-700 text-xs font-medium px-2 py-0.5 rounded-full border border-orange-100">
+                        {row.kpiVessel}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.performanceScore ? (
+                      <span
+                        className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${
+                          Number(row.performanceScore) >= 80
+                            ? "bg-green-100 text-green-700"
+                            : Number(row.performanceScore) >= 60
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {row.performanceScore}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
                   <TableCell className="text-center">
                     {Array.isArray(row.competencies) && row.competencies.length > 0 ? (
                       <div className="flex flex-wrap gap-1 justify-center">
@@ -1323,14 +1613,86 @@ export default function MasterPage() {
                       "-"
                     )}
                   </TableCell>
-                  <TableCell className="text-center">{row.totalGap ?? "-"}</TableCell>
-                  <TableCell className="text-center">{row.strength ?? "-"}</TableCell>
-                  <TableCell className="text-center">{row.havQuadran2 ?? "-"}</TableCell>
-                  <TableCell className="text-center">{row.talentClassified || "-"}</TableCell>
                   <TableCell className="text-center">
-                    {row.totalReadinessUpdateMonths ?? "-"}
+                    {row.totalGap != null ? (
+                      <span
+                        className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          Number(row.totalGap) === 0
+                            ? "bg-green-100 text-green-700"
+                            : Number(row.totalGap) <= 3
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {row.totalGap}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
                   </TableCell>
-                  <TableCell className="text-center">{row.certificateEligible || "-"}</TableCell>
+                  <TableCell className="text-center">
+                    {row.strength ? (
+                      <span className="inline-block bg-emerald-50 text-emerald-700 text-xs font-medium px-2 py-0.5 rounded-full border border-emerald-100">
+                        {row.strength}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.havQuadran2 ? (
+                      <span className="inline-block bg-sky-50 text-sky-700 text-xs font-medium px-2 py-0.5 rounded-full border border-sky-100">
+                        {row.havQuadran2}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.talentClassified ? (
+                      <span
+                        className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${
+                          row.talentClassified.toLowerCase().includes("high")
+                            ? "bg-green-100 text-green-800"
+                            : row.talentClassified.toLowerCase().includes("medium")
+                              ? "bg-yellow-100 text-yellow-800"
+                              : row.talentClassified.toLowerCase().includes("low")
+                                ? "bg-red-100 text-red-800"
+                                : "bg-gray-100 text-gray-700"
+                        }`}
+                      >
+                        {row.talentClassified}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.totalReadinessUpdateMonths != null ? (
+                      <span
+                        className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
+                          Number(row.totalReadinessUpdateMonths) >= 12
+                            ? "bg-green-100 text-green-700"
+                            : Number(row.totalReadinessUpdateMonths) >= 6
+                              ? "bg-yellow-100 text-yellow-700"
+                              : "bg-red-100 text-red-700"
+                        }`}
+                      >
+                        {row.totalReadinessUpdateMonths} mo
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
+                  <TableCell className="text-center">
+                    {row.certificateEligible ? (
+                      <span className="inline-block bg-blue-50 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full border border-blue-100">
+                        {row.certificateEligible}
+                      </span>
+                    ) : (
+                      "-"
+                    )}
+                  </TableCell>
 
                   {/* Actions Column */}
                   <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
@@ -1338,29 +1700,48 @@ export default function MasterPage() {
                       variant="outline"
                       size="sm"
                       onClick={(e) => handleViewMentoringPrograms(row, e)}
-                      className="text-xs"
+                      className="text-xs h-7 px-2.5 border-slate-300 hover:bg-slate-100 hover:border-slate-400"
                     >
-                      View Programs
+                      📋 Programs
                     </Button>
                   </TableCell>
 
                   {/* Dynamic assessment type score columns */}
-                  {assessmentTypeColumns.map((assessmentTypeName) => (
-                    <TableCell key={assessmentTypeName} className="text-center">
-                      <Badge variant={"secondary"}>
-                        {getScoreForAssessmentType(row, assessmentTypeName)}
-                      </Badge>
-                    </TableCell>
-                  ))}
+                  {assessmentTypeColumns.map((assessmentTypeName) => {
+                    const score = getScoreForAssessmentType(row, assessmentTypeName);
+                    return (
+                      <TableCell key={assessmentTypeName} className="text-center">
+                        <span
+                          className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${
+                            score >= 80
+                              ? "bg-green-100 text-green-700"
+                              : score >= 60
+                                ? "bg-yellow-100 text-yellow-700"
+                                : score > 0
+                                  ? "bg-red-100 text-red-700"
+                                  : "bg-gray-100 text-gray-400"
+                          }`}
+                        >
+                          {score > 0 ? score : "-"}
+                        </span>
+                      </TableCell>
+                    );
+                  })}
                 </TableRow>
               ))
             ) : (
               <TableRow>
                 <TableCell
                   colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)}
-                  className="text-center text-gray-400 h-32"
+                  className="text-center text-gray-400 h-40"
                 >
-                  No Data Available
+                  <div className="flex flex-col items-center gap-2">
+                    <span className="text-3xl">📭</span>
+                    <p className="font-medium text-gray-500">Tidak ada data</p>
+                    <p className="text-xs text-gray-400">
+                      Coba ubah filter batch atau kata kunci pencarian
+                    </p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}
@@ -1369,74 +1750,117 @@ export default function MasterPage() {
       </div>
 
       {/* Pagination */}
-      <div className="flex items-center justify-between mt-4">
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button variant="outline" role="combobox" className="w-[120px] justify-between">
-              {paginationRequest.pageSize}
-              <ChevronsUpDownIcon className="ml-2 h-4 w-4 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[120px] p-0">
-            <Command>
-              <CommandList>
-                <CommandGroup>
-                  {PAGE_SIZES.map((size) => (
-                    <CommandItem
-                      key={size}
-                      value={size.toString()}
-                      onSelect={() => {
-                        setCurrentPage(1);
-                        setPaginationRequest({
-                          ...paginationRequest,
-                          pageSize: size,
-                          anchorId: 0,
-                          page: "next",
-                        });
-                        setPageSize(size);
-                      }}
-                    >
-                      <CheckIcon
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          paginationRequest.pageSize === size ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {size}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
+      <div className="flex items-center justify-between mt-4 px-1">
+        {/* Page size selector */}
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-gray-500">Tampilkan</span>
+          <Popover>
+            <PopoverTrigger asChild>
+              <Button
+                variant="outline"
+                role="combobox"
+                className="w-[80px] h-8 text-sm justify-between"
+              >
+                {paginationRequest.pageSize}
+                <ChevronsUpDownIcon className="ml-1 h-3 w-3 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-[100px] p-0">
+              <Command>
+                <CommandList>
+                  <CommandGroup>
+                    {PAGE_SIZES.map((size) => (
+                      <CommandItem
+                        key={size}
+                        value={size.toString()}
+                        onSelect={() => {
+                          setCurrentPage(1);
+                          setPaginationRequest({
+                            ...paginationRequest,
+                            pageSize: size,
+                            anchorId: 0,
+                            page: "next",
+                          });
+                          setPageSize(size);
+                        }}
+                      >
+                        <CheckIcon
+                          className={cn(
+                            "mr-2 h-4 w-4",
+                            paginationRequest.pageSize === size ? "opacity-100" : "opacity-0"
+                          )}
+                        />
+                        {size}
+                      </CommandItem>
+                    ))}
+                  </CommandGroup>
+                </CommandList>
+              </Command>
+            </PopoverContent>
+          </Popover>
+          <span className="text-xs text-gray-500">baris</span>
+        </div>
 
-        <Pagination className="mx-auto">
-          <PaginationContent className="flex justify-center">
+        {/* Page navigation */}
+        <Pagination className="mx-0 w-auto">
+          <PaginationContent className="flex items-center gap-1">
             <PaginationItem>
-              <Button
-                disabled={
-                  !paginationData || paginationData.first_page || currentPage <= 1 || onCallApi
-                }
-                onClick={() => navigatePage("prev")}
-              >
-                <ChevronLeftIcon className="h-4 w-4 mr-1" /> Previous
-              </Button>
+              <PaginationPrevious
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (
+                    !(!paginationData || paginationData.first_page || currentPage <= 1 || onCallApi)
+                  ) {
+                    navigatePage("prev");
+                  }
+                }}
+                className={cn(
+                  "cursor-pointer",
+                  (!paginationData || paginationData.first_page || currentPage <= 1 || onCallApi) &&
+                    "pointer-events-none opacity-50"
+                )}
+              />
             </PaginationItem>
+
             <PaginationItem>
-              <Button
-                disabled={!paginationData?.has_more || onCallApi}
-                onClick={() => navigatePage("next")}
+              <PaginationLink
+                isActive
+                className="cursor-default hover:bg-background"
+                onClick={(e) => e.preventDefault()}
               >
-                Next <ChevronRightIcon className="h-4 w-4 ml-1" />
-              </Button>
+                {currentPage}
+              </PaginationLink>
+            </PaginationItem>
+
+            <PaginationItem>
+              <span className="text-sm text-gray-500 mx-1">
+                {paginationData?.total
+                  ? `dari ${Math.ceil(paginationData.total / paginationRequest.pageSize)}`
+                  : ""}
+              </span>
+            </PaginationItem>
+
+            <PaginationItem>
+              <PaginationNext
+                onClick={(e) => {
+                  e.preventDefault();
+                  if (!(!paginationData?.has_more || onCallApi)) {
+                    navigatePage("next");
+                  }
+                }}
+                className={cn(
+                  "cursor-pointer",
+                  (!paginationData?.has_more || onCallApi) && "pointer-events-none opacity-50"
+                )}
+              />
             </PaginationItem>
           </PaginationContent>
         </Pagination>
 
-        <span className="text-sm text-gray-600">
-          Page {currentPage} | Showing {paginationData?.results?.length || 0} of{" "}
-          {paginationRequest.pageSize} rows
+        {/* Row count info */}
+        <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
+          Menampilkan <strong>{paginationData?.results?.length || 0}</strong> dari{" "}
+          <strong>{paginationRequest.pageSize}</strong> baris
         </span>
       </div>
     </div>

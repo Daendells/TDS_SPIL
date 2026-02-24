@@ -75,6 +75,7 @@ export interface IReport {
   }>;
 
   competencies: IGapCompetency[];
+  batchId?: number | null;
 }
 
 export interface IMentoringReport {
@@ -105,6 +106,7 @@ export interface IPaginationData<T> {
   page_size: number;
   has_more: boolean;
   first_page: boolean;
+  total?: number;
 }
 
 export interface IPaginationRequest {
@@ -112,6 +114,7 @@ export interface IPaginationRequest {
   page: PageType;
   pageSize: number;
   filter: FilterType;
+  batchId?: number | null;
 }
 
 export interface IUser {

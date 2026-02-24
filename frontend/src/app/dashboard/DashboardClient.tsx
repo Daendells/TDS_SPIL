@@ -11,24 +11,27 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Pagination, PaginationContent, PaginationItem } from "@/components/ui/pagination";
-import { Command, CommandGroup, CommandItem, CommandList } from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { CheckIcon, ChevronLeftIcon, ChevronRightIcon, ChevronsUpDownIcon } from "lucide-react";
+import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import CardCompetence from "@/components/card-competence";
 import { IReport, IPaginationRequest, PageType } from "@/types/global-types";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { SkeletonCard } from "@/components/skeleton-card";
 import { useGetIdpCount, useGetReports } from "./_hooks/useReports";
+import { useBatches } from "../master-report/_hooks/useBatch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Batch } from "../master-report/_hooks/useBatch";
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
 export default function DashboardClient() {
   const router = useRouter();
-
-  // React Query hooks for fetching data
-  const { data: idpCountData, error: idpCountError } = useGetIdpCount();
 
   // Pagination request state
   const [paginationRequest, setPaginationRequest] = useState<IPaginationRequest>({
@@ -36,18 +39,18 @@ export default function DashboardClient() {
     page: "next",
     pageSize: 10,
     filter: "",
+    batchId: undefined,
   });
 
-  // Fetch reports using React Query
+  // React Query hooks for fetching data
+  const { data: idpCountData, error: idpCountError } = useGetIdpCount(paginationRequest.batchId);
+  const { batches: batchData } = useBatches();
+
   const {
     data: paginationData,
     isLoading: reportsLoading,
     error: reportsError,
   } = useGetReports(paginationRequest);
-
-  // Page size
-  const [pageSize, setPageSize] = useState(10);
-  const [open, setOpen] = useState(false);
 
   // Determine FDP, MDP, SDP counts from React Query data
   const fdp = idpCountData?.fdp ?? null;
@@ -141,54 +144,67 @@ export default function DashboardClient() {
         )}
       </div>
 
-      {/* Page Size Selector */}
-      <div className="mb-2">
-        <Popover open={open} onOpenChange={setOpen}>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              role="combobox"
-              aria-expanded={open}
-              className="w-[6.25rem] justify-between"
+      {/* Filters Toolbar */}
+      <div className="mb-4 flex items-center justify-between">
+        <div className="flex items-center gap-4">
+          {/* Page Size Selector */}
+          <div className="flex items-center gap-2">
+            <Select
+              value={paginationRequest.pageSize.toString()}
+              onValueChange={(val) => {
+                const size = parseInt(val);
+                setPaginationRequest({
+                  ...paginationRequest,
+                  pageSize: size,
+                  anchorId: 0,
+                  page: "next",
+                });
+              }}
             >
-              {pageSize}
-              <ChevronsUpDownIcon className="ml-2 h-4 w-4 shrink-0 opacity-50" />
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-[6.25rem] p-0">
-            <Command>
-              <CommandList>
-                <CommandGroup>
-                  {PAGE_SIZES.map((size) => (
-                    <CommandItem
-                      key={size}
-                      value={size.toString()}
-                      onSelect={(currentValue) => {
-                        setPageSize(parseInt(currentValue));
-                        setPaginationRequest({
-                          ...paginationRequest,
-                          pageSize: parseInt(currentValue),
-                          anchorId: 0,
-                          page: "next",
-                        });
-                        setOpen(false);
-                      }}
-                    >
-                      <CheckIcon
-                        className={cn(
-                          "mr-2 h-4 w-4",
-                          pageSize === size ? "opacity-100" : "opacity-0"
-                        )}
-                      />
-                      {size}
-                    </CommandItem>
-                  ))}
-                </CommandGroup>
-              </CommandList>
-            </Command>
-          </PopoverContent>
-        </Popover>
-        <span className="ml-2">Pages</span>
+              <SelectTrigger className="w-[100px]">
+                <SelectValue placeholder="Page Size" />
+              </SelectTrigger>
+              <SelectContent>
+                {PAGE_SIZES.map((size) => (
+                  <SelectItem key={size} value={size.toString()}>
+                    {size}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Halaman</span>
+          </div>
+
+          {/* Batch Selector */}
+          <div className="flex items-center gap-2">
+            <Select
+              value={paginationRequest.batchId?.toString() || "all"}
+              onValueChange={(val) => {
+                const bId = val === "all" ? undefined : val === "none" ? -1 : parseInt(val);
+                setPaginationRequest({
+                  ...paginationRequest,
+                  batchId: bId,
+                  anchorId: 0,
+                  page: "next",
+                });
+              }}
+            >
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Pilih Batch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Semua Batch</SelectItem>
+                <SelectItem value="none">Tanpa Batch</SelectItem>
+                {batchData?.map((batch: Batch) => (
+                  <SelectItem key={batch.id} value={batch.id.toString()}>
+                    Batch {batch.batchNo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground whitespace-nowrap">Batch</span>
+          </div>
+        </div>
       </div>
 
       {/* TABLE */}

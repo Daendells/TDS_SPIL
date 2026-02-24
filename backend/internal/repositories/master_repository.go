@@ -49,3 +49,8 @@ func (r *MasterRepository) Update(db *gorm.DB, report *domain.FullReport) error 
 func (r *MasterRepository) Delete(db *gorm.DB, master *domain.FullReport) error {
 	return db.Delete(master).Error
 }
+
+// Bulk assign batch for master reports
+func (r *MasterRepository) BulkAssignBatch(db *gorm.DB, reportIDs []uint, batchID *int) error {
+	return db.Model(&domain.FullReport{}).Where("id IN ?", reportIDs).Update("batch_id", batchID).Error
+}

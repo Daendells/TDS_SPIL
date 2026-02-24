@@ -82,6 +82,7 @@ func Bootstrap(config *BootstrapConfig) {
 	mutationCacheRepository := repositories.NewMutationCacheRepository(config.DB, config.Log)
 	seamanRepository := repositories.NewSeamanRepository(config.DB)
 	assessmentRepository := repositories.NewAssessmentRepository()
+	batchRepository := repositories.NewBatchRepository(config.Log)
 
 	// --- Services (DB-based)
 	adminService := services.NewAdminService(config.DB, config.Log)
@@ -103,6 +104,7 @@ func Bootstrap(config *BootstrapConfig) {
 	trainingPlanService := services.NewTrainingPlanService(gapCompetencyRepository, trainingScheduleRepository, competencyProgramMappingRepository, competencyTypeRepository, *reportRepository, config.DB, config.Log)
 	assignmentService := services.NewAssignmentService(assignmentRepo, config.Validate)
 	aspectService := services.NewAspectService(config.DB, config.Log, aspectRepository)
+	batchService := services.NewBatchService(config.DB, config.Log, config.Validate, batchRepository)
 
 	// --- IDP Tracking Services
 	apolloAPIBaseURL := config.Config.GetString("APOLLO_API_BASE_URL")
@@ -146,6 +148,7 @@ func Bootstrap(config *BootstrapConfig) {
 	quizController := controllers.NewQuizController(config.Log, config.DB, quizService)
 	adminController := controllers.NewAdminController(adminService, config.Log)
 	scoringConfigController := controllers.NewScoringConfigController(config.Log, config.DB, quizService)
+	batchController := controllers.NewBatchController(batchService)
 
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(
@@ -192,6 +195,7 @@ func Bootstrap(config *BootstrapConfig) {
 		SeamanController:             seamanController,
 		QuizController:               quizController,
 		ScoringConfigController:      scoringConfigController,
+		BatchController:              batchController,
 	}
 	routerConfig.Setup()
 

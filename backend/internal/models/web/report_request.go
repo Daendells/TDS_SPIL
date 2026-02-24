@@ -17,6 +17,7 @@ type DashboardRequest struct {
 	Page     string `form:"page" binding:"required,oneof=next prev"`
 	PageSize int    `form:"page_size" binding:"required,gte=1"`
 	Filter   string `form:"filter" binding:"omitempty,oneof=MDP FDP SDP"`
+	BatchID  int    `form:"batch_id"`
 }
 
 func (request *DashboardRequest) ParseError(errs validator.ValidationErrors) map[string]string {

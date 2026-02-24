@@ -166,3 +166,27 @@ func (c *MasterController) GetMentoringPrograms(ctx *gin.Context) {
 
 	ctx.JSON(response.Code, response)
 }
+
+func (c *MasterController) BulkAssignBatch(ctx *gin.Context) {
+	var request web.BulkAssignBatchRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	response, err := c.Service.BulkAssignBatch(ctx.Request.Context(), &request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "Internal Server Error",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(response.Code, response)
+}

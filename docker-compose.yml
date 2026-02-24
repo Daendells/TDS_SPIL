@@ -59,7 +59,7 @@ services:
       JWT_SECRET_KEY: your-secret-key
       # GROQ_API_KEY: your-groq-key
     ports:
-      - "8081:8080"
+      - "8080:8080"
     volumes:
       - backend_storage:/app/storage
       - ./backend/public:/app/public:ro
@@ -88,7 +88,7 @@ services:
       CHOKIDAR_USEPOLLING: true
       JWT_SECRET: your-secret-key
     ports:
-      - "3001:3000"
+      - "3000:3000"
     volumes:
       # Bind mount source code for hot reload
       - ./frontend:/app

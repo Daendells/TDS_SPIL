@@ -22,11 +22,29 @@ export const reportKeys = {
 };
 
 // React Query hook for fetching IDP (Integrated Development Programs) count
-export function useGetIdpCount() {
+export function useGetIdpCount(batchId?: number | null) {
   const response = useQuery<IdpCountData, Error>({
-    queryKey: reportKeys.idpCount(),
+    queryKey: batchId ? [...reportKeys.idpCount(), batchId] : reportKeys.idpCount(),
     queryFn: async () => {
-      const response = await api.get<ApiResponse<IdpCountData>>("/reports/idp-count");
+      // Add required Page and PageSize parameters matching DashboardRequest structure
+      const params = new URLSearchParams({
+        page: "next",
+        page_size: "1000",
+        anchor_id: "0",
+      });
+
+      if (batchId) {
+        params.append("batch_id", batchId.toString());
+      }
+
+      // We need to get the batchId from somewhere or pass it as an argument.
+      // Since useGetIdpCount is usually called in the same component as useGetReports,
+      // let's modify it to accept components state if needed, but for now
+      // let's check how it's used in DashboardClient.
+
+      const response = await api.get<ApiResponse<IdpCountData>>(
+        `/reports/idp-count?${params.toString()}`
+      );
 
       if (!response.data) {
         throw new Error("Failed to fetch IDP count data");
@@ -64,6 +82,7 @@ export function useGetReports(paginationRequest: IPaginationRequest) {
             page: paginationRequest.page,
             page_size: paginationRequest.pageSize,
             filter: paginationRequest.filter,
+            batch_id: paginationRequest.batchId,
           },
         });
 

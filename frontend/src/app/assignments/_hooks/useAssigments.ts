@@ -2,7 +2,12 @@
 import { useState, useEffect, useDeferredValue, startTransition } from "react";
 import { toast } from "sonner";
 import { api } from "@/app/lib/api";
-import { IAssignmentFlat, IAssignmentCreate, IAssignmentUpdate } from "@/types/global-types";
+import {
+  IAssignmentFlat,
+  IAssignmentCreate,
+  IAssignmentUpdate,
+  IReport,
+} from "@/types/global-types";
 
 export function useAssignments() {
   const [assignments, setAssignments] = useState<IAssignmentFlat[]>([]);
@@ -14,8 +19,43 @@ export function useAssignments() {
 
   /** 🔹 Page Size & Filters */
   const [pageSize, setPageSize] = useState<number>(20);
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [filteredCount, setFilteredCount] = useState<number>(0);
   const [filterAssessment, setFilterAssessment] = useState<string>("ALL");
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
+  const [filterBatch, setFilterBatch] = useState<string>("ALL");
+  const [batchSeafarerCodes, setBatchSeafarerCodes] = useState<Set<string> | null>(null);
+
+  /** 🔹 Fetch batch members when filterBatch changes */
+  useEffect(() => {
+    const fetchBatchMembers = async () => {
+      if (filterBatch === "ALL" || !filterBatch) {
+        setBatchSeafarerCodes(null);
+        return;
+      }
+
+      try {
+        setLoading(true);
+        // We use master-reports endpoint to get seafarers in this batch
+        const res = await api.get(`/api/master-reports?batch_id=${filterBatch}&page_size=1000`);
+        const reports = res.data?.data?.data || res.data?.data || res.data || [];
+
+        const codes = new Set<string>();
+        reports.forEach((r: IReport) => {
+          if (r.seafarerCode) codes.add(r.seafarerCode);
+        });
+
+        setBatchSeafarerCodes(codes);
+      } catch (err) {
+        console.error("Failed to fetch batch members", err);
+        setBatchSeafarerCodes(new Set()); // Empty set so no assignments show
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBatchMembers();
+  }, [filterBatch]);
 
   /** 🔹 Fetch all assignments (no pagination backend) */
   const fetchAll = async () => {
@@ -86,11 +126,41 @@ export function useAssignments() {
       filtered = filtered.filter((a) => a.status === filterStatus);
     }
 
-    // 📌 Page Size (client)
-    const sliced = pageSize === -1 ? filtered : filtered.slice(0, pageSize);
+    // 🎯 Filter Batch (using the cross-referenced codes)
+    if (batchSeafarerCodes !== null) {
+      filtered = filtered.filter((a) => batchSeafarerCodes.has(a.seafarerCode));
+    }
 
-    startTransition(() => setAssignments(sliced));
-  }, [deferredQuery, allAssignments, filterAssessment, filterStatus, pageSize]);
+    // 📌 Page Size (client-side pagination)
+    setFilteredCount(filtered.length);
+
+    if (pageSize === -1) {
+      startTransition(() => {
+        setAssignments(filtered);
+        setCurrentPage(1);
+      });
+    } else {
+      const startIndex = (currentPage - 1) * pageSize;
+      const sliced = filtered.slice(startIndex, startIndex + pageSize);
+
+      startTransition(() => setAssignments(sliced));
+    }
+  }, [
+    deferredQuery,
+    allAssignments,
+    filterAssessment,
+    filterStatus,
+    batchSeafarerCodes,
+    pageSize,
+    currentPage,
+  ]);
+
+  const navigatePage = (page: "prev" | "next") => {
+    setCurrentPage((prev) => {
+      if (page === "prev") return Math.max(1, prev - 1);
+      return prev + 1;
+    });
+  };
 
   /** CRUD */
   const createAssignment = async (payload: IAssignmentCreate) => {
@@ -160,6 +230,14 @@ export function useAssignments() {
 
     filterStatus,
     setFilterStatus,
+
+    filterBatch,
+    setFilterBatch,
+
+    currentPage,
+    navigatePage,
+    totalCount: allAssignments.length,
+    filteredCount,
 
     fetchAll,
     createAssignment,

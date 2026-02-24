@@ -91,14 +91,25 @@ func (controller *ReportController) FindAll(ctx *gin.Context) {
 }
 
 func (controller *ReportController) IDPCount(ctx *gin.Context) {
+	var request web.DashboardRequest
+	if err := ctx.ShouldBindQuery(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
 	// TODO: Call Service
-	response, err := controller.Service.IDPCount(ctx)
+	response, err := controller.Service.IDPCount(ctx, &request)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
 			Code:   http.StatusInternalServerError,
 			Status: "Internal Server Error",
 			Error:  err.Error(),
 		})
+		return
 	}
 
 	ctx.JSON(response.Code, response)

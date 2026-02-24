@@ -41,6 +41,8 @@ type MasterReport struct {
 	GapCompetencies   []GapCompetency  `json:"gapCompetencies" gorm:"foreignKey:ReportID"`
 	ReportScores      []ReportScore    `json:"reportScores" gorm:"foreignKey:ReportID;references:ID"`
 	MentoringReport   *MentoringReport `json:"mentoringReport,omitempty" gorm:"-"` // Not stored in DB, fetched via API
+	BatchID           *int             `json:"batchId" gorm:"column:batch_id"`
+	Batch             *Batch           `json:"batch,omitempty" gorm:"foreignKey:BatchID;references:ID"`
 }
 
 type FullReport struct {
@@ -111,6 +113,8 @@ type FullReport struct {
 	GapCompetencies []GapCompetency  `json:"gapCompetencies" gorm:"foreignKey:ReportID"`
 	ReportScores    []ReportScore    `json:"reportScores" gorm:"foreignKey:ReportID;references:ID"`
 	MentoringReport *MentoringReport `json:"mentoringReport,omitempty" gorm:"-"` // Not stored in DB, fetched via API
+	BatchID         *int             `json:"batchId" gorm:"column:batch_id"`
+	Batch           *Batch           `json:"batch,omitempty" gorm:"foreignKey:BatchID;references:ID"`
 }
 
 func (FullReport) TableName() string {

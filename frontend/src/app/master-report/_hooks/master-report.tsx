@@ -23,11 +23,13 @@ export function useMasterReports(initialPageSize = 10) {
     page: "next",
     pageSize: initialPageSize,
     filter: "",
+    batchId: null,
   });
   const [searchName, setSearchName] = useState("");
   const [debouncedName] = useDebounce(searchName, 500);
   const lastQueryRef = useRef<string>("");
   const pendingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const prevDebouncedNameRef = useRef<string>("");
 
   const deferredData = useDeferredValue(paginationData);
 
@@ -44,6 +46,10 @@ export function useMasterReports(initialPageSize = 10) {
         params.set("anchor_id", paginationRequest.anchorId.toString());
       } else {
         params.set("anchor_id", "0");
+      }
+
+      if (paginationRequest.batchId) {
+        params.set("batch_id", paginationRequest.batchId.toString());
       }
 
       if (debouncedName) params.set("query", debouncedName);
@@ -79,6 +85,7 @@ export function useMasterReports(initialPageSize = 10) {
           page_size: apiMeta?.page_size ?? paginationRequest.pageSize,
           has_more: apiMeta?.has_more ?? parsedReports.length >= paginationRequest.pageSize,
           first_page: apiMeta?.first_page ?? false,
+          total: apiMeta?.total ?? 0,
         };
 
         // Extract available mentoring reports from response
@@ -121,19 +128,27 @@ export function useMasterReports(initialPageSize = 10) {
   }, [paginationRequest, debouncedName]);
 
   useEffect(() => {
-    startTransition(() => {
-      setPaginationRequest((prev) => ({
-        ...prev,
-        anchorId: 0,
-        page: "next",
-      }));
-    });
+    // Only update pagination if the debouncedName actually changed
+    if (prevDebouncedNameRef.current !== debouncedName) {
+      prevDebouncedNameRef.current = debouncedName;
+      startTransition(() => {
+        setPaginationRequest((prev) => ({
+          ...prev,
+          anchorId: 0,
+          page: "next",
+        }));
+      });
+    }
   }, [debouncedName]);
 
   const createReport = async (report: Partial<IReport>) => {
     setOnCallApi(true);
     try {
-      const res = await api.post("/api/master-reports", report);
+      const payload = {
+        ...report,
+        batchId: paginationRequest.batchId,
+      };
+      const res = await api.post("/api/master-reports", payload);
       toast.success("Report added successfully!");
       startTransition(() => {
         setPaginationRequest((prev) => ({
@@ -222,6 +237,31 @@ export function useMasterReports(initialPageSize = 10) {
     }
   };
 
+  const bulkAssignBatch = async (reportIds: number[], batchId: number | null) => {
+    setOnCallApi(true);
+    try {
+      const res = await api.post("/api/master-reports/bulk-assign-batch", {
+        reportIds,
+        batchId,
+      });
+      toast.success(`${reportIds.length} report(s) assigned to batch!`);
+      startTransition(() => {
+        setPaginationRequest((prev) => ({
+          ...prev,
+          anchorId: 0,
+          page: "next",
+        }));
+      });
+      return res.data;
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to assign batch");
+      throw err;
+    } finally {
+      setOnCallApi(false);
+    }
+  };
+
   const refreshPersonalData = async () => {
     setOnCallApi(true);
     try {
@@ -257,6 +297,7 @@ export function useMasterReports(initialPageSize = 10) {
     createReport,
     deleteReport,
     updateReport,
+    bulkAssignBatch,
     refreshAllReadiness,
     refreshPersonalData,
   };

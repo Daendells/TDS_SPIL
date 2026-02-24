@@ -132,6 +132,14 @@ func (r *ReportRepository) SelectAll(db *gorm.DB, filter *web.DashboardRequest, 
 		args = append(args, filter.Filter)
 	}
 
+	// Batch Filter
+	if (filter.BatchID > 0) {
+		queryBuilder.WriteString(" AND batch_id = ?")
+		args = append(args, filter.BatchID)
+	} else if (filter.BatchID == -1) {
+		queryBuilder.WriteString(" AND batch_id IS NULL")
+	}
+
 	// Order + limit
 	var orderCondition string
 	if filter.Page == "next" {
@@ -152,16 +160,27 @@ func (r *ReportRepository) SelectAll(db *gorm.DB, filter *web.DashboardRequest, 
 	return nil
 }
 
-func (r *ReportRepository) IDPCount(db *gorm.DB, data *web.IDPCountData) error {
-	query := `
+func (r *ReportRepository) IDPCount(db *gorm.DB, filter *web.DashboardRequest, data *web.IDPCountData) error {
+	var queryBuilder strings.Builder
+	var args []interface{}
+
+	queryBuilder.WriteString(`
 		SELECT 
 			SUM(CASE WHEN idp_program = 'MDP' THEN 1 ELSE 0 END) as mdp,
 			SUM(CASE WHEN idp_program = 'FDP' THEN 1 ELSE 0 END) as fdp,
 			SUM(CASE WHEN idp_program = 'SDP' THEN 1 ELSE 0 END) as sdp
 		FROM reports
-	`
+		WHERE 1=1
+	`)
 
-	if err := db.Raw(query).Scan(data).Error; err != nil {
+	if (filter != nil && filter.BatchID > 0) {
+		queryBuilder.WriteString(" AND batch_id = ?")
+		args = append(args, filter.BatchID)
+	} else if (filter != nil && filter.BatchID == -1) {
+		queryBuilder.WriteString(" AND batch_id IS NULL")
+	}
+
+	if err := db.Raw(queryBuilder.String(), args...).Scan(data).Error; err != nil {
 		return err
 	}
 
