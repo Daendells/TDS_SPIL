@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import React from "react";
+import { useSearchParams } from "next/navigation";
 
 // Form validation GOES HERE
 import { z } from "zod";
@@ -37,6 +38,7 @@ const FormSchema = z.object({
 
 export default function Page() {
   const loginMutation = useLogin();
+  const searchParams = useSearchParams();
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -53,6 +55,29 @@ export default function Page() {
       password: data.password,
     });
   };
+
+  const handleSsoLogin = React.useCallback(() => {
+    const apiBase = process.env.NEXT_PUBLIC_API_ENDPOINT || window.location.origin;
+    const params = new URLSearchParams();
+    const clientID = searchParams.get("client_id");
+    if (clientID) {
+      params.set("client_id", clientID);
+    }
+
+    const queryString = params.toString();
+    const target = `${apiBase}/api/auth/sso/initiate${queryString ? `?${queryString}` : ""}`;
+    window.location.href = target;
+  }, [searchParams]);
+
+  React.useEffect(() => {
+    const shouldAutoSSO = searchParams.get("login_sso") === "true";
+    const clientID = searchParams.get("client_id");
+    if (shouldAutoSSO && clientID === process.env.NEXT_PUBLIC_SSO_CLIENT_ID) {
+      handleSsoLogin();
+    }
+  }, [handleSsoLogin, searchParams]);
+
+  const ssoError = searchParams.get("sso_error");
 
   return (
     <div className="flex flex-col gap-5">
@@ -103,8 +128,16 @@ export default function Page() {
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-2 mt-4">
+              {ssoError ? (
+                <div className="w-full rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700">
+                  SSO login failed: {ssoError}
+                </div>
+              ) : null}
               <Button type="submit" className="w-full" disabled={loginMutation.isPending}>
                 {loginMutation.isPending ? "Loading..." : "Login"}
+              </Button>
+              <Button type="button" variant="outline" className="w-full" onClick={handleSsoLogin}>
+                Login with SSO SPIL
               </Button>
             </CardFooter>
           </form>

@@ -14,12 +14,18 @@ func NewViper() *viper.Viper {
 	config.SetDefault("DB_PORT", "3306")
 	config.SetDefault("WEB_PORT", 8080)
 	config.SetDefault("ENV", "development")
+	config.SetDefault("SSO_BASE_URL", "")
+	config.SetDefault("SSO_FRONTEND_URL", "")
+	config.SetDefault("SSO_CLIENT_ID", "")
+	config.SetDefault("SSO_CLIENT_SECRET", "")
+	config.SetDefault("SSO_CALLBACK_URL", "")
+	config.SetDefault("FRONTEND_URL", "http://localhost:3000")
 
 	// Try to read .env file (optional for Docker)
 	config.SetConfigFile(".env")
 	config.AddConfigPath("./../")
 	config.AddConfigPath("./")
-	
+
 	err := config.ReadInConfig()
 	if err != nil {
 		// .env file not found - this is OK in Docker

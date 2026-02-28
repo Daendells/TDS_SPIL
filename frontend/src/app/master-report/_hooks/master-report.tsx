@@ -85,7 +85,6 @@ export function useMasterReports(initialPageSize = 10) {
           page_size: apiMeta?.page_size ?? paginationRequest.pageSize,
           has_more: apiMeta?.has_more ?? parsedReports.length >= paginationRequest.pageSize,
           first_page: apiMeta?.first_page ?? false,
-          total: apiMeta?.total ?? 0,
         };
 
         // Extract available mentoring reports from response
@@ -237,31 +236,6 @@ export function useMasterReports(initialPageSize = 10) {
     }
   };
 
-  const bulkAssignBatch = async (reportIds: number[], batchId: number | null) => {
-    setOnCallApi(true);
-    try {
-      const res = await api.post("/api/master-reports/bulk-assign-batch", {
-        reportIds,
-        batchId,
-      });
-      toast.success(`${reportIds.length} report(s) assigned to batch!`);
-      startTransition(() => {
-        setPaginationRequest((prev) => ({
-          ...prev,
-          anchorId: 0,
-          page: "next",
-        }));
-      });
-      return res.data;
-    } catch (err) {
-      const error = err as { response?: { data?: { error?: string } } };
-      toast.error(error.response?.data?.error || "Failed to assign batch");
-      throw err;
-    } finally {
-      setOnCallApi(false);
-    }
-  };
-
   const refreshPersonalData = async () => {
     setOnCallApi(true);
     try {
@@ -278,6 +252,33 @@ export function useMasterReports(initialPageSize = 10) {
     } catch (err) {
       const error = err as { response?: { data?: { error?: string } } };
       toast.error(error.response?.data?.error || "Failed to refresh personal data");
+      throw err;
+    } finally {
+      setOnCallApi(false);
+    }
+  };
+
+  const bulkAssignBatch = async (reportIds: number[], batchId: number | null) => {
+    setOnCallApi(true);
+    try {
+      const res = await api.post("/api/master-reports/bulk-assign-batch", {
+        reportIds,
+        batchId,
+      });
+      toast.success("Reports assigned to batch successfully!");
+
+      startTransition(() => {
+        setPaginationRequest((prev) => ({
+          ...prev,
+          anchorId: 0,
+          page: "next",
+        }));
+      });
+
+      return res.data;
+    } catch (err) {
+      const error = err as { response?: { data?: { error?: string } } };
+      toast.error(error.response?.data?.error || "Failed to assign batch");
       throw err;
     } finally {
       setOnCallApi(false);

@@ -40,7 +40,8 @@ COPY --from=builder /app/clear-data .
 
 # Copy entrypoint script
 COPY entrypoint.sh .
-RUN chmod +x entrypoint.sh
+RUN sed -i 's/\r$//' entrypoint.sh && chmod +x entrypoint.sh
+# RUN chmod +x entrypoint.sh
 
 # Copy necessary resources (fonts, seed data, etc)
 COPY fonts ./fonts
