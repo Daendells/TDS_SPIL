@@ -35,6 +35,15 @@ func (r *UserReporsitory) FindByID(db *gorm.DB, id int) (*domain.User, error) {
 	return &user, nil
 }
 
+func (r *UserReporsitory) FindBySSOID(db *gorm.DB, ssoID string) (*domain.User, error) {
+	var user domain.User
+	err := db.Where("sso_id = ?", ssoID).First(&user).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
 func (r *UserReporsitory) FindAll(db *gorm.DB) ([]domain.User, error) {
 	var users []domain.User
 	err := db.Find(&users).Order("created_at DESC").Error

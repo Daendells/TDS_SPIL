@@ -7,6 +7,7 @@ type User struct {
 	Username  string    `gorm:"column:username;unique;size:100;not null"`
 	Password  string    `gorm:"column:password;not null"`
 	Role      string    `gorm:"column:role;type:enum('admin');default:'admin';not null"`
+	SSOID     string    `gorm:"column:sso_id;uniqueIndex;size:100"`
 	CreatedAt time.Time `gorm:"column:created_at;autoCreateTime"`
 	UpdatedAt time.Time `gorm:"column:updated_at;autoUpdateTime"`
 }

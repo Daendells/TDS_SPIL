@@ -89,6 +89,7 @@ func Bootstrap(config *BootstrapConfig) {
 	reportService := services.NewReportService(config.DB, config.Log, config.Validate, reportRepository, gapCompetencyRepository, seamenCacheRepository, mutationCacheRepository)
 	seamanService := services.NewSeamanService(seamanRepository)
 	userService := services.NewUserService(config.DB, config.Log, config.Validate, config.Config, userRepository)
+	ssoService := services.NewSSOService(config.DB, config.Config, config.Log, userRepository, userService)
 	mentoringReportService := services.NewMentoringReportService(config.DB, config.Log, config.Validate, mentoringReportRepository)
 	coachingReportService := services.NewCoachingReportService(coachingReportRepository, config.Log)
 	questionService := services.NewQuestionService(questionRepository, config.Validate)
@@ -125,7 +126,7 @@ func Bootstrap(config *BootstrapConfig) {
 	cronService := services.NewCronService(config.Log, idpCalculationService, apolloAPIService, nanikaAPIService)
 
 	reportController := controllers.NewReportController(reportService, config.Log, apolloAPIService)
-	userController := controllers.NewUserController(userService, config.Log)
+	userController := controllers.NewUserController(userService, ssoService, config.Log)
 	mentoringReportController := controllers.NewMentoringReportController(mentoringReportService, config.Log)
 	coachingReportController := controllers.NewCoachingReportController(coachingReportService, config.Log)
 	questionController := controllers.NewQuestionController(questionService, optionService, config.DB)
@@ -191,11 +192,11 @@ func Bootstrap(config *BootstrapConfig) {
 		AuthMiddleware:               authMiddleware,
 		AssignmentController:         assignmentController,
 
-		IDPTrackingController:        idpTrackingController,
-		SeamanController:             seamanController,
-		QuizController:               quizController,
-		ScoringConfigController:      scoringConfigController,
-		BatchController:              batchController,
+		IDPTrackingController:   idpTrackingController,
+		SeamanController:        seamanController,
+		QuizController:          quizController,
+		ScoringConfigController: scoringConfigController,
+		BatchController:         batchController,
 	}
 	routerConfig.Setup()
 

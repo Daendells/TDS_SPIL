@@ -15,14 +15,16 @@ import (
 )
 
 type UserController struct {
-	Log     *logrus.Logger
-	Service *services.UserService
+	Log        *logrus.Logger
+	Service    *services.UserService
+	SSOService *services.SSOService
 }
 
-func NewUserController(service *services.UserService, log *logrus.Logger) *UserController {
+func NewUserController(service *services.UserService, ssoService *services.SSOService, log *logrus.Logger) *UserController {
 	return &UserController{
-		Log:     log,
-		Service: service,
+		Log:        log,
+		Service:    service,
+		SSOService: ssoService,
 	}
 }
 
@@ -80,7 +82,7 @@ func (c *UserController) Login(ctx *gin.Context) {
 	// TODO: Create HTTP Only Cookie (optional, frontend will handle it)
 	// In production with HTTPS, use secure=true
 	isProduction := os.Getenv("ENV") == "production"
-	ctx.SetSameSite(http.SameSiteLaxMode)  // Changed from None to Lax for same-site
+	ctx.SetSameSite(http.SameSiteLaxMode) // Changed from None to Lax for same-site
 	ctx.SetCookie(middlewares.TOKEN_COOKIE, tokenString, 3600*6, "/", "", isProduction, true)
 
 	// Send token in response body for frontend to store
@@ -106,6 +108,59 @@ func (c *UserController) Logout(ctx *gin.Context) {
 		Code:   http.StatusOK,
 		Data:   "Logged out successfully",
 	})
+}
+
+func (c *UserController) InitiateSSO(ctx *gin.Context) {
+	if c.SSOService == nil || !c.SSOService.IsConfigured() {
+		ctx.JSON(http.StatusServiceUnavailable, web.ErrorResponse{
+			Code:   http.StatusServiceUnavailable,
+			Status: "Service Unavailable",
+			Error:  "SSO is not configured",
+		})
+		return
+	}
+
+	clientIDOverride := ctx.Query("client_id")
+	redirectURL, err := c.SSOService.BuildInitiateRedirectURL(clientIDOverride)
+	if err != nil {
+		c.Log.Errorf("failed to build SSO redirect URL: %v", err)
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.Redirect(http.StatusTemporaryRedirect, redirectURL)
+}
+
+func (c *UserController) SSOCallback(ctx *gin.Context) {
+	if c.SSOService == nil || !c.SSOService.IsConfigured() {
+		ctx.JSON(http.StatusServiceUnavailable, web.ErrorResponse{
+			Code:   http.StatusServiceUnavailable,
+			Status: "Service Unavailable",
+			Error:  "SSO is not configured",
+		})
+		return
+	}
+
+	if ssoErr := ctx.Query("error"); ssoErr != "" {
+		ctx.Redirect(http.StatusTemporaryRedirect, c.SSOService.BuildFrontendLoginErrorURL(ssoErr))
+		return
+	}
+
+	code := ctx.Query("code")
+	state := ctx.Query("state")
+
+	localToken, err := c.SSOService.HandleCallback(code, state)
+	if err != nil {
+		c.Log.Errorf("SSO callback failed: %v", err)
+		ctx.Redirect(http.StatusTemporaryRedirect, c.SSOService.BuildFrontendLoginErrorURL(err.Error()))
+		return
+	}
+
+	ctx.Redirect(http.StatusTemporaryRedirect, c.SSOService.BuildFrontendCallbackURL(localToken))
 }
 
 // CreateUser membuat user baru (admin only)

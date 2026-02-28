@@ -60,6 +60,12 @@ func (c *RouterConfig) SetupGuestRouter() {
 		auth.POST("/login", c.UserController.Login)
 	}
 
+	sso := c.App.Group("api/auth/sso")
+	{
+		sso.GET("/initiate", c.UserController.InitiateSSO)
+		sso.GET("/callback", c.UserController.SSOCallback)
+	}
+
 	report := c.App.Group("reports")
 	{
 		report.GET("", c.ReportController.FindAll)

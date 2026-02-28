@@ -18,30 +18,24 @@ export const reportKeys = {
   all: ["reports"] as const,
   list: () => [...reportKeys.all, "list"] as const,
   paginated: (request: IPaginationRequest) => [...reportKeys.list(), request] as const,
-  idpCount: () => [...reportKeys.all, "idp-count"] as const,
+  idpCount: (batchId?: number | null) =>
+    [...reportKeys.all, "idp-count", batchId ?? "all"] as const,
 };
 
 // React Query hook for fetching IDP (Integrated Development Programs) count
 export function useGetIdpCount(batchId?: number | null) {
   const response = useQuery<IdpCountData, Error>({
-    queryKey: batchId ? [...reportKeys.idpCount(), batchId] : reportKeys.idpCount(),
+    queryKey: reportKeys.idpCount(batchId),
     queryFn: async () => {
       // Add required Page and PageSize parameters matching DashboardRequest structure
       const params = new URLSearchParams({
-        page: "next",
-        page_size: "1000",
-        anchor_id: "0",
+        page: "next", // Must be "next" or "prev" according to backend validation
+        page_size: "1000", // Use a large page size since we just need the count
+        anchor_id: "0", // Optional but good to include
       });
-
-      if (batchId) {
-        params.append("batch_id", batchId.toString());
+      if (batchId !== undefined && batchId !== null) {
+        params.set("batch_id", String(batchId));
       }
-
-      // We need to get the batchId from somewhere or pass it as an argument.
-      // Since useGetIdpCount is usually called in the same component as useGetReports,
-      // let's modify it to accept components state if needed, but for now
-      // let's check how it's used in DashboardClient.
-
       const response = await api.get<ApiResponse<IdpCountData>>(
         `/reports/idp-count?${params.toString()}`
       );
@@ -82,7 +76,6 @@ export function useGetReports(paginationRequest: IPaginationRequest) {
             page: paginationRequest.page,
             page_size: paginationRequest.pageSize,
             filter: paginationRequest.filter,
-            batch_id: paginationRequest.batchId,
           },
         });
 
