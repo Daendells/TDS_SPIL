@@ -3,6 +3,7 @@ package main
 import (
 	"backend/internal/config"
 	"backend/internal/models/domain"
+	"fmt"
 	"strings"
 
 	"gorm.io/gorm"
@@ -22,6 +23,18 @@ func main() {
 	}
 
 	log.Info("Migration completed successfully")
+
+	log.Info("Deduplicating duplicate reports by seaman_code...")
+	if err := deduplicateReports(db); err != nil {
+		log.Fatalf("reports deduplication failed: %v", err)
+	}
+	log.Info("Reports deduplicated successfully")
+
+	log.Info("Deduplicating gap competencies...")
+	if err := deduplicateGapCompetencies(db); err != nil {
+		log.Fatalf("gap competencies deduplication failed: %v", err)
+	}
+	log.Info("Gap competencies deduplicated successfully")
 
 	log.Info("Populating default referensi for existing trainings...")
 	if err := populateDefaultReferensi(db); err != nil {
@@ -93,6 +106,129 @@ func runAutoMigrate(db *gorm.DB) error {
 			return err
 		}
 	}
+
+	return nil
+}
+
+func deduplicateReports(db *gorm.DB) error {
+	// Check if reports table has duplicates by seaman_code
+	var dupCount int64
+	db.Raw(`
+		SELECT COUNT(*) FROM (
+			SELECT seaman_code FROM reports
+			WHERE seaman_code IS NOT NULL AND seaman_code != ''
+			GROUP BY seaman_code HAVING COUNT(*) > 1
+		) AS dups
+	`).Scan(&dupCount)
+
+	if dupCount == 0 {
+		return nil
+	}
+
+	fmt.Printf("Found %d seaman_codes with duplicate reports, cleaning up...\n", dupCount)
+
+	// Step 1: Delete gap_competencies for duplicate reports (keep lowest ID per seaman_code)
+	result := db.Exec(`
+		DELETE gc FROM gap_competencies gc
+		INNER JOIN reports r ON gc.report_id = r.id
+		WHERE r.seaman_code IS NOT NULL AND r.seaman_code != ''
+		AND r.id NOT IN (
+			SELECT min_id FROM (
+				SELECT MIN(id) as min_id FROM reports
+				WHERE seaman_code IS NOT NULL AND seaman_code != ''
+				GROUP BY seaman_code
+			) AS kept
+		)
+		AND r.seaman_code IN (
+			SELECT dup_code FROM (
+				SELECT seaman_code AS dup_code FROM reports
+				WHERE seaman_code IS NOT NULL AND seaman_code != ''
+				GROUP BY seaman_code HAVING COUNT(*) > 1
+			) AS dups
+		)
+	`)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete gap_competencies for duplicate reports: %w", result.Error)
+	}
+	if result.RowsAffected > 0 {
+		fmt.Printf("Removed %d gap_competencies from duplicate reports\n", result.RowsAffected)
+	}
+
+	// Step 2: Delete report_scores for duplicate reports
+	result = db.Exec(`
+		DELETE rs FROM report_scores rs
+		INNER JOIN reports r ON rs.report_id = r.id
+		WHERE r.seaman_code IS NOT NULL AND r.seaman_code != ''
+		AND r.id NOT IN (
+			SELECT min_id FROM (
+				SELECT MIN(id) as min_id FROM reports
+				WHERE seaman_code IS NOT NULL AND seaman_code != ''
+				GROUP BY seaman_code
+			) AS kept
+		)
+		AND r.seaman_code IN (
+			SELECT dup_code FROM (
+				SELECT seaman_code AS dup_code FROM reports
+				WHERE seaman_code IS NOT NULL AND seaman_code != ''
+				GROUP BY seaman_code HAVING COUNT(*) > 1
+			) AS dups
+		)
+	`)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete report_scores for duplicate reports: %w", result.Error)
+	}
+	if result.RowsAffected > 0 {
+		fmt.Printf("Removed %d report_scores from duplicate reports\n", result.RowsAffected)
+	}
+
+	// Step 3: Delete duplicate reports (keep lowest ID per seaman_code)
+	result = db.Exec(`
+		DELETE r1 FROM reports r1
+		INNER JOIN reports r2
+		ON r1.seaman_code = r2.seaman_code AND r1.id > r2.id
+		WHERE r1.seaman_code IS NOT NULL AND r1.seaman_code != ''
+	`)
+	if result.Error != nil {
+		return fmt.Errorf("failed to delete duplicate reports: %w", result.Error)
+	}
+	if result.RowsAffected > 0 {
+		fmt.Printf("Removed %d duplicate report records\n", result.RowsAffected)
+	}
+
+	return nil
+}
+
+func deduplicateGapCompetencies(db *gorm.DB) error {
+	// Check if gap_competencies table has data
+	var count int64
+	if err := db.Table("gap_competencies").Count(&count).Error; err != nil {
+		// Table might not exist yet on first run, skip
+		return nil
+	}
+
+	if count == 0 {
+		return nil
+	}
+
+	// Remove duplicates, keeping the row with the lowest ID for each (report_id, competency_type_id)
+	result := db.Exec(`
+		DELETE g1 FROM gap_competencies g1
+		INNER JOIN gap_competencies g2
+		ON g1.report_id = g2.report_id
+		   AND g1.competency_type_id = g2.competency_type_id
+		   AND g1.id > g2.id
+	`)
+	if result.Error != nil {
+		return fmt.Errorf("failed to deduplicate gap competencies: %w", result.Error)
+	}
+
+	if result.RowsAffected > 0 {
+		fmt.Printf("Removed %d duplicate gap competency records\n", result.RowsAffected)
+	}
+
+	// Ensure unique index exists (AutoMigrate may have failed if duplicates existed before)
+	db.Exec(`ALTER TABLE gap_competencies ADD UNIQUE INDEX idx_report_competency (report_id, competency_type_id)`)
+	// Ignore error if index already exists (created by AutoMigrate)
 
 	return nil
 }
@@ -354,6 +490,13 @@ WHERE total_readiness_update_months IS NULL`
 	}
 
 	for _, report := range reports {
+		// Skip if this report already has gap_competencies (avoids duplicates on re-deploy)
+		var existingCount int64
+		db.Table("gap_competencies").Where("report_id = ?", report.ID).Count(&existingCount)
+		if existingCount > 0 {
+			continue
+		}
+
 		codes := strings.Split(report.CompetencyGapAnalysis, "; ")
 		for _, code := range codes {
 			code = strings.TrimSpace(code)

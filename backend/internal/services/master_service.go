@@ -430,6 +430,14 @@ func (s *MasterService) Create(request *web.MasterReportData) (*web.SuccessRespo
 
 	master := converter.MasterReportRequestToDomain(request)
 
+	// Prevent duplicate reports: check if seaman_code already exists
+	if master.SeamanCode != nil && *master.SeamanCode != "" {
+		var existing domain.FullReport
+		if err := s.DB.Where("seaman_code = ?", *master.SeamanCode).First(&existing).Error; err == nil {
+			return nil, fmt.Errorf("report with seaman code '%s' already exists (ID: %d)", *master.SeamanCode, existing.ID)
+		}
+	}
+
 	// Context: User wants new reports to be assigned to the currently filtered batch (if any)
 	// We assume the BatchID is passed in the request body (MasterReportData)
 	if request.BatchID != nil && *request.BatchID > 0 {
