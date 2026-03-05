@@ -1,5 +1,5 @@
 "use client";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useAssignments } from "./_hooks/useAssigments";
 import { useCatalogs } from "./_hooks/useCatalogs";
 import { useBatches } from "../master-report/_hooks/useBatch";
@@ -40,7 +40,7 @@ import { PlusIcon, EditIcon, TrashIcon, Search } from "lucide-react";
 import { toast } from "sonner";
 import { IAssignmentFlat } from "@/types/global-types";
 
-export default function AssignmentTable() {
+export default function AssignmentTable({ batchId: externalBatchId }: { batchId?: string | null }) {
   const {
     loading,
     assignments,
@@ -63,8 +63,16 @@ export default function AssignmentTable() {
     filteredCount,
   } = useAssignments();
 
-  const { assessments, users } = useCatalogs();
+  const { assessments, users } = useCatalogs(filterBatch);
   const { batches } = useBatches();
+
+  // Sync external batchId to internal filterBatch
+  useEffect(() => {
+    if (externalBatchId !== undefined) {
+      setFilterBatch(externalBatchId ?? "ALL");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [externalBatchId]);
 
   const [openDialog, setOpenDialog] = useState(false);
   const [editing, setEditing] = useState<IAssignmentFlat | null>(null);
@@ -114,6 +122,10 @@ export default function AssignmentTable() {
           await createAssignment({
             seafarerCode: code,
             assessmentTypeId: Number(form.assessment_type_id),
+            batchId:
+              filterBatch && filterBatch !== "ALL" && filterBatch !== "-1"
+                ? Number(filterBatch)
+                : null,
             status: form.status,
             createdBy: "SYSTEM",
           });
@@ -146,7 +158,20 @@ export default function AssignmentTable() {
     <div className="mt-8 p-4 m-6 space-y-6 ">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Assignments</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-semibold">Assignments</h2>
+          {externalBatchId !== undefined &&
+            filterBatch &&
+            filterBatch !== "ALL" &&
+            (() => {
+              const b = batches.find((bt) => bt.id.toString() === filterBatch);
+              return b ? (
+                <span className="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-800 text-xs font-medium">
+                  Batch {b.batchNo}
+                </span>
+              ) : null;
+            })()}
+        </div>
       </div>
 
       {/* Search bar */}
@@ -195,21 +220,23 @@ export default function AssignmentTable() {
             </SelectContent>
           </Select>
 
-          {/* Filter Batch */}
-          <Select value={filterBatch} onValueChange={setFilterBatch}>
-            <SelectTrigger className="w-[160px]">
-              <SelectValue placeholder="Semua Batch" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="ALL">Semua Batch</SelectItem>
-              <SelectItem value="-1">Tanpa Batch</SelectItem>
-              {batches.map((b) => (
-                <SelectItem key={b.id} value={b.id.toString()}>
-                  Batch {b.batchNo}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Filter Batch – hidden when batch is controlled from parent */}
+          {externalBatchId === undefined && (
+            <Select value={filterBatch} onValueChange={setFilterBatch}>
+              <SelectTrigger className="w-[160px]">
+                <SelectValue placeholder="Semua Batch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="ALL">Semua Batch</SelectItem>
+                <SelectItem value="-1">Tanpa Batch</SelectItem>
+                {batches.map((b) => (
+                  <SelectItem key={b.id} value={b.id.toString()}>
+                    Batch {b.batchNo}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
 
           {/* Page Size selector */}
           <Select value={pageSize.toString()} onValueChange={(val) => setPageSize(Number(val))}>

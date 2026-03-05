@@ -68,9 +68,87 @@ func (s *BatchService) FindAll() (*web.SuccessResponse, error) {
 		return nil, fmt.Errorf("failed to fetch batches: %w", err)
 	}
 
+	var responses []web.BatchResponse
+	for _, b := range batches {
+		count, _ := s.BatchRepository.GetReportCountForBatch(s.DB, b.ID)
+		responses = append(responses, web.BatchResponse{
+			ID:          b.ID,
+			BatchNo:     b.BatchNo,
+			StartDate:   b.StartDate,
+			EndDate:     b.EndDate,
+			Status:      b.Status,
+			SnapshotAt:  b.SnapshotAt,
+			ReportCount: count,
+		})
+	}
+
 	return &web.SuccessResponse{
 		Code:   http.StatusOK,
 		Status: "OK",
-		Data:   batches,
+		Data:   responses,
+	}, nil
+}
+
+func (s *BatchService) FindByID(id int) (*web.SuccessResponse, error) {
+	batch, err := s.BatchRepository.FindByID(s.DB, id)
+	if err != nil {
+		return nil, fmt.Errorf("batch not found: %w", err)
+	}
+
+	count, _ := s.BatchRepository.GetReportCountForBatch(s.DB, batch.ID)
+
+	return &web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data: web.BatchResponse{
+			ID:          batch.ID,
+			BatchNo:     batch.BatchNo,
+			StartDate:   batch.StartDate,
+			EndDate:     batch.EndDate,
+			Status:      batch.Status,
+			SnapshotAt:  batch.SnapshotAt,
+			ReportCount: count,
+		},
+	}, nil
+}
+
+// Update changes the start/end dates of a batch, validating there is no overlap with
+// the immediately preceding and following batches (by batch_no).
+func (s *BatchService) Update(id int, req web.UpdateBatchRequest) (*web.SuccessResponse, error) {
+	batch, err := s.BatchRepository.FindByID(s.DB, id)
+	if err != nil {
+		return nil, fmt.Errorf("batch not found: %w", err)
+	}
+
+	if batch.Status == "completed" {
+		return nil, fmt.Errorf("cannot edit a completed batch")
+	}
+
+	// Validate: no overlap with previous batch
+	if prev, err := s.BatchRepository.FindByBatchNo(s.DB, batch.BatchNo-1); err == nil {
+		if !req.StartDate.After(prev.EndDate) {
+			return nil, fmt.Errorf("start date must be after batch %d end date (%s)", prev.BatchNo, prev.EndDate.Format("2006-01-02"))
+		}
+	}
+
+	// Validate: no overlap with next batch
+	if next, err := s.BatchRepository.FindByBatchNo(s.DB, batch.BatchNo+1); err == nil {
+		if !req.EndDate.Before(next.StartDate) {
+			return nil, fmt.Errorf("end date must be before batch %d start date (%s)", next.BatchNo, next.StartDate.Format("2006-01-02"))
+		}
+	}
+
+	batch.StartDate = req.StartDate
+	batch.EndDate = req.EndDate
+	batch.UpdatedAt = time.Now()
+
+	if err := s.BatchRepository.Update(s.DB, batch); err != nil {
+		return nil, fmt.Errorf("failed to update batch: %w", err)
+	}
+
+	return &web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "OK",
+		Data:   batch,
 	}, nil
 }

@@ -78,13 +78,15 @@ export function useMasterReports(initialPageSize = 10) {
         const apiMeta = response.data?.data;
 
         // Build pagination object using backend data
+        // Backend returns camelCase (firstId, lastId, pageSize, hasMore, firstPage, total)
         const paginationResult: IPaginationData<IReport> = {
           results: parsedReports,
-          first_id: apiMeta?.first_id ?? parsedReports[0]?.id ?? null,
-          last_id: apiMeta?.last_id ?? parsedReports.at(-1)?.id ?? null,
-          page_size: apiMeta?.page_size ?? paginationRequest.pageSize,
-          has_more: apiMeta?.has_more ?? parsedReports.length >= paginationRequest.pageSize,
-          first_page: apiMeta?.first_page ?? false,
+          first_id: apiMeta?.firstId ?? parsedReports[0]?.id ?? null,
+          last_id: apiMeta?.lastId ?? parsedReports.at(-1)?.id ?? null,
+          page_size: apiMeta?.pageSize ?? paginationRequest.pageSize,
+          has_more: apiMeta?.hasMore ?? parsedReports.length >= paginationRequest.pageSize,
+          first_page: apiMeta?.firstPage ?? false,
+          total: apiMeta?.total ?? undefined,
         };
 
         // Extract available mentoring reports from response
@@ -106,6 +108,16 @@ export function useMasterReports(initialPageSize = 10) {
 
         startTransition(() => {
           setPaginationData(paginationResult);
+
+          // Auto-reset to first page if we got empty results on a non-first page
+          // (can happen when user was on a page that no longer exists after filter change)
+          if (parsedReports.length === 0 && !paginationResult.first_page) {
+            setPaginationRequest((prev) => ({
+              ...prev,
+              anchorId: 0,
+              page: "next",
+            }));
+          }
         });
       } catch (err) {
         if (!axios.isCancel(err)) {
@@ -258,13 +270,28 @@ export function useMasterReports(initialPageSize = 10) {
     }
   };
 
-  const bulkAssignBatch = async (reportIds: number[], batchId: number | null) => {
+  const bulkAssignBatch = async (
+    reportIds: number[],
+    batchId: number | null,
+    selectAll?: boolean,
+    query?: string,
+    filterBatchId?: number | null
+  ) => {
     setOnCallApi(true);
     try {
-      const res = await api.post("/api/master-reports/bulk-assign-batch", {
-        reportIds,
-        batchId,
-      });
+      const payload: {
+        reportIds: number[];
+        batchId: number | null;
+        selectAll?: boolean;
+        query?: string;
+        filterBatchId?: number | null;
+      } = { reportIds, batchId };
+      if (selectAll) {
+        payload.selectAll = true;
+        payload.query = query ?? "";
+        payload.filterBatchId = filterBatchId;
+      }
+      const res = await api.post("/api/master-reports/bulk-assign-batch", payload);
       toast.success("Reports assigned to batch successfully!");
 
       startTransition(() => {

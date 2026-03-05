@@ -80,6 +80,11 @@ const items = [
     url: "/quiz-history",
     icon: History,
   },
+  {
+    title: "Batch Control",
+    url: "/batch-control",
+    icon: Calendar,
+  },
 ];
 
 export function AppSidebar() {

@@ -83,6 +83,7 @@ func Bootstrap(config *BootstrapConfig) {
 	seamanRepository := repositories.NewSeamanRepository(config.DB)
 	assessmentRepository := repositories.NewAssessmentRepository()
 	batchRepository := repositories.NewBatchRepository(config.Log)
+	batchSnapshotRepository := repositories.NewBatchSnapshotRepository(config.Log)
 
 	// --- Services (DB-based)
 	adminService := services.NewAdminService(config.DB, config.Log)
@@ -106,6 +107,7 @@ func Bootstrap(config *BootstrapConfig) {
 	assignmentService := services.NewAssignmentService(assignmentRepo, config.Validate)
 	aspectService := services.NewAspectService(config.DB, config.Log, aspectRepository)
 	batchService := services.NewBatchService(config.DB, config.Log, config.Validate, batchRepository)
+	batchSnapshotService := services.NewBatchSnapshotService(config.DB, config.Log, batchRepository, batchSnapshotRepository)
 
 	// --- IDP Tracking Services
 	apolloAPIBaseURL := config.Config.GetString("APOLLO_API_BASE_URL")
@@ -123,7 +125,7 @@ func Bootstrap(config *BootstrapConfig) {
 
 	nanikaAPIService := services.NewNanikaAPIService(config.DB, config.Log, seamenCacheRepository, mutationCacheRepository)
 
-	cronService := services.NewCronService(config.Log, idpCalculationService, apolloAPIService, nanikaAPIService)
+	cronService := services.NewCronService(config.Log, idpCalculationService, apolloAPIService, nanikaAPIService, batchSnapshotService)
 
 	reportController := controllers.NewReportController(reportService, config.Log, apolloAPIService)
 	userController := controllers.NewUserController(userService, ssoService, config.Log)
@@ -149,7 +151,7 @@ func Bootstrap(config *BootstrapConfig) {
 	quizController := controllers.NewQuizController(config.Log, config.DB, quizService)
 	adminController := controllers.NewAdminController(adminService, config.Log)
 	scoringConfigController := controllers.NewScoringConfigController(config.Log, config.DB, quizService)
-	batchController := controllers.NewBatchController(batchService)
+	batchController := controllers.NewBatchController(batchService, batchSnapshotService)
 
 	// --- Generator Service & Controller (LLM/PDF)
 	trainingGenService := trainingService.NewTrainingService(

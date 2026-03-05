@@ -2,12 +2,7 @@
 import { useState, useEffect, useDeferredValue, startTransition } from "react";
 import { toast } from "sonner";
 import { api } from "@/app/lib/api";
-import {
-  IAssignmentFlat,
-  IAssignmentCreate,
-  IAssignmentUpdate,
-  IReport,
-} from "@/types/global-types";
+import { IAssignmentFlat, IAssignmentCreate, IAssignmentUpdate } from "@/types/global-types";
 
 export function useAssignments() {
   const [assignments, setAssignments] = useState<IAssignmentFlat[]>([]);
@@ -24,38 +19,6 @@ export function useAssignments() {
   const [filterAssessment, setFilterAssessment] = useState<string>("ALL");
   const [filterStatus, setFilterStatus] = useState<string>("ALL");
   const [filterBatch, setFilterBatch] = useState<string>("ALL");
-  const [batchSeafarerCodes, setBatchSeafarerCodes] = useState<Set<string> | null>(null);
-
-  /** 🔹 Fetch batch members when filterBatch changes */
-  useEffect(() => {
-    const fetchBatchMembers = async () => {
-      if (filterBatch === "ALL" || !filterBatch) {
-        setBatchSeafarerCodes(null);
-        return;
-      }
-
-      try {
-        setLoading(true);
-        // We use master-reports endpoint to get seafarers in this batch
-        const res = await api.get(`/api/master-reports?batch_id=${filterBatch}&page_size=1000`);
-        const reports = res.data?.data?.data || res.data?.data || res.data || [];
-
-        const codes = new Set<string>();
-        reports.forEach((r: IReport) => {
-          if (r.seafarerCode) codes.add(r.seafarerCode);
-        });
-
-        setBatchSeafarerCodes(codes);
-      } catch (err) {
-        console.error("Failed to fetch batch members", err);
-        setBatchSeafarerCodes(new Set()); // Empty set so no assignments show
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchBatchMembers();
-  }, [filterBatch]);
 
   /** 🔹 Fetch all assignments (no pagination backend) */
   const fetchAll = async () => {
@@ -76,6 +39,7 @@ export function useAssignments() {
               attempts?: number;
               Attempts?: number;
               status?: string;
+              batchId?: number | null;
             }) => ({
               id: a.id,
               seafarerCode: a.seafarerCode,
@@ -84,6 +48,7 @@ export function useAssignments() {
               assessmentType: a.assessmentType,
               attempts: a.attempts ?? a.Attempts ?? 0,
               status: (a.status ?? "ASSIGNED").toUpperCase(),
+              batchId: a.batchId ?? null,
             })
           )
         : [];
@@ -126,9 +91,12 @@ export function useAssignments() {
       filtered = filtered.filter((a) => a.status === filterStatus);
     }
 
-    // 🎯 Filter Batch (using the cross-referenced codes)
-    if (batchSeafarerCodes !== null) {
-      filtered = filtered.filter((a) => batchSeafarerCodes.has(a.seafarerCode));
+    // 🎯 Filter Batch – match directly on assignment.batchId
+    if (filterBatch === "-1") {
+      // Tanpa batch: only assignments with no batch
+      filtered = filtered.filter((a) => a.batchId === null || a.batchId === undefined);
+    } else if (filterBatch !== "ALL") {
+      filtered = filtered.filter((a) => a.batchId === Number(filterBatch));
     }
 
     // 📌 Page Size (client-side pagination)
@@ -150,7 +118,7 @@ export function useAssignments() {
     allAssignments,
     filterAssessment,
     filterStatus,
-    batchSeafarerCodes,
+    filterBatch,
     pageSize,
     currentPage,
   ]);

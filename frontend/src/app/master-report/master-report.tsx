@@ -89,7 +89,11 @@ function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pi
   return offsets;
 }
 
-export default function MasterPage() {
+export default function MasterPage({
+  onBatchChange,
+}: {
+  onBatchChange?: (batchId: number | null) => void;
+}) {
   // Data hooks
   const {
     onCallApi,
@@ -110,6 +114,8 @@ export default function MasterPage() {
   // Bulk assign to batch dialog state
   const [bulkAssignBatchOpen, setBulkAssignBatchOpen] = useState(false);
   const [selectedBatchForAssign, setSelectedBatchForAssign] = useState<string>("");
+  // Global select-all state (Gmail-style: selects across all pages)
+  const [selectAllGlobal, setSelectAllGlobal] = useState(false);
 
   const [addForm, setAddForm] = useState<{
     search: string;
@@ -165,6 +171,12 @@ export default function MasterPage() {
     }
   }, [batches, setPaginationRequest]);
 
+  // Notify parent whenever the active batch changes (for shared batch filter)
+  useEffect(() => {
+    onBatchChange?.(paginationRequest.batchId ?? null);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [paginationRequest.batchId]);
+
   const handleCreateBatch = async () => {
     if (!batchForm.startDate || !batchForm.endDate) {
       toast.error("Format tanggal harus diisi lengkap");
@@ -211,8 +223,25 @@ export default function MasterPage() {
     removeCompetency,
   } = useMasterReportUI();
 
+  // Reset currentPage to 1 when API returns empty results (navigated past last page)
+  useEffect(() => {
+    if (
+      paginationData &&
+      paginationData.results?.length === 0 &&
+      !paginationData.first_page &&
+      currentPage > 1
+    ) {
+      setCurrentPage(1);
+    }
+  }, [paginationData, currentPage, setCurrentPage]);
+
   const tableRef = useRef<HTMLDivElement>(null);
   const offsets = useDynamicStickyOffsets(tableRef, 2);
+
+  // Derived: true when the selected batch is completed (data comes from snapshot)
+  const isArchived = batches.some(
+    (b) => b.id === paginationRequest.batchId && b.status === "completed"
+  );
 
   const PAGE_SIZES = [10, 20, 30, 50, 100];
 
@@ -393,7 +422,10 @@ export default function MasterPage() {
   };
 
   const toggleEditMode = () => {
-    if (isEditMode) setSelectedIds(new Set());
+    if (isEditMode) {
+      setSelectedIds(new Set());
+      setSelectAllGlobal(false);
+    }
     setIsEditMode((prev) => !prev);
   };
 
@@ -414,6 +446,7 @@ export default function MasterPage() {
     const newSet = new Set(selectedIds);
     if (allSelected) {
       ids.forEach((id) => newSet.delete(id));
+      setSelectAllGlobal(false); // Reset global select-all
     } else {
       ids.forEach((id) => newSet.add(id));
     }
@@ -494,8 +527,11 @@ export default function MasterPage() {
     return scoreEntry?.score ?? 0;
   };
 
-  const isAllCurrentPageSelected = () =>
-    paginationData?.results?.every((r) => selectedIds.has(r.id)) ?? false;
+  const isAllCurrentPageSelected = () => {
+    const results = paginationData?.results;
+    if (!results || results.length === 0) return false;
+    return results.every((r) => selectedIds.has(r.id));
+  };
 
   return (
     <div className="mt-6 px-6 pb-8">
@@ -538,6 +574,7 @@ export default function MasterPage() {
             onChange={(e) => {
               setSearchName(e.target.value);
               setCurrentPage(1);
+              setSelectAllGlobal(false);
             }}
             className="w-[280px] bg-white shadow-sm"
           />
@@ -597,6 +634,10 @@ export default function MasterPage() {
                   } else {
                     batchId = parseInt(val);
                   }
+                  setSelectAllGlobal(false);
+                  setSelectedIds(new Set());
+                  setIsEditMode(false);
+                  setCurrentPage(1);
                   setPaginationRequest((prev) => ({
                     ...prev,
                     batchId,
@@ -615,10 +656,24 @@ export default function MasterPage() {
                   {batches.map((batch) => (
                     <SelectItem key={batch.id} value={batch.id.toString()}>
                       Batch {batch.batchNo} ({format(new Date(batch.startDate), "MMM yyyy")})
+                      {batch.status === "completed" ? " 📦" : " ✅"}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
+              {/* Show a notice when selected batch is completed (snapshot data) */}
+              {(() => {
+                const selectedBatch = batches.find((b) => b.id === paginationRequest.batchId);
+                if (selectedBatch?.status === "completed") {
+                  return (
+                    <span className="text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded px-2 py-1">
+                      📦 Data arsip batch {selectedBatch.batchNo}
+                    </span>
+                  );
+                }
+                return null;
+              })()}
 
               <Dialog open={createBatchOpen} onOpenChange={setCreateBatchOpen}>
                 <DialogTrigger asChild>
@@ -683,22 +738,24 @@ export default function MasterPage() {
             </div>
 
             <div className="w-px h-6 bg-gray-300 mx-1" />
-            <Button
-              size="sm"
-              variant={isEditMode ? "destructive" : "outline"}
-              onClick={toggleEditMode}
-              className="flex items-center gap-2"
-            >
-              {isEditMode ? (
-                <>
-                  <XIcon className="w-4 h-4" /> Batal Edit
-                </>
-              ) : (
-                <>
-                  <EditIcon className="w-4 h-4" /> Edit Mode
-                </>
-              )}
-            </Button>
+            {!isArchived && (
+              <Button
+                size="sm"
+                variant={isEditMode ? "destructive" : "outline"}
+                onClick={toggleEditMode}
+                className="flex items-center gap-2"
+              >
+                {isEditMode ? (
+                  <>
+                    <XIcon className="w-4 h-4" /> Batal Edit
+                  </>
+                ) : (
+                  <>
+                    <EditIcon className="w-4 h-4" /> Edit Mode
+                  </>
+                )}
+              </Button>
+            )}
 
             {isEditMode && (
               <>
@@ -709,15 +766,19 @@ export default function MasterPage() {
                     setSelectedBatchForAssign("");
                     setBulkAssignBatchOpen(true);
                   }}
-                  disabled={selectedIds.size === 0}
+                  disabled={selectedIds.size === 0 && !selectAllGlobal}
                   className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
                 >
                   Assign ke Batch
-                  {selectedIds.size > 0 && (
+                  {selectAllGlobal ? (
+                    <span className="ml-1 bg-blue-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full">
+                      Semua {paginationData?.total ?? ""}
+                    </span>
+                  ) : selectedIds.size > 0 ? (
                     <span className="ml-1 bg-blue-100 text-blue-800 text-xs font-semibold px-1.5 py-0.5 rounded-full">
                       {selectedIds.size}
                     </span>
-                  )}
+                  ) : null}
                 </Button>
                 <Button
                   size="sm"
@@ -737,173 +798,212 @@ export default function MasterPage() {
             )}
 
             <div className="w-px h-6 bg-gray-300 mx-1" />
-            <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-              <DialogTrigger asChild>
-                <Button size="sm" className="flex items-center gap-2">
-                  <PlusIcon className="w-4 h-4" /> Add Report
-                </Button>
-              </DialogTrigger>
+            {!isArchived && (
+              <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+                <DialogTrigger asChild>
+                  <Button size="sm" className="flex items-center gap-2">
+                    <PlusIcon className="w-4 h-4" /> Add Report
+                  </Button>
+                </DialogTrigger>
 
-              <DialogContent className="max-w-2xl">
-                <DialogHeader>
-                  <DialogTitle>Add New Report</DialogTitle>
-                  <DialogDescription>
-                    Cari data dari sistem seaman dan pilih untuk ditambahkan.
-                  </DialogDescription>
-                </DialogHeader>
+                <DialogContent className="max-w-2xl">
+                  <DialogHeader>
+                    <DialogTitle>Add New Report</DialogTitle>
+                    <DialogDescription>
+                      Cari data dari sistem seaman dan pilih untuk ditambahkan.
+                    </DialogDescription>
+                  </DialogHeader>
 
-                <div className="space-y-4 py-2">
-                  {/* Search Input */}
-                  <div>
-                    <Label>Search Seaman *</Label>
-                    <Input
-                      placeholder="Cari nama atau seaman code..."
-                      value={addForm.search}
-                      onChange={(e) => setAddForm({ ...addForm, search: e.target.value })}
-                    />
-                    <p className="text-xs text-gray-500 mt-1">
-                      Ketik minimal 2 karakter untuk mencari
-                    </p>
-                  </div>
-
-                  {/* Bulk Mode Toggle */}
-                  {seamanResults.length > 0 && (
-                    <div className="flex items-center gap-2">
-                      <input
-                        type="checkbox"
-                        id="bulkMode"
-                        checked={addForm.bulkAddMode || false}
-                        onChange={toggleBulkMode}
-                        className="w-4 h-4 rounded border-gray-300"
+                  <div className="space-y-4 py-2">
+                    {/* Search Input */}
+                    <div>
+                      <Label>Search Seaman *</Label>
+                      <Input
+                        placeholder="Cari nama atau seaman code..."
+                        value={addForm.search}
+                        onChange={(e) => setAddForm({ ...addForm, search: e.target.value })}
                       />
-                      <Label htmlFor="bulkMode" className="cursor-pointer text-sm font-medium">
-                        Bulk Add Mode (Pilih multiple seaman)
-                      </Label>
-                    </div>
-                  )}
-
-                  {/* Search Results */}
-                  <div className="max-h-80 overflow-auto border rounded-md bg-white">
-                    {loading && (
-                      <p className="text-center text-gray-500 py-8">
-                        <span className="inline-block">Mencari data...</span>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Ketik minimal 2 karakter untuk mencari
                       </p>
+                    </div>
+
+                    {/* Bulk Mode Toggle */}
+                    {seamanResults.length > 0 && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          type="checkbox"
+                          id="bulkMode"
+                          checked={addForm.bulkAddMode || false}
+                          onChange={toggleBulkMode}
+                          className="w-4 h-4 rounded border-gray-300"
+                        />
+                        <Label htmlFor="bulkMode" className="cursor-pointer text-sm font-medium">
+                          Bulk Add Mode (Pilih multiple seaman)
+                        </Label>
+                      </div>
                     )}
 
-                    {!loading && seamanResults.length > 0 && (
-                      <div className="divide-y">
-                        {seamanResults.map((seaman) => {
-                          const isSelected = addForm.bulkAddMode
-                            ? (addForm.selectedBulk || []).some(
-                                (s) => s.seamanCode === seaman.seamanCode
-                              )
-                            : addForm.selected?.seamanCode === seaman.seamanCode;
+                    {/* Search Results */}
+                    <div className="max-h-80 overflow-auto border rounded-md bg-white">
+                      {loading && (
+                        <p className="text-center text-gray-500 py-8">
+                          <span className="inline-block">Mencari data...</span>
+                        </p>
+                      )}
 
-                          return (
-                            <div
-                              key={seaman.seamanCode}
-                              onClick={() => {
-                                if (addForm.bulkAddMode) {
-                                  toggleBulkSelection(seaman);
-                                } else {
-                                  setAddForm({
-                                    ...addForm,
-                                    selected: seaman,
-                                  });
-                                }
-                              }}
-                              className={`px-4 py-3 cursor-pointer transition-colors ${
-                                isSelected
-                                  ? "bg-blue-50 border-l-4 border-blue-500"
-                                  : "hover:bg-gray-50"
-                              }`}
-                            >
-                              <div className="flex items-center gap-3">
-                                {addForm.bulkAddMode && (
-                                  <input
-                                    type="checkbox"
-                                    checked={isSelected}
-                                    onChange={() => toggleBulkSelection(seaman)}
-                                    onClick={(e) => e.stopPropagation()}
-                                    className="w-4 h-4 rounded border-gray-300"
-                                  />
-                                )}
-                                <div className="flex-1">
-                                  <div className="font-semibold text-gray-800">{seaman.name}</div>
-                                  <div className="text-sm text-gray-500">
-                                    Seaman Code: {seaman.seamanCode}
+                      {!loading && seamanResults.length > 0 && (
+                        <div className="divide-y">
+                          {seamanResults.map((seaman) => {
+                            const isSelected = addForm.bulkAddMode
+                              ? (addForm.selectedBulk || []).some(
+                                  (s) => s.seamanCode === seaman.seamanCode
+                                )
+                              : addForm.selected?.seamanCode === seaman.seamanCode;
+
+                            return (
+                              <div
+                                key={seaman.seamanCode}
+                                onClick={() => {
+                                  if (addForm.bulkAddMode) {
+                                    toggleBulkSelection(seaman);
+                                  } else {
+                                    setAddForm({
+                                      ...addForm,
+                                      selected: seaman,
+                                    });
+                                  }
+                                }}
+                                className={`px-4 py-3 cursor-pointer transition-colors ${
+                                  isSelected
+                                    ? "bg-blue-50 border-l-4 border-blue-500"
+                                    : "hover:bg-gray-50"
+                                }`}
+                              >
+                                <div className="flex items-center gap-3">
+                                  {addForm.bulkAddMode && (
+                                    <input
+                                      type="checkbox"
+                                      checked={isSelected}
+                                      onChange={() => toggleBulkSelection(seaman)}
+                                      onClick={(e) => e.stopPropagation()}
+                                      className="w-4 h-4 rounded border-gray-300"
+                                    />
+                                  )}
+                                  <div className="flex-1">
+                                    <div className="font-semibold text-gray-800">{seaman.name}</div>
+                                    <div className="text-sm text-gray-500">
+                                      Seaman Code: {seaman.seamanCode}
+                                    </div>
                                   </div>
                                 </div>
                               </div>
+                            );
+                          })}
+                        </div>
+                      )}
+
+                      {!loading && seamanResults.length === 0 && addForm.search && (
+                        <p className="text-center text-gray-500 py-8">
+                          Tidak ada data seaman yang cocok dengan pencarian &quot;{addForm.search}
+                          &quot;
+                        </p>
+                      )}
+
+                      {!loading && seamanResults.length === 0 && !addForm.search && (
+                        <p className="text-center text-gray-400 py-8">
+                          Mulai ketik untuk mencari seaman
+                        </p>
+                      )}
+                    </div>
+
+                    {/* Selected Info */}
+                    {addForm.bulkAddMode && (addForm.selectedBulk || []).length > 0 && (
+                      <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
+                        <p className="text-sm font-medium text-blue-900">
+                          {(addForm.selectedBulk || []).length} seaman dipilih
+                        </p>
+                        <div className="text-xs text-blue-700 mt-2 space-y-1">
+                          {(addForm.selectedBulk || []).map((s) => (
+                            <div key={s.seamanCode} className="flex justify-between items-center">
+                              <span>{s.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => toggleBulkSelection(s)}
+                                className="text-blue-600 hover:text-blue-800 font-medium"
+                              >
+                                Remove
+                              </button>
                             </div>
-                          );
-                        })}
+                          ))}
+                        </div>
                       </div>
-                    )}
-
-                    {!loading && seamanResults.length === 0 && addForm.search && (
-                      <p className="text-center text-gray-500 py-8">
-                        Tidak ada data seaman yang cocok dengan pencarian &quot;{addForm.search}
-                        &quot;
-                      </p>
-                    )}
-
-                    {!loading && seamanResults.length === 0 && !addForm.search && (
-                      <p className="text-center text-gray-400 py-8">
-                        Mulai ketik untuk mencari seaman
-                      </p>
                     )}
                   </div>
 
-                  {/* Selected Info */}
-                  {addForm.bulkAddMode && (addForm.selectedBulk || []).length > 0 && (
-                    <div className="bg-blue-50 border border-blue-200 rounded-md p-3">
-                      <p className="text-sm font-medium text-blue-900">
-                        {(addForm.selectedBulk || []).length} seaman dipilih
-                      </p>
-                      <div className="text-xs text-blue-700 mt-2 space-y-1">
-                        {(addForm.selectedBulk || []).map((s) => (
-                          <div key={s.seamanCode} className="flex justify-between items-center">
-                            <span>{s.name}</span>
-                            <button
-                              type="button"
-                              onClick={() => toggleBulkSelection(s)}
-                              className="text-blue-600 hover:text-blue-800 font-medium"
-                            >
-                              Remove
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setOpenDialog(false)}>
+                      Cancel
+                    </Button>
 
-                <DialogFooter>
-                  <Button variant="outline" onClick={() => setOpenDialog(false)}>
-                    Cancel
-                  </Button>
-
-                  <Button
-                    disabled={
-                      addForm.bulkAddMode
-                        ? (addForm.selectedBulk || []).length === 0 || onCallApi
-                        : !addForm.selected || onCallApi
-                    }
-                    onClick={handleAdd}
-                  >
-                    {onCallApi
-                      ? "Adding..."
-                      : `Add ${
-                          addForm.bulkAddMode ? `(${(addForm.selectedBulk || []).length})` : ""
-                        }`}
-                  </Button>
-                </DialogFooter>
-              </DialogContent>
-            </Dialog>
+                    <Button
+                      disabled={
+                        addForm.bulkAddMode
+                          ? (addForm.selectedBulk || []).length === 0 || onCallApi
+                          : !addForm.selected || onCallApi
+                      }
+                      onClick={handleAdd}
+                    >
+                      {onCallApi
+                        ? "Adding..."
+                        : `Add ${
+                            addForm.bulkAddMode ? `(${(addForm.selectedBulk || []).length})` : ""
+                          }`}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            )}
           </div>
         </div>
       </div>
+
+      {/* Global Select-All Banner */}
+      {isEditMode && (
+        <>
+          {isAllCurrentPageSelected() &&
+            !selectAllGlobal &&
+            (paginationData?.total ?? 0) > selectedIds.size && (
+              <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-50 border border-blue-200 rounded-xl mb-3 text-sm">
+                <span className="text-blue-800">
+                  <strong>{selectedIds.size}</strong> baris di halaman ini dipilih.
+                </span>
+                <button
+                  onClick={() => setSelectAllGlobal(true)}
+                  className="text-blue-600 font-semibold underline hover:text-blue-800 transition-colors"
+                >
+                  Pilih semua {paginationData?.total} baris?
+                </button>
+              </div>
+            )}
+          {selectAllGlobal && (
+            <div className="flex items-center gap-3 px-4 py-2.5 bg-blue-100 border border-blue-400 rounded-xl mb-3 text-sm">
+              <span className="text-blue-900 font-medium">
+                ✓ Semua <strong>{paginationData?.total}</strong> baris dipilih.
+              </span>
+              <button
+                onClick={() => {
+                  setSelectAllGlobal(false);
+                  setSelectedIds(new Set());
+                }}
+                className="text-blue-600 font-semibold underline hover:text-blue-800 transition-colors"
+              >
+                Batalkan pilihan
+              </button>
+            </div>
+          )}
+        </>
+      )}
 
       {/* Bulk Assign to Batch Dialog */}
       <Dialog open={bulkAssignBatchOpen} onOpenChange={setBulkAssignBatchOpen}>
@@ -911,8 +1011,10 @@ export default function MasterPage() {
           <DialogHeader>
             <DialogTitle>Assign ke Batch</DialogTitle>
             <DialogDescription>
-              Pilih batch tujuan untuk {selectedIds.size} report yang dipilih. Pilih &quot;Tanpa
-              Batch&quot; untuk melepas batch.
+              {selectAllGlobal
+                ? `Pilih batch tujuan untuk semua ${paginationData?.total ?? "seluruh"} report.`
+                : `Pilih batch tujuan untuk ${selectedIds.size} report yang dipilih.`}{" "}
+              Pilih &quot;Tanpa Batch&quot; untuk melepas dari batch.
             </DialogDescription>
           </DialogHeader>
           <div className="py-4">
@@ -941,9 +1043,16 @@ export default function MasterPage() {
                 try {
                   const batchId =
                     selectedBatchForAssign === "null" ? null : parseInt(selectedBatchForAssign);
-                  await bulkAssignBatch(Array.from(selectedIds), batchId);
+                  await bulkAssignBatch(
+                    Array.from(selectedIds),
+                    batchId,
+                    selectAllGlobal,
+                    searchName,
+                    paginationRequest.batchId
+                  );
                   setBulkAssignBatchOpen(false);
                   setSelectedIds(new Set());
+                  setSelectAllGlobal(false);
                 } catch {
                   // error already shown in hook
                 }
@@ -1835,7 +1944,7 @@ export default function MasterPage() {
             <PaginationItem>
               <span className="text-sm text-gray-500 mx-1">
                 {paginationData?.total
-                  ? `dari ${Math.ceil(paginationData.total / paginationRequest.pageSize)}`
+                  ? `dari ${Math.ceil(paginationData.total / paginationRequest.pageSize)} halaman`
                   : ""}
               </span>
             </PaginationItem>
@@ -1858,10 +1967,16 @@ export default function MasterPage() {
         </Pagination>
 
         {/* Row count info */}
-        <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
-          Menampilkan <strong>{paginationData?.results?.length || 0}</strong> dari{" "}
-          <strong>{paginationRequest.pageSize}</strong> baris
-        </span>
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
+            Menampilkan <strong>{paginationData?.results?.length || 0}</strong> baris di halaman ini
+          </span>
+          {paginationData?.total ? (
+            <span className="text-xs text-gray-400 px-1">
+              Total <strong>{paginationData.total}</strong> data
+            </span>
+          ) : null}
+        </div>
       </div>
     </div>
   );

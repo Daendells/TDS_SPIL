@@ -51,8 +51,8 @@ func (s *assignmentServiceImpl) FindAll(db *gorm.DB) ([]web.AssignmentData, erro
 				}
 				return v
 			}(),
-
-			Status: toString(row["status"]),
+			Status:  toString(row["status"]),
+			BatchID: toUint64Ptr(row["batch_id"]),
 		})
 	}
 	return out, nil
@@ -80,7 +80,7 @@ func (s *assignmentServiceImpl) Create(db *gorm.DB, req *web.AssignmentCreateReq
 		return web.AssignmentData{}, err
 	}
 
-	exists, err := s.AssignmentRepository.Exists(db, req.SeafarerCode, req.AssessmentTypeID)
+	exists, err := s.AssignmentRepository.Exists(db, req.SeafarerCode, req.AssessmentTypeID, req.BatchID)
 	if err != nil {
 		return web.AssignmentData{}, err
 	}
@@ -91,6 +91,7 @@ func (s *assignmentServiceImpl) Create(db *gorm.DB, req *web.AssignmentCreateReq
 	data := domain.SeafarerAssessment{
 		SeafarerCode:     req.SeafarerCode,
 		AssessmentTypeID: req.AssessmentTypeID,
+		BatchID:          req.BatchID,
 		AttemptsCount:    0,
 	}
 
@@ -102,6 +103,7 @@ func (s *assignmentServiceImpl) Create(db *gorm.DB, req *web.AssignmentCreateReq
 		ID:               data.ID,
 		SeafarerCode:     data.SeafarerCode,
 		AssessmentTypeID: data.AssessmentTypeID,
+		BatchID:          data.BatchID,
 		Attempts:         int(data.AttemptsCount),
 		Status:           data.Status,
 	}, nil
@@ -176,6 +178,7 @@ func (s *assignmentServiceImpl) FindPaged(db *gorm.DB, search string, status str
 			AssessmentType:   toString(row["assessment_type_name"]),
 			Status:           toString(row["status"]),
 			Attempts:         toInt(row["attempts"]),
+			BatchID:          toUint64Ptr(row["batch_id"]),
 		})
 	}
 
@@ -220,4 +223,12 @@ func toUint64(v interface{}) uint64 {
 		return uint64(x)
 	}
 	return 0
+}
+
+func toUint64Ptr(v interface{}) *uint64 {
+	if v == nil {
+		return nil
+	}
+	val := toUint64(v)
+	return &val
 }

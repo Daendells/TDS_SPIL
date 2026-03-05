@@ -10,6 +10,9 @@ export interface Batch {
   batchNo: number;
   startDate: string;
   endDate: string;
+  status: string;
+  snapshotAt?: string;
+  reportCount: number;
 }
 
 export function useBatches() {

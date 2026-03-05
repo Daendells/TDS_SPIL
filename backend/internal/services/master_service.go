@@ -98,6 +98,14 @@ func (s *MasterService) toMentoringReportWeb(mr *domain.MentoringReport) *web.Me
 // ---------------------- READ OPERATIONS ----------------------
 
 func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse, error) {
+	// If the selected batch is completed, serve read-only data from snapshot table
+	if req.BatchID > 0 {
+		var batch domain.Batch
+		if err := s.DB.First(&batch, req.BatchID).Error; err == nil && batch.Status == "completed" {
+			return s.findAllFromSnapshot(req)
+		}
+	}
+
 	db := s.DB.Model(&domain.MasterReport{})
 
 	// --- optional search filter ---
@@ -126,12 +134,12 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 		db = db.Order("id ASC")
 	}
 
-	// --- enforce limit ---
+	// --- enforce limit (fetch limit+1 to detect hasMore) ---
 	limit := req.PageSize
 	if limit <= 0 {
 		limit = 10
 	}
-	db = db.Limit(limit)
+	db = db.Limit(limit + 1)
 
 	// --- Preload GapCompetencies with CompetencyType, ReportScores with AssessmentType ---
 	// Note: MentoringReport is not preloaded - use GET /api/master-reports/mentoring-programs?personName=<name>
@@ -150,6 +158,12 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 		for i, j := 0, len(rows)-1; i < j; i, j = i+1, j-1 {
 			rows[i], rows[j] = rows[j], rows[i]
 		}
+	}
+
+	// --- detect hasMore from the extra row and trim to limit ---
+	hasMore := len(rows) > limit
+	if hasMore {
+		rows = rows[:limit]
 	}
 
 	// --- map domain → web model ---
@@ -274,7 +288,7 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 	responsePayload := web.MasterReportListResponse{
 		Data:                      result,
 		PageSize:                  limit,
-		HasMore:                   len(result) >= limit,
+		HasMore:                   hasMore,
 		FirstPage:                 isFirstPage,
 		Total:                     int(totalCount),
 		AvailableMentoringReports: []web.MentoringReportData{}, // Empty, fetch per-person instead
@@ -290,6 +304,128 @@ func (s *MasterService) FindAll(req web.MasterListRequest) (*web.SuccessResponse
 		Status: "OK",
 		Data:   responsePayload,
 	}, nil
+}
+
+// findAllFromSnapshot serves the master report list from batch_report_snapshots when the batch is completed.
+func (s *MasterService) findAllFromSnapshot(req web.MasterListRequest) (*web.SuccessResponse, error) {
+	db := s.DB.Model(&domain.BatchReportSnapshot{}).Where("batch_id = ?", req.BatchID)
+
+	if req.Query != "" {
+		q := strings.ToLower(req.Query)
+		db = db.Where(
+			s.DB.Where("LOWER(nama) LIKE ?", "%"+q+"%").Or("seafarer_code LIKE ?", "%"+req.Query+"%"),
+		)
+	}
+
+	if req.Page == "next" && req.AnchorID > 0 {
+		db = db.Where("id > ?", req.AnchorID).Order("id ASC")
+	} else if req.Page == "prev" && req.AnchorID > 0 {
+		db = db.Where("id < ?", req.AnchorID).Order("id DESC")
+	} else {
+		db = db.Order("id ASC")
+	}
+
+	limit := req.PageSize
+	if limit <= 0 {
+		limit = 10
+	}
+	db = db.Limit(limit + 1)
+
+	var rows []domain.BatchReportSnapshot
+	if err := db.Find(&rows).Error; err != nil {
+		return nil, fmt.Errorf("failed to query snapshots: %w", err)
+	}
+
+	if req.Page == "prev" && len(rows) > 1 {
+		for i, j := 0, len(rows)-1; i < j; i, j = i+1, j-1 {
+			rows[i], rows[j] = rows[j], rows[i]
+		}
+	}
+
+	hasMore := len(rows) > limit
+	if hasMore {
+		rows = rows[:limit]
+	}
+
+	result := make([]web.MasterReportData, 0, len(rows))
+	for _, r := range rows {
+		batchID := r.BatchID
+		var tmNm *string
+		if r.TMNM != "" {
+			tmNm = &r.TMNM
+		}
+		result = append(result, web.MasterReportData{
+			ID:                         r.ID,
+			VesselName:                 r.VesselName,
+			Nama:                       r.Nama,
+			Jabatan:                    r.Jabatan,
+			User:                       r.User,
+			SeamanCode:                 r.SeamanCode,
+			SeafarerCode:               r.SeafarerCode,
+			Certificate:                r.Certificate,
+			Age:                        r.Age,
+			KonditeReview:              r.KonditeReview,
+			KpiVessel:                  r.KpiVessel,
+			PerformanceScore:           r.PerformanceScore,
+			ValueAssessment:            r.ValueAssessment,
+			AssessmentCenter:           r.AssessmentCenter,
+			PotentialScore:             r.PotentialScore,
+			HavQuadran:                 r.HavQuadran,
+			HavMapping:                 r.HavMapping,
+			CompetencyGapAnalysis:      r.CompetencyGapAnalysis,
+			TotalGap:                   r.TotalGap,
+			Strength:                   r.Strength,
+			TalentClassified:           r.TalentClassified,
+			IDPProgram:                 r.IDPProgram,
+			HavQuadran2:                r.HavQuadran2,
+			TalentClassified2:          r.TalentClassified2,
+			Readiness:                  r.Readiness,
+			CertificateEligible:        r.CertificateEligible,
+			EducationFulfillmentMonths: r.EducationFulfillmentMonths,
+			TotalReadinessUpdateMonths: r.TotalReadinessUpdateMonths,
+			Keterangan:                 r.Keterangan,
+			TmNm:                       tmNm,
+			BatchID:                    &batchID,
+			Competencies:               []web.GapCompetencyData{},
+			ReportScores:               []web.ReportScoreData{},
+		})
+	}
+
+	var isFirstPage bool
+	if len(result) == 0 {
+		isFirstPage = true
+	} else {
+		var count int64
+		s.DB.Model(&domain.BatchReportSnapshot{}).
+			Where("batch_id = ? AND id < ?", req.BatchID, result[0].ID).
+			Count(&count)
+		isFirstPage = (count == 0)
+	}
+
+	var totalCount int64
+	countDB := s.DB.Model(&domain.BatchReportSnapshot{}).Where("batch_id = ?", req.BatchID)
+	if req.Query != "" {
+		q := strings.ToLower(req.Query)
+		countDB = countDB.Where(
+			s.DB.Where("LOWER(nama) LIKE ?", "%"+q+"%").Or("seafarer_code LIKE ?", "%"+req.Query+"%"),
+		)
+	}
+	countDB.Count(&totalCount)
+
+	payload := web.MasterReportListResponse{
+		Data:                      result,
+		PageSize:                  limit,
+		HasMore:                   hasMore,
+		FirstPage:                 isFirstPage,
+		Total:                     int(totalCount),
+		IsArchived:                true,
+		AvailableMentoringReports: []web.MentoringReportData{},
+	}
+	if len(result) > 0 {
+		payload.FirstID = result[0].ID
+		payload.LastID = result[len(result)-1].ID
+	}
+	return &web.SuccessResponse{Code: http.StatusOK, Status: "OK", Data: payload}, nil
 }
 
 // FindById retrieves one master report with full competencies and report scores
@@ -382,16 +518,28 @@ func (s *MasterService) FindById(id uint) (*web.SuccessResponse, error) {
 
 // BulkAssignBatch assigns a batch to multiple reports
 func (s *MasterService) BulkAssignBatch(ctx context.Context, request *web.BulkAssignBatchRequest) (*web.SuccessResponse, error) {
-	if err := s.Validate.Struct(request); err != nil {
-		return nil, fmt.Errorf("validation error: %w", err)
+	// Validate: when not using SelectAll, reportIds must be provided
+	if !request.SelectAll && len(request.ReportIDs) == 0 {
+		return nil, fmt.Errorf("reportIds harus diisi")
 	}
 
 	tx := s.DB.WithContext(ctx).Begin()
 	defer tx.Rollback()
 
-	if err := s.MasterRepository.BulkAssignBatch(tx, request.ReportIDs, request.BatchID); err != nil {
-		s.Log.WithError(err).Error("failed to bulk assign batch")
-		return nil, fmt.Errorf("failed to bulk assign batch: %w", err)
+	assignedCount := 0
+
+	if request.SelectAll {
+		// Assign all reports matching the current filters (global select-all)
+		if err := s.MasterRepository.BulkAssignBatchAll(tx, request.BatchID, request.Query, request.FilterBatchID); err != nil {
+			s.Log.WithError(err).Error("failed to bulk assign batch (all)")
+			return nil, fmt.Errorf("failed to bulk assign batch: %w", err)
+		}
+	} else {
+		if err := s.MasterRepository.BulkAssignBatch(tx, request.ReportIDs, request.BatchID); err != nil {
+			s.Log.WithError(err).Error("failed to bulk assign batch")
+			return nil, fmt.Errorf("failed to bulk assign batch: %w", err)
+		}
+		assignedCount = len(request.ReportIDs)
 	}
 
 	if err := tx.Commit().Error; err != nil {
@@ -401,7 +549,7 @@ func (s *MasterService) BulkAssignBatch(ctx context.Context, request *web.BulkAs
 	return &web.SuccessResponse{
 		Code:   http.StatusOK,
 		Status: "OK",
-		Data:   map[string]interface{}{"assigned_count": len(request.ReportIDs)},
+		Data:   map[string]interface{}{"assigned_count": assignedCount},
 	}, nil
 }
 

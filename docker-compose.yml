@@ -14,6 +14,8 @@ services:
       MYSQL_DATABASE: tds
       MYSQL_USER: tds_user
       MYSQL_PASSWORD: tds_pass
+    ports:
+      - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     command: --default-authentication-plugin=mysql_native_password
@@ -63,6 +65,7 @@ services:
       SSO_CLIENT_SECRET: ${SSO_CLIENT_SECRET:-b919281f18a32cc008ba63016f7d89042bb006f1ae5f0748ab83049a1d8698d4}
       SSO_CALLBACK_URL: ${SSO_CALLBACK_URL:-http://localhost:8080/api/auth/sso/callback}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3000}
+      LOG_LEVEL: 4
       # GROQ_API_KEY: your-groq-key
     ports:
       - "8080:8080"
