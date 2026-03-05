@@ -13,7 +13,7 @@ type AssignmentRepository interface {
 	Create(db *gorm.DB, data *domain.SeafarerAssessment) error
 	Update(db *gorm.DB, data *domain.SeafarerAssessment) error
 	Delete(db *gorm.DB, id uint64) error
-	Exists(db *gorm.DB, seafarerCode string, assessmentTypeID uint64) (bool, error)
+	Exists(db *gorm.DB, seafarerCode string, assessmentTypeID uint64, batchID *uint64) (bool, error)
 	FindJoined(db *gorm.DB) ([]map[string]interface{}, error) // ← untuk list dengan nama
 }
 
@@ -43,11 +43,16 @@ func (r *assignmentRepositoryImpl) Delete(db *gorm.DB, id uint64) error {
 	return db.Delete(&domain.SeafarerAssessment{}, id).Error
 }
 
-func (r *assignmentRepositoryImpl) Exists(db *gorm.DB, seafarerCode string, assessmentTypeID uint64) (bool, error) {
+func (r *assignmentRepositoryImpl) Exists(db *gorm.DB, seafarerCode string, assessmentTypeID uint64, batchID *uint64) (bool, error) {
 	var count int64
-	err := db.Table("seafarer_assessments").
-		Where("seafarer_code = ? AND assessment_type_id = ?", seafarerCode, assessmentTypeID).
-		Count(&count).Error
+	query := db.Table("seafarer_assessments").
+		Where("seafarer_code = ? AND assessment_type_id = ?", seafarerCode, assessmentTypeID)
+	if batchID != nil {
+		query = query.Where("batch_id = ?", *batchID)
+	} else {
+		query = query.Where("batch_id IS NULL")
+	}
+	err := query.Count(&count).Error
 	return count > 0, err
 }
 
@@ -58,11 +63,12 @@ func (r *assignmentRepositoryImpl) FindJoined(db *gorm.DB) ([]map[string]interfa
 		Select(`
 			sa.id,
 			sa.seafarer_code,
+			sa.batch_id,
 			r.nama,
 			at.assessment_type_name,
 			at.id AS assessment_type_id,
 			sa.status,
-  CAST(sa.attempts_count AS UNSIGNED) AS attempts
+			CAST(sa.attempts_count AS UNSIGNED) AS attempts
 		`).
 		Joins("LEFT JOIN reports r ON sa.seafarer_code = r.seafarer_code").
 		Joins("LEFT JOIN assessment_types at ON sa.assessment_type_id = at.id").
@@ -76,14 +82,15 @@ func (r *assignmentRepositoryImpl) FindAllPaged(db *gorm.DB, search string, stat
 
 	query := db.Table("seafarer_assessments AS sa").
 		Select(`
-            sa.id,
-            sa.seafarer_code,
-            r.nama,
-            at.assessment_type_name,
-            at.id AS assessment_type_id,
-            sa.status,
-            CAST(sa.attempts_count AS UNSIGNED) AS attempts
-        `).
+			sa.id,
+			sa.seafarer_code,
+			sa.batch_id,
+			r.nama,
+			at.assessment_type_name,
+			at.id AS assessment_type_id,
+			sa.status,
+			CAST(sa.attempts_count AS UNSIGNED) AS attempts
+		`).
 		Joins("LEFT JOIN reports r ON sa.seafarer_code = r.seafarer_code").
 		Joins("LEFT JOIN assessment_types at ON sa.assessment_type_id = at.id")
 

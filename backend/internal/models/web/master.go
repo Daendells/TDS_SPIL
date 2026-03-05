@@ -131,6 +131,7 @@ type MasterReportListResponse struct {
 	HasMore                   bool                  `json:"hasMore"`
 	FirstPage                 bool                  `json:"firstPage"`
 	Total                     int                   `json:"total"`
+	IsArchived                bool                  `json:"isArchived"`
 	AvailableMentoringReports []MentoringReportData `json:"availableMentoringReports,omitempty"`
 }
 
@@ -198,6 +199,9 @@ type CompetencyUpdateRequest struct {
 }
 
 type BulkAssignBatchRequest struct {
-	ReportIDs []uint `json:"reportIds" binding:"required,min=1" validate:"required,min=1"`
-	BatchID   *int   `json:"batchId"` // Pointer to allow nullifying batch assignment
+	ReportIDs    []uint `json:"reportIds"`   // IDs to assign (ignored when SelectAll=true)
+	BatchID      *int   `json:"batchId"`     // Pointer to allow nullifying batch assignment
+	SelectAll    bool   `json:"selectAll"`   // If true, assign all matching records by filter
+	Query        string `json:"query"`       // Name/seafarer code filter (used with SelectAll)
+	FilterBatchID *int  `json:"filterBatchId"` // Current batch filter (used with SelectAll)
 }

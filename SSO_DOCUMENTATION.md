@@ -32,6 +32,7 @@ Dokumen ini menjelaskan cara kerja sistem SSO (Single Sign-On) yang telah dibang
   - [Environment Variables](#environment-variables)
   - [Struktur File yang Dibuat/Diubah](#struktur-file-yang-dibuatdiubah)
   - [Alur Lengkap di Aplikasi Ini](#alur-lengkap-di-aplikasi-ini)
+  - [Flow Login jika Redirect dari Aplikasi Portal](#flow-login-jika-redirect-dari-aplikasi-portal)
   - [Endpoint SSO di Aplikasi Ini](#endpoint-sso-di-aplikasi-ini)
   - [Strategi State CSRF](#strategi-state-csrf)
   - [Logika Find-or-Create User](#logika-find-or-create-user)
@@ -969,6 +970,34 @@ http://localhost:5176/auth/sso/callback?token=JWT_LOKAL
 **5. Frontend `/auth/sso/callback`**
 
 `SsoCallbackPage` membaca `?token=` dari URL, menyimpannya ke cookie melalui `setToken()`, lalu navigate ke `/dashboard`.
+
+---
+
+### Flow Login jika Redirect dari Aplikasi Portal
+
+Jika login dimulai dari aplikasi portal, portal mengarahkan browser user ke halaman login frontend aplikasi eksternal dengan format:
+
+```text
+{frontend_url}/login?login_sso=true&client_id={client_id}
+```
+
+Contoh:
+
+```text
+http://localhost:5176/login?login_sso=true&client_id=client_xxxxxxxxx
+```
+
+Perilaku pada halaman login (`frontend/src/app/(auth)/login/page.tsx`):
+
+1. Membaca query param `login_sso` dan `client_id` dari URL.
+2. Jika `login_sso === "true"` dan `client_id === NEXT_PUBLIC_SSO_CLIENT_ID`, frontend otomatis menjalankan `handleSsoLogin()`.
+3. `handleSsoLogin()` akan redirect ke backend:
+   `{NEXT_PUBLIC_API_ENDPOINT}/api/auth/sso/initiate?client_id={client_id}`.
+4. Jika `client_id` tidak cocok atau tidak ada, auto-login SSO tidak dijalankan, dan user tetap bisa klik tombol **Login with SSO SPIL** secara manual.
+
+Catatan:
+- Validasi `client_id` terhadap `NEXT_PUBLIC_SSO_CLIENT_ID` mencegah auto-redirect untuk client yang bukan milik aplikasi ini.
+- Parameter `client_id` tetap diteruskan ke endpoint `initiate` agar backend dapat memvalidasi/menggunakan client ID yang sesuai.
 
 ---
 

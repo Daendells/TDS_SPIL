@@ -327,5 +327,8 @@ func (r *RouterConfig) SetupBatchRouter() {
 	{
 		group.GET("", r.BatchController.FindAll)
 		group.POST("", r.BatchController.Create)
+		group.GET("/:id", r.BatchController.FindByID)
+		group.PUT("/:id", r.BatchController.Update)
+		group.GET("/:id/snapshots", r.BatchController.GetSnapshots)
 	}
 }

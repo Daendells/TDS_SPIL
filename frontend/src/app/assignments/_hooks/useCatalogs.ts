@@ -4,7 +4,7 @@ import { toast } from "sonner";
 import { api } from "@/app/lib/api";
 import { IAssessment, IUser } from "@/types/global-types";
 
-export function useCatalogs() {
+export function useCatalogs(batchId?: string | null) {
   const [assessments, setAssessments] = useState<IAssessment[]>([]);
   const [users, setUsers] = useState<IUser[]>([]);
 
@@ -35,7 +35,12 @@ export function useCatalogs() {
 
   const fetchUsers = async () => {
     try {
-      const res = await api.get("/api/master-reports?page=next&page_size=9999");
+      // If a specific batch is selected, fetch only seafarers from that batch
+      let url = "/api/master-reports?page=next&page_size=9999";
+      if (batchId && batchId !== "ALL" && batchId !== "-1") {
+        url = `/api/master-reports?batch_id=${batchId}&page_size=9999`;
+      }
+      const res = await api.get(url);
       const raw = res.data?.data?.data ?? res.data?.data ?? [];
       const parsed: IUser[] = raw.map(
         (u: { id: number; nama: string; jabatan: string; seafarerCode: string }) => ({
@@ -56,7 +61,8 @@ export function useCatalogs() {
   useEffect(() => {
     fetchAssessments();
     fetchUsers();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [batchId]);
 
   return {
     assessments,

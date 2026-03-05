@@ -1,6 +1,8 @@
 package services
 
 import (
+	"time"
+
 	"github.com/robfig/cron/v3"
 	"github.com/sirupsen/logrus"
 )
@@ -11,6 +13,7 @@ type CronService struct {
 	IDPCalculationService *IDPCalculationService
 	ApolloAPIService      *ApolloAPIService
 	NanikaAPIService      *NanikaAPIService
+	BatchSnapshotService  *BatchSnapshotService
 }
 
 func NewCronService(
@@ -18,6 +21,7 @@ func NewCronService(
 	idpCalculationService *IDPCalculationService,
 	apolloAPIService *ApolloAPIService,
 	nanikaAPIService *NanikaAPIService,
+	batchSnapshotService *BatchSnapshotService,
 ) *CronService {
 	// Create cron with seconds support
 	c := cron.New(cron.WithSeconds())
@@ -28,6 +32,7 @@ func NewCronService(
 		IDPCalculationService: idpCalculationService,
 		ApolloAPIService:      apolloAPIService,
 		NanikaAPIService:      nanikaAPIService,
+		BatchSnapshotService:  batchSnapshotService,
 	}
 }
 
@@ -70,6 +75,34 @@ func (s *CronService) Start() error {
 		} else {
 			s.log.Info("Expired cache cleaned successfully")
 		}
+	})
+	if err != nil {
+		return err
+	}
+
+	// Daily batch auto-close at midnight: snapshot-and-close any active batches whose end_date < today
+	// TESTING: every 1 minute (change to "0 0 0 * * *" for production)
+	_, err = s.cron.AddFunc("0 0 0 * * *", func() {
+		now := time.Now()
+		s.log.Infof("[BATCH CRON] Running at %s (local time)", now.Format("2006-01-02 15:04:05 MST"))
+		batches, err := s.BatchSnapshotService.BatchRepository.FindActivePastEndDate(
+			s.BatchSnapshotService.DB,
+		)
+		if err != nil {
+			s.log.Errorf("[BATCH CRON] Failed to find expired batches: %v", err)
+			return
+		}
+		s.log.Infof("[BATCH CRON] Found %d expired batch(es) to close", len(batches))
+		for _, b := range batches {
+			s.log.Infof("[BATCH CRON] Processing batch id=%d no=%d endDate=%s status=%s",
+				b.ID, b.BatchNo, b.EndDate.Format("2006-01-02"), b.Status)
+			if err := s.BatchSnapshotService.SnapshotAndCloseBatch(b.ID); err != nil {
+				s.log.Errorf("[BATCH CRON] ❌ Failed to close batch %d: %v", b.ID, err)
+			} else {
+				s.log.Infof("[BATCH CRON] ✅ Batch %d (no. %d) successfully closed and snapshotted", b.ID, b.BatchNo)
+			}
+		}
+		s.log.Infof("[BATCH CRON] Done. %d batch(es) processed", len(batches))
 	})
 	if err != nil {
 		return err

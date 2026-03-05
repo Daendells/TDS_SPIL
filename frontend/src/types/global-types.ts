@@ -212,12 +212,14 @@ export interface IAssignmentFlat {
   assessmentType: string;
   attempts: number;
   status: string;
+  batchId?: number | null;
 }
 
 // === For Create / Update API ===
 export interface IAssignmentCreate {
   seafarerCode: string;
   assessmentTypeId: number;
+  batchId?: number | null;
   status?: string;
   createdBy: string;
 }

@@ -41,6 +41,11 @@ func main() {
 		log.Fatalf("populate default referensi failed: %v", err)
 	}
 	log.Info("Default referensi populated successfully")
+	log.Info("Running batch system migrations...")
+	if err := runBatchMigrations(db); err != nil {
+		log.Fatalf("Batch migration failed: %v", err)
+	}
+	log.Info("Batch migration completed successfully")
 
 	log.Info("Creating database triggers...")
 	if err := createTriggers(db); err != nil {
@@ -99,6 +104,10 @@ func runAutoMigrate(db *gorm.DB) error {
 		// Final dependent tables
 		&domain.ScoreResult{},
 		&domain.ReportScore{},
+
+		// Batch system tables
+		&domain.ReportBatch{},
+		&domain.BatchReportSnapshot{},
 	}
 
 	for _, model := range models {
@@ -255,6 +264,34 @@ WHERE t.referensi IS NULL
 	return nil
 }
 
+// runBatchMigrations performs the data migration for the new batch system:
+// 1. Migrates existing reports.batch_id data to the report_batches junction table
+// 2. Ensures the batches table has the new status and snapshotted_at columns
+func runBatchMigrations(db *gorm.DB) error {
+	// Migrate existing reports.batch_id → report_batches (only if batch_id column still exists)
+	var batchColExists int64
+	db.Raw(`
+		SELECT COUNT(*) FROM information_schema.columns
+		WHERE table_schema = DATABASE()
+		AND table_name = 'reports'
+		AND column_name = 'batch_id'
+	`).Scan(&batchColExists)
+
+	if batchColExists > 0 {
+		// Copy existing one-to-many data into the new junction table (ignore duplicates)
+		if err := db.Exec(`
+			INSERT IGNORE INTO report_batches (report_id, batch_id, assigned_at)
+			SELECT id, batch_id, NOW()
+			FROM reports
+			WHERE batch_id IS NOT NULL
+		`).Error; err != nil {
+			return err
+		}
+
+	}
+
+	return nil
+}
 func createTriggers(db *gorm.DB) error {
 	db.Exec("DROP TRIGGER IF EXISTS calculate_readiness_before_insert")
 	db.Exec("DROP TRIGGER IF EXISTS after_insert_report_create_report_scores")
