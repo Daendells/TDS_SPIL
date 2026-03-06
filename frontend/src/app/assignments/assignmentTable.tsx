@@ -223,7 +223,7 @@ export default function AssignmentTable({ batchId: externalBatchId }: { batchId?
           {/* Filter Batch – hidden when batch is controlled from parent */}
           {externalBatchId === undefined && (
             <Select value={filterBatch} onValueChange={setFilterBatch}>
-              <SelectTrigger className="w-[160px]">
+              <SelectTrigger className="w-40">
                 <SelectValue placeholder="Semua Batch" />
               </SelectTrigger>
               <SelectContent>

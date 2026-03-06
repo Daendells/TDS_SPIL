@@ -129,7 +129,7 @@ func (service *seafarerAssessmentServiceImpl) Delete(db *gorm.DB, id uint64) err
 }
 
 func (service *seafarerAssessmentServiceImpl) IncrementAttempts(db *gorm.DB, seafarerCode string, assessmentTypeID uint64) (web.SeafarerAssessmentData, error) {
-	seafarerAssessment, err := service.SeafarerAssessmentRepository.FindBySeafarerCodeAndAssessmentType(db, seafarerCode, assessmentTypeID)
+	seafarerAssessment, err := service.SeafarerAssessmentRepository.FindBySeafarerCodeAndAssessmentTypePreferActiveBatch(db, seafarerCode, assessmentTypeID)
 	if err != nil {
 		return web.SeafarerAssessmentData{}, err
 	}
@@ -145,7 +145,7 @@ func (service *seafarerAssessmentServiceImpl) IncrementAttempts(db *gorm.DB, sea
 }
 
 func (service *seafarerAssessmentServiceImpl) CheckAssignment(db *gorm.DB, seafarerCode string, assessmentTypeID uint64) (web.AssignmentCheckResponse, error) {
-	seafarerAssessment, err := service.SeafarerAssessmentRepository.FindBySeafarerCodeAndAssessmentType(db, seafarerCode, assessmentTypeID)
+	seafarerAssessment, err := service.SeafarerAssessmentRepository.FindBySeafarerCodeAndAssessmentTypePreferActiveBatch(db, seafarerCode, assessmentTypeID)
 	
 	if err != nil {
 		// If record not found, it means not assigned

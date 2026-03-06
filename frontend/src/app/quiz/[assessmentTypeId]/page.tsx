@@ -19,6 +19,7 @@ import Image from "next/image";
 import Greetings from "./greetings";
 import Completion from "./completion";
 import { BASE_URL } from "@/app/lib/api";
+import { TutorialDisplay } from "@/components/tutorial-display";
 
 export default function QuizPage() {
   const params = useParams();
@@ -48,6 +49,9 @@ export default function QuizPage() {
 
   // Question navigation state (for one-question-at-a-time display)
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
+
+  // Track which quiz sections have had their tutorial dismissed
+  const [tutorialDismissed, setTutorialDismissed] = useState<Record<number, boolean>>({});
 
   // localStorage key with expiry 3 days
   const STORAGE_KEY = `quizFormData_${assessmentTypeId}`;
@@ -558,6 +562,18 @@ export default function QuizPage() {
   const currentQuestion = currentAssessment?.questions[currentQuestionIndex];
   const userAnswer = currentQuestion ? answers[currentQuestion.questionId] : undefined;
   const totalQuestions = currentAssessment?.questions.length || 0;
+
+  // Show tutorial for this section if it has content and hasn't been dismissed
+  if (currentAssessment?.tutorialContent && !tutorialDismissed[quizStepIndex]) {
+    return (
+      <TutorialDisplay
+        assessmentName={currentAssessment.assessmentName}
+        content={currentAssessment.tutorialContent}
+        timerMinutes={currentAssessment.tutorialTimerMinutes ?? undefined}
+        onProceed={() => setTutorialDismissed((prev) => ({ ...prev, [quizStepIndex]: true }))}
+      />
+    );
+  }
   const answeredCount =
     currentAssessment?.questions.filter((q) => answers[q.questionId] !== undefined).length || 0;
 

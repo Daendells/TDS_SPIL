@@ -18,6 +18,7 @@ type AssessmentService interface {
 	Delete(db *gorm.DB, id uint64) error
 	FindUnassigned(db *gorm.DB) ([]web.AssessmentData, error)
 	AssignAssessment(db *gorm.DB, assessmentID uint64, assessmentTypeID *uint64) error
+	UpdateTutorial(db *gorm.DB, assessmentID uint64, request *web.AssessmentTutorialRequest) (web.AssessmentData, error)
 }
 
 type assessmentServiceImpl struct {
@@ -109,24 +110,22 @@ func (service *assessmentServiceImpl) FindUnassigned(db *gorm.DB) ([]web.Assessm
 }
 
 func (service *assessmentServiceImpl) AssignAssessment(db *gorm.DB, assessmentID uint64, assessmentTypeID *uint64) error {
-	// First find the assessment to get current data
-	// Need to implement FindByID in repository or use raw query, but Update method usually expects full struct
-	// For simplicity, we can fetch all and filter or add FindByID to repo. Respository FindAll is domain.Assessment.
-	// Actually we should add FindByID to repo, but let's see if we can use existing Update method.
-	// Update method takes domain.Assessment.
-	
-	// Let's assume we can fetch by role or something, but we only have ID.
-	// Best approach: Add FindByID to repository or use GORM directly here? No, stick to repo.
-	// But I don't want to edit repo again if possible. 
-	// Wait, I can use db.Model(&domain.Assessment{}).Where("id = ?", id).Update("assess_type_id", typeID)
-	// But service should use repository methods.
-	
-	// Let's modify repository Update to be more flexible? No.
-	// Let's just use raw DB update here or ask user to add FindByID?
-	// I'll add the method and just direct update in service for now to save tool calls, 
-	// or rely on a new method I'll add to Repo? 
-	// Actually, I can just use repository.Update(db, &assessment) if I can get the assessment.
-	
-	// Let's modify the service to use a direct DB update for this specific field to be efficient.
 	return db.Model(&domain.Assessment{}).Where("id = ?", assessmentID).Update("assess_type_id", assessmentTypeID).Error
+}
+
+func (service *assessmentServiceImpl) UpdateTutorial(db *gorm.DB, assessmentID uint64, request *web.AssessmentTutorialRequest) (web.AssessmentData, error) {
+	err := db.Model(&domain.Assessment{}).Where("id = ?", assessmentID).Updates(map[string]interface{}{
+		"tutorial_content":       request.TutorialContent,
+		"tutorial_timer_minutes": request.TutorialTimerMinutes,
+	}).Error
+	if err != nil {
+		return web.AssessmentData{}, err
+	}
+
+	assessment, err := service.AssessmentRepository.FindByID(db, assessmentID)
+	if err != nil {
+		return web.AssessmentData{}, err
+	}
+
+	return converter.AssessmentToAssessmentData(&assessment), nil
 }

@@ -14,6 +14,8 @@ export interface AssessmentData {
   pauseTimestamp?: string;
   sisaWaktu?: number;
   usingTimer?: boolean;
+  // Persisted tutorial dismissal flag to survive page reload
+  tutorialDismissed?: boolean;
 }
 
 export type CESAssessmentData = AssessmentData;

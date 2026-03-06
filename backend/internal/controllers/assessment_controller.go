@@ -111,12 +111,14 @@ func (controller *AssessmentController) FindByRole (ctx *gin.Context) {
 	}
 
 	assessmentResponse := web.AssessmentResponse{
-		AssessmentID: assessment.AssessmentID,
-		Role: assessment.Role,
-		AssessmentName: assessment.AssessmentName,
-		UsingTimer: assessment.UsingTimer,
-		TimerLimitMinutes: assessment.TimerLimitMinutes,
-		Questions: questionsWithOptions,
+		AssessmentID:         assessment.AssessmentID,
+		Role:                 assessment.Role,
+		AssessmentName:       assessment.AssessmentName,
+		UsingTimer:           assessment.UsingTimer,
+		TimerLimitMinutes:    assessment.TimerLimitMinutes,
+		TutorialContent:      assessment.TutorialContent,
+		TutorialTimerMinutes: assessment.TutorialTimerMinutes,
+		Questions:            questionsWithOptions,
 	}
 
 	ctx.JSON(http.StatusOK, web.SuccessResponse {
@@ -193,11 +195,13 @@ func (controller *AssessmentController) FindByRolePublic(ctx *gin.Context) {
 	})
 
 	assessmentResponse := web.AssessmentPublicResponse{
-		AssessmentID: assessment.AssessmentID,
-		Role: assessment.Role,
-		UsingTimer: assessment.UsingTimer,
-		TimerLimitMinutes: assessment.TimerLimitMinutes,
-		Questions: questionsWithOptions,
+		AssessmentID:         assessment.AssessmentID,
+		Role:                 assessment.Role,
+		UsingTimer:           assessment.UsingTimer,
+		TimerLimitMinutes:    assessment.TimerLimitMinutes,
+		TutorialContent:      assessment.TutorialContent,
+		TutorialTimerMinutes: assessment.TutorialTimerMinutes,
+		Questions:            questionsWithOptions,
 	}
 
 	ctx.JSON(http.StatusOK, web.SuccessResponse {
@@ -417,5 +421,43 @@ func (controller *AssessmentController) AssignToType(ctx *gin.Context) {
 		Code: http.StatusOK,
 		Status: "Assign assessment successfully",
 		Data: nil,
+	})
+}
+
+func (controller *AssessmentController) UpdateTutorial(ctx *gin.Context) {
+	assessmentId, err := strconv.ParseUint(ctx.Param("assessmentId"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  "Invalid assessment ID",
+		})
+		return
+	}
+
+	var request web.AssessmentTutorialRequest
+	if err := ctx.ShouldBindJSON(&request); err != nil {
+		ctx.JSON(http.StatusBadRequest, web.ErrorResponse{
+			Code:   http.StatusBadRequest,
+			Status: "Bad Request",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	assessmentData, err := controller.AssessmentService.UpdateTutorial(controller.DB, assessmentId, &request)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
+			Code:   http.StatusInternalServerError,
+			Status: "INTERNAL SERVER ERROR",
+			Error:  err.Error(),
+		})
+		return
+	}
+
+	ctx.JSON(http.StatusOK, web.SuccessResponse{
+		Code:   http.StatusOK,
+		Status: "Update tutorial successfully",
+		Data:   assessmentData,
 	})
 }

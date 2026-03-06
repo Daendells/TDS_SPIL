@@ -12,6 +12,7 @@ import { ValueAssessmentData } from "./page";
 import Image from "next/image";
 import { useGetAssessmentByRole, usePostAssessmentResults } from "./_hooks/useAssessment";
 import { BASE_URL } from "../lib/api";
+import { TutorialDisplay } from "@/components/tutorial-display";
 import { isValidImageUrl } from "../assessment-manager/questions-admin";
 
 interface Section1Props {
@@ -32,6 +33,9 @@ export default function Section1({
     assessmentData.section1Answers ?? {}
   );
   const storageTimeOutRef = useRef(false);
+  const [tutorialDismissed, setTutorialDismissed] = useState(
+    assessmentData.section1TutorialDismissed ?? false
+  );
 
   // Debug: Log currentStep from assessmentData
   useEffect(() => {
@@ -75,6 +79,13 @@ export default function Section1({
       updateAssessmentData({ usingTimer: assessment.usingTimer });
     }
   }, [assessment?.usingTimer, assessmentData.usingTimer, updateAssessmentData]);
+
+  // Set section start time when assessment loads and there is no tutorial to read
+  useEffect(() => {
+    if (assessment && !assessment.tutorialContent && !assessmentData.section1StartTime) {
+      updateAssessmentData({ section1StartTime: new Date().toISOString() });
+    }
+  }, [assessment, assessmentData.section1StartTime, updateAssessmentData]);
 
   // Stable pause/resume callbacks to prevent hook re-setup
   const handlePause = useCallback(() => {
@@ -266,6 +277,25 @@ export default function Section1({
           </Button>
         </div>
       </div>
+    );
+  }
+
+  if (assessment?.tutorialContent && !tutorialDismissed) {
+    return (
+      <TutorialDisplay
+        assessmentName={assessment.assessmentName}
+        content={assessment.tutorialContent}
+        timerMinutes={assessment.tutorialTimerMinutes ?? undefined}
+        onProceed={() => {
+          setTutorialDismissed(true);
+          updateAssessmentData({
+            section1TutorialDismissed: true,
+            ...(!assessmentData.section1StartTime && {
+              section1StartTime: new Date().toISOString(),
+            }),
+          });
+        }}
+      />
     );
   }
 

@@ -151,12 +151,6 @@ export default function CESAssessmentPage() {
     const nextStep = currentStep + 1;
     setCurrentStep(nextStep);
 
-    // Set start time for assessment questions
-    const now = new Date().toISOString();
-    if (nextStep === 3 && !assessmentData.assessmentStartTime) {
-      updateAssessmentData({ assessmentStartTime: now });
-    }
-
     // Reset timer state saat pindah ke questions step
     if (nextStep === 3) {
       // setTimeLeft(0);
@@ -279,7 +273,8 @@ export default function CESAssessmentPage() {
 
     const handleVisibilityChange = () => {
       if (document.hidden) {
-        if (currentStep === 3) {
+        // Only pause if the section timer has actually started (tutorial already dismissed)
+        if (currentStep === 3 && assessmentData.assessmentStartTime) {
           const now = new Date().toISOString();
           const sisaWaktu = calculateCurrentSisaWaktu();
           updateAssessmentData({
@@ -302,7 +297,8 @@ export default function CESAssessmentPage() {
     };
 
     const handleWindowBlur = () => {
-      if (currentStep === 3) {
+      // Only pause if the section timer has actually started (tutorial already dismissed)
+      if (currentStep === 3 && assessmentData.assessmentStartTime) {
         const now = new Date().toISOString();
         const sisaWaktu = calculateCurrentSisaWaktu();
         updateAssessmentData({
@@ -402,8 +398,8 @@ export default function CESAssessmentPage() {
     <div className="min-h-screen bg-gray-50">
       {isClient && (
         <>
-          {/* Timer Display - Show only during assessment questions */}
-          {currentStep === 3 && (
+          {/* Timer Display - Show only during assessment questions, after tutorial is dismissed */}
+          {currentStep === 3 && assessmentData.assessmentStartTime && (
             <TimerDisplay
               sectionName={`CES Assessment - ${role.replace(/_/g, " ").toUpperCase()}`}
               startTime={assessmentData.assessmentStartTime}

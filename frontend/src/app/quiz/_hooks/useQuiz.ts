@@ -25,6 +25,8 @@ export type QuizAssessmentSection = {
   assessmentName: string;
   usingTimer: boolean;
   timerLimitMinutes: number | null;
+  tutorialContent?: string | null;
+  tutorialTimerMinutes?: number | null;
   questions: QuestionOptionPublicResponse[];
 };
 

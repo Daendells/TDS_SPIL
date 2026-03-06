@@ -266,6 +266,7 @@ func (c *RouterConfig) SetupAuthRouter() {
 		assessmentAuth.POST("/assign", c.AssessmentController.AssignToType)
 		assessmentAuth.GET("/:role", c.AssessmentController.FindByRole)
 		assessmentAuth.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
+		assessmentAuth.PATCH("/:assessmentId/tutorial", c.AssessmentController.UpdateTutorial)
 		assessmentAuth.POST("", c.AssessmentController.CreateAssessment)
 		assessmentAuth.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
 		assessmentAuth.POST("/upload-image", c.AssessmentController.UploadAssessmentImage)

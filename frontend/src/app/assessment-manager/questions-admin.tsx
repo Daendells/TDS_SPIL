@@ -28,6 +28,8 @@ import BulkDeleteConfirmationDialog from "./bulk-delete-confirmation-dialog";
 import BulkAssignAspectDialog from "./bulk-assign-aspect-dialog";
 import AddAssessmentDialog from "./add-assessment-dialog";
 import AssessmentConfigDialog from "@/components/assessment-config-dialog";
+import { TutorialSection } from "./tutorial-section";
+import { useDeleteAssessment } from "./_hooks/useAssessment";
 import { AspectManager } from "./aspect-manager";
 import { QuestionAspectSelector } from "./question-aspect-selector";
 import { useGetAllAssessments } from "./_hooks/useAssessment";
@@ -65,12 +67,15 @@ export default function QuestionsAdmin() {
   const [bulkAssignAspectLoading, setBulkAssignAspectLoading] = useState(false);
   const [configDialogOpen, setConfigDialogOpen] = useState(false);
   const [addAssessmentDialogOpen, setAddAssessmentDialogOpen] = useState(false);
+  const [deleteAssessmentDialogOpen, setDeleteAssessmentDialogOpen] = useState(false);
+  const [deleteAssessmentLoading, setDeleteAssessmentLoading] = useState(false);
 
   const [editingQuestion, setEditingQuestion] = useState<QuestionOptionResponse | null>(null);
 
   const deleteQuestionMutation = useDeleteQuestion();
   const bulkDeleteMutation = useBulkDeleteQuestions();
   const bulkUpdateAspectMutation = useBulkUpdateAspect();
+  const deleteAssessmentMutation = useDeleteAssessment();
 
   const { data: assessments } = useGetAllAssessments();
 
@@ -213,11 +218,29 @@ export default function QuestionsAdmin() {
     queryClient.invalidateQueries({ queryKey: ["assessments"] });
   };
 
+  const handleConfirmDeleteAssessment = async () => {
+    setDeleteAssessmentLoading(true);
+    try {
+      await deleteAssessmentMutation.mutateAsync(selectedAssessmentId);
+      toast.success("Assessment berhasil dihapus");
+      setSelectedAssessmentId(0);
+      setSelectedRole("");
+      setDeleteAssessmentDialogOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["assessments"] });
+    } catch {
+      toast.error("Gagal menghapus assessment");
+    } finally {
+      setDeleteAssessmentLoading(false);
+    }
+  };
+
   const getAspectName = (aspectId?: number) => {
     if (!aspectId || !aspectsData) return null;
     const aspect = aspectsData.find((a: AspectResponse) => a.id === aspectId);
     return aspect ? aspect.name : null;
   };
+
+  const selectedAssessment = assessments?.find((a) => a.assessmentId === selectedAssessmentId);
 
   return (
     <div className="space-y-6">
@@ -290,6 +313,14 @@ export default function QuestionsAdmin() {
                   <Settings className="h-4 w-4" />
                   Konfigurasi Assessment
                 </Button>
+                <Button
+                  onClick={() => setDeleteAssessmentDialogOpen(true)}
+                  variant="destructive"
+                  className="flex items-center gap-2"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  Hapus Assessment
+                </Button>
               </>
             )}
           </div>
@@ -303,6 +334,15 @@ export default function QuestionsAdmin() {
             assessments?.find((a) => a.assessmentId === selectedAssessmentId)?.assessmentName ||
             "Assessment"
           }
+        />
+      )}
+
+      {selectedAssessmentId > 0 && (
+        <TutorialSection
+          assessmentId={selectedAssessmentId}
+          assessmentName={selectedAssessment?.assessmentName || "Assessment"}
+          initialContent={selectedAssessment?.tutorialContent ?? null}
+          initialTimerMinutes={selectedAssessment?.tutorialTimerMinutes ?? 1}
         />
       )}
 
@@ -565,6 +605,38 @@ export default function QuestionsAdmin() {
         setOpen={setAddAssessmentDialogOpen}
         onSuccess={handleAddAssessmentSuccess}
       />
+
+      {/* Delete Assessment Confirmation */}
+      {deleteAssessmentDialogOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+          <div className="bg-white rounded-lg shadow-lg p-6 max-w-sm w-full mx-4">
+            <h3 className="text-lg font-bold mb-2">Hapus Assessment</h3>
+            <p className="text-sm text-gray-600 mb-6">
+              Apakah Anda yakin ingin menghapus assessment{" "}
+              <strong>
+                {assessments?.find((a) => a.assessmentId === selectedAssessmentId)?.assessmentName}
+              </strong>
+              ? Tindakan ini tidak dapat dibatalkan dan akan menghapus semua pertanyaan terkait.
+            </p>
+            <div className="flex justify-end gap-3">
+              <button
+                className="px-4 py-2 rounded border text-sm hover:bg-gray-50 disabled:opacity-50"
+                onClick={() => setDeleteAssessmentDialogOpen(false)}
+                disabled={deleteAssessmentLoading}
+              >
+                Batal
+              </button>
+              <button
+                className="px-4 py-2 rounded bg-red-600 text-white text-sm hover:bg-red-700 disabled:opacity-50"
+                onClick={handleConfirmDeleteAssessment}
+                disabled={deleteAssessmentLoading}
+              >
+                {deleteAssessmentLoading ? "Menghapus..." : "Hapus"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

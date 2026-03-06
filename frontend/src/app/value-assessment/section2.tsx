@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ValueAssessmentData } from "./page";
 import { useGetAssessmentByRole, usePostAssessmentResults } from "./_hooks/useAssessment";
+import { TutorialDisplay } from "@/components/tutorial-display";
 import { useCountdown } from "@/hooks/use-session-storage";
 import { useTimerPauseResume } from "@/hooks/useTimerPauseResume";
 import { useStorageCountdown } from "@/hooks/use-local-storage";
@@ -33,6 +34,9 @@ export default function Section2({
   );
   const timeOutRef = useRef(false);
   const storageTimeOutRef = useRef(false);
+  const [tutorialDismissed, setTutorialDismissed] = useState(
+    assessmentData.section2TutorialDismissed ?? false
+  );
 
   // Fetch assessment data using the hook
   const { data: assessment, isLoading, error } = useGetAssessmentByRole("va_2");
@@ -67,6 +71,13 @@ export default function Section2({
       updateAssessmentData({ usingTimer: assessment.usingTimer });
     }
   }, [assessment?.usingTimer, assessmentData.usingTimer, updateAssessmentData]);
+
+  // Set section start time when assessment loads and there is no tutorial to read
+  useEffect(() => {
+    if (assessment && !assessment.tutorialContent && !assessmentData.section2StartTime) {
+      updateAssessmentData({ section2StartTime: new Date().toISOString() });
+    }
+  }, [assessment, assessmentData.section2StartTime, updateAssessmentData]);
 
   // Stable pause/resume callbacks to prevent hook re-setup
   const handlePause = useCallback(() => {
@@ -231,6 +242,25 @@ export default function Section2({
           </Button>
         </div>
       </div>
+    );
+  }
+
+  if (assessment?.tutorialContent && !tutorialDismissed) {
+    return (
+      <TutorialDisplay
+        assessmentName={assessment.assessmentName}
+        content={assessment.tutorialContent}
+        timerMinutes={assessment.tutorialTimerMinutes ?? undefined}
+        onProceed={() => {
+          setTutorialDismissed(true);
+          updateAssessmentData({
+            section2TutorialDismissed: true,
+            ...(!assessmentData.section2StartTime && {
+              section2StartTime: new Date().toISOString(),
+            }),
+          });
+        }}
+      />
     );
   }
 
@@ -404,7 +434,7 @@ export default function Section2({
                           className="flex-1 cursor-pointer text-gray-700 leading-relaxed"
                         >
                           <div className="flex items-center gap-3">
-                            <span className="font-bold text-lg text-gray-800 min-w-[24px]">
+                            <span className="font-bold text-lg text-gray-800 min-w-6">
                               {option.optionLetter}.
                             </span>
                             <div className="flex flex-col gap-2">

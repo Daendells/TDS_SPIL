@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { ValueAssessmentData } from "./page";
 import { useGetAssessmentByRole, usePostAssessmentResults } from "./_hooks/useAssessment";
+import { TutorialDisplay } from "@/components/tutorial-display";
 import Image from "next/image";
 import { useCountdown } from "@/hooks/use-session-storage";
 import { useTimerPauseResume } from "@/hooks/useTimerPauseResume";
@@ -38,6 +39,9 @@ export default function Section3({
     assessmentData.section3Answers ?? {}
   );
   const timeOutRef = useRef(false);
+  const [tutorialDismissed, setTutorialDismissed] = useState(
+    assessmentData.section3TutorialDismissed ?? false
+  );
 
   // Fetch assessment data using the hook
   const { data: assessment, isLoading, error } = useGetAssessmentByRole("va_3");
@@ -73,6 +77,13 @@ export default function Section3({
       updateAssessmentData({ usingTimer: assessment.usingTimer });
     }
   }, [assessment?.usingTimer, assessmentData.usingTimer, updateAssessmentData]);
+
+  // Set section start time when assessment loads and there is no tutorial to read
+  useEffect(() => {
+    if (assessment && !assessment.tutorialContent && !assessmentData.section3StartTime) {
+      updateAssessmentData({ section3StartTime: new Date().toISOString() });
+    }
+  }, [assessment, assessmentData.section3StartTime, updateAssessmentData]);
 
   // Stable pause/resume callbacks to prevent hook re-setup
   const handlePause = useCallback(() => {
@@ -218,6 +229,25 @@ export default function Section3({
           </Button>
         </div>
       </div>
+    );
+  }
+
+  if (assessment?.tutorialContent && !tutorialDismissed) {
+    return (
+      <TutorialDisplay
+        assessmentName={assessment.assessmentName}
+        content={assessment.tutorialContent}
+        timerMinutes={assessment.tutorialTimerMinutes ?? undefined}
+        onProceed={() => {
+          setTutorialDismissed(true);
+          updateAssessmentData({
+            section3TutorialDismissed: true,
+            ...(!assessmentData.section3StartTime && {
+              section3StartTime: new Date().toISOString(),
+            }),
+          });
+        }}
+      />
     );
   }
 

@@ -247,16 +247,12 @@ export default function AssessmentConfigDialog({
     });
   };
 
-  const getRoleLabel = (roleValue: string) => {
-    return ROLES.find((role) => role.value === roleValue)?.label || roleValue;
-  };
-
   // Check if selected role exists in assessments
   const roleExists = selectedRole && assessments.some((a) => a.role === selectedRole);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="!w-[90vw] !max-w-[800px] !h-[55vh] top-[5vh] translate-y-0 flex flex-col">
+      <DialogContent className="w-[90vw]! max-w-[800px]! h-[55vh]! top-[5vh] translate-y-0 flex flex-col">
         <DialogHeader>
           <DialogTitle>Konfigurasi Assessment</DialogTitle>
         </DialogHeader>
@@ -270,7 +266,7 @@ export default function AssessmentConfigDialog({
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="role">Role</Label>
+                  <Label htmlFor="role">URL Path</Label>
                   <Select
                     value={formData.role}
                     onValueChange={(value) => setFormData({ ...formData, role: value })}
@@ -371,9 +367,9 @@ export default function AssessmentConfigDialog({
                       // Edit Mode
                       <div className="space-y-4">
                         <div className="space-y-2">
-                          <Label>Role</Label>
-                          <div className="p-2 bg-gray-100 rounded">
-                            {getRoleLabel(assessment.role)}
+                          <Label>URL Path</Label>
+                          <div className="p-2 bg-gray-100 rounded text-sm font-mono">
+                            {assessment.role}
                           </div>
                         </div>
 
@@ -436,13 +432,13 @@ export default function AssessmentConfigDialog({
                       <div className="flex items-center justify-between">
                         <div className="space-y-2">
                           <div className="flex items-center gap-2">
-                            <h3 className="font-semibold">{getRoleLabel(assessment.role)}</h3>
+                            <h3 className="font-semibold">{assessment.assessmentName}</h3>
                             <Badge variant={assessment.usingTimer ? "default" : "secondary"}>
                               {assessment.usingTimer ? "Timer Aktif" : "Tanpa Timer"}
                             </Badge>
                           </div>
-                          <p className="text-sm text-muted-foreground">
-                            {assessment.assessmentName}
+                          <p className="text-xs text-muted-foreground font-mono">
+                            URL Path: {assessment.role}
                           </p>
                           {assessment.usingTimer && assessment.timerLimitMinutes && (
                             <p className="text-sm text-muted-foreground">

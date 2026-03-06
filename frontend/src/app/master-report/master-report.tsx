@@ -1868,7 +1868,7 @@ export default function MasterPage({
               <Button
                 variant="outline"
                 role="combobox"
-                className="w-[80px] h-8 text-sm justify-between"
+                className="w-20 h-8 text-sm justify-between"
               >
                 {paginationRequest.pageSize}
                 <ChevronsUpDownIcon className="ml-1 h-3 w-3 opacity-50" />
