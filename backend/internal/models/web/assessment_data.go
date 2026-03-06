@@ -1,20 +1,24 @@
 package web
 
 type AssessmentData struct {
-	AssessmentID      uint64   `json:"assessmentId"`
-	Role              string   `json:"role"`
-	AssessmentName    string   `json:"assessmentName"`
-	UsingTimer        bool     `json:"usingTimer"`
-	TimerLimitMinutes *float64 `json:"timerLimitMinutes"`
+	AssessmentID         uint64   `json:"assessmentId"`
+	Role                 string   `json:"role"`
+	AssessmentName       string   `json:"assessmentName"`
+	UsingTimer           bool     `json:"usingTimer"`
+	TimerLimitMinutes    *float64 `json:"timerLimitMinutes"`
+	TutorialContent      *string  `json:"tutorialContent"`
+	TutorialTimerMinutes *float64 `json:"tutorialTimerMinutes"`
 }
 
 type AssessmentResponse struct {
-	AssessmentID      uint64                   `json:"assessmentId"`
-	Role              string                   `json:"role"`
-	AssessmentName    string                   `json:"assessmentName"`
-	UsingTimer        bool                     `json:"usingTimer"`
-	TimerLimitMinutes *float64                 `json:"timerLimitMinutes"`
-	Questions         []QuestionOptionResponse `json:"questions"`
+	AssessmentID         uint64                   `json:"assessmentId"`
+	Role                 string                   `json:"role"`
+	AssessmentName       string                   `json:"assessmentName"`
+	UsingTimer           bool                     `json:"usingTimer"`
+	TimerLimitMinutes    *float64                 `json:"timerLimitMinutes"`
+	TutorialContent      *string                  `json:"tutorialContent"`
+	TutorialTimerMinutes *float64                 `json:"tutorialTimerMinutes"`
+	Questions            []QuestionOptionResponse `json:"questions"`
 }
 
 type QuestionOptionResponse struct {
@@ -42,9 +46,11 @@ type QuestionOptionPublicResponse struct {
 }
 
 type AssessmentPublicResponse struct {
-	AssessmentID      uint64                         `json:"assessmentId"`
-	Role              string                         `json:"role"`
-	UsingTimer        bool                           `json:"usingTimer"`
-	TimerLimitMinutes *float64                       `json:"timerLimitMinutes"`
-	Questions         []QuestionOptionPublicResponse `json:"questions"`
+	AssessmentID         uint64                         `json:"assessmentId"`
+	Role                 string                         `json:"role"`
+	UsingTimer           bool                           `json:"usingTimer"`
+	TimerLimitMinutes    *float64                       `json:"timerLimitMinutes"`
+	TutorialContent      *string                        `json:"tutorialContent"`
+	TutorialTimerMinutes *float64                       `json:"tutorialTimerMinutes"`
+	Questions            []QuestionOptionPublicResponse `json:"questions"`
 }

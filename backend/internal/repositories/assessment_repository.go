@@ -8,6 +8,7 @@ import (
 
 type AssessmentRepository interface {
 	FindByRole(db *gorm.DB, role string) (domain.Assessment, error)
+	FindByID(db *gorm.DB, id uint64) (domain.Assessment, error)
 	Update(db *gorm.DB, assessment *domain.Assessment) error
 	Create(db *gorm.DB, assessment *domain.Assessment) error
 	FindAll(db *gorm.DB) ([]domain.Assessment, error)
@@ -27,6 +28,12 @@ func (repository *assessmentRepositoryImpl) FindByRole(db *gorm.DB, role string)
 	var assessment domain.Assessment
 	// Get the latest record for the role (highest ID)
 	err := db.Where("role = ?", role).Order("id DESC").First(&assessment).Error
+	return assessment, err
+}
+
+func (repository *assessmentRepositoryImpl) FindByID(db *gorm.DB, id uint64) (domain.Assessment, error) {
+	var assessment domain.Assessment
+	err := db.First(&assessment, id).Error
 	return assessment, err
 }
 

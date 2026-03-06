@@ -93,6 +93,8 @@ export function useGetAllAssessments() {
       assessmentName: string;
       usingTimer: boolean;
       timerLimitMinutes: number | null;
+      tutorialContent?: string | null;
+      tutorialTimerMinutes?: number | null;
     }[]
   >({
     queryKey: ["assessments"],
@@ -106,6 +108,8 @@ export function useGetAllAssessments() {
               assessmentName: string;
               usingTimer: boolean;
               timerLimitMinutes: number | null;
+              tutorialContent?: string | null;
+              tutorialTimerMinutes?: number | null;
             }[]
           >
         >(`/api/assessments`);
@@ -198,6 +202,29 @@ export function useAssignAssessment() {
   return useMutation<void, Error, { assessmentId: number; assessmentTypeId: number | null }>({
     mutationFn: async ({ assessmentId, assessmentTypeId }) => {
       await api.post("/api/assessments/assign", { assessmentId, assessmentTypeId });
+    },
+  });
+}
+
+export function useDeleteAssessment() {
+  return useMutation<void, Error, number>({
+    mutationFn: async (assessmentId: number) => {
+      await api.delete(`/api/assessments/${assessmentId}`);
+    },
+  });
+}
+
+export function useUpdateAssessmentTutorial() {
+  return useMutation<
+    void,
+    Error,
+    { assessmentId: number; tutorialContent: string | null; tutorialTimerMinutes: number }
+  >({
+    mutationFn: async ({ assessmentId, tutorialContent, tutorialTimerMinutes }) => {
+      await api.patch(`/api/assessments/${assessmentId}/tutorial`, {
+        tutorialContent,
+        tutorialTimerMinutes,
+      });
     },
   });
 }

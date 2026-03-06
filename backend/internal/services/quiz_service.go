@@ -117,11 +117,13 @@ func (service *quizServiceImpl) GetQuizData(db *gorm.DB, assessmentTypeId uint64
 		}
 
 		quizAssessments = append(quizAssessments, web.QuizAssessmentSection{
-			AssessmentID:      assessment.AssessmentID,
-			AssessmentName:    assessment.AssessmentName,
-			UsingTimer:        assessment.UsingTimer,
-			TimerLimitMinutes: &timerLimit,
-			Questions:         webQuestions,
+			AssessmentID:         assessment.AssessmentID,
+			AssessmentName:       assessment.AssessmentName,
+			UsingTimer:           assessment.UsingTimer,
+			TimerLimitMinutes:    &timerLimit,
+			TutorialContent:      assessment.TutorialContent,
+			TutorialTimerMinutes: assessment.TutorialTimerMinutes,
+			Questions:            webQuestions,
 		})
 	}
 

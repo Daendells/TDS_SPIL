@@ -8,7 +8,7 @@ import Section1 from "./section1";
 import Section2 from "./section2";
 import Section3 from "./section3";
 import Completion from "./completion";
-import AssessmentProgress from "@/components/assessment-progress";
+// import AssessmentProgress from "@/components/assessment-progress";
 import TimerDisplay from "@/components/timer-display";
 import { useCheckAssessmentTypeStatus } from "./_hooks/useAssessmentTypeStatus";
 import { useCheckSeafarerAssignment } from "./_hooks/useCheckSeafarerAssignment";
@@ -44,6 +44,10 @@ export interface ValueAssessmentData {
   section2SisaWaktu?: number;
   section3SisaWaktu?: number;
   usingTimer?: boolean;
+  // Persisted tutorial dismissal flags to survive page reload
+  section1TutorialDismissed?: boolean;
+  section2TutorialDismissed?: boolean;
+  section3TutorialDismissed?: boolean;
 }
 
 export default function ValueAssessmentPage() {
@@ -211,16 +215,6 @@ export default function ValueAssessmentPage() {
   const handleNext = () => {
     const nextStep = currentStep + 1;
     setCurrentStep(nextStep);
-
-    // Set start time for sections
-    const now = new Date().toISOString();
-    if (nextStep === 3 && !assessmentData.section1StartTime) {
-      updateAssessmentData({ section1StartTime: now });
-    } else if (nextStep === 4 && !assessmentData.section2StartTime) {
-      updateAssessmentData({ section2StartTime: now });
-    } else if (nextStep === 5 && !assessmentData.section3StartTime) {
-      updateAssessmentData({ section3StartTime: now });
-    }
 
     // Reset timer state saat pindah step (akan diatur oleh section component)
     if (nextStep >= 3 && nextStep <= 5) {
@@ -418,6 +412,17 @@ export default function ValueAssessmentPage() {
     const handleVisibilityChange = () => {
       if (document.hidden) {
         // Page tersembunyi (tab switch, minimize, dll) - pause timer
+        // Only pause if the section timer has actually started (tutorial already dismissed)
+        const currentSectionStartTime =
+          currentStep === 3
+            ? assessmentData.section1StartTime
+            : currentStep === 4
+              ? assessmentData.section2StartTime
+              : currentStep === 5
+                ? assessmentData.section3StartTime
+                : undefined;
+        if (currentStep < 3 || currentStep > 5 || !currentSectionStartTime) return;
+
         if (currentStep >= 3 && currentStep <= 5) {
           console.log("🔄 [Global Timer] Paused due to visibility change");
           const now = new Date().toISOString();
@@ -487,6 +492,17 @@ export default function ValueAssessmentPage() {
 
     const handleWindowBlur = () => {
       // Window kehilangan focus - pause timer
+      // Only pause if the section timer has actually started (tutorial already dismissed)
+      const currentSectionStartTime =
+        currentStep === 3
+          ? assessmentData.section1StartTime
+          : currentStep === 4
+            ? assessmentData.section2StartTime
+            : currentStep === 5
+              ? assessmentData.section3StartTime
+              : undefined;
+      if (currentStep < 3 || currentStep > 5 || !currentSectionStartTime) return;
+
       if (currentStep >= 3 && currentStep <= 5) {
         console.log("⏸️ [Global Timer] Paused due to window blur");
         const now = new Date().toISOString();
@@ -673,12 +689,21 @@ export default function ValueAssessmentPage() {
     }
   };
 
+  const showTimer =
+    currentStep >= 3 &&
+    currentStep <= 5 &&
+    !!(currentStep === 3
+      ? assessmentData.section1StartTime
+      : currentStep === 4
+        ? assessmentData.section2StartTime
+        : assessmentData.section3StartTime);
+
   return (
     <div className={`min-h-screen bg-gray-50 ${styles.assessmentContainer}`}>
       {isClient && (
         <>
-          {/* Timer Display - Show only during assessment sections */}
-          {currentStep >= 3 && currentStep <= 5 && (
+          {/* Timer Display - Show only during assessment sections, after tutorial is dismissed */}
+          {showTimer && (
             <TimerDisplay
               sectionName={
                 currentStep === 3
@@ -731,11 +756,11 @@ export default function ValueAssessmentPage() {
           )}
 
           {/* Progress Bar - Show only if assessment has started and on client */}
-          {isClient && (assessmentData.email || assessmentData.fullName || currentStep > 1) && (
+          {/* {isClient && (assessmentData.email || assessmentData.fullName || currentStep > 1) && (
             <div className="max-w-4xl mx-auto px-6 pt-4">
               <AssessmentProgress assessmentData={assessmentData} currentStep={currentStep} />
             </div>
-          )}
+          )} */}
           {renderCurrentStep()}
         </>
       )}

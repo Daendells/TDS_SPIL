@@ -11,6 +11,7 @@ import { CESAssessmentData } from "../types";
 import Image from "next/image";
 import { useGetAssessmentByRole, usePostCESResults } from "./_hooks/useAssessment";
 import { BASE_URL } from "../../lib/api";
+import { TutorialDisplay } from "@/components/tutorial-display";
 import { isValidImageUrl } from "@/app/assessment-manager/questions-admin";
 
 interface QuestionsProps {
@@ -31,6 +32,9 @@ export default function Questions({
   const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
   const [answers, setAnswers] = useState<{ [questionId: number]: number }>(
     assessmentData.answers ?? {}
+  );
+  const [tutorialDismissed, setTutorialDismissed] = useState(
+    assessmentData.tutorialDismissed ?? false
   );
 
   const formatRoleName = (roleSlug: string) => {
@@ -69,6 +73,13 @@ export default function Questions({
       updateAssessmentData({ usingTimer: assessment.usingTimer });
     }
   }, [assessment?.usingTimer, assessmentData.usingTimer, updateAssessmentData]);
+
+  // Set assessment start time when assessment loads and there is no tutorial to read
+  useEffect(() => {
+    if (assessment && !assessment.tutorialContent && !assessmentData.assessmentStartTime) {
+      updateAssessmentData({ assessmentStartTime: new Date().toISOString() });
+    }
+  }, [assessment, assessmentData.assessmentStartTime, updateAssessmentData]);
 
   // Stable pause/resume callbacks
   const handlePause = useCallback(() => {
@@ -208,6 +219,25 @@ export default function Questions({
           </Button>
         </div>
       </div>
+    );
+  }
+
+  if (assessment?.tutorialContent && !tutorialDismissed) {
+    return (
+      <TutorialDisplay
+        assessmentName={assessment.assessmentName}
+        content={assessment.tutorialContent}
+        timerMinutes={assessment.tutorialTimerMinutes ?? undefined}
+        onProceed={() => {
+          setTutorialDismissed(true);
+          updateAssessmentData({
+            tutorialDismissed: true,
+            ...(!assessmentData.assessmentStartTime && {
+              assessmentStartTime: new Date().toISOString(),
+            }),
+          });
+        }}
+      />
     );
   }
 

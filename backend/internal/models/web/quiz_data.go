@@ -81,9 +81,11 @@ type QuizDataResponse struct {
 
 // QuizAssessmentSection represents one assessment section in a quiz
 type QuizAssessmentSection struct {
-	AssessmentID      uint64                         `json:"assessmentId"`
-	AssessmentName    string                         `json:"assessmentName"`
-	UsingTimer        bool                           `json:"usingTimer"`
-	TimerLimitMinutes *float64                        `json:"timerLimitMinutes"`
-	Questions         []QuestionOptionPublicResponse `json:"questions"`
+	AssessmentID         uint64                         `json:"assessmentId"`
+	AssessmentName       string                         `json:"assessmentName"`
+	UsingTimer           bool                           `json:"usingTimer"`
+	TimerLimitMinutes    *float64                       `json:"timerLimitMinutes"`
+	TutorialContent      *string                        `json:"tutorialContent"`
+	TutorialTimerMinutes *float64                       `json:"tutorialTimerMinutes"`
+	Questions            []QuestionOptionPublicResponse `json:"questions"`
 }

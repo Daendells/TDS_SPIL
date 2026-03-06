@@ -7,6 +7,8 @@ export type AssessmentResponse = {
   assessmentName: string;
   usingTimer: boolean;
   timerLimitMinutes: number | null;
+  tutorialContent?: string | null;
+  tutorialTimerMinutes?: number | null;
   questions?: QuestionOptionResponse[];
 };
 
@@ -20,4 +22,6 @@ export type AssessmentPayload = {
   assessmentName?: string;
   usingTimer: boolean;
   timerLimitMinutes: number;
+  tutorialContent?: string | null;
+  tutorialTimerMinutes?: number | null;
 };

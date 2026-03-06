@@ -21,9 +21,12 @@ export interface QuestionOptionPublicResponse {
 
 export interface AssessmentPublicResponse {
   assessmentId: number;
+  assessmentName: string;
   role: string;
   usingTimer: boolean;
   timerLimitMinutes: number;
+  tutorialContent?: string | null;
+  tutorialTimerMinutes?: number | null;
   questions: QuestionOptionPublicResponse[];
 }
 
@@ -48,9 +51,12 @@ export function useGetAssessmentByRole(role: string) {
           console.log(`No assessment found for role: ${role}, returning default structure`);
           return {
             assessmentId: 0,
+            assessmentName: "",
             role: role,
             usingTimer: false,
             timerLimitMinutes: 60,
+            tutorialContent: null,
+            tutorialTimerMinutes: null,
             questions: [],
           } as AssessmentPublicResponse;
         }
