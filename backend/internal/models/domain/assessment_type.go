@@ -10,7 +10,7 @@ type AssessmentType struct {
 	MaxAttempts          *int       `gorm:"column:max_attempts" json:"maxAttempts"`
 	
 	// Scoring Configuration
-	ScoringType          string     `gorm:"column:scoring_type;default:'default';not null" json:"scoringType"` // 'default' or 'custom'
+	ScoringType          string     `gorm:"column:scoring_type;default:'default';not null" json:"scoringType"` // 'default', 'custom', or 'cfit'
 	ScoringFormula       *string    `gorm:"column:scoring_formula;type:text" json:"scoringFormula"` // Formula untuk custom scoring
 	UsePercentage        bool       `gorm:"column:use_percentage;default:true" json:"usePercentage"` // Output sebagai persentase
 

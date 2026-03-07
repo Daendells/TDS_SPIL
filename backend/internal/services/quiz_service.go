@@ -18,6 +18,26 @@ import (
 	"gorm.io/gorm"
 )
 
+// cfitScoreTable maps number of correct answers (index 0–49) to the CFIT converted score.
+var cfitScoreTable = []int{
+	38, 40, 43, 45, 47, 48, 52, 55, 57, 60,   // 0-9
+	63, 67, 70, 72, 75, 78, 81, 85, 88, 91,   // 10-19
+	94, 96, 100, 103, 106, 109, 113, 116, 119, 121, // 20-29
+	124, 128, 131, 133, 137, 140, 142, 145, 149, 152, // 30-39
+	155, 157, 161, 165, 167, 169, 173, 176, 179, 183, // 40-49
+}
+
+// cfitConvertScore converts a raw correct-answer count to the CFIT converted score.
+func cfitConvertScore(correctCount int) int {
+	if correctCount < 0 {
+		correctCount = 0
+	}
+	if correctCount >= len(cfitScoreTable) {
+		return cfitScoreTable[len(cfitScoreTable)-1]
+	}
+	return cfitScoreTable[correctCount]
+}
+
 type QuizService interface {
 	GetQuizData(db *gorm.DB, assessmentTypeId uint64) (web.QuizDataResponse, error)
 	SubmitQuiz(db *gorm.DB, request web.QuizSubmitRequest) (web.QuizAttemptResponse, error)
@@ -580,6 +600,13 @@ func (service *quizServiceImpl) calculateFinalScore(quizAttempt domain.QuizAttem
 	// Default result starts with percentage
 	var result float64 = normalizedScore
 
+	// Apply CFIT conversion table if configured
+	if assessmentType.ScoringType == "cfit" {
+		// Each correct answer contributes 100 points; divide to get the count.
+		correctCount := int(math.Round(totalScore / 100.0))
+		return cfitConvertScore(correctCount), nil
+	}
+
 	// Apply custom formula if configured
 	if assessmentType.ScoringType == "custom" && assessmentType.ScoringFormula != nil {
 		// For custom formulas, pass the actual raw scores
@@ -589,12 +616,6 @@ func (service *quizServiceImpl) calculateFinalScore(quizAttempt domain.QuizAttem
 		}
 		// If formula evaluation fails, fallback to default percentage calculation
 	}
-
-	// Apply percentage configuration
-	// if !assessmentType.UsePercentage {
-	// 	// If not using percentage, return raw score
-	// 	result = totalScore
-	// }
 
 	// Round and convert to int
 	return int(math.Round(result)), nil

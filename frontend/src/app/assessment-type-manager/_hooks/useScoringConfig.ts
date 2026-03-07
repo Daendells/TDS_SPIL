@@ -5,14 +5,14 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 export interface ScoringConfig {
   assessmentTypeId: number;
   assessmentTypeName: string;
-  scoringType: "default" | "custom";
+  scoringType: "default" | "custom" | "cfit";
   scoringFormula?: string | null;
   usePercentage: boolean;
 }
 
 export interface UpdateScoringConfigRequest {
   assessmentTypeId: number;
-  scoringType: "default" | "custom";
+  scoringType: "default" | "custom" | "cfit";
   scoringFormula?: string | null;
   usePercentage?: boolean;
 }

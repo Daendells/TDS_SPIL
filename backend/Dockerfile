@@ -19,6 +19,7 @@ COPY . .
 RUN CGO_ENABLED=0 GOOS=linux go build -o api ./cmd/api
 RUN CGO_ENABLED=0 GOOS=linux go build -o migrate ./cmd/migrate
 RUN CGO_ENABLED=0 GOOS=linux go build -o seed ./cmd/seed-csv
+RUN CGO_ENABLED=0 GOOS=linux go build -o seed-cfit ./cmd/seed-cfit
 RUN CGO_ENABLED=0 GOOS=linux go build -o clear-data ./cmd/clear-data
 
 
@@ -36,6 +37,7 @@ RUN apk --no-cache add ca-certificates curl netcat-openbsd tzdata
 COPY --from=builder /app/api .
 COPY --from=builder /app/migrate .
 COPY --from=builder /app/seed .
+COPY --from=builder /app/seed-cfit .
 COPY --from=builder /app/clear-data .
 
 # Copy entrypoint script
