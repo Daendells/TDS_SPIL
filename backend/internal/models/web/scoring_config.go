@@ -2,7 +2,7 @@ package web
 
 type UpdateScoringConfigRequest struct {
 	AssessmentTypeID uint64  `json:"assessmentTypeId" validate:"required"`
-	ScoringType      string  `json:"scoringType" validate:"required,oneof=default custom"`
+	ScoringType      string  `json:"scoringType" validate:"required,oneof=default custom cfit"`
 	ScoringFormula   *string `json:"scoringFormula"`
 	UsePercentage    *bool   `json:"usePercentage"`
 }

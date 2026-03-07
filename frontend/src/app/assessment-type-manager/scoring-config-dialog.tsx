@@ -43,7 +43,7 @@ import {
 } from "./_hooks/useScoringConfig";
 
 const FormSchema = z.object({
-  scoringType: z.enum(["default", "custom"]),
+  scoringType: z.enum(["default", "custom", "cfit"]),
   scoringFormula: z.string().optional(),
   usePercentage: z.boolean(),
 });
@@ -174,12 +174,16 @@ export default function ScoringConfigDialog({
                         <SelectContent>
                           <SelectItem value="default">Default (Persentase)</SelectItem>
                           <SelectItem value="custom">Custom (Formula)</SelectItem>
+                          <SelectItem value="cfit">CFIT (Tabel Konversi)</SelectItem>
                         </SelectContent>
                       </Select>
                       <FormDescription className="text-sm leading-relaxed">
                         <strong>Default:</strong> (score / max_score) × 100
                         <br />
                         <strong>Custom:</strong> Formula yang dapat dikustomisasi
+                        <br />
+                        <strong>CFIT:</strong> Konversi jumlah soal benar (0–49) ke skor standar
+                        CFIT
                         <br />
                         <div className="mt-2 text-xs text-gray-600">
                           <strong>Contoh Custom:</strong>{" "}
@@ -269,6 +273,87 @@ export default function ScoringConfigDialog({
                 )}
               </form>
             </Form>
+
+            {/* CFIT Conversion Table Preview */}
+            {watchScoringType === "cfit" && (
+              <Card className="border-2 border-orange-200">
+                <CardHeader className="pb-4">
+                  <CardTitle className="text-base flex items-center gap-2 text-orange-700">
+                    <Calculator className="h-4 w-4" />
+                    Tabel Konversi CFIT (50 Soal)
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-gray-600 mb-3">
+                    Jumlah soal benar akan dikonversi ke skor CFIT secara otomatis.
+                  </p>
+                  <div className="grid grid-cols-5 gap-1 text-xs">
+                    {(
+                      [
+                        [0, 38],
+                        [1, 40],
+                        [2, 43],
+                        [3, 45],
+                        [4, 47],
+                        [5, 48],
+                        [6, 52],
+                        [7, 55],
+                        [8, 57],
+                        [9, 60],
+                        [10, 63],
+                        [11, 67],
+                        [12, 70],
+                        [13, 72],
+                        [14, 75],
+                        [15, 78],
+                        [16, 81],
+                        [17, 85],
+                        [18, 88],
+                        [19, 91],
+                        [20, 94],
+                        [21, 96],
+                        [22, 100],
+                        [23, 103],
+                        [24, 106],
+                        [25, 109],
+                        [26, 113],
+                        [27, 116],
+                        [28, 119],
+                        [29, 121],
+                        [30, 124],
+                        [31, 128],
+                        [32, 131],
+                        [33, 133],
+                        [34, 137],
+                        [35, 140],
+                        [36, 142],
+                        [37, 145],
+                        [38, 149],
+                        [39, 152],
+                        [40, 155],
+                        [41, 157],
+                        [42, 161],
+                        [43, 165],
+                        [44, 167],
+                        [45, 169],
+                        [46, 173],
+                        [47, 176],
+                        [48, 179],
+                        [49, 183],
+                      ] as [number, number][]
+                    ).map(([correct, converted]) => (
+                      <div
+                        key={correct}
+                        className="flex justify-between bg-orange-50 border border-orange-100 rounded px-2 py-1"
+                      >
+                        <span className="font-medium text-orange-800">{correct}</span>
+                        <span className="text-orange-600">→ {converted}</span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Formula Testing */}
             {watchScoringType === "custom" && watchFormula && (

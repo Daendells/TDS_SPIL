@@ -1820,17 +1820,7 @@ export default function MasterPage({
                     const score = getScoreForAssessmentType(row, assessmentTypeName);
                     return (
                       <TableCell key={assessmentTypeName} className="text-center">
-                        <span
-                          className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${
-                            score >= 80
-                              ? "bg-green-100 text-green-700"
-                              : score >= 60
-                                ? "bg-yellow-100 text-yellow-700"
-                                : score > 0
-                                  ? "bg-red-100 text-red-700"
-                                  : "bg-gray-100 text-gray-400"
-                          }`}
-                        >
+                        <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full`}>
                           {score > 0 ? score : "-"}
                         </span>
                       </TableCell>

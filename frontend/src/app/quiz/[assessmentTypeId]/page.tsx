@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useGetQuizData, useSubmitQuiz, QuizAnswerSubmit } from "../_hooks/useQuiz";
 import {
@@ -52,6 +52,11 @@ export default function QuizPage() {
 
   // Track which quiz sections have had their tutorial dismissed
   const [tutorialDismissed, setTutorialDismissed] = useState<Record<number, boolean>>({});
+
+  // Timer state (per section)
+  const [timerSecondsLeft, setTimerSecondsLeft] = useState<number | null>(null);
+  const timerIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const timerExpiredRef = useRef<Record<number, boolean>>({});
 
   // localStorage key with expiry 3 days
   const STORAGE_KEY = `quizFormData_${assessmentTypeId}`;
@@ -211,6 +216,14 @@ export default function QuizPage() {
     totalQuizSteps,
   ]);
 
+  const formatTimerTime = (seconds: number): string => {
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    if (h > 0) return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
   const handleGreetingsNext = (data: { email: string; consent: boolean }) => {
     setEmail(data.email);
     setCurrentStep(1); // Move to quiz sections
@@ -307,7 +320,7 @@ export default function QuizPage() {
     window.scrollTo(0, 0);
   }, [quizStepIndex]);
 
-  const handleNext = () => {
+  const handleNext = useCallback(() => {
     if (currentStep < totalQuizSteps - 1) {
       setCurrentStep((prev) => prev + 1);
       window.scrollTo(0, 0);
@@ -315,7 +328,8 @@ export default function QuizPage() {
       // Last quiz section, submit
       handleSubmit();
     }
-  };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentStep, totalQuizSteps]);
 
   const handlePrev = () => {
     if (currentStep > 1) {
@@ -329,10 +343,75 @@ export default function QuizPage() {
   const clearStoredData = () => {
     try {
       window.localStorage.removeItem(STORAGE_KEY);
+      // Clear all section timer keys
+      const assessmentCount = quizData?.assessments?.length ?? 0;
+      for (let i = 0; i < assessmentCount; i++) {
+        window.localStorage.removeItem(`quizTimer_${assessmentTypeId}_${i}`);
+      }
     } catch (error) {
       console.warn("Error clearing stored data:", error);
     }
   };
+
+  // Initialize/restore section timer when entering a section
+
+  useEffect(() => {
+    if (!currentAssessment?.usingTimer || !currentAssessment?.timerLimitMinutes) {
+      setTimerSecondsLeft(null);
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      return;
+    }
+
+    // Wait until tutorial is dismissed (if there is one)
+    const hasTutorial = !!currentAssessment.tutorialContent;
+    if (hasTutorial && !tutorialDismissed[quizStepIndex]) {
+      setTimerSecondsLeft(null);
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+      return;
+    }
+
+    const timerKey = `quizTimer_${assessmentTypeId}_${quizStepIndex}`;
+    const existing = window.localStorage.getItem(timerKey);
+    let expiresAt: number;
+
+    if (existing) {
+      const data = JSON.parse(existing) as { expiresAt: number };
+      expiresAt = data.expiresAt;
+    } else {
+      expiresAt = Date.now() + currentAssessment.timerLimitMinutes * 60 * 1000;
+      window.localStorage.setItem(timerKey, JSON.stringify({ value: true, expiresAt }));
+    }
+
+    const updateTimer = () => {
+      const remaining = Math.max(0, Math.floor((expiresAt - Date.now()) / 1000));
+      setTimerSecondsLeft(remaining);
+      if (remaining <= 0 && timerIntervalRef.current) {
+        clearInterval(timerIntervalRef.current);
+      }
+    };
+
+    updateTimer();
+    if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    timerIntervalRef.current = setInterval(updateTimer, 1000);
+
+    return () => {
+      if (timerIntervalRef.current) clearInterval(timerIntervalRef.current);
+    };
+  }, [quizStepIndex, tutorialDismissed, currentAssessment, assessmentTypeId]);
+
+  // Auto-proceed/submit when timer expires
+  useEffect(() => {
+    if (
+      timerSecondsLeft === 0 &&
+      currentAssessment?.usingTimer &&
+      !timerExpiredRef.current[quizStepIndex] &&
+      (currentAssessment?.questions?.length ?? 0) > 0
+    ) {
+      timerExpiredRef.current[quizStepIndex] = true;
+      toast.warning("Waktu habis! Melanjutkan otomatis.");
+      handleNext();
+    }
+  }, [timerSecondsLeft, currentAssessment, quizStepIndex, handleNext]);
 
   const handleSubmit = async () => {
     const payload = {
@@ -579,6 +658,38 @@ export default function QuizPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      {/* Floating Timer - sama seperti value-assessment */}
+      {currentAssessment?.usingTimer && timerSecondsLeft !== null && (
+        <div className="fixed top-4 right-4 z-50 p-4 rounded-lg border-2 shadow-lg bg-blue-50 border-blue-200">
+          <div className="mb-2 text-xs font-medium text-gray-600">
+            {currentAssessment.assessmentName}
+            <span className="ml-2 text-gray-500">
+              (Durasi: {currentAssessment.timerLimitMinutes} menit)
+            </span>
+          </div>
+          <div className="flex items-center space-x-3">
+            <div className="flex items-center space-x-2">
+              <div
+                className={`w-3 h-3 rounded-full ${
+                  timerSecondsLeft > 0 ? "bg-blue-500 animate-pulse" : "bg-gray-400"
+                }`}
+              />
+              <span className="text-sm font-medium text-gray-700">
+                {timerSecondsLeft > 0 ? "Timer Aktif" : "Timer Selesai"}
+              </span>
+            </div>
+            <div className="text-2xl font-mono font-bold text-blue-600">
+              {formatTimerTime(timerSecondsLeft)}
+            </div>
+          </div>
+          {timerSecondsLeft <= 300 && timerSecondsLeft > 0 && (
+            <div className="mt-2 text-xs text-blue-800 font-medium animate-pulse">
+              ⚠️ Waktu hampir habis!
+            </div>
+          )}
+        </div>
+      )}
+
       <div className="max-w-6xl mx-auto px-6">
         {/* Header Section */}
         <div className="bg-white rounded-lg shadow-sm border p-8 mb-3">
