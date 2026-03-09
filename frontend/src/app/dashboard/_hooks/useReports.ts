@@ -23,9 +23,9 @@ export const reportKeys = {
 };
 
 // React Query hook for fetching IDP (Integrated Development Programs) count
-export function useGetIdpCount(batchId?: number | null) {
+export function useGetIdpCount(batchId?: number | null, query?: string) {
   const response = useQuery<IdpCountData, Error>({
-    queryKey: reportKeys.idpCount(batchId),
+    queryKey: [...reportKeys.idpCount(batchId), query ?? ""],
     queryFn: async () => {
       // Add required Page and PageSize parameters matching DashboardRequest structure
       const params = new URLSearchParams({
@@ -35,6 +35,9 @@ export function useGetIdpCount(batchId?: number | null) {
       });
       if (batchId !== undefined && batchId !== null) {
         params.set("batch_id", String(batchId));
+      }
+      if (query) {
+        params.set("query", query);
       }
       const response = await api.get<ApiResponse<IdpCountData>>(
         `/reports/idp-count?${params.toString()}`
@@ -70,13 +73,20 @@ export function useGetReports(paginationRequest: IPaginationRequest) {
     queryKey: reportKeys.paginated(paginationRequest),
     queryFn: async () => {
       try {
+        const params: Record<string, string> = {
+          anchor_id: (paginationRequest.anchorId ?? 0).toString(),
+          page: paginationRequest.page,
+          page_size: String(paginationRequest.pageSize),
+          filter: paginationRequest.filter,
+        };
+        if (paginationRequest.batchId !== undefined && paginationRequest.batchId !== null) {
+          params.batch_id = String(paginationRequest.batchId);
+        }
+        if (paginationRequest.query) {
+          params.query = paginationRequest.query;
+        }
         const response = await api.get<ApiResponse<IPaginationData<IReport>>>(`/reports`, {
-          params: {
-            anchor_id: (paginationRequest.anchorId ?? 0).toString(),
-            page: paginationRequest.page,
-            page_size: paginationRequest.pageSize,
-            filter: paginationRequest.filter,
-          },
+          params,
         });
 
         if (!response.data) {

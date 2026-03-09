@@ -12,6 +12,7 @@ import (
 	"time"
 
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 const csvDir = "cmd/seed-csv/data"
@@ -616,7 +617,11 @@ func seedGapCompetenciesFromCSV(db *gorm.DB, filePath string) error {
 			GapLevel:         parseString(record[3]),
 			Priority:         parseInt(record[4]),
 		}
-		if err := db.FirstOrCreate(&gap, domain.GapCompetency{ID: gap.ID}).Error; err != nil {
+		// Use ON DUPLICATE KEY UPDATE to respect unique constraint on (report_id, competency_type_id)
+		if err := db.Clauses(clause.OnConflict{
+			Columns:   []clause.Column{{Name: "report_id"}, {Name: "competency_type_id"}},
+			DoUpdates: clause.AssignmentColumns([]string{"gap_level", "priority", "updated_at"}),
+		}).Create(&gap).Error; err != nil {
 			return err
 		}
 	}

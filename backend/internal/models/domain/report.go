@@ -4,7 +4,7 @@ import "time"
 
 type Report struct {
 	ID           int    `json:"id" gorm:"column:id;primaryKey"`
-	SeamanCode   string `json:"seamanCode" gorm:"column:seaman_code"`
+	SeamanCode   string `json:"seamanCode" gorm:"column:seaman_code;uniqueIndex:idx_seaman_code"`
 	SeafarerCode string `json:"seafarerCode" gorm:"column:seafarer_code"`
 	Nama         string `json:"nama" gorm:"column:nama"`
 	IDP          string `json:"idp" gorm:"column:idp"`

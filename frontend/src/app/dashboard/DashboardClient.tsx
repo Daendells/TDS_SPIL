@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -15,6 +15,7 @@ import { ChevronLeftIcon, ChevronRightIcon } from "lucide-react";
 import CardCompetence from "@/components/card-competence";
 import { IReport, IPaginationRequest, PageType } from "@/types/global-types";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { SkeletonCard } from "@/components/skeleton-card";
 import { useGetIdpCount, useGetReports } from "./_hooks/useReports";
@@ -27,11 +28,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Batch } from "../master-report/_hooks/useBatch";
+import { useDebounce } from "use-debounce";
 
 const PAGE_SIZES = [10, 20, 50, 100];
 
 export default function DashboardClient() {
   const router = useRouter();
+
+  // Search state
+  const [searchQuery, setSearchQuery] = useState("");
+  const [debouncedQuery] = useDebounce(searchQuery, 500);
 
   // Pagination request state
   const [paginationRequest, setPaginationRequest] = useState<IPaginationRequest>({
@@ -42,8 +48,18 @@ export default function DashboardClient() {
     batchId: undefined,
   });
 
+  // Reset pagination when search query changes
+  useEffect(() => {
+    setPaginationRequest((prev) => ({
+      ...prev,
+      anchorId: 0,
+      page: "next",
+      query: debouncedQuery || undefined,
+    }));
+  }, [debouncedQuery]);
+
   // React Query hooks for fetching data
-  const { data: idpCountData, error: idpCountError } = useGetIdpCount(paginationRequest.batchId);
+  const { data: idpCountData, error: idpCountError } = useGetIdpCount(paginationRequest.batchId, debouncedQuery);
   const { batches: batchData } = useBatches();
 
   const {
@@ -205,6 +221,14 @@ export default function DashboardClient() {
             <span className="text-sm text-muted-foreground whitespace-nowrap">Batch</span>
           </div>
         </div>
+
+        {/* Search Bar — right side */}
+        <Input
+          placeholder="Search by Name or Seafarer Code..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="w-[280px] bg-white shadow-sm"
+        />
       </div>
 
       {/* TABLE */}

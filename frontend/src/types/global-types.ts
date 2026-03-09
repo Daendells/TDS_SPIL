@@ -115,6 +115,7 @@ export interface IPaginationRequest {
   pageSize: number;
   filter: FilterType;
   batchId?: number | null;
+  query?: string;
 }
 
 export interface IUser {

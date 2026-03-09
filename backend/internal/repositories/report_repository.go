@@ -140,6 +140,13 @@ func (r *ReportRepository) SelectAll(db *gorm.DB, filter *web.DashboardRequest, 
 		queryBuilder.WriteString(" AND batch_id IS NULL")
 	}
 
+	// Search Filter
+	if filter.Query != "" {
+		q := strings.ToLower(filter.Query)
+		queryBuilder.WriteString(" AND (LOWER(nama) LIKE ? OR seafarer_code LIKE ?)")
+		args = append(args, "%"+q+"%", "%"+filter.Query+"%")
+	}
+
 	// Order + limit
 	var orderCondition string
 	if filter.Page == "next" {
@@ -178,6 +185,12 @@ func (r *ReportRepository) IDPCount(db *gorm.DB, filter *web.DashboardRequest, d
 		args = append(args, filter.BatchID)
 	} else if (filter != nil && filter.BatchID == -1) {
 		queryBuilder.WriteString(" AND batch_id IS NULL")
+	}
+
+	if filter != nil && filter.Query != "" {
+		q := strings.ToLower(filter.Query)
+		queryBuilder.WriteString(" AND (LOWER(nama) LIKE ? OR seafarer_code LIKE ?)")
+		args = append(args, "%"+q+"%", "%"+filter.Query+"%")
 	}
 
 	if err := db.Raw(queryBuilder.String(), args...).Scan(data).Error; err != nil {

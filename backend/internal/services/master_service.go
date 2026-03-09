@@ -18,6 +18,7 @@ import (
 	"github.com/go-playground/validator/v10"
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 // MasterService provides business logic for master report operations
@@ -851,9 +852,12 @@ func (s *MasterService) Update(id uint, request *web.UpdateMasterRequest) (*web.
 					})
 				}
 
-				// Bulk insert
+				// Bulk insert with ON DUPLICATE KEY UPDATE to prevent constraint violations
 				if len(newGapCompetencies) > 0 {
-					if err := tx.Create(&newGapCompetencies).Error; err != nil {
+					if err := tx.Clauses(clause.OnConflict{
+						Columns:   []clause.Column{{Name: "report_id"}, {Name: "competency_type_id"}},
+						DoUpdates: clause.AssignmentColumns([]string{"updated_at"}),
+					}).Create(&newGapCompetencies).Error; err != nil {
 						s.Log.WithError(err).Error("failed to create gap competencies")
 						return fmt.Errorf("failed to create gap competencies: %w", err)
 					}

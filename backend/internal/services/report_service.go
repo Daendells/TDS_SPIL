@@ -18,6 +18,7 @@ import (
 	"github.com/sirupsen/logrus"
 	"github.com/xuri/excelize/v2"
 	"gorm.io/gorm"
+	"gorm.io/gorm/clause"
 )
 
 type ReportService struct {
@@ -507,7 +508,7 @@ func (service *ReportService) processGapCompetencies(db *gorm.DB, reports *[]dom
 				continue
 			}
 
-			// Create gap competency record
+			// Create gap competency record with ON DUPLICATE KEY UPDATE to prevent duplicates
 			gapCompetency := domain.GapCompetency{
 				ReportID:         report.ID,
 				CompetencyTypeID: competencyType.ID,
@@ -515,8 +516,11 @@ func (service *ReportService) processGapCompetencies(db *gorm.DB, reports *[]dom
 				Priority:         1,
 			}
 
-			// Create new gap competency
-			if err := db.Create(&gapCompetency).Error; err != nil {
+			// Use Clauses to handle duplicate (report_id, competency_type_id) gracefully
+			if err := db.Clauses(clause.OnConflict{
+				Columns:   []clause.Column{{Name: "report_id"}, {Name: "competency_type_id"}},
+				DoUpdates: clause.AssignmentColumns([]string{"updated_at"}),
+			}).Create(&gapCompetency).Error; err != nil {
 				service.Log.Warnf("Failed to create gap competency for report ID %d, competency '%s': %v", report.ID, code, err)
 				continue
 			}

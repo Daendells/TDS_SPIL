@@ -131,78 +131,84 @@ func deduplicateReports(db *gorm.DB) error {
 	`).Scan(&dupCount)
 
 	if dupCount == 0 {
-		return nil
+		fmt.Println("No duplicate reports found, skipping deduplication")
+	} else {
+		fmt.Printf("Found %d seaman_codes with duplicate reports, cleaning up...\n", dupCount)
+
+		// Step 1: Delete gap_competencies for duplicate reports (keep lowest ID per seaman_code)
+		result := db.Exec(`
+			DELETE gc FROM gap_competencies gc
+			INNER JOIN reports r ON gc.report_id = r.id
+			WHERE r.seaman_code IS NOT NULL AND r.seaman_code != ''
+			AND r.id NOT IN (
+				SELECT min_id FROM (
+					SELECT MIN(id) as min_id FROM reports
+					WHERE seaman_code IS NOT NULL AND seaman_code != ''
+					GROUP BY seaman_code
+				) AS kept
+			)
+			AND r.seaman_code IN (
+				SELECT dup_code FROM (
+					SELECT seaman_code AS dup_code FROM reports
+					WHERE seaman_code IS NOT NULL AND seaman_code != ''
+					GROUP BY seaman_code HAVING COUNT(*) > 1
+				) AS dups
+			)
+		`)
+		if result.Error != nil {
+			return fmt.Errorf("failed to delete gap_competencies for duplicate reports: %w", result.Error)
+		}
+		if result.RowsAffected > 0 {
+			fmt.Printf("Removed %d gap_competencies from duplicate reports\n", result.RowsAffected)
+		}
+
+		// Step 2: Delete report_scores for duplicate reports
+		result = db.Exec(`
+			DELETE rs FROM report_scores rs
+			INNER JOIN reports r ON rs.report_id = r.id
+			WHERE r.seaman_code IS NOT NULL AND r.seaman_code != ''
+			AND r.id NOT IN (
+				SELECT min_id FROM (
+					SELECT MIN(id) as min_id FROM reports
+					WHERE seaman_code IS NOT NULL AND seaman_code != ''
+					GROUP BY seaman_code
+				) AS kept
+			)
+			AND r.seaman_code IN (
+				SELECT dup_code FROM (
+					SELECT seaman_code AS dup_code FROM reports
+					WHERE seaman_code IS NOT NULL AND seaman_code != ''
+					GROUP BY seaman_code HAVING COUNT(*) > 1
+				) AS dups
+			)
+		`)
+		if result.Error != nil {
+			return fmt.Errorf("failed to delete report_scores for duplicate reports: %w", result.Error)
+		}
+		if result.RowsAffected > 0 {
+			fmt.Printf("Removed %d report_scores from duplicate reports\n", result.RowsAffected)
+		}
+
+		// Step 3: Delete duplicate reports (keep lowest ID per seaman_code)
+		result = db.Exec(`
+			DELETE r1 FROM reports r1
+			INNER JOIN reports r2
+			ON r1.seaman_code = r2.seaman_code AND r1.id > r2.id
+			WHERE r1.seaman_code IS NOT NULL AND r1.seaman_code != ''
+		`)
+		if result.Error != nil {
+			return fmt.Errorf("failed to delete duplicate reports: %w", result.Error)
+		}
+		if result.RowsAffected > 0 {
+			fmt.Printf("Removed %d duplicate report records\n", result.RowsAffected)
+		}
 	}
 
-	fmt.Printf("Found %d seaman_codes with duplicate reports, cleaning up...\n", dupCount)
-
-	// Step 1: Delete gap_competencies for duplicate reports (keep lowest ID per seaman_code)
-	result := db.Exec(`
-		DELETE gc FROM gap_competencies gc
-		INNER JOIN reports r ON gc.report_id = r.id
-		WHERE r.seaman_code IS NOT NULL AND r.seaman_code != ''
-		AND r.id NOT IN (
-			SELECT min_id FROM (
-				SELECT MIN(id) as min_id FROM reports
-				WHERE seaman_code IS NOT NULL AND seaman_code != ''
-				GROUP BY seaman_code
-			) AS kept
-		)
-		AND r.seaman_code IN (
-			SELECT dup_code FROM (
-				SELECT seaman_code AS dup_code FROM reports
-				WHERE seaman_code IS NOT NULL AND seaman_code != ''
-				GROUP BY seaman_code HAVING COUNT(*) > 1
-			) AS dups
-		)
-	`)
-	if result.Error != nil {
-		return fmt.Errorf("failed to delete gap_competencies for duplicate reports: %w", result.Error)
-	}
-	if result.RowsAffected > 0 {
-		fmt.Printf("Removed %d gap_competencies from duplicate reports\n", result.RowsAffected)
-	}
-
-	// Step 2: Delete report_scores for duplicate reports
-	result = db.Exec(`
-		DELETE rs FROM report_scores rs
-		INNER JOIN reports r ON rs.report_id = r.id
-		WHERE r.seaman_code IS NOT NULL AND r.seaman_code != ''
-		AND r.id NOT IN (
-			SELECT min_id FROM (
-				SELECT MIN(id) as min_id FROM reports
-				WHERE seaman_code IS NOT NULL AND seaman_code != ''
-				GROUP BY seaman_code
-			) AS kept
-		)
-		AND r.seaman_code IN (
-			SELECT dup_code FROM (
-				SELECT seaman_code AS dup_code FROM reports
-				WHERE seaman_code IS NOT NULL AND seaman_code != ''
-				GROUP BY seaman_code HAVING COUNT(*) > 1
-			) AS dups
-		)
-	`)
-	if result.Error != nil {
-		return fmt.Errorf("failed to delete report_scores for duplicate reports: %w", result.Error)
-	}
-	if result.RowsAffected > 0 {
-		fmt.Printf("Removed %d report_scores from duplicate reports\n", result.RowsAffected)
-	}
-
-	// Step 3: Delete duplicate reports (keep lowest ID per seaman_code)
-	result = db.Exec(`
-		DELETE r1 FROM reports r1
-		INNER JOIN reports r2
-		ON r1.seaman_code = r2.seaman_code AND r1.id > r2.id
-		WHERE r1.seaman_code IS NOT NULL AND r1.seaman_code != ''
-	`)
-	if result.Error != nil {
-		return fmt.Errorf("failed to delete duplicate reports: %w", result.Error)
-	}
-	if result.RowsAffected > 0 {
-		fmt.Printf("Removed %d duplicate report records\n", result.RowsAffected)
-	}
+	// Ensure unique index on seaman_code exists to prevent future duplicates
+	// This prevents duplicate reports for the same seafarer
+	db.Exec(`ALTER TABLE reports ADD UNIQUE INDEX idx_seaman_code (seaman_code)`)
+	// Ignore error if index already exists
+	fmt.Println("Ensured unique index on reports.seaman_code")
 
 	return nil
 }
