@@ -13,13 +13,13 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
-import { Edit, AlertCircle, Plus, ExternalLink, Calculator } from "lucide-react";
+import { Edit, AlertCircle, Plus, Calculator, Copy } from "lucide-react";
 import { useGetAllAssessmentTypes, AssessmentType } from "./_hooks/useAssessmentType";
 import AssessmentTypeEditDialog from "./assessment-type-edit-dialog";
 import AssessmentAssignmentDialog from "./assessment-assignment-dialog";
 import ScoringConfigDialog from "./scoring-config-dialog";
 import Image from "next/image";
-import Link from "next/link";
+import { toast } from "sonner";
 
 export default function AssessmentTypeAdmin() {
   const [editDialogOpen, setEditDialogOpen] = useState(false);
@@ -82,15 +82,35 @@ export default function AssessmentTypeAdmin() {
     return now >= start && now <= end;
   };
 
-  const getAssessmentLink = (name: string, id: number) => {
+  const getAssessmentLink = (name: string, id: number, audience: "crew" | "new_recruiter") => {
     const lowerName = name.trim().toLowerCase();
+
     if (lowerName === "value assessment") {
-      return "/value-assessment";
+      return audience === "new_recruiter" ? "/new-recruiter/value-assessment" : "/value-assessment";
     }
     if (lowerName === "ces") {
-      return "/crew-evaluation-system";
+      return audience === "new_recruiter"
+        ? "/new-recruiter/crew-value-assessment"
+        : "/crew-evaluation-system";
     }
-    return `/quiz/${id}`;
+    return audience === "new_recruiter" ? `/new-recruiter/quiz/${id}` : `/quiz/${id}`;
+  };
+
+  const isTemplateAssessmentLink = (path: string) => path.includes("[role]");
+
+  const handleCopyLink = async (
+    assessmentType: AssessmentType,
+    audience: "crew" | "new_recruiter"
+  ) => {
+    const path = getAssessmentLink(assessmentType.assessmentTypeName, assessmentType.id, audience);
+    const fullUrl = typeof window !== "undefined" ? `${window.location.origin}${path}` : path;
+
+    try {
+      await navigator.clipboard.writeText(fullUrl);
+      toast.success(`Link ${audience === "crew" ? "crew" : "new recruiter"} berhasil disalin`);
+    } catch {
+      toast.error("Gagal menyalin link assessment");
+    }
   };
 
   return (
@@ -168,6 +188,19 @@ export default function AssessmentTypeAdmin() {
                 </TableHeader>
                 <TableBody>
                   {assessmentTypes.map((assessmentType) => {
+                    const crewLink = getAssessmentLink(
+                      assessmentType.assessmentTypeName,
+                      assessmentType.id,
+                      "crew"
+                    );
+                    const newRecruiterLink = getAssessmentLink(
+                      assessmentType.assessmentTypeName,
+                      assessmentType.id,
+                      "new_recruiter"
+                    );
+                    const crewIsTemplate = isTemplateAssessmentLink(crewLink);
+                    const newRecruiterIsTemplate = isTemplateAssessmentLink(newRecruiterLink);
+
                     const isActive = isAssessmentActive(
                       assessmentType.startTime,
                       assessmentType.endTime
@@ -182,19 +215,49 @@ export default function AssessmentTypeAdmin() {
                         <TableCell className="font-medium">
                           {assessmentType.assessmentTypeName}
                         </TableCell>
-                        <TableCell>
-                          <Button variant="outline" size="sm" className="h-8 gap-2" asChild>
-                            <Link
-                              href={getAssessmentLink(
-                                assessmentType.assessmentTypeName,
-                                assessmentType.id
-                              )}
-                              target="_blank"
-                            >
-                              Buka
-                              <ExternalLink className="h-3 w-3" />
-                            </Link>
-                          </Button>
+                        <TableCell className="min-w-[180px]">
+                          <div className="space-y-2">
+                            <div className="flex items-center gap-3">
+                              <Badge
+                                variant="outline"
+                                className="min-w-24 justify-center bg-slate-50 text-xs"
+                              >
+                                Crew
+                              </Badge>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-2"
+                                onClick={() => handleCopyLink(assessmentType, "crew")}
+                              >
+                                <Copy className="h-3 w-3" />
+                                Copy
+                              </Button>
+                            </div>
+
+                            <div className="flex items-center gap-3">
+                              <Badge
+                                variant="outline"
+                                className="min-w-24 justify-center bg-slate-50 text-xs"
+                              >
+                                New Recruiter
+                              </Badge>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="h-8 gap-2"
+                                onClick={() => handleCopyLink(assessmentType, "new_recruiter")}
+                              >
+                                <Copy className="h-3 w-3" />
+                                Copy
+                              </Button>
+                            </div>
+                          </div>
+                          {(crewIsTemplate || newRecruiterIsTemplate) && (
+                            <p className="mt-2 text-xs text-slate-500">
+                              Ganti <span className="font-mono">[role]</span> untuk link CES.
+                            </p>
+                          )}
                         </TableCell>
                         <TableCell>{formatDate(assessmentType.startTime)}</TableCell>
                         <TableCell>{formatDate(assessmentType.endTime)}</TableCell>

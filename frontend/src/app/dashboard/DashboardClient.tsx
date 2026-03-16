@@ -59,7 +59,10 @@ export default function DashboardClient() {
   }, [debouncedQuery]);
 
   // React Query hooks for fetching data
-  const { data: idpCountData, error: idpCountError } = useGetIdpCount(paginationRequest.batchId, debouncedQuery);
+  const { data: idpCountData, error: idpCountError } = useGetIdpCount(
+    paginationRequest.batchId,
+    debouncedQuery
+  );
   const { batches: batchData } = useBatches();
 
   const {

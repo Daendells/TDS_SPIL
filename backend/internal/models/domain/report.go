@@ -3,16 +3,16 @@ package domain
 import "time"
 
 type Report struct {
-	ID           int    `json:"id" gorm:"column:id;primaryKey"`
-	SeamanCode   string `json:"seamanCode" gorm:"column:seaman_code;uniqueIndex:idx_seaman_code"`
-	SeafarerCode string `json:"seafarerCode" gorm:"column:seafarer_code"`
-	Nama         string `json:"nama" gorm:"column:nama"`
-	IDP          string `json:"idp" gorm:"column:idp"`
-	Jabatan      string `json:"jabatan" gorm:"column:jabatan"`
-	VesselName   string `json:"vesselName" gorm:"column:vessel_name"`
-	Certificate  string `json:"certificate" gorm:"column:certificate"`
-	Age          string `json:"age" gorm:"column:age"`
-	TanggalLahir string `json:"tanggalLahir" gorm:"column:tanggal_lahir"`
+	ID           int        `json:"id" gorm:"column:id;primaryKey"`
+	SeamanCode   string     `json:"seamanCode" gorm:"column:seaman_code;type:varchar(50);not null;uniqueIndex:idx_seaman_code"`
+	SeafarerCode string     `json:"seafarerCode" gorm:"column:seafarer_code"`
+	Nama         string     `json:"nama" gorm:"column:nama"`
+	IDP          string     `json:"idp" gorm:"column:idp"`
+	Jabatan      string     `json:"jabatan" gorm:"column:jabatan"`
+	VesselName   string     `json:"vesselName" gorm:"column:vessel_name"`
+	Certificate  string     `json:"certificate" gorm:"column:certificate"`
+	Age          string     `json:"age" gorm:"column:age"`
+	TanggalLahir string     `json:"tanggalLahir" gorm:"column:tanggal_lahir"`
 	StartDate    *time.Time `json:"startDate" gorm:"column:start_date;type:date"`
 
 	// Catatan Indisipliner
@@ -60,15 +60,15 @@ type Report struct {
 	IDPMentor string `json:"idpMentor" gorm:"column:idp_mentor"`
 	IDPCoach  string `json:"idpCoach" gorm:"column:idp_coach"`
 
-	CreatedAt                  *time.Time `json:"createdAt" gorm:"column:created_at"`
-	UpdatedAt                  *time.Time `json:"updatedAt" gorm:"column:updated_at"`
-	User                       string `json:"user" gorm:"column:user"`
-	ReadinessMonth             *int   `json:"readinessMonth" gorm:"column:readiness_month"`
-	EducationFulfillmentMonths *int   `json:"educationFulfillmentMonths" gorm:"column:education_fulfillment_months"`
-	TotalReadinessUpdateMonths *int   `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness_update_months"`
-	Keterangan                 string `json:"keterangan" gorm:"column:keterangan"`
-	TMNM                       string `json:"tmnm" gorm:"column:tm_nm"`
-	ReportScores               []ReportScore   `json:"reportScores,omitempty" gorm:"foreignKey:ReportID"`
-	BatchID                    *int            `json:"batchId" gorm:"column:batch_id"`
-	Batch                      *Batch          `json:"batch,omitempty" gorm:"foreignKey:BatchID;references:ID"`
+	CreatedAt                  *time.Time    `json:"createdAt" gorm:"column:created_at"`
+	UpdatedAt                  *time.Time    `json:"updatedAt" gorm:"column:updated_at"`
+	User                       string        `json:"user" gorm:"column:user"`
+	ReadinessMonth             *int          `json:"readinessMonth" gorm:"column:readiness_month"`
+	EducationFulfillmentMonths *int          `json:"educationFulfillmentMonths" gorm:"column:education_fulfillment_months"`
+	TotalReadinessUpdateMonths *int          `json:"totalReadinessUpdateMonths" gorm:"column:total_readiness_update_months"`
+	Keterangan                 string        `json:"keterangan" gorm:"column:keterangan"`
+	TMNM                       string        `json:"tmnm" gorm:"column:tm_nm"`
+	ReportScores               []ReportScore `json:"reportScores,omitempty" gorm:"foreignKey:ReportID"`
+	BatchID                    *int          `json:"batchId" gorm:"column:batch_id"`
+	Batch                      *Batch        `json:"batch,omitempty" gorm:"foreignKey:BatchID;references:ID"`
 }

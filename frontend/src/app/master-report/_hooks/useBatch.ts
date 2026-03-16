@@ -8,6 +8,8 @@ type ApiError = { response?: { data?: { error?: string } } };
 export interface Batch {
   id: number;
   batchNo: number;
+  batchName: string;
+  type: string;
   startDate: string;
   endDate: string;
   status: string;
@@ -15,22 +17,25 @@ export interface Batch {
   reportCount: number;
 }
 
-export function useBatches() {
-  const { data, error, isLoading } = useSWR<Batch[]>("/api/batches", async (url: string) => {
+export function useBatches(batchType = "crew") {
+  const key = `/api/batches?type=${batchType}`;
+  const { data, error, isLoading } = useSWR<Batch[]>(key, async (url: string) => {
     const res = await api.get(url);
     return res.data.data;
   });
 
   const [creating, setCreating] = useState(false);
 
-  const createBatch = async (startDate: Date, endDate: Date) => {
+  const createBatch = async (batchName: string, startDate: Date, endDate: Date) => {
     setCreating(true);
     try {
       await api.post("/api/batches", {
+        type: batchType,
+        batchName,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
       });
-      await mutate("/api/batches");
+      await mutate(key);
       toast.success("Batch created successfully!");
       return true;
     } catch (err: unknown) {

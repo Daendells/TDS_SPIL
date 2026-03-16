@@ -1,11 +1,12 @@
 "use client";
 
 import * as React from "react";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import Image from "next/image";
 import { Separator } from "@radix-ui/react-separator";
+import { api } from "@/app/lib/api";
 
 import {
   Command,
@@ -54,8 +55,7 @@ import { useMasterReportUI } from "./_hooks/useMasterReportUI";
 import { useGetAllAssessmentTypes } from "./_hooks/useAssessmentType";
 import type { IReport, SeamanLookup } from "@/types/global-types";
 import { useAvailableSeamen } from "./_hooks/useAvailableSeamen";
-import { useBatches } from "./_hooks/useBatch";
-import { format } from "date-fns";
+import { useBatches, type Batch } from "./_hooks/useBatch";
 
 import {
   Select,
@@ -64,6 +64,27 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
+
+type ReportPickerState = {
+  items: IReport[];
+  query: string;
+  anchorId: number | null;
+  hasMore: boolean;
+  isLoading: boolean;
+  isLoadingMore: boolean;
+};
+
+const EMPTY_REPORT_PICKER: ReportPickerState = {
+  items: [],
+  query: "",
+  anchorId: 0,
+  hasMore: true,
+  isLoading: false,
+  isLoadingMore: false,
+};
+
+const REPORT_PICKER_PAGE_SIZE = 20;
 
 /* Dynamic sticky offset calculator */
 function useDynamicStickyOffsets(ref: React.RefObject<HTMLDivElement | null>, pinnedCount = 2) {
@@ -114,8 +135,9 @@ export default function MasterPage({
   // Bulk assign to batch dialog state
   const [bulkAssignBatchOpen, setBulkAssignBatchOpen] = useState(false);
   const [selectedBatchForAssign, setSelectedBatchForAssign] = useState<string>("");
-  // Global select-all state (Gmail-style: selects across all pages)
   const [selectAllGlobal, setSelectAllGlobal] = useState(false);
+  const [selectedReportIdsForBatch, setSelectedReportIdsForBatch] = useState<number[]>([]);
+  const [reportPicker, setReportPicker] = useState<ReportPickerState>(EMPTY_REPORT_PICKER);
 
   const [addForm, setAddForm] = useState<{
     search: string;
@@ -147,47 +169,16 @@ export default function MasterPage({
   const { data: assessmentTypes = [] } = useGetAllAssessmentTypes();
 
   // Batch hooks
-  const { batches, createBatch, isCreating, loading: loadingBatches } = useBatches();
-  const [createBatchOpen, setCreateBatchOpen] = useState(false);
-  const [batchForm, setBatchForm] = useState<{
-    startDate: Date | undefined;
-    endDate: Date | undefined;
-  }>({
-    startDate: undefined,
-    endDate: undefined,
-  });
+  const { batches, loading: loadingBatches } = useBatches();
 
   // Track whether we've already set the initial default batch
-  const defaultBatchSet = useRef(false);
 
   // Set default batch ID to the latest batch when first loaded — only once
-  useEffect(() => {
-    if (!defaultBatchSet.current && batches && batches.length > 0) {
-      defaultBatchSet.current = true;
-      setPaginationRequest((prev) => ({
-        ...prev,
-        batchId: batches[0].id,
-      }));
-    }
-  }, [batches, setPaginationRequest]);
-
   // Notify parent whenever the active batch changes (for shared batch filter)
   useEffect(() => {
     onBatchChange?.(paginationRequest.batchId ?? null);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [paginationRequest.batchId]);
-
-  const handleCreateBatch = async () => {
-    if (!batchForm.startDate || !batchForm.endDate) {
-      toast.error("Format tanggal harus diisi lengkap");
-      return;
-    }
-    const success = await createBatch(batchForm.startDate, batchForm.endDate);
-    if (success) {
-      setCreateBatchOpen(false);
-      setBatchForm({ startDate: undefined, endDate: undefined });
-    }
-  };
 
   // UI hooks
   const {
@@ -237,10 +228,11 @@ export default function MasterPage({
 
   const tableRef = useRef<HTMLDivElement>(null);
   const offsets = useDynamicStickyOffsets(tableRef, 2);
+  const skipNextReportPickerSearchRef = useRef(false);
 
   // Derived: true when the selected batch is completed (data comes from snapshot)
   const isArchived = batches.some(
-    (b) => b.id === paginationRequest.batchId && b.status === "completed"
+    (b: Batch) => b.id === paginationRequest.batchId && b.status === "completed"
   );
 
   const PAGE_SIZES = [10, 20, 30, 50, 100];
@@ -533,10 +525,116 @@ export default function MasterPage({
     return results.every((r) => selectedIds.has(r.id));
   };
 
+  const fetchReportPicker = useCallback(
+    async (options?: { reset?: boolean; query?: string; anchorId?: number | null }) => {
+      const reset = options?.reset ?? false;
+      const query = options?.query ?? "";
+      const anchorId = reset ? 0 : (options?.anchorId ?? 0);
+
+      setReportPicker((prev) => ({
+        ...prev,
+        ...(reset ? { items: [], anchorId: 0, hasMore: true } : {}),
+        ...(reset ? { isLoading: true } : { isLoadingMore: true }),
+      }));
+
+      try {
+        const params = new URLSearchParams({
+          page: "next",
+          page_size: REPORT_PICKER_PAGE_SIZE.toString(),
+          anchor_id: String(anchorId ?? 0),
+        });
+
+        if (query.trim()) params.set("query", query.trim());
+        if (paginationRequest.batchId !== null && paginationRequest.batchId !== undefined) {
+          params.set("batch_id", paginationRequest.batchId.toString());
+        }
+
+        const response = await api.get(`/api/master-reports?${params.toString()}`);
+        const payload = response.data?.data;
+        const reports = Array.isArray(payload?.data)
+          ? (payload.data as IReport[])
+          : Array.isArray(response.data?.data)
+            ? (response.data.data as IReport[])
+            : Array.isArray(response.data)
+              ? (response.data as IReport[])
+              : [];
+
+        setReportPicker((prev) => ({
+          ...prev,
+          items: reset ? reports : [...prev.items, ...reports],
+          anchorId: payload?.lastId ?? reports.at(-1)?.id ?? null,
+          hasMore: payload?.hasMore ?? reports.length >= REPORT_PICKER_PAGE_SIZE,
+          isLoading: false,
+          isLoadingMore: false,
+        }));
+      } catch {
+        setReportPicker((prev) => ({
+          ...prev,
+          isLoading: false,
+          isLoadingMore: false,
+        }));
+        toast.error("Gagal memuat report");
+      }
+    },
+    [paginationRequest.batchId]
+  );
+
+  useEffect(() => {
+    if (!bulkAssignBatchOpen) {
+      skipNextReportPickerSearchRef.current = false;
+      return;
+    }
+    skipNextReportPickerSearchRef.current = true;
+    fetchReportPicker({ reset: true, query: reportPicker.query });
+  }, [bulkAssignBatchOpen, paginationRequest.batchId, fetchReportPicker, reportPicker.query]);
+
+  useEffect(() => {
+    if (!bulkAssignBatchOpen) return;
+    if (skipNextReportPickerSearchRef.current) {
+      skipNextReportPickerSearchRef.current = false;
+      return;
+    }
+    const timeout = setTimeout(() => {
+      fetchReportPicker({ reset: true, query: reportPicker.query });
+    }, 300);
+    return () => clearTimeout(timeout);
+  }, [bulkAssignBatchOpen, reportPicker.query, fetchReportPicker]);
+
+  const toggleReportSelectionForBatch = (reportId: number) => {
+    setSelectedReportIdsForBatch((prev) =>
+      prev.includes(reportId) ? prev.filter((id) => id !== reportId) : [...prev, reportId]
+    );
+  };
+
+  const toggleSelectAllReportsForBatch = () => {
+    const visibleIds = reportPicker.items.map((report) => report.id);
+    const allSelected =
+      visibleIds.length > 0 &&
+      visibleIds.every((reportId) => selectedReportIdsForBatch.includes(reportId));
+
+    if (allSelected) {
+      const visibleSet = new Set(visibleIds);
+      setSelectedReportIdsForBatch((prev) => prev.filter((id) => !visibleSet.has(id)));
+      return;
+    }
+
+    setSelectedReportIdsForBatch((prev) => Array.from(new Set([...prev, ...visibleIds])));
+  };
+
+  const handleReportPickerScroll = (event: React.UIEvent<HTMLDivElement>) => {
+    if (!reportPicker.hasMore || reportPicker.isLoading || reportPicker.isLoadingMore) return;
+
+    const target = event.currentTarget;
+    const nearBottom = target.scrollTop + target.clientHeight >= target.scrollHeight - 48;
+    if (nearBottom) {
+      fetchReportPicker({ query: reportPicker.query, anchorId: reportPicker.anchorId });
+    }
+  };
+
   return (
-    <div className="mt-6 px-6 pb-8">
+    <div className="mt-6 space-y-6 px-6 pb-8">
       {/* Header Section */}
-      <div className="space-y-5 mb-6">
+      <section className="space-y-5 rounded-xl border bg-background px-5 py-5 shadow-sm">
         <div>
           <div className="flex items-center gap-4 mb-5">
             <Image
@@ -567,7 +665,7 @@ export default function MasterPage({
         </div>
 
         {/* Toolbar */}
-        <div className="flex flex-wrap items-center gap-3 p-3 bg-gray-50 border rounded-xl">
+        <div className="flex flex-wrap items-center gap-3 rounded-xl border bg-slate-50/60 p-3">
           <Input
             placeholder="🔍 Search by Name or Seafarer Code..."
             value={searchName}
@@ -653,10 +751,9 @@ export default function MasterPage({
                 <SelectContent>
                   <SelectItem value="all">Semua Batch</SelectItem>
                   <SelectItem value="no-batch">Tanpa Batch</SelectItem>
-                  {batches.map((batch) => (
+                  {batches.map((batch: Batch) => (
                     <SelectItem key={batch.id} value={batch.id.toString()}>
-                      Batch {batch.batchNo} ({format(new Date(batch.startDate), "MMM yyyy")})
-                      {batch.status === "completed" ? " 📦" : " ✅"}
+                      {batch.batchName}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -664,80 +761,37 @@ export default function MasterPage({
 
               {/* Show a notice when selected batch is completed (snapshot data) */}
               {(() => {
-                const selectedBatch = batches.find((b) => b.id === paginationRequest.batchId);
+                const selectedBatch = batches.find(
+                  (b: Batch) => b.id === paginationRequest.batchId
+                );
                 if (selectedBatch?.status === "completed") {
                   return (
                     <span className="text-xs bg-amber-100 text-amber-700 border border-amber-300 rounded px-2 py-1">
-                      📦 Data arsip batch {selectedBatch.batchNo}
+                      📦 Data arsip batch {selectedBatch.batchName}
                     </span>
                   );
                 }
                 return null;
               })()}
-
-              <Dialog open={createBatchOpen} onOpenChange={setCreateBatchOpen}>
-                <DialogTrigger asChild>
-                  <Button variant="outline" size="icon" title="Buat Batch Baru">
-                    <PlusIcon className="w-4 h-4" />
-                  </Button>
-                </DialogTrigger>
-                <DialogContent>
-                  <DialogHeader>
-                    <DialogTitle>Buat Batch Baru</DialogTitle>
-                    <DialogDescription>
-                      Tentukan periode awal dan akhir untuk batch baru.
-                    </DialogDescription>
-                  </DialogHeader>
-
-                  <div className="grid gap-4 py-4">
-                    <div className="space-y-2">
-                      <Label>Tanggal Mulai</Label>
-                      <Input
-                        type="date"
-                        className="w-full"
-                        value={batchForm.startDate ? format(batchForm.startDate, "yyyy-MM-dd") : ""}
-                        onChange={(e) =>
-                          setBatchForm((prev) => ({
-                            ...prev,
-                            startDate: e.target.value ? new Date(e.target.value) : undefined,
-                          }))
-                        }
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label>Tanggal Selesai</Label>
-                      <Input
-                        type="date"
-                        className="w-full"
-                        value={batchForm.endDate ? format(batchForm.endDate, "yyyy-MM-dd") : ""}
-                        onChange={(e) =>
-                          setBatchForm((prev) => ({
-                            ...prev,
-                            endDate: e.target.value ? new Date(e.target.value) : undefined,
-                          }))
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  <DialogFooter>
-                    <Button variant="outline" onClick={() => setCreateBatchOpen(false)}>
-                      Batal
-                    </Button>
-                    <Button
-                      onClick={handleCreateBatch}
-                      disabled={!batchForm.startDate || !batchForm.endDate || isCreating}
-                    >
-                      {isCreating && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                      Buat Batch
-                    </Button>
-                  </DialogFooter>
-                </DialogContent>
-              </Dialog>
             </div>
 
             <div className="w-px h-6 bg-gray-300 mx-1" />
+            {!isArchived && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => {
+                  setSelectedBatchForAssign("");
+                  setSelectedReportIdsForBatch([]);
+                  setReportPicker(EMPTY_REPORT_PICKER);
+                  setBulkAssignBatchOpen(true);
+                }}
+                className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+              >
+                Assign ke Batch
+              </Button>
+            )}
+
             {!isArchived && (
               <Button
                 size="sm"
@@ -759,27 +813,6 @@ export default function MasterPage({
 
             {isEditMode && (
               <>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={() => {
-                    setSelectedBatchForAssign("");
-                    setBulkAssignBatchOpen(true);
-                  }}
-                  disabled={selectedIds.size === 0 && !selectAllGlobal}
-                  className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
-                >
-                  Assign ke Batch
-                  {selectAllGlobal ? (
-                    <span className="ml-1 bg-blue-600 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full">
-                      Semua {paginationData?.total ?? ""}
-                    </span>
-                  ) : selectedIds.size > 0 ? (
-                    <span className="ml-1 bg-blue-100 text-blue-800 text-xs font-semibold px-1.5 py-0.5 rounded-full">
-                      {selectedIds.size}
-                    </span>
-                  ) : null}
-                </Button>
                 <Button
                   size="sm"
                   variant="destructive"
@@ -966,7 +999,7 @@ export default function MasterPage({
             )}
           </div>
         </div>
-      </div>
+      </section>
 
       {/* Global Select-All Banner */}
       {isEditMode && (
@@ -1007,52 +1040,121 @@ export default function MasterPage({
 
       {/* Bulk Assign to Batch Dialog */}
       <Dialog open={bulkAssignBatchOpen} onOpenChange={setBulkAssignBatchOpen}>
-        <DialogContent>
+        <DialogContent className="sm:max-w-xl">
           <DialogHeader>
             <DialogTitle>Assign ke Batch</DialogTitle>
             <DialogDescription>
-              {selectAllGlobal
-                ? `Pilih batch tujuan untuk semua ${paginationData?.total ?? "seluruh"} report.`
-                : `Pilih batch tujuan untuk ${selectedIds.size} report yang dipilih.`}{" "}
-              Pilih &quot;Tanpa Batch&quot; untuk melepas dari batch.
+              Pilih report crew dan batch tujuan. Pencarian memakai query backend dan daftar akan
+              memuat bertahap saat discroll.
             </DialogDescription>
           </DialogHeader>
-          <div className="py-4">
-            <Label>Batch Tujuan</Label>
-            <Select value={selectedBatchForAssign} onValueChange={setSelectedBatchForAssign}>
-              <SelectTrigger className="w-full mt-2">
-                <SelectValue placeholder="Pilih batch..." />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="null">Tanpa Batch (lepas dari batch)</SelectItem>
-                {batches.map((batch) => (
-                  <SelectItem key={batch.id} value={batch.id.toString()}>
-                    Batch {batch.batchNo} ({format(new Date(batch.startDate), "MMM yyyy")})
-                  </SelectItem>
+          <div className="space-y-4 py-2">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label>Pilih Report</Label>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  onClick={toggleSelectAllReportsForBatch}
+                >
+                  Pilih Semua
+                </Button>
+              </div>
+              <Input
+                value={reportPicker.query}
+                onChange={(e) =>
+                  setReportPicker((prev) => ({ ...prev, query: e.target.value, anchorId: 0 }))
+                }
+                placeholder="Cari nama atau seafarer code"
+              />
+              <div
+                className="max-h-64 space-y-2 overflow-auto rounded-lg border p-3"
+                onScroll={handleReportPickerScroll}
+              >
+                {reportPicker.items.map((report) => (
+                  <label
+                    key={report.id}
+                    className="flex cursor-pointer items-start gap-3 rounded-md border border-transparent px-2 py-2 hover:bg-slate-50"
+                  >
+                    <Checkbox
+                      checked={selectedReportIdsForBatch.includes(report.id)}
+                      onCheckedChange={() => toggleReportSelectionForBatch(report.id)}
+                    />
+                    <div className="space-y-0.5 text-sm">
+                      <div className="font-medium text-slate-900">{report.nama}</div>
+                      <div className="text-slate-500">
+                        {report.seafarerCode || report.seamanCode || "-"} •{" "}
+                        {batches.find((batch: Batch) => batch.id === report.batchId)?.batchName ||
+                          "Tanpa batch"}
+                      </div>
+                    </div>
+                  </label>
                 ))}
-              </SelectContent>
-            </Select>
+                {reportPicker.isLoading && (
+                  <div className="py-3 text-center text-sm text-muted-foreground">
+                    Memuat report...
+                  </div>
+                )}
+                {reportPicker.isLoadingMore && (
+                  <div className="py-3 text-center text-sm text-muted-foreground">
+                    Memuat lebih banyak...
+                  </div>
+                )}
+                {!reportPicker.isLoading && reportPicker.items.length === 0 && (
+                  <div className="py-3 text-center text-sm text-muted-foreground">
+                    Tidak ada report yang cocok
+                  </div>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Batch Tujuan</Label>
+              <Select value={selectedBatchForAssign} onValueChange={setSelectedBatchForAssign}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Pilih batch..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="null">Tanpa Batch</SelectItem>
+                  {batches.map((batch: Batch) => (
+                    <SelectItem key={batch.id} value={batch.id.toString()}>
+                      {batch.batchName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="text-sm text-muted-foreground">
+              {selectedReportIdsForBatch.length} report dipilih
+            </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBulkAssignBatchOpen(false)}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setBulkAssignBatchOpen(false);
+                setSelectedBatchForAssign("");
+                setSelectedReportIdsForBatch([]);
+                setReportPicker(EMPTY_REPORT_PICKER);
+              }}
+            >
               Batal
             </Button>
             <Button
-              disabled={!selectedBatchForAssign || onCallApi}
+              disabled={
+                !selectedBatchForAssign || selectedReportIdsForBatch.length === 0 || onCallApi
+              }
               onClick={async () => {
                 try {
                   const batchId =
                     selectedBatchForAssign === "null" ? null : parseInt(selectedBatchForAssign);
-                  await bulkAssignBatch(
-                    Array.from(selectedIds),
-                    batchId,
-                    selectAllGlobal,
-                    searchName,
-                    paginationRequest.batchId
-                  );
+                  await bulkAssignBatch(selectedReportIdsForBatch, batchId);
                   setBulkAssignBatchOpen(false);
-                  setSelectedIds(new Set());
-                  setSelectAllGlobal(false);
+                  setSelectedBatchForAssign("");
+                  setSelectedReportIdsForBatch([]);
+                  setReportPicker(EMPTY_REPORT_PICKER);
                 } catch {
                   // error already shown in hook
                 }
@@ -1557,417 +1659,447 @@ export default function MasterPage({
       </Dialog>
 
       {/* Table */}
-      <div
-        ref={tableRef}
-        className={`overflow-auto max-h-[70vh] border rounded-xl shadow-sm transition-opacity ${
-          onCallApi ? "opacity-60" : "opacity-100"
-        }`}
-      >
-        <table className="w-full caption-bottom text-sm min-w-[2000px] border-collapse">
-          <TableHeader className="sticky top-0 z-50">
-            <TableRow className="bg-slate-900 hover:bg-slate-900">
-              {isEditMode && (
-                <TableHead className="text-center sticky top-0 left-0 z-50 bg-slate-900 w-[50px] text-white">
-                  <button
-                    onClick={toggleSelectAll}
-                    className="aspect-square h-4 w-4 rounded border border-white/60 inline-flex items-center justify-center hover:border-white transition-colors"
+      <section className="overflow-hidden rounded-xl border bg-background shadow-sm">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b bg-slate-50/60 px-5 py-4">
+          <div>
+            <h2 className="text-lg font-semibold text-slate-900">Master Data Crew</h2>
+            <p className="text-sm text-muted-foreground">
+              Data induk crew, performa, assessment, dan readiness development.
+            </p>
+          </div>
+          <Badge variant="outline" className="bg-white">
+            {paginationData?.total ?? paginationData?.results?.length ?? 0} data
+          </Badge>
+        </div>
+        <div
+          ref={tableRef}
+          className={`overflow-auto max-h-[70vh] transition-opacity ${
+            onCallApi ? "opacity-60" : "opacity-100"
+          }`}
+        >
+          <table className="w-full min-w-[2000px] border-collapse caption-bottom text-sm">
+            <TableHeader className="sticky top-0 z-50">
+              <TableRow className="bg-slate-900 hover:bg-slate-900">
+                {isEditMode && (
+                  <TableHead className="text-center sticky top-0 left-0 z-50 bg-slate-900 w-[50px] text-white">
+                    <button
+                      onClick={toggleSelectAll}
+                      className="aspect-square h-4 w-4 rounded border border-white/60 inline-flex items-center justify-center hover:border-white transition-colors"
+                    >
+                      {isAllCurrentPageSelected() && (
+                        <div className="h-2.5 w-2.5 rounded bg-white" />
+                      )}
+                    </button>
+                  </TableHead>
+                )}
+                {TABLE_COLUMNS.map((col, i) => (
+                  <TableHead
+                    key={col}
+                    className={cn(
+                      "text-center sticky top-0 text-white font-semibold text-xs uppercase tracking-wide whitespace-nowrap px-3 py-3 border-r border-white/10",
+                      i < 2 ? "z-50 bg-slate-900" : "z-40 bg-slate-900"
+                    )}
+                    style={i < 2 ? { left: `${offsets[i] || 0}px` } : {}}
                   >
-                    {isAllCurrentPageSelected() && <div className="h-2.5 w-2.5 rounded bg-white" />}
-                  </button>
-                </TableHead>
-              )}
-              {TABLE_COLUMNS.map((col, i) => (
-                <TableHead
-                  key={col}
-                  className={cn(
-                    "text-center sticky top-0 text-white font-semibold text-xs uppercase tracking-wide whitespace-nowrap px-3 py-3 border-r border-white/10",
-                    i < 2 ? "z-50 bg-slate-900" : "z-40 bg-slate-900"
-                  )}
-                  style={i < 2 ? { left: `${offsets[i] || 0}px` } : {}}
-                >
-                  {col}
-                </TableHead>
-              ))}
-            </TableRow>
-          </TableHeader>
-
-          <TableBody>
-            {onCallApi ? (
-              <TableRow>
-                <TableCell
-                  colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)}
-                  className="text-center text-gray-400 h-32"
-                >
-                  <Loader2 className="mx-auto h-6 w-6 animate-spin" />
-                  <p className="mt-2">Loading...</p>
-                </TableCell>
+                    {col}
+                  </TableHead>
+                ))}
               </TableRow>
-            ) : paginationData?.results?.length ? (
-              paginationData.results.map((row, i) => (
-                <TableRow
-                  key={row.id}
-                  className={`transition-colors ${
-                    selectedIds.has(row.id)
-                      ? "bg-blue-50 border-l-2 border-l-blue-500"
-                      : i % 2 === 0
-                        ? "bg-white"
-                        : "bg-gray-50/60"
-                  } ${isEditMode ? "cursor-pointer hover:bg-blue-50/40" : "hover:bg-gray-100/50"}`}
-                  onClick={() => handleRowClick(row)}
-                >
-                  {isEditMode && (
-                    <TableCell
-                      className="text-center sticky left-0 z-40 bg-inherit border-r"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        toggleRowSelection(row.id);
-                      }}
-                    >
-                      <button className="aspect-square h-4 w-4 rounded border border-primary inline-flex items-center justify-center hover:bg-primary/10 transition-colors">
-                        {selectedIds.has(row.id) && (
-                          <div className="h-2.5 w-2.5 rounded bg-primary" />
-                        )}
-                      </button>
-                    </TableCell>
-                  )}
+            </TableHeader>
+
+            <TableBody>
+              {onCallApi ? (
+                <TableRow>
                   <TableCell
-                    className="text-center bg-inherit border-r sticky z-30 text-gray-500 text-xs font-medium"
-                    style={{ left: `${offsets[0] || 0}px`, width: "60px", pointerEvents: "none" }}
+                    colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)}
+                    className="text-center text-gray-400 h-32"
                   >
-                    <span className="pointer-events-auto">{getRowNumber(i)}</span>
+                    <Loader2 className="mx-auto h-6 w-6 animate-spin" />
+                    <p className="mt-2">Loading...</p>
                   </TableCell>
-                  <TableCell
-                    className="bg-inherit border-r sticky z-30 font-medium text-gray-900"
-                    style={{ left: `${offsets[1] || 0}px`, width: "200px", pointerEvents: "none" }}
-                  >
-                    <span className="pointer-events-auto">{row.nama}</span>
-                  </TableCell>
-                  <TableCell className="text-center text-xs font-mono text-gray-600">
-                    {row.seamanCode || "-"}
-                  </TableCell>
-                  <TableCell className="text-center text-xs font-mono text-gray-600">
-                    {row.seafarerCode || "-"}
-                  </TableCell>
-                  <TableCell className="text-center text-xs text-gray-700 whitespace-nowrap">
-                    {row.vesselName || "-"}
-                  </TableCell>
-                  <TableCell className="text-center text-xs text-gray-700 whitespace-nowrap">
-                    {row.jabatan || "-"}
-                  </TableCell>
-                  <TableCell className="text-center text-xs">{row.idpProgram || "-"}</TableCell>
-                  <TableCell className="text-center">
-                    {row.age ? (
-                      <span className="inline-block bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">
-                        {row.age}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center text-xs">{row.certificate || "-"}</TableCell>
-                  <TableCell className="text-center">
-                    {row.konditeReview ? (
-                      <span className="inline-block bg-purple-50 text-purple-700 text-xs font-medium px-2 py-0.5 rounded-full border border-purple-100">
-                        {row.konditeReview}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.kpiVessel ? (
-                      <span className="inline-block bg-orange-50 text-orange-700 text-xs font-medium px-2 py-0.5 rounded-full border border-orange-100">
-                        {row.kpiVessel}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.performanceScore ? (
-                      <span
-                        className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${
-                          Number(row.performanceScore) >= 80
-                            ? "bg-green-100 text-green-700"
-                            : Number(row.performanceScore) >= 60
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {row.performanceScore}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {Array.isArray(row.competencies) && row.competencies.length > 0 ? (
-                      <div className="flex flex-wrap gap-1 justify-center">
-                        {row.competencies.map((c, index) => {
-                          const code = c?.competencyType?.code;
-                          if (!code) return null;
-
-                          return (
-                            <span
-                              key={c.id || c.competencyTypeId || `${code}-${index}`}
-                              className="px-2 py-1 rounded-xl text-xs font-semibold text-white"
-                              style={{ backgroundColor: colorFromString(code) }}
-                            >
-                              {code}
-                            </span>
-                          );
-                        })}
-                      </div>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.totalGap != null ? (
-                      <span
-                        className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          Number(row.totalGap) === 0
-                            ? "bg-green-100 text-green-700"
-                            : Number(row.totalGap) <= 3
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {row.totalGap}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.strength ? (
-                      <span className="inline-block bg-emerald-50 text-emerald-700 text-xs font-medium px-2 py-0.5 rounded-full border border-emerald-100">
-                        {row.strength}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.havQuadran2 ? (
-                      <span className="inline-block bg-sky-50 text-sky-700 text-xs font-medium px-2 py-0.5 rounded-full border border-sky-100">
-                        {row.havQuadran2}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.talentClassified ? (
-                      <span
-                        className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${
-                          row.talentClassified.toLowerCase().includes("high")
-                            ? "bg-green-100 text-green-800"
-                            : row.talentClassified.toLowerCase().includes("medium")
-                              ? "bg-yellow-100 text-yellow-800"
-                              : row.talentClassified.toLowerCase().includes("low")
-                                ? "bg-red-100 text-red-800"
-                                : "bg-gray-100 text-gray-700"
-                        }`}
-                      >
-                        {row.talentClassified}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.totalReadinessUpdateMonths != null ? (
-                      <span
-                        className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
-                          Number(row.totalReadinessUpdateMonths) >= 12
-                            ? "bg-green-100 text-green-700"
-                            : Number(row.totalReadinessUpdateMonths) >= 6
-                              ? "bg-yellow-100 text-yellow-700"
-                              : "bg-red-100 text-red-700"
-                        }`}
-                      >
-                        {row.totalReadinessUpdateMonths} mo
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-                  <TableCell className="text-center">
-                    {row.certificateEligible ? (
-                      <span className="inline-block bg-blue-50 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full border border-blue-100">
-                        {row.certificateEligible}
-                      </span>
-                    ) : (
-                      "-"
-                    )}
-                  </TableCell>
-
-                  {/* Actions Column */}
-                  <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={(e) => handleViewMentoringPrograms(row, e)}
-                      className="text-xs h-7 px-2.5 border-slate-300 hover:bg-slate-100 hover:border-slate-400"
-                    >
-                      📋 Programs
-                    </Button>
-                  </TableCell>
-
-                  {/* Dynamic assessment type score columns */}
-                  {assessmentTypeColumns.map((assessmentTypeName) => {
-                    const score = getScoreForAssessmentType(row, assessmentTypeName);
-                    return (
-                      <TableCell key={assessmentTypeName} className="text-center">
-                        <span className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full`}>
-                          {score > 0 ? score : "-"}
-                        </span>
-                      </TableCell>
-                    );
-                  })}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)}
-                  className="text-center text-gray-400 h-40"
-                >
-                  <div className="flex flex-col items-center gap-2">
-                    <span className="text-3xl">📭</span>
-                    <p className="font-medium text-gray-500">Tidak ada data</p>
-                    <p className="text-xs text-gray-400">
-                      Coba ubah filter batch atau kata kunci pencarian
-                    </p>
-                  </div>
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </table>
-      </div>
-
-      {/* Pagination */}
-      <div className="flex items-center justify-between mt-4 px-1">
-        {/* Page size selector */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-gray-500">Tampilkan</span>
-          <Popover>
-            <PopoverTrigger asChild>
-              <Button
-                variant="outline"
-                role="combobox"
-                className="w-20 h-8 text-sm justify-between"
-              >
-                {paginationRequest.pageSize}
-                <ChevronsUpDownIcon className="ml-1 h-3 w-3 opacity-50" />
-              </Button>
-            </PopoverTrigger>
-            <PopoverContent className="w-[100px] p-0">
-              <Command>
-                <CommandList>
-                  <CommandGroup>
-                    {PAGE_SIZES.map((size) => (
-                      <CommandItem
-                        key={size}
-                        value={size.toString()}
-                        onSelect={() => {
-                          setCurrentPage(1);
-                          setPaginationRequest({
-                            ...paginationRequest,
-                            pageSize: size,
-                            anchorId: 0,
-                            page: "next",
-                          });
-                          setPageSize(size);
+              ) : paginationData?.results?.length ? (
+                paginationData.results.map((row, i) => (
+                  <TableRow
+                    key={row.id}
+                    className={`transition-colors ${
+                      selectedIds.has(row.id)
+                        ? "bg-blue-50 border-l-2 border-l-blue-500"
+                        : i % 2 === 0
+                          ? "bg-white"
+                          : "bg-gray-50/60"
+                    } ${isEditMode ? "cursor-pointer hover:bg-blue-50/40" : "hover:bg-gray-100/50"}`}
+                    onClick={() => handleRowClick(row)}
+                  >
+                    {isEditMode && (
+                      <TableCell
+                        className="text-center sticky left-0 z-40 bg-inherit border-r"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          toggleRowSelection(row.id);
                         }}
                       >
-                        <CheckIcon
-                          className={cn(
-                            "mr-2 h-4 w-4",
-                            paginationRequest.pageSize === size ? "opacity-100" : "opacity-0"
+                        <button className="aspect-square h-4 w-4 rounded border border-primary inline-flex items-center justify-center hover:bg-primary/10 transition-colors">
+                          {selectedIds.has(row.id) && (
+                            <div className="h-2.5 w-2.5 rounded bg-primary" />
                           )}
-                        />
-                        {size}
-                      </CommandItem>
-                    ))}
-                  </CommandGroup>
-                </CommandList>
-              </Command>
-            </PopoverContent>
-          </Popover>
-          <span className="text-xs text-gray-500">baris</span>
+                        </button>
+                      </TableCell>
+                    )}
+                    <TableCell
+                      className="text-center bg-inherit border-r sticky z-30 text-gray-500 text-xs font-medium"
+                      style={{ left: `${offsets[0] || 0}px`, width: "60px", pointerEvents: "none" }}
+                    >
+                      <span className="pointer-events-auto">{getRowNumber(i)}</span>
+                    </TableCell>
+                    <TableCell
+                      className="bg-inherit border-r sticky z-30 font-medium text-gray-900"
+                      style={{
+                        left: `${offsets[1] || 0}px`,
+                        width: "200px",
+                        pointerEvents: "none",
+                      }}
+                    >
+                      <span className="pointer-events-auto">{row.nama}</span>
+                    </TableCell>
+                    <TableCell className="text-center text-xs font-mono text-gray-600">
+                      {row.seamanCode || "-"}
+                    </TableCell>
+                    <TableCell className="text-center text-xs font-mono text-gray-600">
+                      {row.seafarerCode || "-"}
+                    </TableCell>
+                    <TableCell className="text-center text-xs text-gray-700 whitespace-nowrap">
+                      {row.vesselName || "-"}
+                    </TableCell>
+                    <TableCell className="text-center text-xs text-gray-700 whitespace-nowrap">
+                      {row.jabatan || "-"}
+                    </TableCell>
+                    <TableCell className="text-center text-xs">{row.idpProgram || "-"}</TableCell>
+                    <TableCell className="text-center">
+                      {row.age ? (
+                        <span className="inline-block bg-gray-100 text-gray-700 text-xs font-medium px-2 py-0.5 rounded-full">
+                          {row.age}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center text-xs">{row.certificate || "-"}</TableCell>
+                    <TableCell className="text-center">
+                      {row.konditeReview ? (
+                        <span className="inline-block bg-purple-50 text-purple-700 text-xs font-medium px-2 py-0.5 rounded-full border border-purple-100">
+                          {row.konditeReview}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {row.kpiVessel ? (
+                        <span className="inline-block bg-orange-50 text-orange-700 text-xs font-medium px-2 py-0.5 rounded-full border border-orange-100">
+                          {row.kpiVessel}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {row.performanceScore ? (
+                        <span
+                          className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full ${
+                            Number(row.performanceScore) >= 80
+                              ? "bg-green-100 text-green-700"
+                              : Number(row.performanceScore) >= 60
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {row.performanceScore}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {Array.isArray(row.competencies) && row.competencies.length > 0 ? (
+                        <div className="flex flex-wrap gap-1 justify-center">
+                          {row.competencies.map((c, index) => {
+                            const code = c?.competencyType?.code;
+                            if (!code) return null;
+
+                            return (
+                              <span
+                                key={c.id || c.competencyTypeId || `${code}-${index}`}
+                                className="px-2 py-1 rounded-xl text-xs font-semibold text-white"
+                                style={{ backgroundColor: colorFromString(code) }}
+                              >
+                                {code}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {row.totalGap != null ? (
+                        <span
+                          className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            Number(row.totalGap) === 0
+                              ? "bg-green-100 text-green-700"
+                              : Number(row.totalGap) <= 3
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {row.totalGap}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {row.strength ? (
+                        <span className="inline-block bg-emerald-50 text-emerald-700 text-xs font-medium px-2 py-0.5 rounded-full border border-emerald-100">
+                          {row.strength}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {row.havQuadran2 ? (
+                        <span className="inline-block bg-sky-50 text-sky-700 text-xs font-medium px-2 py-0.5 rounded-full border border-sky-100">
+                          {row.havQuadran2}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {row.talentClassified ? (
+                        <span
+                          className={`inline-block text-xs font-semibold px-2.5 py-1 rounded-full ${
+                            row.talentClassified.toLowerCase().includes("high")
+                              ? "bg-green-100 text-green-800"
+                              : row.talentClassified.toLowerCase().includes("medium")
+                                ? "bg-yellow-100 text-yellow-800"
+                                : row.talentClassified.toLowerCase().includes("low")
+                                  ? "bg-red-100 text-red-800"
+                                  : "bg-gray-100 text-gray-700"
+                          }`}
+                        >
+                          {row.talentClassified}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {row.totalReadinessUpdateMonths != null ? (
+                        <span
+                          className={`inline-block text-xs font-semibold px-2 py-0.5 rounded-full ${
+                            Number(row.totalReadinessUpdateMonths) >= 12
+                              ? "bg-green-100 text-green-700"
+                              : Number(row.totalReadinessUpdateMonths) >= 6
+                                ? "bg-yellow-100 text-yellow-700"
+                                : "bg-red-100 text-red-700"
+                          }`}
+                        >
+                          {row.totalReadinessUpdateMonths} mo
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+                    <TableCell className="text-center">
+                      {row.certificateEligible ? (
+                        <span className="inline-block bg-blue-50 text-blue-700 text-xs font-medium px-2 py-0.5 rounded-full border border-blue-100">
+                          {row.certificateEligible}
+                        </span>
+                      ) : (
+                        "-"
+                      )}
+                    </TableCell>
+
+                    {/* Actions Column */}
+                    <TableCell className="text-center" onClick={(e) => e.stopPropagation()}>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => handleViewMentoringPrograms(row, e)}
+                        className="text-xs h-7 px-2.5 border-slate-300 hover:bg-slate-100 hover:border-slate-400"
+                      >
+                        📋 Programs
+                      </Button>
+                    </TableCell>
+
+                    {/* Dynamic assessment type score columns */}
+                    {assessmentTypeColumns.map((assessmentTypeName) => {
+                      const score = getScoreForAssessmentType(row, assessmentTypeName);
+                      return (
+                        <TableCell key={assessmentTypeName} className="text-center">
+                          <span
+                            className={`inline-block text-xs font-bold px-2 py-0.5 rounded-full`}
+                          >
+                            {score > 0 ? score : "-"}
+                          </span>
+                        </TableCell>
+                      );
+                    })}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={TABLE_COLUMNS.length + (isEditMode ? 1 : 0)}
+                    className="text-center text-gray-400 h-40"
+                  >
+                    <div className="flex flex-col items-center gap-2">
+                      <span className="text-3xl">📭</span>
+                      <p className="font-medium text-gray-500">Tidak ada data</p>
+                      <p className="text-xs text-gray-400">
+                        Coba ubah filter batch atau kata kunci pencarian
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </table>
         </div>
 
-        {/* Page navigation */}
-        <Pagination className="mx-0 w-auto">
-          <PaginationContent className="flex items-center gap-1">
-            <PaginationItem>
-              <PaginationPrevious
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (
-                    !(!paginationData || paginationData.first_page || currentPage <= 1 || onCallApi)
-                  ) {
-                    navigatePage("prev");
-                  }
-                }}
-                className={cn(
-                  "cursor-pointer",
-                  (!paginationData || paginationData.first_page || currentPage <= 1 || onCallApi) &&
-                    "pointer-events-none opacity-50"
-                )}
-              />
-            </PaginationItem>
+        {/* Pagination */}
+        <div className="flex items-center justify-between border-t px-5 py-4">
+          {/* Page size selector */}
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-gray-500">Tampilkan</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  role="combobox"
+                  className="w-20 h-8 text-sm justify-between"
+                >
+                  {paginationRequest.pageSize}
+                  <ChevronsUpDownIcon className="ml-1 h-3 w-3 opacity-50" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-[100px] p-0">
+                <Command>
+                  <CommandList>
+                    <CommandGroup>
+                      {PAGE_SIZES.map((size) => (
+                        <CommandItem
+                          key={size}
+                          value={size.toString()}
+                          onSelect={() => {
+                            setCurrentPage(1);
+                            setPaginationRequest({
+                              ...paginationRequest,
+                              pageSize: size,
+                              anchorId: 0,
+                              page: "next",
+                            });
+                            setPageSize(size);
+                          }}
+                        >
+                          <CheckIcon
+                            className={cn(
+                              "mr-2 h-4 w-4",
+                              paginationRequest.pageSize === size ? "opacity-100" : "opacity-0"
+                            )}
+                          />
+                          {size}
+                        </CommandItem>
+                      ))}
+                    </CommandGroup>
+                  </CommandList>
+                </Command>
+              </PopoverContent>
+            </Popover>
+            <span className="text-xs text-gray-500">baris</span>
+          </div>
 
-            <PaginationItem>
-              <PaginationLink
-                isActive
-                className="cursor-default hover:bg-background"
-                onClick={(e) => e.preventDefault()}
-              >
-                {currentPage}
-              </PaginationLink>
-            </PaginationItem>
+          {/* Page navigation */}
+          <Pagination className="mx-0 w-auto">
+            <PaginationContent className="flex items-center gap-1">
+              <PaginationItem>
+                <PaginationPrevious
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (
+                      !(
+                        !paginationData ||
+                        paginationData.first_page ||
+                        currentPage <= 1 ||
+                        onCallApi
+                      )
+                    ) {
+                      navigatePage("prev");
+                    }
+                  }}
+                  className={cn(
+                    "cursor-pointer",
+                    (!paginationData ||
+                      paginationData.first_page ||
+                      currentPage <= 1 ||
+                      onCallApi) &&
+                      "pointer-events-none opacity-50"
+                  )}
+                />
+              </PaginationItem>
 
-            <PaginationItem>
-              <span className="text-sm text-gray-500 mx-1">
-                {paginationData?.total
-                  ? `dari ${Math.ceil(paginationData.total / paginationRequest.pageSize)} halaman`
-                  : ""}
-              </span>
-            </PaginationItem>
+              <PaginationItem>
+                <PaginationLink
+                  isActive
+                  className="cursor-default hover:bg-background"
+                  onClick={(e) => e.preventDefault()}
+                >
+                  {currentPage}
+                </PaginationLink>
+              </PaginationItem>
 
-            <PaginationItem>
-              <PaginationNext
-                onClick={(e) => {
-                  e.preventDefault();
-                  if (!(!paginationData?.has_more || onCallApi)) {
-                    navigatePage("next");
-                  }
-                }}
-                className={cn(
-                  "cursor-pointer",
-                  (!paginationData?.has_more || onCallApi) && "pointer-events-none opacity-50"
-                )}
-              />
-            </PaginationItem>
-          </PaginationContent>
-        </Pagination>
+              <PaginationItem>
+                <span className="text-sm text-gray-500 mx-1">
+                  {paginationData?.total
+                    ? `dari ${Math.ceil(paginationData.total / paginationRequest.pageSize)} halaman`
+                    : ""}
+                </span>
+              </PaginationItem>
 
-        {/* Row count info */}
-        <div className="flex flex-col items-end gap-0.5">
-          <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
-            Menampilkan <strong>{paginationData?.results?.length || 0}</strong> baris di halaman ini
-          </span>
-          {paginationData?.total ? (
-            <span className="text-xs text-gray-400 px-1">
-              Total <strong>{paginationData.total}</strong> data
+              <PaginationItem>
+                <PaginationNext
+                  onClick={(e) => {
+                    e.preventDefault();
+                    if (!(!paginationData?.has_more || onCallApi)) {
+                      navigatePage("next");
+                    }
+                  }}
+                  className={cn(
+                    "cursor-pointer",
+                    (!paginationData?.has_more || onCallApi) && "pointer-events-none opacity-50"
+                  )}
+                />
+              </PaginationItem>
+            </PaginationContent>
+          </Pagination>
+
+          {/* Row count info */}
+          <div className="flex flex-col items-end gap-0.5">
+            <span className="text-xs text-gray-500 bg-gray-100 px-3 py-1.5 rounded-lg">
+              Menampilkan <strong>{paginationData?.results?.length || 0}</strong> baris di halaman
+              ini
             </span>
-          ) : null}
+            {paginationData?.total ? (
+              <span className="text-xs text-gray-400 px-1">
+                Total <strong>{paginationData.total}</strong> data
+              </span>
+            ) : null}
+          </div>
         </div>
-      </div>
+      </section>
     </div>
   );
 }

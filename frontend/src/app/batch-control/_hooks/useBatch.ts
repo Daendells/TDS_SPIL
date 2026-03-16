@@ -12,6 +12,8 @@ type ApiError = { response?: { data?: { error?: string } } };
 export interface Batch {
   id: number;
   batchNo: number;
+  batchName: string;
+  type: string;
   startDate: string;
   endDate: string;
   status: "active" | "completed";
@@ -45,8 +47,9 @@ export interface BatchSnapshot {
 
 // ─── Hooks ────────────────────────────────────────────────────────────────────
 
-export function useBatches() {
-  const { data, error, isLoading } = useSWR<Batch[]>("/api/batches", async (url: string) => {
+export function useBatches(batchType = "crew") {
+  const key = `/api/batches?type=${batchType}`;
+  const { data, error, isLoading } = useSWR<Batch[]>(key, async (url: string) => {
     const res = await api.get(url);
     return res.data.data;
   });
@@ -54,14 +57,16 @@ export function useBatches() {
   const [creating, setCreating] = useState(false);
   const [updating, setUpdating] = useState(false);
 
-  const createBatch = async (startDate: Date, endDate: Date) => {
+  const createBatch = async (batchName: string, startDate: Date, endDate: Date) => {
     setCreating(true);
     try {
       await api.post("/api/batches", {
+        type: batchType,
+        batchName,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
       });
-      await mutate("/api/batches");
+      await mutate(key);
       toast.success("Batch berhasil dibuat!");
       return true;
     } catch (err: unknown) {
@@ -73,14 +78,16 @@ export function useBatches() {
     }
   };
 
-  const updateBatch = async (id: number, startDate: Date, endDate: Date) => {
+  const updateBatch = async (id: number, batchName: string, startDate: Date, endDate: Date) => {
     setUpdating(true);
     try {
       await api.put(`/api/batches/${id}`, {
+        type: batchType,
+        batchName,
         startDate: startDate.toISOString(),
         endDate: endDate.toISOString(),
       });
-      await mutate("/api/batches");
+      await mutate(key);
       toast.success("Batch berhasil diupdate!");
       return true;
     } catch (err: unknown) {

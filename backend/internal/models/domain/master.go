@@ -51,7 +51,7 @@ type FullReport struct {
 	Jabatan *string `gorm:"column:jabatan;default:null"`
 	User    *string `gorm:"column:user;default:null"`
 
-	SeamanCode   *string `gorm:"column:seaman_code;default:null;uniqueIndex:idx_seaman_code"`
+	SeamanCode   *string `gorm:"column:seaman_code;type:varchar(50);default:null;uniqueIndex:idx_seaman_code"`
 	SeafarerCode *string `gorm:"column:seafarer_code;default:null"`
 	VesselName   *string `gorm:"column:vessel_name;default:null"`
 	Certificate  *string `gorm:"column:certificate;default:null"`
