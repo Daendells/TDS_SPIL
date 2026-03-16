@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import {
   LaptopMinimal,
   ChevronUp,
@@ -51,6 +52,11 @@ const items = [
     icon: LaptopMinimal,
   },
   {
+    title: "New Recruiter Report",
+    url: "/new-recruiter-report",
+    icon: Users,
+  },
+  {
     title: "Upload Excel",
     url: "/dashboard/excel",
     icon: Inbox,
@@ -88,6 +94,7 @@ const items = [
 ];
 
 export function AppSidebar() {
+  const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
   const { user } = useAuth();
   const logoutMutation = useLogout();
@@ -99,6 +106,10 @@ export function AppSidebar() {
 
   // Calculate total overdue across all programs
   const totalOverdueCount = (sdpCount || 0) + (mdpCount || 0) + (fdpCount || 0);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -152,27 +163,33 @@ export function AppSidebar() {
       <SidebarFooter>
         <SidebarMenu>
           <SidebarMenuItem>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton>
-                  <User2 /> {user?.username}
-                  <ChevronUp className="ml-auto" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
-                <DropdownMenuItem className="p-0">
-                  <Button
-                    className="w-full"
-                    variant="destructive"
-                    disabled={logoutMutation.isPending}
-                    onClick={() => logoutMutation.mutate()}
-                  >
-                    {logoutMutation.isPending ? "Signing out..." : "Sign out"}
-                  </Button>
-                  {/* <span>Sign out</span> */}
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            {mounted ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <SidebarMenuButton>
+                    <User2 /> {user?.username}
+                    <ChevronUp className="ml-auto" />
+                  </SidebarMenuButton>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
+                  <DropdownMenuItem className="p-0">
+                    <Button
+                      className="w-full"
+                      variant="destructive"
+                      disabled={logoutMutation.isPending}
+                      onClick={() => logoutMutation.mutate()}
+                    >
+                      {logoutMutation.isPending ? "Signing out..." : "Sign out"}
+                    </Button>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <SidebarMenuButton>
+                <User2 /> {user?.username}
+                <ChevronUp className="ml-auto" />
+              </SidebarMenuButton>
+            )}
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarFooter>

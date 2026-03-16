@@ -23,9 +23,13 @@ func (r *BatchRepository) Create(db *gorm.DB, batch *domain.Batch) error {
 	return db.Create(batch).Error
 }
 
-func (r *BatchRepository) FindAll(db *gorm.DB) ([]domain.Batch, error) {
+func (r *BatchRepository) FindAll(db *gorm.DB, batchType string) ([]domain.Batch, error) {
 	var batches []domain.Batch
-	err := db.Order("batch_no desc").Find(&batches).Error
+	query := db.Order("batch_no desc")
+	if batchType != "" {
+		query = query.Where("type = ?", batchType)
+	}
+	err := query.Find(&batches).Error
 	return batches, err
 }
 

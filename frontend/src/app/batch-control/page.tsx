@@ -25,6 +25,13 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 import { useBatches, useSnapshots, type Batch } from "./_hooks/useBatch";
 
@@ -69,12 +76,16 @@ function CreateDialog({
   open,
   onClose,
   batches,
+  batchType = "crew",
 }: {
   open: boolean;
   onClose: () => void;
   batches: Batch[];
+  batchType?: "crew" | "new_recruiter";
 }) {
-  const { createBatch, isCreating } = useBatches();
+  const [selectedBatchType, setSelectedBatchType] = useState<"crew" | "new_recruiter">(batchType);
+  const { createBatch, isCreating } = useBatches(selectedBatchType);
+  const [batchName, setBatchName] = useState("");
   const [startDate, setStartDate] = useState<Date | undefined>();
   const [endDate, setEndDate] = useState<Date | undefined>();
 
@@ -84,9 +95,11 @@ function CreateDialog({
     : undefined;
 
   const handleSubmit = async () => {
-    if (!startDate || !endDate) return;
-    const ok = await createBatch(startDate, endDate);
+    if (!batchName.trim() || !startDate || !endDate) return;
+    const ok = await createBatch(batchName.trim(), startDate, endDate);
     if (ok) {
+      setSelectedBatchType(batchType);
+      setBatchName("");
       setStartDate(undefined);
       setEndDate(undefined);
       onClose();
@@ -101,6 +114,29 @@ function CreateDialog({
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          <div className="space-y-1">
+            <Label>Jenis Batch</Label>
+            <Select
+              value={selectedBatchType}
+              onValueChange={(value: "crew" | "new_recruiter") => setSelectedBatchType(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih jenis batch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="crew">Crew</SelectItem>
+                <SelectItem value="new_recruiter">New Recruiter</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>Nama Batch</Label>
+            <Input
+              value={batchName}
+              onChange={(e) => setBatchName(e.target.value)}
+              placeholder="Contoh: Crew Intake Maret 2026"
+            />
+          </div>
           <DateInput
             label="Tanggal Mulai"
             value={startDate}
@@ -120,7 +156,10 @@ function CreateDialog({
           <Button variant="outline" onClick={onClose}>
             Batal
           </Button>
-          <Button onClick={handleSubmit} disabled={!startDate || !endDate || isCreating}>
+          <Button
+            onClick={handleSubmit}
+            disabled={!batchName.trim() || !startDate || !endDate || isCreating}
+          >
             {isCreating ? "Menyimpan..." : "Simpan"}
           </Button>
         </DialogFooter>
@@ -142,7 +181,11 @@ function EditDialog({
   nextBatch?: Batch;
   onClose: () => void;
 }) {
-  const { updateBatch, isUpdating } = useBatches();
+  const [selectedBatchType, setSelectedBatchType] = useState<"crew" | "new_recruiter">(
+    (batch?.type as "crew" | "new_recruiter") ?? "crew"
+  );
+  const { updateBatch, isUpdating } = useBatches(selectedBatchType);
+  const [batchName, setBatchName] = useState(batch?.batchName ?? "");
   const [startDate, setStartDate] = useState<Date | undefined>(
     batch ? parseISO(batch.startDate) : undefined
   );
@@ -161,8 +204,8 @@ function EditDialog({
     : undefined;
 
   const handleSubmit = async () => {
-    if (!startDate || !endDate) return;
-    const ok = await updateBatch(batch.id, startDate, endDate);
+    if (!batchName.trim() || !startDate || !endDate) return;
+    const ok = await updateBatch(batch.id, batchName.trim(), startDate, endDate);
     if (ok) onClose();
   };
 
@@ -170,10 +213,29 @@ function EditDialog({
     <Dialog open={!!batch} onOpenChange={(v) => !v && onClose()}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Edit Batch {batch.batchNo}</DialogTitle>
+          <DialogTitle>Edit Batch {batch.batchName}</DialogTitle>
         </DialogHeader>
 
         <div className="space-y-4 py-2">
+          <div className="space-y-1">
+            <Label>Jenis Batch</Label>
+            <Select
+              value={selectedBatchType}
+              onValueChange={(value: "crew" | "new_recruiter") => setSelectedBatchType(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih jenis batch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="crew">Crew</SelectItem>
+                <SelectItem value="new_recruiter">New Recruiter</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>Nama Batch</Label>
+            <Input value={batchName} onChange={(e) => setBatchName(e.target.value)} />
+          </div>
           {prevBatch && (
             <p className="text-xs text-muted-foreground">
               ⚠️ Batch {prevBatch.batchNo} berakhir pada{" "}
@@ -209,7 +271,10 @@ function EditDialog({
           <Button variant="outline" onClick={onClose}>
             Batal
           </Button>
-          <Button onClick={handleSubmit} disabled={!startDate || !endDate || isUpdating}>
+          <Button
+            onClick={handleSubmit}
+            disabled={!batchName.trim() || !startDate || !endDate || isUpdating}
+          >
             {isUpdating ? "Menyimpan..." : "Simpan"}
           </Button>
         </DialogFooter>
@@ -296,7 +361,8 @@ function SnapshotDialog({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BatchControlPage() {
-  const { batches, loading } = useBatches();
+  const [batchTypeFilter, setBatchTypeFilter] = useState<"crew" | "new_recruiter">("crew");
+  const { batches, loading } = useBatches(batchTypeFilter);
 
   const [createOpen, setCreateOpen] = useState(false);
   const [editBatch, setEditBatch] = useState<Batch | null>(null);
@@ -322,9 +388,25 @@ export default function BatchControlPage() {
             Kelola periode batch Talent Development System
           </p>
         </div>
-        <Button onClick={() => setCreateOpen(true)}>
-          <Plus className="mr-2 h-4 w-4" /> Buat Batch
-        </Button>
+        <div className="flex items-center gap-3">
+          <div className="w-[220px]">
+            <Select
+              value={batchTypeFilter}
+              onValueChange={(value: "crew" | "new_recruiter") => setBatchTypeFilter(value)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Pilih jenis batch" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="crew">Crew</SelectItem>
+                <SelectItem value="new_recruiter">New Recruiter</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <Button onClick={() => setCreateOpen(true)}>
+            <Plus className="mr-2 h-4 w-4" /> Buat Batch
+          </Button>
+        </div>
       </div>
 
       {/* Batch Table */}
@@ -332,9 +414,10 @@ export default function BatchControlPage() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-24">Batch No</TableHead>
+              <TableHead className="w-48">Nama Batch</TableHead>
               <TableHead>Tanggal Mulai</TableHead>
               <TableHead>Tanggal Selesai</TableHead>
+              <TableHead>Jenis</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-right">Jumlah Report</TableHead>
               <TableHead className="text-right">Dipindai</TableHead>
@@ -345,7 +428,7 @@ export default function BatchControlPage() {
             {loading ? (
               Array.from({ length: 5 }).map((_, i) => (
                 <TableRow key={i}>
-                  {Array.from({ length: 7 }).map((__, j) => (
+                  {Array.from({ length: 8 }).map((__, j) => (
                     <TableCell key={j}>
                       <Skeleton className="h-5 w-full" />
                     </TableCell>
@@ -354,7 +437,7 @@ export default function BatchControlPage() {
               ))
             ) : batches.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={8} className="text-center py-8 text-muted-foreground">
                   Belum ada batch. Klik &quot;Buat Batch&quot; untuk memulai.
                 </TableCell>
               </TableRow>
@@ -365,9 +448,14 @@ export default function BatchControlPage() {
                 .map((batch) => {
                   return (
                     <TableRow key={batch.id}>
-                      <TableCell className="font-bold">#{batch.batchNo}</TableCell>
+                      <TableCell className="font-bold">{batch.batchName}</TableCell>
                       <TableCell>{format(parseISO(batch.startDate), "dd MMM yyyy")}</TableCell>
                       <TableCell>{format(parseISO(batch.endDate), "dd MMM yyyy")}</TableCell>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {batch.type === "new_recruiter" ? "New Recruiter" : "Crew"}
+                        </Badge>
+                      </TableCell>
                       <TableCell>
                         <Badge variant={batch.status === "active" ? "default" : "secondary"}>
                           {batch.status === "active" ? "Aktif" : "Selesai"}
@@ -412,7 +500,12 @@ export default function BatchControlPage() {
       </div>
 
       {/* Dialogs */}
-      <CreateDialog open={createOpen} onClose={() => setCreateOpen(false)} batches={batches} />
+      <CreateDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        batches={batches}
+        batchType={batchTypeFilter}
+      />
 
       {editBatch &&
         (() => {

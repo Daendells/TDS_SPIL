@@ -32,6 +32,7 @@ type RouterConfig struct {
 	SeamanController             *controllers.SeamanController
 	QuizController               *controllers.QuizController
 	ScoringConfigController      *controllers.ScoringConfigController
+	NewRecruiterController       *controllers.NewRecruiterController
 	AuthMiddleware               gin.HandlerFunc
 	BatchController              *controllers.BatchController
 }
@@ -99,7 +100,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		trainingPlan.GET("/programs", c.TrainingPlanController.GetAvailablePrograms)
 		trainingPlan.GET("/export-excel", c.TrainingPlanController.ExportTrainingPlanExcel)
 		trainingPlan.PUT("/toggle-started/:id", c.TrainingPlanController.ToggleTrainingStarted) // Toggle is_started flag
-		trainingPlan.GET("/overdue-count", c.TrainingPlanController.GetOverdueCount)          // Get overdue unstarted count
+		trainingPlan.GET("/overdue-count", c.TrainingPlanController.GetOverdueCount)            // Get overdue unstarted count
 	}
 
 	// IDP Tracking endpoints (for readiness refresh)
@@ -197,6 +198,15 @@ func (c *RouterConfig) SetupGuestRouter() {
 		seafarerAssessments.GET("/:id", c.SeafarerAssessmentController.FindByID)
 		seafarerAssessments.GET("/by-seafarer/:seafarerCode", c.SeafarerAssessmentController.FindBySeafarerCode)
 		seafarerAssessments.GET("/by-assessment-type/:assessmentTypeId", c.SeafarerAssessmentController.FindByAssessmentTypeID)
+	}
+
+	newRecruitersPublic := c.App.Group("api/new-recruiters")
+	{
+		newRecruitersPublic.GET("/check-assignment/:token/:assessmentTypeId", c.NewRecruiterController.CheckAssignment)
+		newRecruitersPublic.GET("/check-assignment/:token/:assessmentTypeId/:role", c.NewRecruiterController.CheckAssignmentWithRole)
+		newRecruitersPublic.POST("/increment-attempts/:token/:assessmentTypeId", c.NewRecruiterController.IncrementAttempts)
+		newRecruitersPublic.POST("/assessment-results/submit", c.NewRecruiterController.SubmitAssessment)
+		newRecruitersPublic.POST("/quiz/submit", c.NewRecruiterController.SubmitQuiz)
 	}
 
 	assessmentResults := c.App.Group("assessment-results")
@@ -301,6 +311,19 @@ func (c *RouterConfig) SetupAuthRouter() {
 		questionsWithOptionsAuth.PUT("/:questionId", c.QuestionOptionController.UpdateQuestionWithOptions)
 		questionsWithOptionsAuth.DELETE("/:questionId", c.QuestionOptionController.DeleteQuestionWithOptions)
 		questionsWithOptionsAuth.DELETE("/bulk-delete", c.QuestionOptionController.BulkDelete)
+	}
+
+	newRecruitersAuth := c.App.Group("api/new-recruiters").Use(c.AuthMiddleware)
+	{
+		newRecruitersAuth.GET("", c.NewRecruiterController.FindAll)
+		newRecruitersAuth.GET("/search", c.NewRecruiterController.Search)
+		newRecruitersAuth.POST("", c.NewRecruiterController.Create)
+		newRecruitersAuth.PUT("/:id", c.NewRecruiterController.Update)
+		newRecruitersAuth.POST("/bulk-assign-batch", c.NewRecruiterController.BulkAssignBatch)
+		newRecruitersAuth.DELETE("/:id", c.NewRecruiterController.Delete)
+		newRecruitersAuth.GET("/assignments", c.NewRecruiterController.FindAssignments)
+		newRecruitersAuth.POST("/assignments", c.NewRecruiterController.CreateAssignment)
+		newRecruitersAuth.DELETE("/assignments/:id", c.NewRecruiterController.DeleteAssignment)
 	}
 }
 

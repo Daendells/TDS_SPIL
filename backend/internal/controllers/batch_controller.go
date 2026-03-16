@@ -46,7 +46,8 @@ func (c *BatchController) Create(ctx *gin.Context) {
 }
 
 func (c *BatchController) FindAll(ctx *gin.Context) {
-	response, err := c.BatchService.FindAll()
+	batchType := ctx.Query("type")
+	response, err := c.BatchService.FindAll(batchType)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, web.ErrorResponse{
 			Code:   http.StatusInternalServerError,

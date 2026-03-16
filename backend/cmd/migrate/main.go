@@ -16,6 +16,11 @@ func main() {
 
 	log.Info("Starting database migrations...")
 
+	log.Info("Normalizing legacy column types...")
+	if err := normalizeLegacySchema(db); err != nil {
+		log.Fatalf("schema normalization failed: %v", err)
+	}
+
 	// Run GORM auto migration (handles role column automatically)
 	log.Info("Running GORM auto migration...")
 	if err := runAutoMigrate(db); err != nil {
@@ -49,15 +54,130 @@ func main() {
 
 	log.Info("Creating database triggers...")
 	if err := createTriggers(db); err != nil {
-		log.Fatalf("trigger creation failed: %v", err)
+		if isIgnorableTriggerError(err) {
+			log.Warnf("Skipping trigger creation because current DB user lacks privileges: %v", err)
+		} else {
+			log.Fatalf("trigger creation failed: %v", err)
+		}
+	} else {
+		log.Info("Triggers created successfully")
 	}
-	log.Info("Triggers created successfully")
 
 	log.Info("Updating existing records with calculated values...")
 	if err := updateExistingRecords(db); err != nil {
 		log.Fatalf("update existing records failed: %v", err)
 	}
 	log.Info("All migrations completed successfully")
+}
+
+func isIgnorableTriggerError(err error) bool {
+	if err == nil {
+		return false
+	}
+
+	message := err.Error()
+	return strings.Contains(message, "Error 1419") ||
+		strings.Contains(message, "SUPER privilege") ||
+		strings.Contains(message, "log_bin_trust_function_creators")
+}
+
+func normalizeLegacySchema(db *gorm.DB) error {
+	var reportsTableExists int64
+	if err := db.Raw(`
+		SELECT COUNT(*) FROM information_schema.tables
+		WHERE table_schema = DATABASE()
+		AND table_name = 'reports'
+	`).Scan(&reportsTableExists).Error; err != nil {
+		return err
+	}
+
+	if reportsTableExists == 0 {
+		return nil
+	}
+
+	if err := db.Exec(`
+		ALTER TABLE reports
+		MODIFY COLUMN seaman_code VARCHAR(50) NULL
+	`).Error; err != nil {
+		return fmt.Errorf("failed to normalize reports.seaman_code column: %w", err)
+	}
+
+	var batchesTableExists int64
+	if err := db.Raw(`
+		SELECT COUNT(*) FROM information_schema.tables
+		WHERE table_schema = DATABASE()
+		AND table_name = 'batches'
+	`).Scan(&batchesTableExists).Error; err != nil {
+		return err
+	}
+
+	if batchesTableExists > 0 {
+		var batchNameColumnExists int64
+		if err := db.Raw(`
+			SELECT COUNT(*) FROM information_schema.columns
+			WHERE table_schema = DATABASE()
+			AND table_name = 'batches'
+			AND column_name = 'batch_name'
+		`).Scan(&batchNameColumnExists).Error; err != nil {
+			return err
+		}
+
+		if batchNameColumnExists == 0 {
+			if err := db.Exec(`
+				ALTER TABLE batches
+				ADD COLUMN batch_name VARCHAR(150) NULL AFTER batch_no
+			`).Error; err != nil {
+				return fmt.Errorf("failed to add batches.batch_name column: %w", err)
+			}
+		}
+
+		if err := db.Exec(`
+			UPDATE batches
+			SET batch_name = CONCAT('Batch ', batch_no)
+			WHERE batch_name IS NULL OR batch_name = ''
+		`).Error; err != nil {
+			return fmt.Errorf("failed to backfill batches.batch_name: %w", err)
+		}
+
+		if err := db.Exec(`
+			ALTER TABLE batches
+			MODIFY COLUMN batch_name VARCHAR(150) NOT NULL
+		`).Error; err != nil {
+			return fmt.Errorf("failed to enforce batches.batch_name column definition: %w", err)
+		}
+	}
+
+	var newRecruitersTableExists int64
+	if err := db.Raw(`
+		SELECT COUNT(*) FROM information_schema.tables
+		WHERE table_schema = DATABASE()
+		AND table_name = 'new_recruiters'
+	`).Scan(&newRecruitersTableExists).Error; err != nil {
+		return err
+	}
+
+	if newRecruitersTableExists > 0 {
+		var recruiterBatchColumnExists int64
+		if err := db.Raw(`
+			SELECT COUNT(*) FROM information_schema.columns
+			WHERE table_schema = DATABASE()
+			AND table_name = 'new_recruiters'
+			AND column_name = 'batch_id'
+		`).Scan(&recruiterBatchColumnExists).Error; err != nil {
+			return err
+		}
+
+		if recruiterBatchColumnExists == 0 {
+			if err := db.Exec(`
+				ALTER TABLE new_recruiters
+				ADD COLUMN batch_id BIGINT NULL AFTER academy_name
+			`).Error; err != nil {
+				return fmt.Errorf("failed to add new_recruiters.batch_id column: %w", err)
+			}
+		}
+	}
+
+	return nil
 }
 
 func runAutoMigrate(db *gorm.DB) error {
@@ -73,6 +193,7 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.AssessmentType{},
 		&domain.CompetencyType{},
 		&domain.Report{},
+		&domain.NewRecruiter{},
 		&domain.ApolloTrainingCache{},
 		&domain.SeamenCache{},
 		&domain.MutationCache{},
@@ -80,12 +201,12 @@ func runAutoMigrate(db *gorm.DB) error {
 		// Tables with single dependency
 		&domain.Assessment{},
 		&domain.SeafarerAssessment{},
+		&domain.NewRecruiterAssignment{},
 		&domain.Training{},
 		&domain.MentoringReport{},
 		&domain.CoachingReport{},
 		&domain.IDPTracking{}, // Depends on Report
 		&domain.Batch{},       // Independent/Parent of Report (optional, but sticking to basics)
-
 
 		// Tables with multiple dependencies
 		&domain.CompetencyProgramMapping{}, // Depends on CompetencyType and Training
@@ -100,6 +221,9 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.AssessmentResult{},
 		&domain.UserAnswer{},
 		&domain.QuizAttempt{},
+		&domain.NewRecruiterAssessmentSubmission{},
+		&domain.NewRecruiterQuizAttempt{},
+		&domain.NewRecruiterReportScore{},
 
 		// Final dependent tables
 		&domain.ScoreResult{},
@@ -274,6 +398,11 @@ WHERE t.referensi IS NULL
 // 1. Migrates existing reports.batch_id data to the report_batches junction table
 // 2. Ensures the batches table has the new status and snapshotted_at columns
 func runBatchMigrations(db *gorm.DB) error {
+	db.Exec("ALTER TABLE batches MODIFY COLUMN type ENUM('crew','new_recruiter') NOT NULL DEFAULT 'crew'")
+	if err := db.Exec("UPDATE batches SET type = 'crew' WHERE type IS NULL OR type = ''").Error; err != nil {
+		return err
+	}
+
 	// Migrate existing reports.batch_id → report_batches (only if batch_id column still exists)
 	var batchColExists int64
 	db.Raw(`

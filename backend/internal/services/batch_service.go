@@ -42,6 +42,8 @@ func (s *BatchService) Create(req web.CreateBatchRequest) (*web.SuccessResponse,
 
 		batch = domain.Batch{
 			BatchNo:   nextNo,
+			BatchName: req.BatchName,
+			Type:      req.Type,
 			StartDate: req.StartDate,
 			EndDate:   req.EndDate,
 			CreatedAt: time.Now(),
@@ -62,8 +64,8 @@ func (s *BatchService) Create(req web.CreateBatchRequest) (*web.SuccessResponse,
 	}, nil
 }
 
-func (s *BatchService) FindAll() (*web.SuccessResponse, error) {
-	batches, err := s.BatchRepository.FindAll(s.DB)
+func (s *BatchService) FindAll(batchType string) (*web.SuccessResponse, error) {
+	batches, err := s.BatchRepository.FindAll(s.DB, batchType)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch batches: %w", err)
 	}
@@ -74,6 +76,8 @@ func (s *BatchService) FindAll() (*web.SuccessResponse, error) {
 		responses = append(responses, web.BatchResponse{
 			ID:          b.ID,
 			BatchNo:     b.BatchNo,
+			BatchName:   b.BatchName,
+			Type:        b.Type,
 			StartDate:   b.StartDate,
 			EndDate:     b.EndDate,
 			Status:      b.Status,
@@ -103,6 +107,8 @@ func (s *BatchService) FindByID(id int) (*web.SuccessResponse, error) {
 		Data: web.BatchResponse{
 			ID:          batch.ID,
 			BatchNo:     batch.BatchNo,
+			BatchName:   batch.BatchName,
+			Type:        batch.Type,
 			StartDate:   batch.StartDate,
 			EndDate:     batch.EndDate,
 			Status:      batch.Status,
@@ -138,8 +144,10 @@ func (s *BatchService) Update(id int, req web.UpdateBatchRequest) (*web.SuccessR
 		}
 	}
 
+	batch.BatchName = req.BatchName
 	batch.StartDate = req.StartDate
 	batch.EndDate = req.EndDate
+	batch.Type = req.Type
 	batch.UpdatedAt = time.Now()
 
 	if err := s.BatchRepository.Update(s.DB, batch); err != nil {
