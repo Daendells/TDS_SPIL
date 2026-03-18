@@ -57,7 +57,7 @@ export default function Page() {
   };
 
   const handleSsoLogin = React.useCallback(() => {
-    const apiBase = process.env.NEXT_PUBLIC_API_ENDPOINT || window.location.origin;
+    const apiBase = process.env.NEXT_PUBLIC_API_ENDPOINT || `${window.location.origin}/tds-api`;
     const params = new URLSearchParams();
     const clientID = searchParams.get("client_id");
     if (clientID) {

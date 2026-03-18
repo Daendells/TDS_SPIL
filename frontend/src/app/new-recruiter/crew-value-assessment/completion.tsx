@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { CESAssessmentData } from "./types";
 import Image from "next/image";
 import { CheckCircle } from "lucide-react";
+import { withBasePath } from "@/lib/base-path";
 
 interface CompletionProps {
   assessmentData: CESAssessmentData;
@@ -66,7 +67,9 @@ export default function Completion({ assessmentData, clearStoredData, role }: Co
             </div>
             <Button
               onClick={() =>
-                (window.location.href = "/new-recruiter/crew-value-assessment/" + role)
+                (window.location.href = withBasePath(
+                  `/new-recruiter/crew-value-assessment/${role}`
+                ))
               }
             >
               Tutup

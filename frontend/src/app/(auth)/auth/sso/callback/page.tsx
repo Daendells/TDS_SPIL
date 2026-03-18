@@ -6,6 +6,7 @@ import Cookies from "universal-cookie";
 import { Loader2, ShieldCheck } from "lucide-react";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { withBasePath } from "@/lib/base-path";
 
 const cookies = new Cookies();
 
@@ -36,7 +37,7 @@ export default function SSOCallbackPage() {
   useEffect(() => {
     const token = searchParams.get("token");
     if (!token) {
-      window.location.href = "/login?sso_error=Missing+token+from+callback";
+      window.location.href = `${withBasePath("/login")}?sso_error=Missing+token+from+callback`;
       return;
     }
 
@@ -57,7 +58,7 @@ export default function SSOCallbackPage() {
       );
     }
 
-    window.location.href = "/dashboard";
+    window.location.href = withBasePath("/dashboard");
   }, [searchParams]);
 
   return (

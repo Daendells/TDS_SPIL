@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import type { CESAssessmentData } from "../types";
 import Image from "next/image";
 import { CheckCircle } from "lucide-react";
+import { withBasePath } from "@/lib/base-path";
 
 interface CompletionProps {
   assessmentData: CESAssessmentData;
@@ -30,7 +31,7 @@ export default function Completion({ assessmentData, clearStoredData, role }: Co
     window.close();
     // Fallback if window.close() doesn't work
     setTimeout(() => {
-      window.location.href = "/crew-evaluation-system";
+      window.location.href = withBasePath("/crew-evaluation-system");
     }, 100);
   };
 

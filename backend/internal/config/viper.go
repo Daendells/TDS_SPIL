@@ -20,6 +20,7 @@ func NewViper() *viper.Viper {
 	config.SetDefault("SSO_CLIENT_SECRET", "")
 	config.SetDefault("SSO_CALLBACK_URL", "")
 	config.SetDefault("FRONTEND_URL", "http://localhost:3000")
+	config.SetDefault("BACKEND_PUBLIC_URL", "http://localhost:8080")
 
 	// Try to read .env file (optional for Docker)
 	config.SetConfigFile(".env")

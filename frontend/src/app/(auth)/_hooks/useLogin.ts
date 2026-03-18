@@ -3,6 +3,7 @@ import { toast } from "sonner";
 import api from "@/app/lib/api";
 import { ApiReturn } from "@/app/types/api";
 import { useAuth } from "@/context/AuthContext";
+import { withBasePath } from "@/lib/base-path";
 import Cookies from "universal-cookie";
 
 const cookies = new Cookies();
@@ -72,7 +73,7 @@ export function useLogin() {
 
       // Navigate to dashboard with window.location to ensure full page reload
       // This prevents RSC issues and ensures middleware runs properly
-      window.location.href = "/dashboard";
+      window.location.href = withBasePath("/dashboard");
     },
     onError: (error) => {
       // Handle login error
@@ -105,7 +106,7 @@ export function useLogout() {
       toast.success("Logout berhasil!");
 
       // Navigate to login with window.location to ensure full page reload
-      window.location.href = "/login";
+      window.location.href = withBasePath("/login");
     },
     onError: (error) => {
       // Handle logout error
@@ -115,7 +116,7 @@ export function useLogout() {
       // Even if logout fails on server, clear local state
       cookies.remove("Authorization", { path: "/" });
       setUser(null);
-      window.location.href = "/login";
+      window.location.href = withBasePath("/login");
     },
   });
 }

@@ -1,17 +1,24 @@
 import { NextResponse } from "next/server";
 import { NextRequest } from "next/server";
 import { jwtVerify } from "jose";
+import { stripBasePath, withBasePath } from "@/lib/base-path";
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET?.trim());
+
+const buildRedirectURL = (request: NextRequest, path: string) => {
+  return new URL(withBasePath(path), request.url);
+};
+
 export async function proxy(request: NextRequest) {
   const token = request.cookies.get("Authorization")?.value;
   console.log("TOKEN:", token);
   const url = request.nextUrl;
+  const pathname = stripBasePath(url.pathname);
 
   // TODO: Handle root "/"
-  if (url.pathname === "/") {
+  if (pathname === "/") {
     if (!token) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(buildRedirectURL(request, "/login"));
     }
 
     try {
@@ -19,17 +26,17 @@ export async function proxy(request: NextRequest) {
         algorithms: ["HS256"],
       });
       console.log("PAYLOAD:", payload);
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(buildRedirectURL(request, "/dashboard"));
     } catch (err) {
       console.log(err);
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(buildRedirectURL(request, "/login"));
     }
   }
 
   // TODO: Handle Public Routes
-  if (url.pathname.startsWith("/login")) {
+  if (pathname.startsWith("/login")) {
     if (token) {
-      return NextResponse.redirect(new URL("/dashboard", request.url));
+      return NextResponse.redirect(buildRedirectURL(request, "/dashboard"));
     }
   }
 
@@ -43,11 +50,11 @@ export async function proxy(request: NextRequest) {
     "/report-mentoring",
   ];
 
-  const isProtectedRoute = protectedRoutes.some((route) => url.pathname.startsWith(route));
+  const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
 
   if (isProtectedRoute) {
     if (!token) {
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(buildRedirectURL(request, "/login"));
     }
 
     try {
@@ -58,7 +65,7 @@ export async function proxy(request: NextRequest) {
       return NextResponse.next();
     } catch (err) {
       console.log("ERROR VERIFY:", (err as Error).message);
-      return NextResponse.redirect(new URL("/login", request.url));
+      return NextResponse.redirect(buildRedirectURL(request, "/login"));
     }
   }
   return NextResponse.next();
