@@ -19,7 +19,6 @@ import {
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import React from "react";
-import { useSearchParams } from "next/navigation";
 
 // Form validation GOES HERE
 import { z } from "zod";
@@ -38,7 +37,9 @@ const FormSchema = z.object({
 
 export default function Page() {
   const loginMutation = useLogin();
-  const searchParams = useSearchParams();
+  const [clientID, setClientID] = React.useState<string | null>(null);
+  const [shouldAutoSSO, setShouldAutoSSO] = React.useState(false);
+  const [ssoError, setSsoError] = React.useState<string | null>(null);
 
   const form = useForm<z.infer<typeof FormSchema>>({
     resolver: zodResolver(FormSchema),
@@ -59,7 +60,6 @@ export default function Page() {
   const handleSsoLogin = React.useCallback(() => {
     const apiBase = process.env.NEXT_PUBLIC_API_ENDPOINT || `${window.location.origin}/tds-api`;
     const params = new URLSearchParams();
-    const clientID = searchParams.get("client_id");
     if (clientID) {
       params.set("client_id", clientID);
     }
@@ -67,17 +67,20 @@ export default function Page() {
     const queryString = params.toString();
     const target = `${apiBase}/api/auth/sso/initiate${queryString ? `?${queryString}` : ""}`;
     window.location.href = target;
-  }, [searchParams]);
+  }, [clientID]);
 
   React.useEffect(() => {
-    const shouldAutoSSO = searchParams.get("login_sso") === "true";
-    const clientID = searchParams.get("client_id");
+    const params = new URLSearchParams(window.location.search);
+    setClientID(params.get("client_id"));
+    setShouldAutoSSO(params.get("login_sso") === "true");
+    setSsoError(params.get("sso_error"));
+  }, []);
+
+  React.useEffect(() => {
     if (shouldAutoSSO && clientID === process.env.NEXT_PUBLIC_SSO_CLIENT_ID) {
       handleSsoLogin();
     }
-  }, [handleSsoLogin, searchParams]);
-
-  const ssoError = searchParams.get("sso_error");
+  }, [clientID, handleSsoLogin, shouldAutoSSO]);
 
   return (
     <div className="flex flex-col gap-5">

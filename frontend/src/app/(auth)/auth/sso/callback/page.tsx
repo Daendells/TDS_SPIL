@@ -1,7 +1,6 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
 import Cookies from "universal-cookie";
 import { Loader2, ShieldCheck } from "lucide-react";
 
@@ -32,9 +31,8 @@ function decodeTokenPayload(token: string): TokenPayload | null {
 }
 
 export default function SSOCallbackPage() {
-  const searchParams = useSearchParams();
-
   useEffect(() => {
+    const searchParams = new URLSearchParams(window.location.search);
     const token = searchParams.get("token");
     if (!token) {
       window.location.href = `${withBasePath("/login")}?sso_error=Missing+token+from+callback`;
@@ -59,7 +57,7 @@ export default function SSOCallbackPage() {
     }
 
     window.location.href = withBasePath("/dashboard");
-  }, [searchParams]);
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full overflow-hidden bg-slate-50">
