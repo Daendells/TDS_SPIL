@@ -4,15 +4,15 @@ import Cookies from "universal-cookie";
 
 import { UninterceptedApiError } from "../types/api";
 
-export const BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8080";
+export const BASE_URL = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8081";
 
 export const api = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT,
+  baseURL: process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8081",
   headers: {
     "Content-Type": "application/json",
   },
-  timeout: 20000,
-  timeoutErrorMessage: "Perikasa Kembali Koneksi Internet Anda.",
+  timeout: 120000,
+  timeoutErrorMessage: "Periksa kembali koneksi internet Anda.",
   withCredentials: true, // Enable credentials for cookies
 });
 

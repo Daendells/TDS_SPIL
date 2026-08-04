@@ -298,6 +298,10 @@ export default function MasterPage({
         await createReport({
           nama: seaman.name,
           seamanCode: seaman.seamanCode,
+          seafarerCode: seaman.seafarerCode,
+          jabatan: seaman.jabatan,
+          certificate: seaman.certificate,
+          vesselName: seaman.vesselName,
         });
       }
 

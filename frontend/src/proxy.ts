@@ -48,6 +48,7 @@ export async function proxy(request: NextRequest) {
     "/assessment-type-manager",
     "/assignments",
     "/report-mentoring",
+    "/cv-analysis",
   ];
 
   const isProtectedRoute = protectedRoutes.some((route) => pathname.startsWith(route));
@@ -83,5 +84,6 @@ export const config = {
     "/assignments/:path*",
     "/value-assessment/:path*",
     "/report-mentoring/:path*",
+    "/cv-analysis/:path*",
   ],
 };

@@ -12,8 +12,8 @@ RUN apk add --no-cache libc6-compat
 # Copy package files
 COPY package.json package-lock.json* ./
 
-# Install all dependencies (including devDependencies for hot reload)
-RUN npm ci
+# Install dependencies (npm install for development lock file flexibility)
+RUN npm install
 
 # Expose port
 EXPOSE 3000

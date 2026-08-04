@@ -585,6 +585,26 @@ func (s *MasterService) Create(request *web.MasterReportData) (*web.SuccessRespo
 		if err := s.DB.Where("seaman_code = ?", *master.SeamanCode).First(&existing).Error; err == nil {
 			return nil, fmt.Errorf("report with seaman code '%s' already exists (ID: %d)", *master.SeamanCode, existing.ID)
 		}
+
+		// Auto-enrich missing seafarer details from seamen_cache
+		var seamenCache domain.SeamenCache
+		if err := s.DB.Where("seaman_code = ?", *master.SeamanCode).First(&seamenCache).Error; err == nil {
+			if (master.SeafarerCode == nil || *master.SeafarerCode == "") && seamenCache.SeafarerCode != "" {
+				master.SeafarerCode = &seamenCache.SeafarerCode
+			}
+			if (master.Jabatan == nil || *master.Jabatan == "") && seamenCache.LastPosition != "" {
+				master.Jabatan = &seamenCache.LastPosition
+			}
+			if (master.Certificate == nil || *master.Certificate == "") && seamenCache.Certificate != "" {
+				master.Certificate = &seamenCache.Certificate
+			}
+			if (master.VesselName == nil || *master.VesselName == "") && seamenCache.LastLocation != "" {
+				master.VesselName = &seamenCache.LastLocation
+			}
+			if (master.Nama == nil || *master.Nama == "") && seamenCache.Name != "" {
+				master.Nama = &seamenCache.Name
+			}
+		}
 	}
 
 	// Context: User wants new reports to be assigned to the currently filtered batch (if any)

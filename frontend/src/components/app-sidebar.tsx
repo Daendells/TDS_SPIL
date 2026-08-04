@@ -10,6 +10,7 @@ import {
   Calendar,
   Users,
   History,
+  Sparkles,
 } from "lucide-react";
 
 import {
@@ -85,6 +86,11 @@ const items = [
     title: "Quiz History",
     url: "/quiz-history",
     icon: History,
+  },
+  {
+    title: "CV Analysis (AI)",
+    url: "/cv-analysis",
+    icon: Sparkles,
   },
   {
     title: "Batch Control",

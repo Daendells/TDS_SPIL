@@ -1,0 +1,39 @@
+version: "3.8"
+
+# ============================================================
+# TDS Frontend ONLY - pointing to HOSTED API (pe.spil.co.id/tds-api)
+# Tidak pakai backend lokal / MySQL lokal.
+# Data diambil dari server production TDS.
+# ============================================================
+
+services:
+  tds_frontend:
+    container_name: tds_frontend_hosted
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    environment:
+      NODE_ENV: development
+      NEXT_PUBLIC_API_ENDPOINT: https://pe.spil.co.id/tds-api
+      NEXT_PUBLIC_BASE_PATH: /tds
+      NEXT_PUBLIC_SSO_CLIENT_ID: client_29f1ebacc189d8f2162d95ea63acd6a5
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+      JWT_SECRET: your-secret-key
+      NODE_OPTIONS: "--max-old-space-size=4096"
+    deploy:
+      resources:
+        limits:
+          memory: 5g
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+      - /app/.next
+    networks:
+      - tds-net
+
+networks:
+  tds-net:
+    driver: bridge

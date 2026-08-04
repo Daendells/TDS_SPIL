@@ -11,8 +11,11 @@ import (
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 
+	"backend/internal/ai"
+	"backend/internal/benchmark"
 	"backend/internal/controllers"
 	trainingController "backend/internal/controllers/training"
+	"backend/internal/llm"
 	"backend/internal/middlewares"
 	"backend/internal/repositories"
 	"backend/internal/routers"
@@ -171,6 +174,39 @@ func Bootstrap(config *BootstrapConfig) {
 	)
 	trainingGenController := trainingController.NewTrainingController(trainingServiceDB, trainingGenService, quizGenService, config.Log)
 
+	// --- OpenRouter Client & CV Analysis Service (lama — backward compatibility)
+	openRouterClient := llm.NewOpenRouterClient(
+		config.Log,
+		config.Config.GetString("OPENROUTER_API_KEY"),
+		config.Config.GetString("OPENROUTER_MODEL"),
+		config.Config.GetString("OPENROUTER_BASE_URL"),
+	)
+	cvAnalysisService := services.NewCVAnalysisService(config.Log, openRouterClient)
+	cvAnalysisController := controllers.NewCVAnalysisController(config.Log, cvAnalysisService)
+
+	// --- AI Abstraction Layer (baru)
+	aiProvider, err := ai.NewProvider(config.Log, ai.ProviderConfig{
+		Provider: config.Config.GetString("MODEL_PROVIDER"),
+		APIKey:   config.Config.GetString("OPENROUTER_API_KEY"),
+		BaseURL:  config.Config.GetString("OPENROUTER_BASE_URL"),
+	})
+	if err != nil {
+		config.Log.Fatalf("Failed to initialize AI provider: %v", err)
+	}
+
+	// --- Benchmark Logger
+	benchmarkLogger := benchmark.NewLogger(config.Log, "logs/ai_benchmark.jsonl")
+
+	// --- New Feature Services
+	candidateAnalysisService := services.NewCandidateAnalysisService(config.Log, aiProvider, benchmarkLogger)
+	roleAnalysisService := services.NewRoleAnalysisService(config.Log, aiProvider, benchmarkLogger)
+	interviewQuestionService := services.NewInterviewQuestionService(config.Log, aiProvider, benchmarkLogger)
+
+	// --- New Feature Controllers
+	candidateAnalysisController := controllers.NewCandidateAnalysisController(config.Log, candidateAnalysisService, interviewQuestionService)
+	roleAnalysisController := controllers.NewRoleAnalysisController(config.Log, roleAnalysisService)
+	pdfController := controllers.NewPDFController(config.Log)
+
 	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KEY"))
 
 	// --- Router setup
@@ -203,6 +239,10 @@ func Bootstrap(config *BootstrapConfig) {
 		ScoringConfigController: scoringConfigController,
 		NewRecruiterController:  newRecruiterController,
 		BatchController:         batchController,
+		CVAnalysisController:            cvAnalysisController,
+		CandidateAnalysisController:     candidateAnalysisController,
+		RoleAnalysisController:          roleAnalysisController,
+		PDFController:                   pdfController,
 	}
 	routerConfig.Setup()
 

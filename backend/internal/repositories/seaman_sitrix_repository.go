@@ -32,7 +32,11 @@ func (r *SeamanRepository) FindAvailableSeamen(
 	err := r.DB.Raw(`
 		SELECT
     s.name AS name,
-    s.seaman_code AS seaman_code
+    s.seaman_code AS seaman_code,
+    s.seafarer_code AS seafarer_code,
+    s.last_position AS jabatan,
+    s.certificate AS certificate,
+    s.last_location AS vessel_name
 FROM seamen_cache s
 WHERE NOT EXISTS (
     SELECT 1

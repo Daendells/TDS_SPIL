@@ -244,6 +244,10 @@ export interface ICompetencyType {
 export interface SeamanLookup {
   name: string;
   seamanCode: string;
+  seafarerCode?: string;
+  jabatan?: string;
+  certificate?: string;
+  vesselName?: string;
 }
 
 export interface IGapCompetency {

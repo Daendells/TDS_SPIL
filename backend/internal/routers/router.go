@@ -35,6 +35,10 @@ type RouterConfig struct {
 	NewRecruiterController       *controllers.NewRecruiterController
 	AuthMiddleware               gin.HandlerFunc
 	BatchController              *controllers.BatchController
+	CVAnalysisController            *controllers.CVAnalysisController
+	CandidateAnalysisController     *controllers.CandidateAnalysisController
+	RoleAnalysisController          *controllers.RoleAnalysisController
+	PDFController                   *controllers.PDFController
 }
 
 func (c *RouterConfig) Setup() {
@@ -51,6 +55,10 @@ func (c *RouterConfig) Setup() {
 	c.SetupBatchRouter()
 	c.SetupQuizRouter()
 	c.SetupScoringConfigRouter()
+	c.SetupCVAnalysisRouter()
+	c.SetupCandidateAnalysisRouter()
+	c.SetupRoleAnalysisRouter()
+	c.SetupPDFRouter()
 }
 
 func (c *RouterConfig) SetupGuestRouter() {
@@ -354,5 +362,43 @@ func (r *RouterConfig) SetupBatchRouter() {
 		group.GET("/:id", r.BatchController.FindByID)
 		group.PUT("/:id", r.BatchController.Update)
 		group.GET("/:id/snapshots", r.BatchController.GetSnapshots)
+	}
+}
+
+func (r *RouterConfig) SetupCVAnalysisRouter() {
+	group := r.App.Group("/api/cv-analysis")
+	{
+		group.POST("/analyze", r.CVAnalysisController.AnalyzeCV)
+		group.POST("/rank-candidates", r.CVAnalysisController.RankCandidates)
+		group.POST("/recommend-roles", r.CVAnalysisController.RecommendRoles)
+		group.POST("/unified-analysis", r.CVAnalysisController.AnalyzeUnifiedCVs)
+	}
+}
+
+// SetupCandidateAnalysisRouter mendaftarkan endpoint Fitur 1 (Candidate Analysis).
+func (r *RouterConfig) SetupCandidateAnalysisRouter() {
+	group := r.App.Group("/api/candidate-analysis")
+	{
+		// POST /api/candidate-analysis — Analisis 1 CV terhadap seluruh role IT
+		group.POST("", r.CandidateAnalysisController.Analyze)
+		// POST /api/candidate-analysis/interview-questions — Generate interview questions on-demand
+		group.POST("/interview-questions", r.CandidateAnalysisController.GenerateInterviewQuestions)
+	}
+}
+
+// SetupPDFRouter mendaftarkan endpoint untuk ekstraksi teks dari PDF.
+func (r *RouterConfig) SetupPDFRouter() {
+	group := r.App.Group("/api/pdf")
+	{
+		group.POST("/extract", r.PDFController.ExtractText)
+	}
+}
+
+// SetupRoleAnalysisRouter mendaftarkan endpoint Fitur 2 (Role Analysis).
+func (r *RouterConfig) SetupRoleAnalysisRouter() {
+	group := r.App.Group("/api/role-analysis")
+	{
+		// POST /api/role-analysis — Ranking banyak kandidat untuk 1 role
+		group.POST("", r.RoleAnalysisController.Analyze)
 	}
 }

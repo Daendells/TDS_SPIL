@@ -200,12 +200,16 @@ export default function TrainingMaterialTab() {
       // Combine keyword (deskripsi_perilaku) with optional referensi
       let combinedReferensi = item.deskripsi_perilaku || "";
 
-      // Use existing referensi or generate default
-      const referensiToUse = item.referensi || generateDefaultReferensi(item);
+      // Use user's custom referensi or fallback to system prompt
+      const customRef = getUserCustomReferensi(item.referensi);
+      const defaultPrompt = generateDefaultReferensi(item);
+      const referensiToUse = customRef
+        ? `${defaultPrompt}\n\nReferensi Tambahan:\n${customRef}`
+        : defaultPrompt;
 
       if (referensiToUse) {
         combinedReferensi = combinedReferensi
-          ? `${combinedReferensi}\n\nReferensi Tambahan:\n${referensiToUse}`
+          ? `${combinedReferensi}\n\n${referensiToUse}`
           : referensiToUse;
       }
 
@@ -365,6 +369,13 @@ export default function TrainingMaterialTab() {
     } finally {
       setCreateLoading(false);
     }
+  };
+
+  // Extract custom user referensi, filtering out default system prompt if present
+  const getUserCustomReferensi = (referensi?: string | null): string => {
+    if (!referensi) return "";
+    if (referensi.trim().startsWith("buatkan slide training online")) return "";
+    return referensi.trim();
   };
 
   // Generate default referensi text based on training data
@@ -608,13 +619,11 @@ yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topi
                                   size="sm"
                                   onClick={() => {
                                     setSelectedTraining(item);
-                                    // Use existing referensi or generate default
-                                    setTempReferensi(
-                                      item.referensi || generateDefaultReferensi(item)
-                                    );
+                                    // Load only user's custom referensi (not default system prompt)
+                                    setTempReferensi(getUserCustomReferensi(item.referensi));
                                   }}
                                 >
-                                  {item.referensi ? "Edit" : "Tambah"}
+                                  {getUserCustomReferensi(item.referensi) ? "Edit" : "Tambah"}
                                 </Button>
                               </td>
                               <td className="py-3 px-4 text-center">

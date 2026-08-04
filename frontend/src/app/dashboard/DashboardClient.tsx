@@ -34,6 +34,11 @@ const PAGE_SIZES = [10, 20, 50, 100];
 
 export default function DashboardClient() {
   const router = useRouter();
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
 
   // Search state
   const [searchQuery, setSearchQuery] = useState("");
@@ -168,59 +173,67 @@ export default function DashboardClient() {
         <div className="flex items-center gap-4">
           {/* Page Size Selector */}
           <div className="flex items-center gap-2">
-            <Select
-              value={paginationRequest.pageSize.toString()}
-              onValueChange={(val) => {
-                const size = parseInt(val);
-                setPaginationRequest({
-                  ...paginationRequest,
-                  pageSize: size,
-                  anchorId: 0,
-                  page: "next",
-                });
-              }}
-            >
-              <SelectTrigger className="w-[100px]">
-                <SelectValue placeholder="Page Size" />
-              </SelectTrigger>
-              <SelectContent>
-                {PAGE_SIZES.map((size) => (
-                  <SelectItem key={size} value={size.toString()}>
-                    {size}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isMounted ? (
+              <Select
+                value={paginationRequest.pageSize.toString()}
+                onValueChange={(val) => {
+                  const size = parseInt(val);
+                  setPaginationRequest({
+                    ...paginationRequest,
+                    pageSize: size,
+                    anchorId: 0,
+                    page: "next",
+                  });
+                }}
+              >
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue placeholder="Page Size" />
+                </SelectTrigger>
+                <SelectContent>
+                  {PAGE_SIZES.map((size) => (
+                    <SelectItem key={size} value={size.toString()}>
+                      {size}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="w-[100px] h-10 bg-slate-100 rounded-md border animate-pulse" />
+            )}
             <span className="text-sm text-muted-foreground whitespace-nowrap">Halaman</span>
           </div>
 
           {/* Batch Selector */}
           <div className="flex items-center gap-2">
-            <Select
-              value={paginationRequest.batchId?.toString() || "all"}
-              onValueChange={(val) => {
-                const bId = val === "all" ? undefined : val === "none" ? -1 : parseInt(val);
-                setPaginationRequest({
-                  ...paginationRequest,
-                  batchId: bId,
-                  anchorId: 0,
-                  page: "next",
-                });
-              }}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Pilih Batch" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Semua Batch</SelectItem>
-                <SelectItem value="none">Tanpa Batch</SelectItem>
-                {batchData?.map((batch: Batch) => (
-                  <SelectItem key={batch.id} value={batch.id.toString()}>
-                    Batch {batch.batchNo}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            {isMounted ? (
+              <Select
+                value={paginationRequest.batchId?.toString() || "all"}
+                onValueChange={(val) => {
+                  const bId = val === "all" ? undefined : val === "none" ? -1 : parseInt(val);
+                  setPaginationRequest({
+                    ...paginationRequest,
+                    batchId: bId,
+                    anchorId: 0,
+                    page: "next",
+                  });
+                }}
+              >
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Pilih Batch" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Batch</SelectItem>
+                  <SelectItem value="none">Tanpa Batch</SelectItem>
+                  {batchData?.map((batch: Batch) => (
+                    <SelectItem key={batch.id} value={batch.id.toString()}>
+                      Batch {batch.batchNo}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            ) : (
+              <div className="w-[180px] h-10 bg-slate-100 rounded-md border animate-pulse" />
+            )}
             <span className="text-sm text-muted-foreground whitespace-nowrap">Batch</span>
           </div>
         </div>
