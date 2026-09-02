@@ -1,7 +1,6 @@
 package middlewares
 
 import (
-	"fmt"
 	"net/http"
 	"time"
 
@@ -15,6 +14,7 @@ var (
 	TOKEN_COOKIE = "Authorization"
 	TOKEN_KEY    = "TOKEN"
 	USER_KEY     = "USER"
+	ROLE_KEY     = "ROLE"
 )
 
 func DeleteToken(ctx *gin.Context) {
@@ -22,27 +22,19 @@ func DeleteToken(ctx *gin.Context) {
 }
 
 func AuthMiddleware(secret string) gin.HandlerFunc {
-	fmt.Println("AuthMiddleware initialized with secret:", secret)
 	return func(ctx *gin.Context) {
-		fmt.Printf("[AUTH] Method: %s, Path: %s\n", ctx.Request.Method, ctx.Request.URL.Path)
-
 		var tokenString string
 		var err error
 
 		// First try to get token from cookie
 		tokenString, err = ctx.Cookie(TOKEN_COOKIE)
-		fmt.Printf("[AUTH] Cookie attempt - Error: %v, Token: %s\n", err, tokenString)
 
 		// If no cookie, try Authorization header
-		if err != nil {
+		if err != nil || tokenString == "" {
 			authHeader := ctx.GetHeader("Authorization")
-			fmt.Printf("[AUTH] Authorization header: '%s'\n", authHeader)
-
 			if authHeader != "" && len(authHeader) > 7 && authHeader[:7] == "Bearer " {
 				tokenString = authHeader[7:] // Remove "Bearer " prefix
-				fmt.Printf("[AUTH] Token extracted from header: %s\n", tokenString)
 			} else {
-				fmt.Printf("[AUTH] No valid authorization header found\n")
 				ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
 					Code:   http.StatusUnauthorized,
 					Status: "Unauthorized",
@@ -53,64 +45,77 @@ func AuthMiddleware(secret string) gin.HandlerFunc {
 			}
 		}
 
-		fmt.Println("[AUTH] Final token to validate:", tokenString)
-
-		// TODO: Decode and Validate it
+		// Decode and Validate JWT
 		token, err := jwt.Parse(tokenString, func(token *jwt.Token) (any, error) {
 			return []byte(secret), nil
 		}, jwt.WithValidMethods([]string{jwt.SigningMethodHS256.Alg()}))
-		//! IF the signature is different
+
 		if err != nil {
-			//! Delete Token
-			// DeleteToken(ctx)
 			ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
 				Code:   http.StatusUnauthorized,
 				Status: "Unauthorized",
-				Error:  "Signature Failed",
-				// Error: err.Error(),
+				Error:  "Invalid or Expired Token Signature",
 			})
 			ctx.Abort()
 			return
 		}
 
-		// TODO: Claim the JWT
 		if claims, ok := token.Claims.(jwt.MapClaims); ok {
-			fmt.Println(claims)
-			// TODO: Check the expired time
-			if float64(time.Now().Unix()) > claims["expired"].(float64) {
-				//! Delete the Cookie
-				DeleteToken(ctx)
-				ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
-					Code:   http.StatusUnauthorized,
-					Status: "Unauthorized",
-					Error:  "Token Expired",
-				})
-				ctx.Abort()
-				return
+			// Check expiration
+			if exp, ok := claims["expired"].(float64); ok {
+				if float64(time.Now().Unix()) > exp {
+					DeleteToken(ctx)
+					ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
+						Code:   http.StatusUnauthorized,
+						Status: "Unauthorized",
+						Error:  "Token Expired",
+					})
+					ctx.Abort()
+					return
+				}
 			}
 
-			// TODO: Find the user with Token Sub
-			// var user domain.User
-			fmt.Println(claims)
+			// Extract User Info & Role
+			role := "viewer"
+			if r, ok := claims["role"].(string); ok && r != "" {
+				role = r
+			}
 
-			// TODO: Set the User
+			username := ""
+			if u, ok := claims["username"].(string); ok {
+				username = u
+			}
 
-			// TODO: Set the Token (for logout)
 			ctx.Set(TOKEN_KEY, tokenString)
+			ctx.Set(USER_KEY, username)
+			ctx.Set(ROLE_KEY, role)
 
-			// Continue
 			ctx.Next()
-
 		} else {
 			ctx.JSON(http.StatusUnauthorized, web.ErrorResponse{
 				Code:   http.StatusUnauthorized,
 				Status: "Unauthorized",
-				Error:  "Failed to Claim",
+				Error:  "Failed to claim token",
 			})
 			ctx.Abort()
 			return
 		}
-		// fmt.Println(tokenString)
-		// ctx.Next()
+	}
+}
+
+// AdminOnly middleware memastikan bahwa request hanya dapat dilakukan oleh pengguna dengan role 'admin'
+func AdminOnly() gin.HandlerFunc {
+	return func(ctx *gin.Context) {
+		roleVal, exists := ctx.Get(ROLE_KEY)
+		if !exists || roleVal != "admin" {
+			ctx.JSON(http.StatusForbidden, web.ErrorResponse{
+				Code:   http.StatusForbidden,
+				Status: "Forbidden",
+				Error:  "Akses ditolak: Fitur ini hanya dapat diakses oleh Admin",
+			})
+			ctx.Abort()
+			return
+		}
+		ctx.Next()
 	}
 }

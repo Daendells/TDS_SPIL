@@ -20,12 +20,14 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Trash2, Edit2, Plus } from "lucide-react";
+import { Loader2, Trash2, Edit2, Plus, ShieldAlert } from "lucide-react";
 import { UserDialog } from "@/components/UserDialog";
 import { useGetUsers, useDeleteUser, type User } from "@/hooks/useUserManagement";
+import { useAuth } from "@/context/AuthContext";
 import { toast } from "sonner";
 
 export default function UserManagementPage() {
+  const { isAdmin } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
@@ -34,6 +36,22 @@ export default function UserManagementPage() {
 
   const { data: users, isLoading, error } = useGetUsers();
   const deleteUserMutation = useDeleteUser();
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh] p-8 text-center space-y-4">
+        <div className="w-14 h-14 rounded-full bg-amber-50 text-amber-600 flex items-center justify-center">
+          <ShieldAlert className="w-7 h-7" />
+        </div>
+        <div>
+          <h2 className="text-xl font-bold text-gray-900">Akses Terbatas (Admin Only)</h2>
+          <p className="text-sm text-gray-500 mt-1 max-w-md">
+            Akun Anda saat ini memiliki role <strong>Viewer</strong>. Menu User Management hanya dapat dikelola oleh Administrator sistem.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const handleCreateNew = () => {
     setIsEditMode(false);
@@ -122,8 +140,12 @@ export default function UserManagementPage() {
                       <TableCell className="font-medium">{user.id}</TableCell>
                       <TableCell>{user.username}</TableCell>
                       <TableCell>
-                        <span className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium capitalize">
-                          {user.role}
+                        <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold uppercase tracking-wider ${
+                          user.role === "admin"
+                            ? "bg-blue-100 text-blue-800 border border-blue-200"
+                            : "bg-slate-100 text-slate-700 border border-slate-200"
+                        }`}>
+                          {user.role === "admin" ? "Admin" : "Viewer"}
                         </span>
                       </TableCell>
                       <TableCell className="text-sm text-gray-600">{user.createdAt}</TableCell>

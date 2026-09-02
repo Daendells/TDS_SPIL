@@ -25,6 +25,7 @@ export interface RoleAnalysisResult {
   total_candidates: number;
   recommended_candidate: string;
   recommendation_reason: string;
+  role_criteria_summary?: string;
   rankings: CandidateRankingItem[];
 }
 

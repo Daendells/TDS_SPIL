@@ -13,13 +13,13 @@ export interface User {
 export interface CreateUserRequest {
   username: string;
   password: string;
-  role: "admin";
+  role: "admin" | "viewer";
 }
 
 export interface UpdateUserRequest {
   username?: string;
   password?: string;
-  role?: "admin";
+  role?: "admin" | "viewer";
 }
 
 // Hook untuk get semua users

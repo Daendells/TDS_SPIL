@@ -11,6 +11,7 @@ import { useUpdateAssessmentTutorial } from "./_hooks/useAssessment";
 import { useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
 
 interface TutorialSectionProps {
   assessmentId: number;
@@ -25,6 +26,7 @@ export function TutorialSection({
   initialContent,
   initialTimerMinutes,
 }: TutorialSectionProps) {
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
   const updateMutation = useUpdateAssessmentTutorial();
 
@@ -83,7 +85,7 @@ export function TutorialSection({
             <BookOpen className="h-4 w-4" />
             Tutorial — {assessmentName}
           </CardTitle>
-          {!isEditing && (
+          {isAdmin && !isEditing && (
             <Button
               variant="outline"
               size="sm"

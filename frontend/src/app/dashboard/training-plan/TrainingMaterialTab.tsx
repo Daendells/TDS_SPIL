@@ -31,6 +31,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { FileText, RefreshCw, Edit, Trash2, Search } from "lucide-react";
 import { Input } from "@/components/ui/input";
+import { useAuth } from "@/context/AuthContext";
 
 interface ITraining {
   no: number;
@@ -71,6 +72,7 @@ interface GroupedTraining {
 }
 
 export default function TrainingMaterialTab() {
+  const { isAdmin } = useAuth();
   const [data, setData] = useState<ITraining[]>([]);
   const [groupedData, setGroupedData] = useState<GroupedTraining[]>([]);
   const [loading, setLoading] = useState(true);
@@ -545,10 +547,12 @@ yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topi
               className="pl-10 w-64"
             />
           </div>
-          <Button onClick={openCreateDialog} className="gap-2">
-            <FileText className="w-4 h-4" />
-            Add New Training
-          </Button>
+          {isAdmin && (
+            <Button onClick={openCreateDialog} className="gap-2">
+              <FileText className="w-4 h-4" />
+              Add New Training
+            </Button>
+          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -596,10 +600,10 @@ yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topi
                             <th className="py-3 px-4 text-left font-semibold">Topik Training</th>
                             <th className="py-3 px-4 text-left font-semibold">Tools/Framework</th>
                             <th className="py-3 px-4 text-center font-semibold">Referensi</th>
-                            <th className="py-3 px-4 text-center font-semibold">Material</th>
-                            <th className="py-3 px-4 text-center font-semibold">Quiz</th>
+                            {isAdmin && <th className="py-3 px-4 text-center font-semibold">Material</th>}
+                            {isAdmin && <th className="py-3 px-4 text-center font-semibold">Quiz</th>}
                             <th className="py-3 px-4 text-center font-semibold">Files</th>
-                            <th className="py-3 px-4 text-center font-semibold">Actions</th>
+                            {isAdmin && <th className="py-3 px-4 text-center font-semibold">Actions</th>}
                           </tr>
                         </thead>
                         <tbody>
@@ -614,60 +618,70 @@ yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topi
                               <td className="py-3 px-4">{item.topik_training}</td>
                               <td className="py-3 px-4 text-gray-600">{item.tools_training}</td>
                               <td className="py-3 px-4 text-center">
-                                <Button
-                                  variant="secondary"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedTraining(item);
-                                    // Load only user's custom referensi (not default system prompt)
-                                    setTempReferensi(getUserCustomReferensi(item.referensi));
-                                  }}
-                                >
-                                  {getUserCustomReferensi(item.referensi) ? "Edit" : "Tambah"}
-                                </Button>
-                              </td>
-                              <td className="py-3 px-4 text-center">
-                                {item.generated_file_url || item.generated_pdf_url ? (
+                                {isAdmin ? (
                                   <Button
+                                    variant="secondary"
                                     size="sm"
-                                    variant="outline"
-                                    onClick={() => openRegenerateDialog(item)}
-                                    disabled={generating === item.no}
-                                    className="gap-2"
+                                    onClick={() => {
+                                      setSelectedTraining(item);
+                                      // Load only user's custom referensi (not default system prompt)
+                                      setTempReferensi(getUserCustomReferensi(item.referensi));
+                                    }}
                                   >
-                                    <RefreshCw className="w-4 h-4" />
-                                    {generating === item.no ? "Regenerating..." : "Regenerate"}
+                                    {getUserCustomReferensi(item.referensi) ? "Edit" : "Tambah"}
                                   </Button>
                                 ) : (
-                                  <Button
-                                    size="sm"
-                                    onClick={() => handleGenerate(item, false)}
-                                    disabled={generating === item.no}
-                                  >
-                                    {generating === item.no ? "Generating..." : "Generate"}
-                                  </Button>
+                                  <span className="text-xs text-gray-500">
+                                    {getUserCustomReferensi(item.referensi) ? "Ada Referensi" : "-"}
+                                  </span>
                                 )}
                               </td>
-                              <td className="py-3 px-4 text-center">
-                                <Button
-                                  size="sm"
-                                  variant={item.generated_quiz_url ? "outline" : "default"}
-                                  onClick={() => handleGenerateQuiz(item)}
-                                  disabled={generatingQuiz === item.no || !item.generated_pdf_url}
-                                  className="gap-2"
-                                >
-                                  {generatingQuiz === item.no ? (
-                                    "Generating..."
-                                  ) : item.generated_quiz_url ? (
-                                    <>
+                              {isAdmin && (
+                                <td className="py-3 px-4 text-center">
+                                  {item.generated_file_url || item.generated_pdf_url ? (
+                                    <Button
+                                      size="sm"
+                                      variant="outline"
+                                      onClick={() => openRegenerateDialog(item)}
+                                      disabled={generating === item.no}
+                                      className="gap-2"
+                                    >
                                       <RefreshCw className="w-4 h-4" />
-                                      Regenerate Quiz
-                                    </>
+                                      {generating === item.no ? "Regenerating..." : "Regenerate"}
+                                    </Button>
                                   ) : (
-                                    "Generate Quiz"
+                                    <Button
+                                      size="sm"
+                                      onClick={() => handleGenerate(item, false)}
+                                      disabled={generating === item.no}
+                                    >
+                                      {generating === item.no ? "Generating..." : "Generate"}
+                                    </Button>
                                   )}
-                                </Button>
-                              </td>
+                                </td>
+                              )}
+                              {isAdmin && (
+                                <td className="py-3 px-4 text-center">
+                                  <Button
+                                    size="sm"
+                                    variant={item.generated_quiz_url ? "outline" : "default"}
+                                    onClick={() => handleGenerateQuiz(item)}
+                                    disabled={generatingQuiz === item.no || !item.generated_pdf_url}
+                                    className="gap-2"
+                                  >
+                                    {generatingQuiz === item.no ? (
+                                      "Generating..."
+                                    ) : item.generated_quiz_url ? (
+                                      <>
+                                        <RefreshCw className="w-4 h-4" />
+                                        Regenerate Quiz
+                                      </>
+                                    ) : (
+                                      "Generate Quiz"
+                                    )}
+                                  </Button>
+                                </td>
+                              )}
                               <td className="py-3 px-4 text-center">
                                 <div className="flex gap-2 justify-center">
                                   {item.generated_file_url ? (
@@ -732,26 +746,28 @@ yaitu slide 1: judul, slide 2: objective, slide 3: konsep penjelasan detail topi
                                   )}
                                 </div>
                               </td>
-                              <td className="py-3 px-4 text-center">
-                                <div className="flex gap-2 justify-center">
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => openEditDialog(item)}
-                                    className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-                                  >
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => openDeleteDialog(item)}
-                                    className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                                  >
-                                    <Trash2 className="h-4 w-4" />
-                                  </Button>
-                                </div>
-                              </td>
+                              {isAdmin && (
+                                <td className="py-3 px-4 text-center">
+                                  <div className="flex gap-2 justify-center">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => openEditDialog(item)}
+                                      className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
+                                    >
+                                      <Edit className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => openDeleteDialog(item)}
+                                      className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
+                                    >
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </td>
+                              )}
                             </tr>
                           ))}
                         </tbody>

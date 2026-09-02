@@ -342,8 +342,8 @@ func (s *SSOService) findOrCreateUser(info *ssoUserInfo) (*domain.User, error) {
 
 	var userByUsername domain.User
 	if err := s.UserRepository.FindByUsername(s.DB, &userByUsername, info.Username); err == nil {
-		userByUsername.SSOID = info.ID
-		if updateErr := s.UserRepository.Update(s.DB, &userByUsername); updateErr != nil {
+		userByUsername.SSOID = &info.ID
+		if updateErr := s.DB.Model(&userByUsername).Update("sso_id", info.ID).Error; updateErr != nil {
 			return nil, updateErr
 		}
 		return &userByUsername, nil
@@ -357,11 +357,18 @@ func (s *SSOService) findOrCreateUser(info *ssoUserInfo) (*domain.User, error) {
 	newUser := &domain.User{
 		Username: info.Username,
 		Password: password,
-		Role:     "admin",
-		SSOID:    info.ID,
+		Role:     "viewer",
+		SSOID:    &info.ID,
 	}
 
 	if err := s.UserRepository.Create(s.DB, newUser); err != nil {
+		// Fallback jika terjadi race condition / concurrent requests
+		var existingUser domain.User
+		if retryErr := s.UserRepository.FindByUsername(s.DB, &existingUser, info.Username); retryErr == nil {
+			existingUser.SSOID = &info.ID
+			_ = s.DB.Model(&existingUser).Update("sso_id", info.ID)
+			return &existingUser, nil
+		}
 		return nil, err
 	}
 

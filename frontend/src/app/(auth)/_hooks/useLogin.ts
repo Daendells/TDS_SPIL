@@ -17,6 +17,7 @@ export type LoginRequest = {
 export type LoginResponse = {
   id: number;
   username: string;
+  role?: string;
   token: string;
 };
 
@@ -55,6 +56,21 @@ export function useLogin() {
       return response.data.data;
     },
     onSuccess: (userData) => {
+      // Decode JWT token payload as secondary verification
+      let resolvedRole = userData.role;
+      if (!resolvedRole && userData.token) {
+        try {
+          const parts = userData.token.split(".");
+          if (parts.length >= 2) {
+            const payload = JSON.parse(atob(parts[1].replace(/-/g, "+").replace(/_/g, "/")));
+            if (payload.role) resolvedRole = payload.role;
+          }
+        } catch (e) {
+          console.warn("Failed to decode token payload:", e);
+        }
+      }
+      if (!resolvedRole) resolvedRole = "viewer";
+
       // Store token in cookie (manually from frontend)
       cookies.set("Authorization", userData.token, {
         path: "/",
@@ -62,17 +78,23 @@ export function useLogin() {
         sameSite: "lax",
       });
 
-      // Set user data in auth context (without token)
-      setUser({
+      const userObject = {
         id: userData.id,
         username: userData.username,
-      });
+        role: resolvedRole,
+      };
+
+      if (typeof window !== "undefined") {
+        localStorage.setItem("USER", JSON.stringify(userObject));
+      }
+
+      // Set user data in auth context
+      setUser(userObject);
 
       // Show success message
       toast.success("Login berhasil!");
 
       // Navigate to dashboard with window.location to ensure full page reload
-      // This prevents RSC issues and ensures middleware runs properly
       window.location.href = withBasePath("/dashboard");
     },
     onError: (error) => {

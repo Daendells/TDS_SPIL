@@ -19,6 +19,7 @@ import { useGetAspectsByAssessmentId, useDeleteAspect } from "./_hooks/useAspect
 import { useGetQuestionsByAssessmentId, useBulkUpdateAspect } from "./_hooks/useQuestion";
 import { AspectDialog } from "./aspect-dialog";
 import { AspectQuestionAssignmentDialog } from "./aspect-question-assignment-dialog";
+import { useAuth } from "@/context/AuthContext";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -36,6 +37,7 @@ interface AspectManagerProps {
 }
 
 export function AspectManager({ assessmentId, assessmentName }: AspectManagerProps) {
+  const { isAdmin } = useAuth();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
@@ -82,6 +84,8 @@ export function AspectManager({ assessmentId, assessmentName }: AspectManagerPro
     try {
       await deleteAspectMutation.mutateAsync(deletingAspect.id);
       toast.success("Aspect berhasil dihapus");
+      refetch();
+      refetchQuestions();
       setDeleteDialogOpen(false);
       setDeletingAspect(null);
     } catch (error) {
@@ -117,21 +121,23 @@ export function AspectManager({ assessmentId, assessmentName }: AspectManagerPro
               Kelola aspects untuk {assessmentName}
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button
-              onClick={() => setAssignmentDialogOpen(true)}
-              size="sm"
-              variant="outline"
-              disabled={questions.length === 0 || aspects.length === 0}
-            >
-              <ListChecks className="h-4 w-4 mr-2" />
-              Manage Assignments
-            </Button>
-            <Button onClick={handleAdd} size="sm">
-              <Plus className="h-4 w-4 mr-2" />
-              Tambah Aspect
-            </Button>
-          </div>
+          {isAdmin && (
+            <div className="flex gap-2">
+              <Button
+                onClick={() => setAssignmentDialogOpen(true)}
+                size="sm"
+                variant="outline"
+                disabled={questions.length === 0 || aspects.length === 0}
+              >
+                <ListChecks className="h-4 w-4 mr-2" />
+                Manage Assignments
+              </Button>
+              <Button onClick={handleAdd} size="sm">
+                <Plus className="h-4 w-4 mr-2" />
+                Tambah Aspect
+              </Button>
+            </div>
+          )}
         </CardHeader>
         <CardContent>
           {!isWeightValid && aspects.length > 0 && (
@@ -158,7 +164,7 @@ export function AspectManager({ assessmentId, assessmentName }: AspectManagerPro
                   <TableHead>Nama</TableHead>
                   <TableHead className="text-center">Weight (%)</TableHead>
                   <TableHead className="text-center">Questions</TableHead>
-                  <TableHead className="text-right">Aksi</TableHead>
+                  {isAdmin && <TableHead className="text-right">Aksi</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -179,21 +185,23 @@ export function AspectManager({ assessmentId, assessmentName }: AspectManagerPro
                         <span className="text-muted-foreground text-sm">-</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button variant="ghost" size="icon" onClick={() => handleEdit(aspect)}>
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleDeleteClick(aspect)}
-                          className="text-destructive hover:text-destructive"
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
+                    {isAdmin && (
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button variant="ghost" size="icon" onClick={() => handleEdit(aspect)}>
+                            <Pencil className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            onClick={() => handleDeleteClick(aspect)}
+                            className="text-destructive hover:text-destructive"
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    )}
                   </TableRow>
                 ))}
                 <TableRow>
@@ -206,7 +214,7 @@ export function AspectManager({ assessmentId, assessmentName }: AspectManagerPro
                   <TableCell className="text-center">
                     <Badge variant="outline">{questions.length} total questions</Badge>
                   </TableCell>
-                  <TableCell></TableCell>
+                  {isAdmin && <TableCell></TableCell>}
                 </TableRow>
               </TableBody>
             </Table>

@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/select";
 
 import { useBatches, useSnapshots, type Batch } from "./_hooks/useBatch";
+import { useAuth } from "@/context/AuthContext";
 
 // ─── Date Input helper ────────────────────────────────────────────────────────
 
@@ -361,6 +362,7 @@ function SnapshotDialog({
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function BatchControlPage() {
+  const { isAdmin } = useAuth();
   const [batchTypeFilter, setBatchTypeFilter] = useState<"crew" | "new_recruiter">("crew");
   const { batches, loading } = useBatches(batchTypeFilter);
 
@@ -403,9 +405,11 @@ export default function BatchControlPage() {
               </SelectContent>
             </Select>
           </div>
-          <Button onClick={() => setCreateOpen(true)}>
-            <Plus className="mr-2 h-4 w-4" /> Buat Batch
-          </Button>
+          {isAdmin && (
+            <Button onClick={() => setCreateOpen(true)}>
+              <Plus className="mr-2 h-4 w-4" /> Buat Batch
+            </Button>
+          )}
         </div>
       </div>
 
@@ -469,7 +473,7 @@ export default function BatchControlPage() {
                       </TableCell>
                       <TableCell className="text-right">
                         <div className="flex justify-end gap-1">
-                          {batch.status === "active" && (
+                          {isAdmin && batch.status === "active" && (
                             <Button
                               size="icon"
                               variant="ghost"
@@ -479,16 +483,14 @@ export default function BatchControlPage() {
                               <Pencil className="h-4 w-4" />
                             </Button>
                           )}
-                          {batch.status === "completed" && (
-                            <Button
-                              size="icon"
-                              variant="ghost"
-                              title="Lihat snapshot"
-                              onClick={() => setSnapshotBatch(batch)}
-                            >
-                              <Eye className="h-4 w-4" />
-                            </Button>
-                          )}
+                          <Button
+                            size="icon"
+                            variant="ghost"
+                            title="Lihat snapshot"
+                            onClick={() => setSnapshotBatch(batch)}
+                          >
+                            <Eye className="h-4 w-4" />
+                          </Button>
                         </div>
                       </TableCell>
                     </TableRow>

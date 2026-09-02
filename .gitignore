@@ -55,6 +55,7 @@ backend/storage/*
 
 # Agent / AI Rules
 agent.md
+AGENT.md
 AGENTS.md
 Agent.md
 .agents/

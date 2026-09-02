@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"strings"
 
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
 
@@ -46,6 +47,19 @@ func main() {
 		log.Fatalf("populate default referensi failed: %v", err)
 	}
 	log.Info("Default referensi populated successfully")
+
+	log.Info("Seeding default CV roles if empty...")
+	if err := seedDefaultCVRoles(db); err != nil {
+		log.Fatalf("seed default cv roles failed: %v", err)
+	}
+	log.Info("Default CV roles verified/seeded successfully")
+
+	log.Info("Seeding default system accounts (Admin & User/Viewer)...")
+	if err := seedDefaultAccounts(db); err != nil {
+		log.Fatalf("seed default accounts failed: %v", err)
+	}
+	log.Info("Default system accounts verified/seeded successfully")
+
 	log.Info("Running batch system migrations...")
 	if err := runBatchMigrations(db); err != nil {
 		log.Fatalf("Batch migration failed: %v", err)
@@ -147,6 +161,24 @@ func normalizeLegacySchema(db *gorm.DB) error {
 		}
 	}
 
+	var usersTableExists int64
+	if err := db.Raw(`
+		SELECT COUNT(*) FROM information_schema.tables
+		WHERE table_schema = DATABASE()
+		AND table_name = 'users'
+	`).Scan(&usersTableExists).Error; err != nil {
+		return err
+	}
+
+	if usersTableExists > 0 {
+		if err := db.Exec(`
+			ALTER TABLE users
+			MODIFY COLUMN role ENUM('admin', 'viewer') NOT NULL DEFAULT 'viewer'
+		`).Error; err != nil {
+			return fmt.Errorf("failed to normalize users.role column: %w", err)
+		}
+	}
+
 	var newRecruitersTableExists int64
 	if err := db.Raw(`
 		SELECT COUNT(*) FROM information_schema.tables
@@ -190,6 +222,7 @@ func runAutoMigrate(db *gorm.DB) error {
 	models := []interface{}{
 		// Independent tables
 		&domain.User{},
+		&domain.CVRole{},
 		&domain.AssessmentType{},
 		&domain.CompetencyType{},
 		&domain.Report{},
@@ -690,3 +723,97 @@ WHERE total_readiness_update_months IS NULL`
 
 	return nil
 }
+
+func seedDefaultCVRoles(db *gorm.DB) error {
+	var count int64
+	if err := db.Model(&domain.CVRole{}).Count(&count).Error; err != nil {
+		return err
+	}
+
+	if count > 0 {
+		return nil
+	}
+
+	defaultRoles := []domain.CVRole{
+		{Name: "NAKHODA", Category: "DECK", Description: "Master / Nakhoda kapal berijazah ANT-I, bertanggung jawab penuh atas keselamatan kapal, muatan, navigasi, dan seluruh kru kapal."},
+		{Name: "EXTRA NAKHODA", Category: "DECK", Description: "Perwira navigasi senior berijazah ANT-I/ANT-II sebagai perbantuan komando dan operasional kapal."},
+		{Name: "MUALIM I", Category: "DECK", Description: "Chief Officer / Chief Mate berijazah ANT-II/ANT-I, bertanggung jawab atas muatan kapal, stabilitas, dan pemeliharaan lambung/dek."},
+		{Name: "EXT. MUALIM I", Category: "DECK", Description: "Perwira dek tambahan berijazah ANT-II membantu Chief Officer dalam operasional muatan dan stabilitas."},
+		{Name: "MUALIM II", Category: "DECK", Description: "Second Officer berijazah ANT-III/ANT-II, perwira navigasi, pemeliharaan peralatan navigasi dan peta laut."},
+		{Name: "EXT. MUALIM II", Category: "DECK", Description: "Perwira dek tambahan membantu Second Officer dalam tugas navigasi dan administrasi pelayaran."},
+		{Name: "MUALIM III", Category: "DECK", Description: "Third Officer berijazah ANT-III/ANT-IV, bertanggung jawab atas peralatan keselamatan dan pemadam kebakaran kapal."},
+		{Name: "EXT. MUALIM III", Category: "DECK", Description: "Perwira dek tambahan membantu Third Officer dalam pemeliharaan alat-alat keselamatan (LSA/FFA)."},
+		{Name: "MUALIM IV", Category: "DECK", Description: "Junior Deck Officer berijazah ANT-IV membantu dinas jaga navigasi dan operasional dek."},
+		{Name: "KKM", Category: "ENGINE", Description: "Chief Engineer / Kepala Kamar Mesin berijazah ATT-I, bertanggung jawab penuh atas seluruh permesinan, propulsi, dan kelistrikan kapal."},
+		{Name: "EXTRA KKM", Category: "ENGINE", Description: "Perwira mesin senior berijazah ATT-I/ATT-II membantu manajemen kamar mesin dan overhaul mesin utama."},
+		{Name: "MASINIS I", Category: "ENGINE", Description: "Second Engineer berijazah ATT-II/ATT-I, penanggung jawab operasional mesin induk (main engine) dan koordinasi harian tim mesin."},
+		{Name: "EXT. MASINIS I", Category: "ENGINE", Description: "Perwira mesin tambahan membantu Second Engineer dalam pemeliharaan mesin induk dan instalasi mekanikal."},
+		{Name: "MASINIS II", Category: "ENGINE", Description: "Third Engineer berijazah ATT-III/ATT-II, penanggung jawab generator (auxiliary engine), kompresor, dan pompa-pompa utama."},
+		{Name: "EXT. MASINIS II", Category: "ENGINE", Description: "Perwira mesin tambahan membantu Third Engineer dalam perawatan auxiliary engine dan purifier."},
+		{Name: "MASINIS III", Category: "ENGINE", Description: "Fourth Engineer berijazah ATT-III/ATT-IV, bertanggung jawab atas boiler, sistem refrigerasi, AC, dan water maker."},
+		{Name: "MASINIS IV", Category: "ENGINE", Description: "Junior Engineer berijazah ATT-IV bertugas membantu dinas jaga mesin dan bunker kapal."},
+		{Name: "ELECTRICIAN", Category: "ENGINE", Description: "Electro-Technical Officer (ETO) / Electrician berijazah ETO/Kelistrikan Maritim, bertanggung jawab atas seluruh sistem kelistrikan, otomasi, reefer container, dan navigasi elektronik kapal."},
+		{Name: "MARKONIS", Category: "DECK", Description: "Radio Officer / GMDSS Operator bertugas menangani komunikasi radio maritim, satelit, dan keselamatan maritim."},
+		{Name: "MANDOR MESIN", Category: "ENGINE", Description: "Engine Foreman / Bosun Mesin, mengoordinasikan rating mesin (juru minyak, fitter) dalam pekerjaan pemeliharaan kamar mesin."},
+		{Name: "FITTER", Category: "ENGINE", Description: "Tukang Las & Bubut kapal, ahli fabrikasi, pemotongan, pengelasan pipa, dan perbaikan mekanikal darurat di atas kapal."},
+		{Name: "JURU MINYAK", Category: "ENGINE", Description: "Oiler / Rating Engine berijazah COP Rating Forming Part of an Engine-room Watch, membantu pelumasan dan dinas jaga kamar mesin."},
+		{Name: "SERANG", Category: "DECK", Description: "Boatswain (Bosun) / Kepala Rating Dek, memimpin rating dek dalam pemeliharaan kapal, pengecatan, olah gerak, dan tali-temali."},
+		{Name: "JURU MUDI", Category: "DECK", Description: "Able Seaman Deck (AB) / Helmsman berijazah COP Rating Deck Watch, memegang kemudi saat olah gerak dan dinas jaga navigasi."},
+		{Name: "KELASI", Category: "DECK", Description: "Ordinary Seaman (OS) berijazah COP Deck, membantu pekerjaan pembersihan, pengecatan, sandar-lepas kapal, dan bongkar muat."},
+		{Name: "JURU MASAK I", Category: "CATERING", Description: "Chief Cook berijazah Ship's Cook Certificate, bertanggung jawab menyusun menu, mengelola bahan makanan, dan memasak untuk seluruh kru kapal."},
+		{Name: "JURU MASAK II", Category: "CATERING", Description: "Second Cook membantu Chief Cook dalam persiapan makanan, kebersihan dapur galley, dan penataan messroom."},
+		{Name: "PELAYAN", Category: "CATERING", Description: "Messman / Steward, bertanggung jawab atas kebersihan messroom, akomodasi perwira, dan penyajian makanan."},
+		{Name: "KADET DEK", Category: "TRAINEE", Description: "Deck Cadet, taruna pelayaran jurusan nautika yang menjalani praktek laut (Prala) untuk persiapan ANT-III."},
+		{Name: "KADET MESIN", Category: "TRAINEE", Description: "Engine Cadet, taruna pelayaran jurusan teknika yang menjalani praktek laut (Prala) untuk persiapan ATT-III."},
+		{Name: "KADET ELECTRONIC", Category: "TRAINEE", Description: "Electro-Technical Cadet, taruna elektro maritim menjalani praktek lapangan sistem kelistrikan kapal."},
+	}
+
+	for _, role := range defaultRoles {
+		if err := db.Create(&role).Error; err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func seedDefaultAccounts(db *gorm.DB) error {
+	defaultUsers := []struct {
+		Username string
+		Password string
+		Role     string
+	}{
+		{Username: "admin", Password: "admin123", Role: "admin"},
+		{Username: "user", Password: "user123", Role: "viewer"},
+		{Username: "davin", Password: "davin", Role: "admin"},
+	}
+
+	for _, u := range defaultUsers {
+		var existing domain.User
+		err := db.Where("username = ?", u.Username).First(&existing).Error
+		hashed, errHash := bcrypt.GenerateFromPassword([]byte(u.Password), bcrypt.DefaultCost)
+		if errHash != nil {
+			return errHash
+		}
+
+		if err != nil && err == gorm.ErrRecordNotFound {
+			newUser := domain.User{
+				Username: u.Username,
+				Password: string(hashed),
+				Role:     u.Role,
+				SSOID:    nil,
+			}
+			if err := db.Create(&newUser).Error; err != nil {
+				return err
+			}
+		} else if err == nil {
+			db.Model(&existing).Updates(map[string]interface{}{
+				"password": string(hashed),
+				"role":     u.Role,
+			})
+		}
+	}
+
+	return nil
+}
+

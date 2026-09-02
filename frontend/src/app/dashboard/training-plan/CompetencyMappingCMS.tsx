@@ -47,6 +47,7 @@ import {
   type CompetencyMappingFormData,
   type CompetencyMappingItem,
 } from "./_hooks/useCompetencyMappingCMS";
+import { useAuth } from "@/context/AuthContext";
 import type { TrainingPlanResponse } from "./_hooks/useTrainingPlan";
 
 interface CompetencyMappingCMSProps {
@@ -55,6 +56,7 @@ interface CompetencyMappingCMSProps {
 }
 
 export default function CompetencyMappingCMS({ program, trainingPlan }: CompetencyMappingCMSProps) {
+  const { isAdmin } = useAuth();
   const [editingMapping, setEditingMapping] = useState<CompetencyMappingItem | null>(null);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
@@ -164,7 +166,7 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
               <TableHead>Category</TableHead>
               <TableHead>Training Material 1</TableHead>
               <TableHead>Training Material 2</TableHead>
-              <TableHead className="text-right">Actions</TableHead>
+              {isAdmin && <TableHead className="text-right">Actions</TableHead>}
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -195,31 +197,33 @@ export default function CompetencyMappingCMS({ program, trainingPlan }: Competen
                       <span className="text-muted-foreground italic">Not set</span>
                     )}
                   </TableCell>
-                  <TableCell className="text-right">
-                    <div className="flex gap-2 justify-end">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleEdit(mapping)}
-                        className="h-8 w-8 p-0 hover:bg-blue-50 hover:text-blue-600"
-                      >
-                        <Pencil className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleDelete(mapping)}
-                        className="h-8 w-8 p-0 hover:bg-red-50 hover:text-red-600"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </TableCell>
+                  {isAdmin && (
+                    <TableCell className="text-right">
+                      <div className="flex gap-2 justify-end">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleEdit(mapping)}
+                          className="h-8 w-8 p-0"
+                        >
+                          <Pencil className="h-4 w-4" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleDelete(mapping)}
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700 hover:bg-red-50"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </TableCell>
+                  )}
                 </TableRow>
               ))
             ) : (
               <TableRow>
-                <TableCell colSpan={4} className="text-center py-8 text-muted-foreground">
+                <TableCell colSpan={isAdmin ? 5 : 4} className="text-center py-8 text-muted-foreground">
                   No competency mappings found for {program} program
                 </TableCell>
               </TableRow>

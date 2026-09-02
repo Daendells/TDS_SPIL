@@ -43,6 +43,7 @@ import { toast } from "sonner";
 import { useBatches, type Batch } from "@/app/master-report/_hooks/useBatch";
 import { Copy, Plus } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useAuth } from "@/context/AuthContext";
 
 type Recruiter = {
   id: number;
@@ -156,6 +157,7 @@ const emptyPaginatedResponse = <T,>(): PaginatedResponse<T> => ({
 });
 
 export default function NewRecruiterReportPage() {
+  const { isAdmin } = useAuth();
   const [recruiterData, setRecruiterData] =
     useState<PaginatedResponse<Recruiter>>(emptyPaginatedResponse<Recruiter>());
   const [assignmentData, setAssignmentData] =
@@ -591,17 +593,18 @@ export default function NewRecruiterReportPage() {
             {assignmentData.total} assignment
           </Badge>
 
-          <Dialog open={isBulkAssignModalOpen} onOpenChange={setIsBulkAssignModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">Assign Batch</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-lg">
-              <DialogHeader>
-                <DialogTitle>Bulk Assign Batch Recruiter</DialogTitle>
-                <DialogDescription>
-                  Pilih recruiter dan batch tujuan untuk memperbarui batch secara massal.
-                </DialogDescription>
-              </DialogHeader>
+          {isAdmin && (
+            <Dialog open={isBulkAssignModalOpen} onOpenChange={setIsBulkAssignModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">Assign Batch</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-lg">
+                <DialogHeader>
+                  <DialogTitle>Bulk Assign Batch Recruiter</DialogTitle>
+                  <DialogDescription>
+                    Pilih recruiter dan batch tujuan untuk memperbarui batch secara massal.
+                  </DialogDescription>
+                </DialogHeader>
 
               <div className="space-y-4 py-2">
                 <div className="space-y-3">
@@ -702,254 +705,253 @@ export default function NewRecruiterReportPage() {
               </DialogFooter>
             </DialogContent>
           </Dialog>
-          <Dialog open={isAssignmentModalOpen} onOpenChange={setIsAssignmentModalOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline">Buat Assignment</Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-xl">
-              <DialogHeader>
-                <DialogTitle>Buat Assignment Token</DialogTitle>
-                <DialogDescription>
-                  Token akan dibuat per recruiter dan per assessment saat assignment disimpan.
-                </DialogDescription>
-              </DialogHeader>
+          )}
 
-              <div className="space-y-4 py-2">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <Label>Pilih Recruiter</Label>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() =>
-                        toggleSelectAllRecruiters(
-                          selectedAssignmentRecruiterIds,
-                          setSelectedAssignmentRecruiterIds,
-                          assignmentPicker.items
-                        )
-                      }
-                    >
-                      Pilih Semua
-                    </Button>
-                  </div>
-                  <Input
-                    value={assignmentPicker.query}
-                    onChange={(e) =>
-                      setAssignmentPicker((prev) => ({ ...prev, query: e.target.value }))
-                    }
-                    placeholder="Cari nama, seafarer code, rank, atau akademi"
-                  />
-                  <div
-                    className="max-h-60 space-y-2 overflow-auto rounded-lg border p-3"
-                    onScroll={(event) => handlePickerScroll(event, "assignment")}
-                  >
-                    {assignmentPicker.items.map((recruiter) => (
-                      <label
-                        key={recruiter.id}
-                        className="flex cursor-pointer items-start gap-3 rounded-md border border-transparent px-2 py-2 hover:bg-slate-50"
+          {isAdmin && (
+            <Dialog open={isAssignmentModalOpen} onOpenChange={setIsAssignmentModalOpen}>
+              <DialogTrigger asChild>
+                <Button variant="outline">Buat Assignment</Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-xl">
+                <DialogHeader>
+                  <DialogTitle>Buat Assignment Token</DialogTitle>
+                  <DialogDescription>
+                    Token akan dibuat per recruiter dan per assessment saat assignment disimpan.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="space-y-4 py-2">
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <Label>Pilih Recruiter</Label>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() =>
+                          toggleSelectAllRecruiters(
+                            selectedAssignmentRecruiterIds,
+                            setSelectedAssignmentRecruiterIds,
+                            assignmentPicker.items
+                          )
+                        }
                       >
-                        <Checkbox
-                          checked={selectedAssignmentRecruiterIds.includes(recruiter.id)}
-                          onCheckedChange={() =>
-                            toggleRecruiterSelection(
-                              recruiter.id,
-                              setSelectedAssignmentRecruiterIds
-                            )
-                          }
-                        />
-                        <div className="space-y-0.5 text-sm">
-                          <div className="font-medium text-slate-900">{recruiter.nama}</div>
-                          <div className="text-slate-500">
-                            {recruiter.rank} • {recruiter.batchName || "Tanpa batch"}
+                        Pilih Semua
+                      </Button>
+                    </div>
+                    <Input
+                      value={assignmentPicker.query}
+                      onChange={(e) =>
+                        setAssignmentPicker((prev) => ({ ...prev, query: e.target.value }))
+                      }
+                      placeholder="Cari nama, seafarer code, rank, atau akademi"
+                    />
+                    <div
+                      className="max-h-60 space-y-2 overflow-auto rounded-lg border p-3"
+                      onScroll={(event) => handlePickerScroll(event, "assignment")}
+                    >
+                      {assignmentPicker.items.map((recruiter) => (
+                        <label
+                          key={recruiter.id}
+                          className="flex cursor-pointer items-start gap-3 rounded-md border border-transparent px-2 py-2 hover:bg-slate-50"
+                        >
+                          <Checkbox
+                            checked={selectedAssignmentRecruiterIds.includes(recruiter.id)}
+                            onCheckedChange={() =>
+                              toggleRecruiterSelection(
+                                recruiter.id,
+                                setSelectedAssignmentRecruiterIds
+                              )
+                            }
+                          />
+                          <div className="space-y-0.5 text-sm">
+                            <div className="font-medium text-slate-900">{recruiter.nama}</div>
+                            <div className="text-slate-500">
+                              {recruiter.rank} • {recruiter.batchName || "Tanpa batch"}
+                            </div>
                           </div>
+                        </label>
+                      ))}
+                      {assignmentPicker.isLoading && (
+                        <div className="py-3 text-center text-sm text-muted-foreground">
+                          Memuat recruiter...
                         </div>
-                      </label>
-                    ))}
-                    {assignmentPicker.isLoading && (
-                      <div className="py-3 text-center text-sm text-muted-foreground">
-                        Memuat recruiter...
-                      </div>
-                    )}
-                    {assignmentPicker.isLoadingMore && (
-                      <div className="py-3 text-center text-sm text-muted-foreground">
-                        Memuat lebih banyak...
-                      </div>
-                    )}
+                      )}
+                      {assignmentPicker.isLoadingMore && (
+                        <div className="py-3 text-center text-sm text-muted-foreground">
+                          Memuat lebih banyak...
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Assessment Type</Label>
+                    <Select
+                      value={selectedAssessmentTypeId}
+                      onValueChange={setSelectedAssessmentTypeId}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Pilih assessment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {assessmentTypes.map((type) => (
+                          <SelectItem key={type.id} value={String(type.id)}>
+                            {type.assessmentTypeName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <DialogFooter>
+                    <Button
+                      variant="outline"
+                      onClick={() => {
+                        setIsAssignmentModalOpen(false);
+                        setSelectedAssignmentRecruiterIds([]);
+                        setSelectedAssessmentTypeId("");
+                        setAssignmentPicker(emptyPickerState);
+                      }}
+                    >
+                      Batal
+                    </Button>
+                    <Button
+                      onClick={() =>
+                        createAssignment().catch(() => toast.error("Gagal membuat assignment"))
+                      }
+                      disabled={isSubmittingAssignment}
+                    >
+                      {isSubmittingAssignment ? "Membuat token..." : "Generate Token"}
+                    </Button>
+                  </DialogFooter>
+                </div>
+              </DialogContent>
+            </Dialog>
+          )}
+
+          {isAdmin && (
+            <Dialog open={isRecruiterModalOpen} onOpenChange={setIsRecruiterModalOpen}>
+              <DialogTrigger asChild>
+                <Button className="gap-2">
+                  <Plus className="h-4 w-4" />
+                  Tambah Recruiter
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-2xl">
+                <DialogHeader>
+                  <DialogTitle>Tambah New Recruiter</DialogTitle>
+                  <DialogDescription>
+                    Isi data recruiter terlebih dahulu sebelum membuat assignment token.
+                  </DialogDescription>
+                </DialogHeader>
+
+                <div className="grid gap-4 py-2 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="recruiter-nama">Nama</Label>
+                    <Input
+                      id="recruiter-nama"
+                      value={form.nama}
+                      placeholder="Masukkan nama lengkap"
+                      onChange={(e) => setForm((prev) => ({ ...prev, nama: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recruiter-seafarer-code">Seafarer Code</Label>
+                    <Input
+                      id="recruiter-seafarer-code"
+                      value={form.seafarerCode}
+                      placeholder="Masukkan seafarer code"
+                      onChange={(e) => setForm((prev) => ({ ...prev, seafarerCode: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recruiter-rank">Rank</Label>
+                    <Select
+                      value={form.rank}
+                      onValueChange={(value) => setForm((prev) => ({ ...prev, rank: value }))}
+                    >
+                      <SelectTrigger id="recruiter-rank">
+                        <SelectValue placeholder="Pilih rank" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {rankOptions.map((rank) => (
+                          <SelectItem key={rank} value={rank}>
+                            {rank}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recruiter-academy">Akademi Pelayaran</Label>
+                    <Input
+                      id="recruiter-academy"
+                      value={form.academyName}
+                      placeholder="Masukkan nama akademi"
+                      onChange={(e) => setForm((prev) => ({ ...prev, academyName: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recruiter-batch">Batch</Label>
+                    <Select
+                      value={form.batchId || ""}
+                      onValueChange={(value) => setForm((prev) => ({ ...prev, batchId: value }))}
+                    >
+                      <SelectTrigger id="recruiter-batch">
+                        <SelectValue placeholder="Pilih batch recruiter" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {batches.map((batch: Batch) => (
+                          <SelectItem key={batch.id} value={String(batch.id)}>
+                            {batch.batchName}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recruiter-phone">Nomor Telepon</Label>
+                    <Input
+                      id="recruiter-phone"
+                      value={form.phone}
+                      placeholder="Opsional"
+                      onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="recruiter-email">Email</Label>
+                    <Input
+                      id="recruiter-email"
+                      value={form.email}
+                      placeholder="Opsional"
+                      onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
+                    />
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label>Assessment Type</Label>
-                  <Select
-                    value={selectedAssessmentTypeId}
-                    onValueChange={setSelectedAssessmentTypeId}
+                <DialogFooter>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setIsRecruiterModalOpen(false);
+                      setForm(emptyRecruiter);
+                    }}
                   >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih assessment" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {assessmentTypes.map((type) => (
-                        <SelectItem key={type.id} value={String(type.id)}>
-                          {type.assessmentTypeName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="rounded-lg border border-dashed border-slate-200 bg-slate-50 p-4 text-sm text-slate-600">
-                  Assignment akan otomatis memakai batch yang terdaftar pada recruiter. Token
-                  dibagikan admin ke peserta, dan attempt tetap dicatat pada assignment yang sama.
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  {selectedAssignmentRecruiterIds.length} recruiter dipilih
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsAssignmentModalOpen(false);
-                    setSelectedAssignmentRecruiterIds([]);
-                    setSelectedAssessmentTypeId("");
-                    setAssignmentPicker(emptyPickerState);
-                  }}
-                >
-                  Batal
-                </Button>
-                <Button
-                  onClick={() =>
-                    createAssignment().catch(() => toast.error("Gagal membuat assignment"))
-                  }
-                  disabled={isSubmittingAssignment}
-                >
-                  {isSubmittingAssignment ? "Membuat token..." : "Generate Token"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-          <Dialog open={isRecruiterModalOpen} onOpenChange={setIsRecruiterModalOpen}>
-            <DialogTrigger asChild>
-              <Button className="gap-2">
-                <Plus className="h-4 w-4" />
-                Tambah Recruiter
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Tambah New Recruiter</DialogTitle>
-                <DialogDescription>
-                  Isi data recruiter terlebih dahulu sebelum membuat assignment token.
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="grid gap-4 py-2 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label htmlFor="recruiter-nama">Nama</Label>
-                  <Input
-                    id="recruiter-nama"
-                    value={form.nama}
-                    placeholder="Masukkan nama lengkap"
-                    onChange={(e) => setForm((prev) => ({ ...prev, nama: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="recruiter-seafarer-code">Seafarer Code</Label>
-                  <Input
-                    id="recruiter-seafarer-code"
-                    value={form.seafarerCode}
-                    placeholder="Masukkan seafarer code"
-                    onChange={(e) => setForm((prev) => ({ ...prev, seafarerCode: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="recruiter-rank">Rank</Label>
-                  <Select
-                    value={form.rank}
-                    onValueChange={(value) => setForm((prev) => ({ ...prev, rank: value }))}
+                    Batal
+                  </Button>
+                  <Button
+                    onClick={() =>
+                      createRecruiter().catch(() => toast.error("Gagal menambah new recruiter"))
+                    }
+                    disabled={isSubmittingRecruiter}
                   >
-                    <SelectTrigger id="recruiter-rank">
-                      <SelectValue placeholder="Pilih rank" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {rankOptions.map((rank) => (
-                        <SelectItem key={rank} value={rank}>
-                          {rank}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="recruiter-academy">Akademi Pelayaran</Label>
-                  <Input
-                    id="recruiter-academy"
-                    value={form.academyName}
-                    placeholder="Masukkan nama akademi"
-                    onChange={(e) => setForm((prev) => ({ ...prev, academyName: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="recruiter-batch">Batch</Label>
-                  <Select
-                    value={form.batchId || ""}
-                    onValueChange={(value) => setForm((prev) => ({ ...prev, batchId: value }))}
-                  >
-                    <SelectTrigger id="recruiter-batch">
-                      <SelectValue placeholder="Pilih batch recruiter" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {batches.map((batch: Batch) => (
-                        <SelectItem key={batch.id} value={String(batch.id)}>
-                          {batch.batchName}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="recruiter-phone">Nomor Telepon</Label>
-                  <Input
-                    id="recruiter-phone"
-                    value={form.phone}
-                    placeholder="Opsional"
-                    onChange={(e) => setForm((prev) => ({ ...prev, phone: e.target.value }))}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="recruiter-email">Email</Label>
-                  <Input
-                    id="recruiter-email"
-                    value={form.email}
-                    placeholder="Opsional"
-                    onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
-                  />
-                </div>
-              </div>
-
-              <DialogFooter>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setIsRecruiterModalOpen(false);
-                    setForm(emptyRecruiter);
-                  }}
-                >
-                  Batal
-                </Button>
-                <Button
-                  onClick={() =>
-                    createRecruiter().catch(() => toast.error("Gagal menambah new recruiter"))
-                  }
-                  disabled={isSubmittingRecruiter}
-                >
-                  {isSubmittingRecruiter ? "Menyimpan..." : "Simpan Recruiter"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+                    {isSubmittingRecruiter ? "Menyimpan..." : "Simpan Recruiter"}
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          )}
         </div>
       </section>
 

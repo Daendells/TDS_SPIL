@@ -28,13 +28,13 @@ import { toast } from "sonner";
 const createUserSchema = z.object({
   username: z.string().min(3, "Username min 3 karakter").max(100),
   password: z.string().min(6, "Password min 6 karakter"),
-  role: z.literal("admin"),
+  role: z.enum(["admin", "viewer"]),
 });
 
 const updateUserSchema = z.object({
   username: z.string().min(3, "Username min 3 karakter").max(100),
   password: z.string().min(6, "Password min 6 karakter").optional().or(z.literal("")),
-  role: z.literal("admin"),
+  role: z.enum(["admin", "viewer"]),
 });
 
 export interface UserDialogProps {
@@ -61,7 +61,7 @@ export function UserDialog({ open, onOpenChange, isEdit = false, defaultValues }
     defaultValues: {
       username: defaultValues?.username || "",
       password: "",
-      role: "admin",
+      role: (defaultValues?.role as "admin" | "viewer") || "viewer",
     },
   });
 
@@ -71,13 +71,13 @@ export function UserDialog({ open, onOpenChange, isEdit = false, defaultValues }
       form.reset({
         username: defaultValues.username,
         password: "",
-        role: "admin",
+        role: (defaultValues.role as "admin" | "viewer") || "viewer",
       });
     } else if (open && !isEdit) {
       form.reset({
         username: "",
         password: "",
-        role: "admin",
+        role: "viewer",
       });
     }
   }, [open, isEdit, defaultValues, form]);
@@ -95,9 +95,9 @@ export function UserDialog({ open, onOpenChange, isEdit = false, defaultValues }
   const onSubmit = async (values: z.infer<typeof schema>) => {
     try {
       if (isEdit && defaultValues) {
-        const updateData: { username: string; role: "admin"; password?: string } = {
+        const updateData: { username: string; role: "admin" | "viewer"; password?: string } = {
           username: values.username,
-          role: values.role as "admin",
+          role: values.role,
         };
         if (values.password) {
           updateData.password = values.password;
@@ -109,7 +109,7 @@ export function UserDialog({ open, onOpenChange, isEdit = false, defaultValues }
         toast.success("User berhasil diupdate");
       } else {
         await createUserMutation.mutateAsync(
-          values as { username: string; password: string; role: "admin" }
+          values as { username: string; password: string; role: "admin" | "viewer" }
         );
         toast.success("User berhasil dibuat");
       }
@@ -128,8 +128,8 @@ export function UserDialog({ open, onOpenChange, isEdit = false, defaultValues }
           <DialogTitle>{isEdit ? "Edit User" : "Buat User Baru"}</DialogTitle>
           <DialogDescription>
             {isEdit
-              ? "Update informasi user"
-              : "Buat user baru dengan username, password, dan role"}
+              ? "Update informasi user dan hak akses"
+              : "Buat user baru dengan username, password, dan hak akses"}
           </DialogDescription>
         </DialogHeader>
 
@@ -173,12 +173,17 @@ export function UserDialog({ open, onOpenChange, isEdit = false, defaultValues }
               name="role"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Role</FormLabel>
-                  <div className="flex items-center gap-2 px-3 py-2 border rounded-md bg-gray-50">
-                    <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
-                      {field.value}
-                    </span>
-                  </div>
+                  <FormLabel>Role / Hak Akses</FormLabel>
+                  <FormControl>
+                    <select
+                      value={field.value}
+                      onChange={(e) => field.onChange(e.target.value as "admin" | "viewer")}
+                      className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="viewer">Viewer (View-Only, tidak bisa edit data)</option>
+                      <option value="admin">Admin (Full Access & User Management)</option>
+                    </select>
+                  </FormControl>
                   <FormMessage />
                 </FormItem>
               )}

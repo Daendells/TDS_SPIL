@@ -14,6 +14,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 import { useSwapSchedules, useToggleTrainingStarted } from "./_hooks/useTrainingPlan";
 import type { TrainingPlanSummary } from "./_hooks/useTrainingPlan";
 import CourseNameDialog from "./CourseNameDialog";
@@ -53,6 +54,7 @@ export default function TrainingScheduleTimeline({
   competencyMapping,
   onExportExcel,
 }: TrainingScheduleTimelineProps) {
+  const { isAdmin } = useAuth();
   const [collapsedMonths, setCollapsedMonths] = useState<Set<string>>(new Set());
   const [schedules, setSchedules] = useState<ScheduleItem[]>([]);
   const [originalSchedules, setOriginalSchedules] = useState<ScheduleItem[]>([]);
@@ -366,7 +368,7 @@ export default function TrainingScheduleTimeline({
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-4">
         <div className="flex items-center gap-2">
-          {!editMode && (
+          {isAdmin && !editMode && (
             <Button variant="outline" size="sm" onClick={() => setEditMode(true)}>
               <Edit className="h-4 w-4 mr-2" />
               Edit Schedules
@@ -507,7 +509,7 @@ export default function TrainingScheduleTimeline({
                                               onCheckedChange={() =>
                                                 handleToggleStarted(schedule.id, schedule.isStarted)
                                               }
-                                              disabled={toggleLoading === schedule.id}
+                                              disabled={!isAdmin || toggleLoading === schedule.id}
                                               className="scale-75"
                                             />
                                           </div>

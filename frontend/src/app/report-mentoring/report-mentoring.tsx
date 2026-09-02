@@ -29,6 +29,7 @@ import { IReport } from "@/types/global-types";
 import { parseReports, parsePaginationData } from "@/lib/utils";
 import Image from "next/image";
 import { Calendar } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 
 const FormSchema = z.object({
   reportType: z.enum(["mentoring", "coaching"], { message: "Tipe laporan harus dipilih" }),
@@ -50,6 +51,7 @@ const FormSchema = z.object({
 });
 
 export default function ReportMentoring() {
+  const { isAdmin } = useAuth();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [reports, setReports] = useState<IReport[]>([]);
   const [selectedMentees, setSelectedMentees] = useState<string[]>([]);
@@ -785,10 +787,15 @@ export default function ReportMentoring() {
             {/* Submit Section */}
             <div className="bg-white rounded-lg shadow-sm border p-8">
               <div className="flex flex-col items-center gap-6">
+                {!isAdmin && (
+                  <div className="text-amber-700 bg-amber-50 border border-amber-200 px-4 py-2 rounded-md text-sm font-medium">
+                    Mode View Only: Hanya Admin yang dapat membuat dan menyimpan laporan mentoring.
+                  </div>
+                )}
                 <Button
                   type="submit"
                   className="w-full md:w-1/2 py-4 text-lg font-semibold bg-gray-800 hover:bg-gray-700 text-white transition-all duration-300 hover:scale-105"
-                  disabled={isSubmitting}
+                  disabled={!isAdmin || isSubmitting}
                 >
                   {isSubmitting ? "Menyimpan..." : "Simpan Laporan Mentoring"}
                 </Button>

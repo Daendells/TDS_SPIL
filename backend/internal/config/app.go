@@ -88,6 +88,7 @@ func Bootstrap(config *BootstrapConfig) {
 	batchRepository := repositories.NewBatchRepository(config.Log)
 	batchSnapshotRepository := repositories.NewBatchSnapshotRepository(config.Log)
 	newRecruiterRepository := repositories.NewNewRecruiterRepository()
+	cvRoleRepository := repositories.NewCVRoleRepository(config.Log)
 
 	// --- Services (DB-based)
 	adminService := services.NewAdminService(config.DB, config.Log)
@@ -95,6 +96,7 @@ func Bootstrap(config *BootstrapConfig) {
 	seamanService := services.NewSeamanService(seamanRepository)
 	userService := services.NewUserService(config.DB, config.Log, config.Validate, config.Config, userRepository)
 	ssoService := services.NewSSOService(config.DB, config.Config, config.Log, userRepository, userService)
+	cvRoleService := services.NewCVRoleService(config.DB, config.Log, config.Validate, cvRoleRepository)
 	mentoringReportService := services.NewMentoringReportService(config.DB, config.Log, config.Validate, mentoringReportRepository)
 	coachingReportService := services.NewCoachingReportService(coachingReportRepository, config.Log)
 	questionService := services.NewQuestionService(questionRepository, config.Validate)
@@ -206,6 +208,7 @@ func Bootstrap(config *BootstrapConfig) {
 	candidateAnalysisController := controllers.NewCandidateAnalysisController(config.Log, candidateAnalysisService, interviewQuestionService)
 	roleAnalysisController := controllers.NewRoleAnalysisController(config.Log, roleAnalysisService)
 	pdfController := controllers.NewPDFController(config.Log)
+	cvRoleController := controllers.NewCVRoleController(cvRoleService, config.Log)
 
 	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KEY"))
 
@@ -243,10 +246,11 @@ func Bootstrap(config *BootstrapConfig) {
 		CandidateAnalysisController:     candidateAnalysisController,
 		RoleAnalysisController:          roleAnalysisController,
 		PDFController:                   pdfController,
+		CVRoleController:                cvRoleController,
 	}
 	routerConfig.Setup()
 
-	routers.SetupAdminRouter(config.App, adminController)
+	routers.SetupAdminRouter(config.App, adminController, authMiddleware)
 
 	// --- Start Cron Service
 	if err := cronService.Start(); err != nil {

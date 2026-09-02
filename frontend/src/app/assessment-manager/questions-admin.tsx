@@ -38,6 +38,7 @@ import { QuestionOptionResponse } from "@/types/assessment";
 import Image from "next/image";
 import { BASE_URL } from "../lib/api";
 import { AspectResponse } from "@/types/aspect";
+import { useAuth } from "@/context/AuthContext";
 
 const VA_1_CATEGORIES = ["Integrity", "Customer Oriented", "Competitive", "Team Work", "Visioner"];
 
@@ -51,6 +52,7 @@ export const isValidImageUrl = (imageUrl: string | null | undefined): boolean =>
 };
 
 export default function QuestionsAdmin() {
+  const { isAdmin } = useAuth();
   const queryClient = useQueryClient();
 
   const [selectedAssessmentId, setSelectedAssessmentId] = useState<number>(0);
@@ -299,7 +301,7 @@ export default function QuestionsAdmin() {
               </SelectContent>
             </Select>
 
-            {selectedAssessmentId > 0 && (
+            {selectedAssessmentId > 0 && isAdmin && (
               <>
                 <Button onClick={handleAddQuestion} className="flex items-center gap-2">
                   <Plus className="h-4 w-4" />
@@ -358,7 +360,7 @@ export default function QuestionsAdmin() {
                 </CardTitle>
                 <CardDescription>{questions.length} question ditemukan</CardDescription>
               </div>
-              {questions.length > 0 && (
+              {questions.length > 0 && isAdmin && (
                 <div className="flex items-center gap-2">
                   <div className="flex items-center gap-2">
                     <Checkbox
@@ -432,34 +434,38 @@ export default function QuestionsAdmin() {
                             />
                           )}
                           <p className="text-sm font-medium mb-2">{question.questionText}</p>
-                          <div className="mt-2 flex gap-2 items-center">
-                            <span className="text-xs text-muted-foreground mr-2">Aspect:</span>
-                            <QuestionAspectSelector
-                              questionId={question.questionId}
-                              currentAspectId={question.aspectId}
-                              assessmentId={selectedAssessmentId}
-                              aspects={aspectsData ?? []}
-                              onSuccess={() => refetch()}
-                            />
-                          </div>
+                          {isAdmin && (
+                            <div className="mt-2 flex gap-2 items-center">
+                              <span className="text-xs text-muted-foreground mr-2">Aspect:</span>
+                              <QuestionAspectSelector
+                                questionId={question.questionId}
+                                currentAspectId={question.aspectId}
+                                assessmentId={selectedAssessmentId}
+                                aspects={aspectsData ?? []}
+                                onSuccess={() => refetch()}
+                              />
+                            </div>
+                          )}
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleEditQuestion(question)}
-                        >
-                          <Edit className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDeleteQuestion(question)}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      </div>
+                      {isAdmin && (
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleEditQuestion(question)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDeleteQuestion(question)}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      )}
                     </div>
 
                     <Separator className="my-3" />

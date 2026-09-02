@@ -52,11 +52,13 @@ import {
   useGetOverdueCount,
   type TrainingPlanParticipant,
 } from "./_hooks/useTrainingPlan";
+import { useAuth } from "@/context/AuthContext";
 import TrainingScheduleTimeline from "./TrainingScheduleTimeline";
 import CompetencyMappingCMS from "./CompetencyMappingCMS";
 import TrainingMaterialTab from "./TrainingMaterialTab";
 
 export default function TrainingPlanClient() {
+  const { isAdmin } = useAuth();
   const [selectedProgram, setSelectedProgram] = useState("SDP");
   const [selectedParticipant, setSelectedParticipant] = useState<TrainingPlanParticipant | null>(
     null
@@ -236,18 +238,20 @@ export default function TrainingPlanClient() {
               })}
             </SelectContent>
           </Select>
-          <Button
-            onClick={handleGenerateSchedules}
-            disabled={generateSchedules.isPending}
-            className="gap-2"
-          >
-            {generateSchedules.isPending ? (
-              <Loader2 className="h-4 w-4 animate-spin" />
-            ) : (
-              <Calendar className="h-4 w-4" />
-            )}
-            Generate Schedules
-          </Button>
+          {isAdmin && (
+            <Button
+              onClick={handleGenerateSchedules}
+              disabled={generateSchedules.isPending}
+              className="gap-2"
+            >
+              {generateSchedules.isPending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Calendar className="h-4 w-4" />
+              )}
+              Generate Schedules
+            </Button>
+          )}
         </div>
       </div>
 

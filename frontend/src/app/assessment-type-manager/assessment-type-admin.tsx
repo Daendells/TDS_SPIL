@@ -20,8 +20,10 @@ import AssessmentAssignmentDialog from "./assessment-assignment-dialog";
 import ScoringConfigDialog from "./scoring-config-dialog";
 import Image from "next/image";
 import { toast } from "sonner";
+import { useAuth } from "@/context/AuthContext";
 
 export default function AssessmentTypeAdmin() {
+  const { isAdmin } = useAuth();
   const [editDialogOpen, setEditDialogOpen] = useState(false);
   const [assignmentDialogOpen, setAssignmentDialogOpen] = useState(false);
   const [scoringConfigDialogOpen, setScoringConfigDialogOpen] = useState(false);
@@ -183,7 +185,7 @@ export default function AssessmentTypeAdmin() {
                     <TableHead>Max Attempts</TableHead>
                     <TableHead>Assigned Assessments</TableHead>
                     <TableHead>Status</TableHead>
-                    <TableHead className="text-right">Aksi</TableHead>
+                    {isAdmin && <TableHead className="text-right">Aksi</TableHead>}
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -292,37 +294,39 @@ export default function AssessmentTypeAdmin() {
                             <Badge className="bg-gray-100 text-gray-800">Tidak Ada Jadwal</Badge>
                           )}
                         </TableCell>
-                        <TableCell className="text-right">
-                          <div className="flex justify-end gap-1">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleScoringConfigClick(assessmentType)}
-                              className="hover:bg-purple-50 text-purple-600"
-                              title="Configure Scoring"
-                            >
-                              <Calculator className="h-4 w-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleAssignmentClick(assessmentType)}
-                              className="hover:bg-blue-50 text-blue-600"
-                              title="Kelola Assessment"
-                            >
-                              Kelola
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => handleEditClick(assessmentType)}
-                              className="hover:bg-gray-100"
-                              title="Edit Assessment Type"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
+                        {isAdmin && (
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleScoringConfigClick(assessmentType)}
+                                className="hover:bg-purple-50 text-purple-600"
+                                title="Configure Scoring"
+                              >
+                                <Calculator className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleAssignmentClick(assessmentType)}
+                                className="hover:bg-blue-50 text-blue-600"
+                                title="Kelola Assessment"
+                              >
+                                Kelola
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => handleEditClick(assessmentType)}
+                                className="hover:bg-gray-100"
+                                title="Edit Assessment Type"
+                              >
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        )}
                       </TableRow>
                     );
                   })}

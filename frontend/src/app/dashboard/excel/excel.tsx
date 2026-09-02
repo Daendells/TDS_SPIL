@@ -16,8 +16,10 @@ import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import Image from "next/image";
 import { api } from "@/app/lib/api";
+import { useAuth } from "@/context/AuthContext";
 
 export default function Excel() {
+  const { isAdmin } = useAuth();
   const [files, setFile] = useState<File[] | undefined>();
   const [openModal, setOpenModal] = useState<boolean>(false);
   const [onUpload, setOnUpload] = useState<boolean>(true);
@@ -54,6 +56,17 @@ export default function Excel() {
       console.error(err);
     }
   };
+
+  if (!isAdmin) {
+    return (
+      <div className="flex flex-col items-center justify-center p-12 text-center bg-card rounded-xl border">
+        <h2 className="text-xl font-semibold mb-2">Akses Terbatas</h2>
+        <p className="text-muted-foreground text-sm max-w-md">
+          Hanya pengguna dengan peran <strong>Admin</strong> yang memiliki hak akses untuk mengupload data Excel ke sistem.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col gap-4">

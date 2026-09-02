@@ -93,6 +93,7 @@ func (c *UserController) Login(ctx *gin.Context) {
 		Data: web.UserLoginResponse{
 			ID:       userData.ID,
 			Username: userData.Username,
+			Role:     userData.Role,
 			Token:    tokenString,
 		},
 	}

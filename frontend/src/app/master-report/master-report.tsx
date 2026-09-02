@@ -56,6 +56,7 @@ import { useGetAllAssessmentTypes } from "./_hooks/useAssessmentType";
 import type { IReport, SeamanLookup } from "@/types/global-types";
 import { useAvailableSeamen } from "./_hooks/useAvailableSeamen";
 import { useBatches, type Batch } from "./_hooks/useBatch";
+import { useAuth } from "@/context/AuthContext";
 
 import {
   Select,
@@ -115,6 +116,7 @@ export default function MasterPage({
 }: {
   onBatchChange?: (batchId: number | null) => void;
 }) {
+  const { isAdmin } = useAuth();
   // Data hooks
   const {
     onCallApi,
@@ -682,41 +684,45 @@ export default function MasterPage({
           />
 
           <div className="flex items-center gap-2 ml-auto">
-            <Button
-              size="sm"
-              variant="default"
-              onClick={refreshAllReadiness}
-              disabled={onCallApi}
-              className="flex items-center gap-2"
-            >
-              {onCallApi ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Refreshing...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4" /> Refresh Readiness
-                </>
-              )}
-            </Button>
+            {isAdmin && (
+              <>
+                <Button
+                  size="sm"
+                  variant="default"
+                  onClick={refreshAllReadiness}
+                  disabled={onCallApi}
+                  className="flex items-center gap-2"
+                >
+                  {onCallApi ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" /> Refresh Readiness
+                    </>
+                  )}
+                </Button>
 
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={refreshPersonalData}
-              disabled={onCallApi}
-              className="flex items-center gap-2"
-            >
-              {onCallApi ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" /> Refreshing...
-                </>
-              ) : (
-                <>
-                  <RefreshCw className="w-4 h-4" /> Refresh Personal Data
-                </>
-              )}
-            </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={refreshPersonalData}
+                  disabled={onCallApi}
+                  className="flex items-center gap-2"
+                >
+                  {onCallApi ? (
+                    <>
+                      <Loader2 className="w-4 h-4 animate-spin" /> Refreshing...
+                    </>
+                  ) : (
+                    <>
+                      <RefreshCw className="w-4 h-4" /> Refresh Personal Data
+                    </>
+                  )}
+                </Button>
+              </>
+            )}
 
             <div className="flex items-center gap-2 border-l pl-4 ml-2">
               <Select
@@ -779,69 +785,64 @@ export default function MasterPage({
               })()}
             </div>
 
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            {!isArchived && (
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => {
-                  setSelectedBatchForAssign("");
-                  setSelectedReportIdsForBatch([]);
-                  setReportPicker(EMPTY_REPORT_PICKER);
-                  setBulkAssignBatchOpen(true);
-                }}
-                className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
-              >
-                Assign ke Batch
-              </Button>
-            )}
-
-            {!isArchived && (
-              <Button
-                size="sm"
-                variant={isEditMode ? "destructive" : "outline"}
-                onClick={toggleEditMode}
-                className="flex items-center gap-2"
-              >
-                {isEditMode ? (
-                  <>
-                    <XIcon className="w-4 h-4" /> Batal Edit
-                  </>
-                ) : (
-                  <>
-                    <EditIcon className="w-4 h-4" /> Edit Mode
-                  </>
-                )}
-              </Button>
-            )}
-
-            {isEditMode && (
+            {isAdmin && !isArchived && (
               <>
+                <div className="w-px h-6 bg-gray-300 mx-1" />
                 <Button
                   size="sm"
-                  variant="destructive"
-                  onClick={confirmDelete}
-                  disabled={selectedIds.size === 0}
+                  variant="outline"
+                  onClick={() => {
+                    setSelectedBatchForAssign("");
+                    setSelectedReportIdsForBatch([]);
+                    setReportPicker(EMPTY_REPORT_PICKER);
+                    setBulkAssignBatchOpen(true);
+                  }}
+                  className="flex items-center gap-2 border-blue-300 text-blue-700 hover:bg-blue-50"
+                >
+                  Assign ke Batch
+                </Button>
+
+                <Button
+                  size="sm"
+                  variant={isEditMode ? "destructive" : "outline"}
+                  onClick={toggleEditMode}
                   className="flex items-center gap-2"
                 >
-                  <TrashIcon className="w-4 h-4" /> Delete
-                  {selectedIds.size > 0 && (
-                    <span className="ml-1 bg-red-700 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full">
-                      {selectedIds.size}
-                    </span>
+                  {isEditMode ? (
+                    <>
+                      <XIcon className="w-4 h-4" /> Batal Edit
+                    </>
+                  ) : (
+                    <>
+                      <EditIcon className="w-4 h-4" /> Edit Mode
+                    </>
                   )}
                 </Button>
-              </>
-            )}
 
-            <div className="w-px h-6 bg-gray-300 mx-1" />
-            {!isArchived && (
-              <Dialog open={openDialog} onOpenChange={setOpenDialog}>
-                <DialogTrigger asChild>
-                  <Button size="sm" className="flex items-center gap-2">
-                    <PlusIcon className="w-4 h-4" /> Add Report
+                {isEditMode && (
+                  <Button
+                    size="sm"
+                    variant="destructive"
+                    onClick={confirmDelete}
+                    disabled={selectedIds.size === 0}
+                    className="flex items-center gap-2"
+                  >
+                    <TrashIcon className="w-4 h-4" /> Delete
+                    {selectedIds.size > 0 && (
+                      <span className="ml-1 bg-red-700 text-white text-xs font-semibold px-1.5 py-0.5 rounded-full">
+                        {selectedIds.size}
+                      </span>
+                    )}
                   </Button>
-                </DialogTrigger>
+                )}
+
+                <div className="w-px h-6 bg-gray-300 mx-1" />
+                <Dialog open={openDialog} onOpenChange={setOpenDialog}>
+                  <DialogTrigger asChild>
+                    <Button size="sm" className="flex items-center gap-2">
+                      <PlusIcon className="w-4 h-4" /> Add Report
+                    </Button>
+                  </DialogTrigger>
 
                 <DialogContent className="max-w-2xl">
                   <DialogHeader>
@@ -1000,6 +1001,7 @@ export default function MasterPage({
                   </DialogFooter>
                 </DialogContent>
               </Dialog>
+              </>
             )}
           </div>
         </div>

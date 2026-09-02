@@ -102,7 +102,7 @@ const items = [
 export function AppSidebar() {
   const [mounted, setMounted] = useState(false);
   const pathname = usePathname();
-  const { user } = useAuth();
+  const { user, isAdmin } = useAuth();
   const logoutMutation = useLogout();
 
   // Fetch overdue count for all programs
@@ -116,6 +116,14 @@ export function AppSidebar() {
   useEffect(() => {
     setMounted(true);
   }, []);
+
+  // Filter menu: User Management dan Upload Excel hanya untuk admin
+  const visibleItems = items.filter((item) => {
+    if (item.title === "User Management" || item.title === "Upload Excel") {
+      return isAdmin;
+    }
+    return true;
+  });
 
   return (
     <Sidebar collapsible="icon" variant="floating">
@@ -143,7 +151,7 @@ export function AppSidebar() {
           <SidebarGroupLabel>Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {items.map((item) => (
+              {visibleItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url}>
                     <Link key={item.url} href={item.url}>
@@ -172,12 +180,28 @@ export function AppSidebar() {
             {mounted ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <SidebarMenuButton>
-                    <User2 /> {user?.username}
-                    <ChevronUp className="ml-auto" />
+                  <SidebarMenuButton className="h-auto py-2">
+                    <User2 className="w-4 h-4 flex-shrink-0" />
+                    <div className="flex flex-col items-start min-w-0 flex-1">
+                      <span className="text-xs font-semibold truncate w-full">{user?.username}</span>
+                      <span className={`text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.2 rounded ${
+                        user?.role === "admin"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-slate-100 text-slate-600"
+                      }`}>
+                        {user?.role === "admin" ? "Admin" : "Viewer (View Only)"}
+                      </span>
+                    </div>
+                    <ChevronUp className="ml-auto w-4 h-4 flex-shrink-0" />
                   </SidebarMenuButton>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent side="top" className="w-[--radix-popper-anchor-width]">
+                  <div className="px-2 py-1.5 text-xs text-muted-foreground border-b mb-1">
+                    Masuk sebagai: <strong>@{user?.username}</strong>
+                    <div className="text-[11px] text-gray-500 mt-0.5">
+                      Hak akses: <span className="font-semibold">{user?.role === "admin" ? "Administrator" : "View-Only"}</span>
+                    </div>
+                  </div>
                   <DropdownMenuItem className="p-0">
                     <Button
                       className="w-full"

@@ -3,6 +3,7 @@ package routers
 import (
 	"backend/internal/controllers"
 	traininggen "backend/internal/controllers/training"
+	"backend/internal/middlewares"
 
 	"github.com/gin-gonic/gin"
 )
@@ -39,6 +40,7 @@ type RouterConfig struct {
 	CandidateAnalysisController     *controllers.CandidateAnalysisController
 	RoleAnalysisController          *controllers.RoleAnalysisController
 	PDFController                   *controllers.PDFController
+	CVRoleController                *controllers.CVRoleController
 }
 
 func (c *RouterConfig) Setup() {
@@ -59,11 +61,11 @@ func (c *RouterConfig) Setup() {
 	c.SetupCandidateAnalysisRouter()
 	c.SetupRoleAnalysisRouter()
 	c.SetupPDFRouter()
+	c.SetupCVRoleRouter()
 }
 
 func (c *RouterConfig) SetupGuestRouter() {
-	// TODO: Setup Login
-
+	// Authentication & SSO
 	auth := c.App.Group("auth")
 	{
 		auth.POST("/login", c.UserController.Login)
@@ -75,6 +77,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		sso.GET("/callback", c.UserController.SSOCallback)
 	}
 
+	// Reports (Read operations)
 	report := c.App.Group("reports")
 	{
 		report.GET("", c.ReportController.FindAll)
@@ -83,112 +86,88 @@ func (c *RouterConfig) SetupGuestRouter() {
 		report.GET("/seafarer-code/:seafarerCode", c.ReportController.FindBySeafarerCode)
 		report.GET("/seafarer-code/:seafarerCode/training-data", c.ReportController.GetTrainingData)
 		report.GET("/seafarer-code/:seafarerCode/training-summary", c.ReportController.GetTrainingSummary)
-		report.POST("/refresh-personal-data", c.ReportController.RefreshPersonalData)
-		report.POST("/upload", c.ReportController.CreateAll)
 		report.GET("/test", c.ReportController.TestPanic)
 	}
 
+	// Trainings (Read operations)
 	trainings := c.App.Group("trainings")
 	{
 		trainings.GET("", c.TrainingGenController.FindAll)
-		trainings.POST("", c.TrainingController.Create)
-		trainings.POST("/generate", c.TrainingGenController.Generate)
-		trainings.POST("/generate-quiz", c.TrainingGenController.GenerateQuiz)
-		trainings.PUT("/:no", c.TrainingController.Update)
-		trainings.PUT("/:no/referensi", c.TrainingController.UpdateReferensi)
-		trainings.DELETE("/:no", c.TrainingController.Delete)
 	}
 
+	// Training Plan (Read operations)
 	trainingPlan := c.App.Group("api/training-plan")
 	{
 		trainingPlan.GET("", c.TrainingPlanController.GetTrainingPlan)
-		trainingPlan.POST("/generate-schedules", c.TrainingPlanController.GenerateSchedules)
-		trainingPlan.PUT("/swap-schedules", c.TrainingPlanController.SwapSchedules)
 		trainingPlan.GET("/competency-mapping", c.TrainingPlanController.GetCompetencyMapping)
 		trainingPlan.GET("/programs", c.TrainingPlanController.GetAvailablePrograms)
 		trainingPlan.GET("/export-excel", c.TrainingPlanController.ExportTrainingPlanExcel)
-		trainingPlan.PUT("/toggle-started/:id", c.TrainingPlanController.ToggleTrainingStarted) // Toggle is_started flag
-		trainingPlan.GET("/overdue-count", c.TrainingPlanController.GetOverdueCount)            // Get overdue unstarted count
+		trainingPlan.GET("/overdue-count", c.TrainingPlanController.GetOverdueCount)
 	}
 
-	// IDP Tracking endpoints (for readiness refresh)
-	idpTracking := c.App.Group("api/idp-tracking")
-	{
-		idpTracking.POST("/refresh/:reportId", c.IDPTrackingController.RefreshReadiness) // Refresh specific report
-		idpTracking.POST("/refresh-all", c.IDPTrackingController.RefreshAllReadiness)    // Refresh all reports
-	}
-
-	// Competency Mapping CMS endpoints
+	// Competency Mapping (Read operations)
 	competencyMapping := c.App.Group("api/competency-mappings")
 	{
 		competencyMapping.GET("", c.CompetencyMappingController.GetMappingsByProgram)
 		competencyMapping.GET("/all", c.CompetencyMappingController.GetAllMappings)
-		competencyMapping.POST("", c.CompetencyMappingController.CreateMapping)
-		competencyMapping.PUT("/:id", c.CompetencyMappingController.UpdateMapping)
-		competencyMapping.DELETE("/:id", c.CompetencyMappingController.DeleteMapping)
 	}
 
-	// Competency Types endpoints (Public - read only)
+	// Competency Types (Read only)
 	competencyTypes := c.App.Group("api/competency-types")
 	{
-		competencyTypes.GET("", c.CompetencyTypeController.GetAll)               // Get all competency types
-		competencyTypes.GET("/active", c.CompetencyTypeController.GetActive)     // Get only active
-		competencyTypes.GET("/:id", c.CompetencyTypeController.GetByID)          // Get by ID
-		competencyTypes.GET("/code/:code", c.CompetencyTypeController.GetByCode) // Get by code
+		competencyTypes.GET("", c.CompetencyTypeController.GetAll)
+		competencyTypes.GET("/active", c.CompetencyTypeController.GetActive)
+		competencyTypes.GET("/:id", c.CompetencyTypeController.GetByID)
+		competencyTypes.GET("/code/:code", c.CompetencyTypeController.GetByCode)
 	}
 
 	// All trainings endpoint for dropdowns
 	c.App.GET("api/trainings", c.CompetencyMappingController.GetAllTrainings)
 
+	// Mentoring Reports (Read operations)
 	mentoringReports := c.App.Group("mentoring-reports")
 	{
-		mentoringReports.POST("", c.MentoringReportController.Create)
 		mentoringReports.GET("", c.MentoringReportController.FindAll)
 		mentoringReports.GET("/:id", c.MentoringReportController.FindById)
-		mentoringReports.PUT("", c.MentoringReportController.Update)
-		mentoringReports.DELETE("/:id", c.MentoringReportController.Delete)
 		mentoringReports.GET("/by-mentee", c.MentoringReportController.FindByMenteeName)
 		mentoringReports.GET("/reports/:reportId", c.MentoringReportController.FindByReportID)
 	}
 
+	// Coaching Reports (Read operations)
 	coachingReports := c.App.Group("coaching-reports")
 	{
-		coachingReports.POST("", c.CoachingReportController.Create)
 		coachingReports.GET("", c.CoachingReportController.GetAll)
 		coachingReports.GET("/:id", c.CoachingReportController.GetByID)
-		coachingReports.PUT("/:id", c.CoachingReportController.Update)
-		coachingReports.DELETE("/:id", c.CoachingReportController.Delete)
 		coachingReports.GET("/reports/:reportId", c.CoachingReportController.GetByReportID)
 	}
 
+	// Questions & Options (Read operations)
 	questions := c.App.Group("questions")
 	{
-		questions.POST("", c.QuestionController.Create)
 		questions.GET("", c.QuestionController.FindAll)
 		questions.GET("/:questionId", c.QuestionController.FindById)
 	}
 
 	options := c.App.Group("options")
 	{
-		options.POST("", c.OptionController.Create)
 		options.GET("", c.OptionController.FindAll)
 		options.GET("/:optionId", c.OptionController.FindById)
 		options.GET("/question/:questionId", c.OptionController.FindByQuestionId)
 	}
 
-	// Combined question-option routes (Public access - only read operations)
 	questionsWithOptions := c.App.Group("api/questions-with-options")
 	{
 		questionsWithOptions.GET("", c.QuestionOptionController.FindAllQuestionsWithOptions)
 	}
 
+	// Assessments (Read operations)
 	assessment := c.App.Group("api/assessments")
 	{
 		assessment.GET("/public/:role", c.AssessmentController.FindByRolePublic)
 		assessment.GET("", c.AssessmentController.FindAllAssessments)
 	}
 
-	// Assessment Types endpoints (Public - read only)
+	// Assessment Types (Read operations)
 	assessmentTypes := c.App.Group("api/assessment-types")
 	{
 		assessmentTypes.GET("", c.AssessmentTypeController.FindAll)
@@ -196,7 +175,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		assessmentTypes.GET("/:id", c.AssessmentTypeController.FindByID)
 	}
 
-	// Seafarer Assessments endpoints (Public - read only)
+	// Seafarer Assessments (Read operations + Candidate attempt increment)
 	seafarerAssessments := c.App.Group("api/seafarer-assessments")
 	{
 		seafarerAssessments.GET("", c.SeafarerAssessmentController.FindAll)
@@ -208,6 +187,7 @@ func (c *RouterConfig) SetupGuestRouter() {
 		seafarerAssessments.GET("/by-assessment-type/:assessmentTypeId", c.SeafarerAssessmentController.FindByAssessmentTypeID)
 	}
 
+	// New Recruiters Public Quiz/Assessment
 	newRecruitersPublic := c.App.Group("api/new-recruiters")
 	{
 		newRecruitersPublic.GET("/check-assignment/:token/:assessmentTypeId", c.NewRecruiterController.CheckAssignment)
@@ -217,59 +197,54 @@ func (c *RouterConfig) SetupGuestRouter() {
 		newRecruitersPublic.POST("/quiz/submit", c.NewRecruiterController.SubmitQuiz)
 	}
 
+	// Assessment Results Submit
 	assessmentResults := c.App.Group("assessment-results")
 	{
 		assessmentResults.POST("/submit", c.AssessmentResultController.Submit)
 	}
 
-	// Seamen endpoints (Public - read only)
+	// Seamen (Read operations)
 	seamen := c.App.Group("api/seamen")
 	{
 		seamen.GET("/available", c.SeamanController.SearchAvailableSeamen)
 	}
 
-	// Register Question and Option routes
-	QuestionRouter(c.App, c.QuestionController)
-	OptionRouter(c.App, c.OptionController)
-	AspectRouter(c.App, c.AspectController)
-}
-func (r *RouterConfig) SetupMasterRouter() {
-
-	group := r.App.Group("/api/master-reports")
-
-	{
-		group.GET("", r.MasterController.FindAll)
-		group.GET("/mentoring-programs", r.MasterController.GetMentoringPrograms)
-		group.GET("/:id", r.MasterController.FindById)
-		group.POST("", r.MasterController.Create)
-		group.PUT("/:id", r.MasterController.Update)
-		group.DELETE("/:id", r.MasterController.Delete)
-		group.POST("/bulk-assign-batch", r.MasterController.BulkAssignBatch)
-
-	}
-}
-
-// --- Router assignment baru
-func (r *RouterConfig) SetupAssignmentRouter() {
-	group := r.App.Group("/api/assignments")
-	{
-		group.GET("", r.AssignmentController.ListPaged)
-		group.POST("", r.AssignmentController.Create)
-		group.POST("/bulk", r.AssignmentController.BulkCreate)
-		group.PUT("/:id", r.AssignmentController.Update)
-		group.DELETE("/:id", r.AssignmentController.Delete)
-	}
+	// Register Question, Option, Aspect routes
+	QuestionRouter(c.App, c.QuestionController, c.AuthMiddleware)
+	OptionRouter(c.App, c.OptionController, c.AuthMiddleware)
+	AspectRouter(c.App, c.AspectController, c.AuthMiddleware)
 }
 
 func (c *RouterConfig) SetupAuthRouter() {
-	// Protected Auth Routes
+	// Authenticated General Routes
 	auth := c.App.Group("auth").Use(c.AuthMiddleware)
 	{
 		auth.POST("/logout", c.UserController.Logout)
 	}
 
+	assessmentResultsAuth := c.App.Group("assessment-results").Use(c.AuthMiddleware)
+	{
+		assessmentResultsAuth.GET("/seafarer/:seafarerCode", c.AssessmentResultController.FindBySeafarerCode)
+		assessmentResultsAuth.GET("/report/:seafarerCode", c.AssessmentResultController.GetValueAssessmentReportBySeafarerCode)
+	}
+
+	newRecruitersAuth := c.App.Group("api/new-recruiters").Use(c.AuthMiddleware)
+	{
+		newRecruitersAuth.GET("", c.NewRecruiterController.FindAll)
+		newRecruitersAuth.GET("/search", c.NewRecruiterController.Search)
+		newRecruitersAuth.GET("/assignments", c.NewRecruiterController.FindAssignments)
+	}
+
+	assessmentAuth := c.App.Group("api/assessments").Use(c.AuthMiddleware)
+	{
+		assessmentAuth.GET("/unassigned-list", c.AssessmentController.FindUnassigned)
+		assessmentAuth.GET("/:role", c.AssessmentController.FindByRole)
+	}
+
+	// ── ADMIN ONLY MUTATING ROUTES ──────────────────────────────────────────
+
 	// User Management Routes (admin only)
-	userMgmt := c.App.Group("api/users").Use(c.AuthMiddleware)
+	userMgmt := c.App.Group("api/users").Use(c.AuthMiddleware, middlewares.AdminOnly())
 	{
 		userMgmt.POST("", c.UserController.CreateUser)
 		userMgmt.GET("", c.UserController.GetAllUsers)
@@ -278,60 +253,140 @@ func (c *RouterConfig) SetupAuthRouter() {
 		userMgmt.DELETE("/:id", c.UserController.DeleteUser)
 	}
 
-	assessmentAuth := c.App.Group("api/assessments").Use(c.AuthMiddleware)
+	// Reports Admin Mutations
+	reportsAdmin := c.App.Group("reports").Use(c.AuthMiddleware, middlewares.AdminOnly())
 	{
-		assessmentAuth.GET("/unassigned-list", c.AssessmentController.FindUnassigned)
-		assessmentAuth.POST("/assign", c.AssessmentController.AssignToType)
-		assessmentAuth.GET("/:role", c.AssessmentController.FindByRole)
-		assessmentAuth.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
-		assessmentAuth.PATCH("/:assessmentId/tutorial", c.AssessmentController.UpdateTutorial)
-		assessmentAuth.POST("", c.AssessmentController.CreateAssessment)
-		assessmentAuth.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
-		assessmentAuth.POST("/upload-image", c.AssessmentController.UploadAssessmentImage)
+		reportsAdmin.POST("/refresh-personal-data", c.ReportController.RefreshPersonalData)
+		reportsAdmin.POST("/upload", c.ReportController.CreateAll)
 	}
 
-	assessmentResults := c.App.Group("assessment-results").Use(c.AuthMiddleware)
+	// Trainings Admin Mutations
+	trainingsAdmin := c.App.Group("trainings").Use(c.AuthMiddleware, middlewares.AdminOnly())
 	{
-		assessmentResults.GET("/seafarer/:seafarerCode", c.AssessmentResultController.FindBySeafarerCode)
-		assessmentResults.GET("/report/:seafarerCode", c.AssessmentResultController.GetValueAssessmentReportBySeafarerCode)
+		trainingsAdmin.POST("", c.TrainingController.Create)
+		trainingsAdmin.POST("/generate", c.TrainingGenController.Generate)
+		trainingsAdmin.POST("/generate-quiz", c.TrainingGenController.GenerateQuiz)
+		trainingsAdmin.PUT("/:no", c.TrainingController.Update)
+		trainingsAdmin.PUT("/:no/referensi", c.TrainingController.UpdateReferensi)
+		trainingsAdmin.DELETE("/:no", c.TrainingController.Delete)
 	}
 
-	// Protected Assessment Types endpoints
-	assessmentTypesAuth := c.App.Group("api/assessment-types").Use(c.AuthMiddleware)
+	// Training Plan Admin Mutations
+	trainingPlanAdmin := c.App.Group("api/training-plan").Use(c.AuthMiddleware, middlewares.AdminOnly())
 	{
-		assessmentTypesAuth.POST("", c.AssessmentTypeController.Create)
-		assessmentTypesAuth.PUT("/:id", c.AssessmentTypeController.Update)
-		assessmentTypesAuth.DELETE("/:id", c.AssessmentTypeController.Delete)
+		trainingPlanAdmin.POST("/generate-schedules", c.TrainingPlanController.GenerateSchedules)
+		trainingPlanAdmin.PUT("/swap-schedules", c.TrainingPlanController.SwapSchedules)
+		trainingPlanAdmin.PUT("/toggle-started/:id", c.TrainingPlanController.ToggleTrainingStarted)
 	}
 
-	// Protected Seafarer Assessments endpoints
-	seafarerAssessmentsAuth := c.App.Group("api/seafarer-assessments").Use(c.AuthMiddleware)
+	// IDP Tracking Admin Mutations
+	idpTrackingAdmin := c.App.Group("api/idp-tracking").Use(c.AuthMiddleware, middlewares.AdminOnly())
 	{
-		seafarerAssessmentsAuth.POST("", c.SeafarerAssessmentController.Assign)
-		seafarerAssessmentsAuth.PUT("/:id/status", c.SeafarerAssessmentController.UpdateStatus)
-		seafarerAssessmentsAuth.DELETE("/:id", c.SeafarerAssessmentController.Delete)
+		idpTrackingAdmin.POST("/refresh/:reportId", c.IDPTrackingController.RefreshReadiness)
+		idpTrackingAdmin.POST("/refresh-all", c.IDPTrackingController.RefreshAllReadiness)
 	}
 
-	// Protected Combined question-option routes
-	questionsWithOptionsAuth := c.App.Group("api/questions-with-options").Use(c.AuthMiddleware)
+	// Competency Mappings Admin Mutations
+	competencyMappingAdmin := c.App.Group("api/competency-mappings").Use(c.AuthMiddleware, middlewares.AdminOnly())
 	{
-		questionsWithOptionsAuth.POST("", c.QuestionOptionController.CreateQuestionWithOptions)
-		questionsWithOptionsAuth.PUT("/:questionId", c.QuestionOptionController.UpdateQuestionWithOptions)
-		questionsWithOptionsAuth.DELETE("/:questionId", c.QuestionOptionController.DeleteQuestionWithOptions)
-		questionsWithOptionsAuth.DELETE("/bulk-delete", c.QuestionOptionController.BulkDelete)
+		competencyMappingAdmin.POST("", c.CompetencyMappingController.CreateMapping)
+		competencyMappingAdmin.PUT("/:id", c.CompetencyMappingController.UpdateMapping)
+		competencyMappingAdmin.DELETE("/:id", c.CompetencyMappingController.DeleteMapping)
 	}
 
-	newRecruitersAuth := c.App.Group("api/new-recruiters").Use(c.AuthMiddleware)
+	// Mentoring Reports Admin Mutations
+	mentoringReportsAdmin := c.App.Group("mentoring-reports").Use(c.AuthMiddleware, middlewares.AdminOnly())
 	{
-		newRecruitersAuth.GET("", c.NewRecruiterController.FindAll)
-		newRecruitersAuth.GET("/search", c.NewRecruiterController.Search)
-		newRecruitersAuth.POST("", c.NewRecruiterController.Create)
-		newRecruitersAuth.PUT("/:id", c.NewRecruiterController.Update)
-		newRecruitersAuth.POST("/bulk-assign-batch", c.NewRecruiterController.BulkAssignBatch)
-		newRecruitersAuth.DELETE("/:id", c.NewRecruiterController.Delete)
-		newRecruitersAuth.GET("/assignments", c.NewRecruiterController.FindAssignments)
-		newRecruitersAuth.POST("/assignments", c.NewRecruiterController.CreateAssignment)
-		newRecruitersAuth.DELETE("/assignments/:id", c.NewRecruiterController.DeleteAssignment)
+		mentoringReportsAdmin.POST("", c.MentoringReportController.Create)
+		mentoringReportsAdmin.PUT("", c.MentoringReportController.Update)
+		mentoringReportsAdmin.DELETE("/:id", c.MentoringReportController.Delete)
+	}
+
+	// Coaching Reports Admin Mutations
+	coachingReportsAdmin := c.App.Group("coaching-reports").Use(c.AuthMiddleware, middlewares.AdminOnly())
+	{
+		coachingReportsAdmin.POST("", c.CoachingReportController.Create)
+		coachingReportsAdmin.PUT("/:id", c.CoachingReportController.Update)
+		coachingReportsAdmin.DELETE("/:id", c.CoachingReportController.Delete)
+	}
+
+	// Assessment Admin Mutations
+	assessmentAdmin := c.App.Group("api/assessments").Use(c.AuthMiddleware, middlewares.AdminOnly())
+	{
+		assessmentAdmin.POST("/assign", c.AssessmentController.AssignToType)
+		assessmentAdmin.PUT("/:assessmentId", c.AssessmentController.UpdateAssessment)
+		assessmentAdmin.PATCH("/:assessmentId/tutorial", c.AssessmentController.UpdateTutorial)
+		assessmentAdmin.POST("", c.AssessmentController.CreateAssessment)
+		assessmentAdmin.DELETE("/:assessmentId", c.AssessmentController.DeleteAssessment)
+		assessmentAdmin.POST("/upload-image", c.AssessmentController.UploadAssessmentImage)
+	}
+
+	// Assessment Types Admin Mutations
+	assessmentTypesAdmin := c.App.Group("api/assessment-types").Use(c.AuthMiddleware, middlewares.AdminOnly())
+	{
+		assessmentTypesAdmin.POST("", c.AssessmentTypeController.Create)
+		assessmentTypesAdmin.PUT("/:id", c.AssessmentTypeController.Update)
+		assessmentTypesAdmin.DELETE("/:id", c.AssessmentTypeController.Delete)
+	}
+
+	// Seafarer Assessments Admin Mutations
+	seafarerAssessmentsAdmin := c.App.Group("api/seafarer-assessments").Use(c.AuthMiddleware, middlewares.AdminOnly())
+	{
+		seafarerAssessmentsAdmin.POST("", c.SeafarerAssessmentController.Assign)
+		seafarerAssessmentsAdmin.PUT("/:id/status", c.SeafarerAssessmentController.UpdateStatus)
+		seafarerAssessmentsAdmin.DELETE("/:id", c.SeafarerAssessmentController.Delete)
+	}
+
+	// Questions with Options Admin Mutations
+	questionsWithOptionsAdmin := c.App.Group("api/questions-with-options").Use(c.AuthMiddleware, middlewares.AdminOnly())
+	{
+		questionsWithOptionsAdmin.POST("", c.QuestionOptionController.CreateQuestionWithOptions)
+		questionsWithOptionsAdmin.PUT("/:questionId", c.QuestionOptionController.UpdateQuestionWithOptions)
+		questionsWithOptionsAdmin.DELETE("/:questionId", c.QuestionOptionController.DeleteQuestionWithOptions)
+		questionsWithOptionsAdmin.DELETE("/bulk-delete", c.QuestionOptionController.BulkDelete)
+	}
+
+	// New Recruiters Admin Mutations
+	newRecruitersAdmin := c.App.Group("api/new-recruiters").Use(c.AuthMiddleware, middlewares.AdminOnly())
+	{
+		newRecruitersAdmin.POST("", c.NewRecruiterController.Create)
+		newRecruitersAdmin.PUT("/:id", c.NewRecruiterController.Update)
+		newRecruitersAdmin.POST("/bulk-assign-batch", c.NewRecruiterController.BulkAssignBatch)
+		newRecruitersAdmin.DELETE("/:id", c.NewRecruiterController.Delete)
+		newRecruitersAdmin.POST("/assignments", c.NewRecruiterController.CreateAssignment)
+		newRecruitersAdmin.DELETE("/assignments/:id", c.NewRecruiterController.DeleteAssignment)
+	}
+}
+
+func (r *RouterConfig) SetupMasterRouter() {
+	group := r.App.Group("/api/master-reports")
+	{
+		group.GET("", r.MasterController.FindAll)
+		group.GET("/mentoring-programs", r.MasterController.GetMentoringPrograms)
+		group.GET("/:id", r.MasterController.FindById)
+	}
+
+	adminGroup := r.App.Group("/api/master-reports").Use(r.AuthMiddleware, middlewares.AdminOnly())
+	{
+		adminGroup.POST("", r.MasterController.Create)
+		adminGroup.PUT("/:id", r.MasterController.Update)
+		adminGroup.DELETE("/:id", r.MasterController.Delete)
+		adminGroup.POST("/bulk-assign-batch", r.MasterController.BulkAssignBatch)
+	}
+}
+
+func (r *RouterConfig) SetupAssignmentRouter() {
+	group := r.App.Group("/api/assignments")
+	{
+		group.GET("", r.AssignmentController.ListPaged)
+	}
+
+	adminGroup := r.App.Group("/api/assignments").Use(r.AuthMiddleware, middlewares.AdminOnly())
+	{
+		adminGroup.POST("", r.AssignmentController.Create)
+		adminGroup.POST("/bulk", r.AssignmentController.BulkCreate)
+		adminGroup.PUT("/:id", r.AssignmentController.Update)
+		adminGroup.DELETE("/:id", r.AssignmentController.Delete)
 	}
 }
 
@@ -349,8 +404,12 @@ func (r *RouterConfig) SetupScoringConfigRouter() {
 	group := r.App.Group("/api/scoring-config")
 	{
 		group.GET("/:assessmentTypeId", r.ScoringConfigController.GetScoringConfig)
-		group.PUT("/:assessmentTypeId", r.ScoringConfigController.UpdateScoringConfig)
-		group.POST("/validate-formula", r.ScoringConfigController.ValidateFormula)
+	}
+
+	adminGroup := r.App.Group("/api/scoring-config").Use(r.AuthMiddleware, middlewares.AdminOnly())
+	{
+		adminGroup.PUT("/:assessmentTypeId", r.ScoringConfigController.UpdateScoringConfig)
+		adminGroup.POST("/validate-formula", r.ScoringConfigController.ValidateFormula)
 	}
 }
 
@@ -358,10 +417,14 @@ func (r *RouterConfig) SetupBatchRouter() {
 	group := r.App.Group("/api/batches")
 	{
 		group.GET("", r.BatchController.FindAll)
-		group.POST("", r.BatchController.Create)
 		group.GET("/:id", r.BatchController.FindByID)
-		group.PUT("/:id", r.BatchController.Update)
 		group.GET("/:id/snapshots", r.BatchController.GetSnapshots)
+	}
+
+	adminGroup := r.App.Group("/api/batches").Use(r.AuthMiddleware, middlewares.AdminOnly())
+	{
+		adminGroup.POST("", r.BatchController.Create)
+		adminGroup.PUT("/:id", r.BatchController.Update)
 	}
 }
 
@@ -400,5 +463,21 @@ func (r *RouterConfig) SetupRoleAnalysisRouter() {
 	{
 		// POST /api/role-analysis — Ranking banyak kandidat untuk 1 role
 		group.POST("", r.RoleAnalysisController.Analyze)
+	}
+}
+
+// SetupCVRoleRouter mendaftarkan endpoint untuk manajemen CV Roles (CRUD Roles & Descriptions)
+func (r *RouterConfig) SetupCVRoleRouter() {
+	publicGroup := r.App.Group("/api/cv-roles")
+	{
+		publicGroup.GET("", r.CVRoleController.GetAll)
+		publicGroup.GET("/:id", r.CVRoleController.GetByID)
+	}
+
+	adminGroup := r.App.Group("/api/cv-roles").Use(r.AuthMiddleware, middlewares.AdminOnly())
+	{
+		adminGroup.POST("", r.CVRoleController.Create)
+		adminGroup.PUT("/:id", r.CVRoleController.Update)
+		adminGroup.DELETE("/:id", r.CVRoleController.Delete)
 	}
 }

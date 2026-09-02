@@ -12,6 +12,7 @@ const cookies = new Cookies();
 type TokenPayload = {
   sub?: number | string;
   username?: string;
+  role?: string;
 };
 
 function decodeTokenPayload(token: string): TokenPayload | null {
@@ -52,6 +53,7 @@ export default function SSOCallbackPage() {
         JSON.stringify({
           id: Number(payload.sub),
           username: payload.username,
+          role: payload.role || "viewer",
         })
       );
     }

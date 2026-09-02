@@ -38,17 +38,20 @@ func NewUserService(db *gorm.DB, log *logrus.Logger, validate *validator.Validat
 }
 
 func (service *UserService) CreateAccessToken(user *domain.User) (string, error) {
-	// TODO: Generate JWT Token
+	// Generate JWT Token
+	role := user.Role
+	if role == "" {
+		role = "viewer"
+	}
+
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"sub":      user.ID,
 		"username": user.Username,
+		"role":     role,
 		"expired":  time.Now().Add(time.Hour * 6).Unix(), // 6 Hours
 	})
 
-	// TODO: Sign and Get the complete encoded token as a string using the secret key
 	secretKey := service.Config.GetString("JWT_SECRET_KEY")
-	fmt.Println(secretKey)
-
 	tokenString, err := token.SignedString([]byte(secretKey))
 	if err != nil {
 		return "", err
