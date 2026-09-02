@@ -198,12 +198,18 @@ export function DISCCharts({ summary }: DISCChartsProps) {
   const activeConsistency = Object.entries(summary.consistencyCounts).filter(([, val]) => val > 0);
   const consistencyLabels = activeConsistency.map(([k, v]) => `${k} (${v} kandidat)`);
   const consistencyValues = activeConsistency.map(([, v]) => v);
+  const consistencyColors = activeConsistency.map(([k]) => {
+    if (k.toLowerCase().includes("still")) return "#10b981"; // Emerald Green for Still Consistent
+    if (k.toLowerCase().includes("note")) return "#94a3b8";  // Muted Slate for Note for Assessor
+    return "#f59e0b"; // Amber for Incomplete
+  });
+
   const consistencyData = {
     labels: consistencyLabels,
     datasets: [
       {
         data: consistencyValues,
-        backgroundColor: ["#10b981", "#94a3b8", "#64748b"], // Bright Emerald Green for Consistent, Muted Slate for Note
+        backgroundColor: consistencyColors,
         borderWidth: 2,
         borderColor: "#ffffff",
       },

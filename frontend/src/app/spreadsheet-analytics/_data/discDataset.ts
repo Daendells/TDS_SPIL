@@ -19468,11 +19468,11 @@ export const REAL_DISC_DATASET: DISCCandidate[] = [
         "nik":  "24071102012",
         "email":  "asrabil123@gmail.com",
         "date":  "2023-11-09",
-        "dominantType":  "I",
-        "traitM":  "D / I / S / C",
+        "dominantType":  "C",
+        "traitM":  "D / C",
         "traitL":  "-",
         "traitPk":  "-",
-        "consistency":  "Consistent",
+        "consistency":  "Incomplete",
         "graph1":  {
                        "d":  0,
                        "s":  0,
@@ -19491,12 +19491,12 @@ export const REAL_DISC_DATASET: DISCCandidate[] = [
                        "c":  0,
                        "i":  0
                    },
-        "descWords":  "",
-        "character":  "",
-        "motivation":  "",
-        "jobEmphasis":  "",
-        "workMask":  "",
-        "underPressure":  ""
+        "descWords":  "Belum ada catatan deskriptif.",
+        "character":  "Data asesmen kandidat belum selesai diisi.",
+        "motivation":  "-",
+        "jobEmphasis":  "-",
+        "workMask":  "-",
+        "underPressure":  "-"
     },
     {
         "id":  "DISC-0542",
