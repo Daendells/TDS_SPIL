@@ -11,6 +11,7 @@ import {
   Users,
   History,
   Sparkles,
+  FileSpreadsheet,
 } from "lucide-react";
 
 import {
@@ -46,6 +47,11 @@ const items = [
     title: "Dashboard",
     url: "/dashboard",
     icon: LaptopMinimal,
+  },
+  {
+    title: "Spreadsheet Analytics",
+    url: "/spreadsheet-analytics",
+    icon: FileSpreadsheet,
   },
   {
     title: "Master Report",
