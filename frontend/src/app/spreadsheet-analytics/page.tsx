@@ -44,78 +44,76 @@ export default function SpreadsheetAnalyticsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-slate-50/60 pb-16">
-      {/* ── SPIL DUAL-LOGO OFFICIAL HEADER ─────────────────────────────── */}
-      <header className="border-b border-slate-200 bg-white sticky top-0 z-20 shadow-xs">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div className="flex items-center gap-3">
-            <div className="relative h-9 w-28 shrink-0">
-              <Image
-                src="/images/logo1.png"
-                alt="PT SPIL Logo"
-                fill
-                className="object-contain object-left"
-                priority
-              />
-            </div>
-            <div className="h-6 w-px bg-slate-200 hidden sm:block" />
-            <div className="relative h-9 w-28 shrink-0">
-              <Image
-                src="/images/logo2.png"
-                alt="Partner Logo"
-                fill
-                className="object-contain object-left"
-                priority
-              />
-            </div>
-            <div className="h-6 w-px bg-slate-200 hidden sm:block" />
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-bold text-slate-900 tracking-tight">
-                  TDS RECRUITMENT & PSYCHOMETRIC ANALYTICS
-                </span>
-                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900 text-white">
-                  DISC Maritime Profiler
-                </span>
-              </div>
-              <p className="text-[11px] text-slate-500">
-                Visualisasi Data Asesmen Psikologi & Profil Kepribadian Rekrutmen PT SPIL
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <input
-              type="file"
-              ref={fileInputRef}
-              accept=".csv"
-              className="hidden"
-              onChange={handleFileUpload}
+    <div className="space-y-6 pb-12">
+      {/* ── TOP ACTION BAR (Clean SPIL Header inside Dashboard) ───────────── */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
+        <div className="flex items-center gap-3">
+          <div className="relative h-8 w-24 shrink-0">
+            <Image
+              src="/images/logo1.png"
+              alt="PT SPIL Logo"
+              fill
+              className="object-contain object-left"
+              priority
             />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => fileInputRef.current?.click()}
-              className="text-xs h-8 border-slate-300 text-slate-700 hover:bg-slate-50 gap-1.5"
-            >
-              <Upload className="w-3.5 h-3.5 text-sky-600" />
-              Unggah File CSV Baru
-            </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={resetToRealDataset}
-              className="text-xs h-8 border-slate-300 text-slate-700 hover:bg-slate-50 gap-1.5"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-emerald-600" />
-              Reset ke Dataset Asli (582)
-            </Button>
+          </div>
+          <div className="h-5 w-px bg-slate-200 hidden sm:block" />
+          <div className="relative h-8 w-24 shrink-0">
+            <Image
+              src="/images/logo2.png"
+              alt="Partner Logo"
+              fill
+              className="object-contain object-left"
+              priority
+            />
+          </div>
+          <div className="h-5 w-px bg-slate-200 hidden sm:block" />
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-sm font-bold text-slate-900 tracking-tight">
+                SPM RECRUITMENT & DISC PSYCHOMETRIC ANALYTICS
+              </h1>
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900 text-white">
+                DISC Maritime Profiler
+              </span>
+            </div>
+            <p className="text-xs text-slate-500">
+              Analisis Hasil Tes Psikologi & Profil Kepribadian Rekrutmen PT SPIL
+            </p>
           </div>
         </div>
-      </header>
 
-      {/* ── MAIN CONTENT CONTAINER ─────────────────────────────────────── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+        <div className="flex items-center gap-2">
+          <input
+            type="file"
+            ref={fileInputRef}
+            accept=".csv"
+            className="hidden"
+            onChange={handleFileUpload}
+          />
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => fileInputRef.current?.click()}
+            className="text-xs h-8 border-slate-300 text-slate-700 hover:bg-slate-50 gap-1.5"
+          >
+            <Upload className="w-3.5 h-3.5 text-slate-700" />
+            Unggah File CSV Baru
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={resetToRealDataset}
+            className="text-xs h-8 border-slate-300 text-slate-700 hover:bg-slate-50 gap-1.5"
+          >
+            <RefreshCw className="w-3.5 h-3.5 text-slate-700" />
+            Reset Dataset (582)
+          </Button>
+        </div>
+      </div>
+
+      {/* ── MAIN CONTENT SECTIONS ─────────────────────────────────────── */}
+      <div className="space-y-6">
         {/* Section 1: Executive KPI Overview & Narrative Summary */}
         <section>
           <DISCExecutiveCards summary={summary} />
@@ -146,7 +144,7 @@ export default function SpreadsheetAnalyticsPage() {
             sourceTitle={sourceTitle}
           />
         </section>
-      </main>
+      </div>
     </div>
   );
 }

@@ -53,10 +53,10 @@ export function DISCCharts({ summary }: DISCChartsProps) {
           summary.dominantCounts.C,
         ],
         backgroundColor: [
-          "#e11d48", // Rose / Red for Dominance
-          "#f59e0b", // Amber / Yellow for Influence
-          "#10b981", // Emerald / Green for Steadiness
-          "#0284c7", // Sky / Blue for Conscientiousness
+          "#0f172a", // Slate 900 (Dominance)
+          "#334155", // Slate 700 (Influence)
+          "#0f766e", // Deep Teal (Steadiness)
+          "#0284c7", // Corporate Blue (Conscientiousness)
         ],
         borderWidth: 2,
         borderColor: "#ffffff",
@@ -84,7 +84,7 @@ export function DISCCharts({ summary }: DISCChartsProps) {
         cornerRadius: 8,
       },
     },
-    cutout: "65%",
+    cutout: "68%",
   };
 
   // 2. Average Triple Graph Lines (Graph I Mask, Graph II Core, Graph III Mirror)
@@ -92,28 +92,28 @@ export function DISCCharts({ summary }: DISCChartsProps) {
     labels: ["Dominance (D)", "Influence (I)", "Steadiness (S)", "Compliance (C)"],
     datasets: [
       {
-        label: "Graph I: Mask Behavior (Tuntutan Lingkungan)",
+        label: "Graph I: Mask (Tuntutan Lingkungan)",
         data: [summary.avgGraph1.d, summary.avgGraph1.i, summary.avgGraph1.s, summary.avgGraph1.c],
         borderColor: "#0284c7",
-        backgroundColor: "rgba(2, 132, 199, 0.1)",
+        backgroundColor: "rgba(2, 132, 199, 0.08)",
         borderWidth: 2,
         pointRadius: 4,
         tension: 0.2,
       },
       {
-        label: "Graph II: Core / Under Pressure (Respon Tekanan)",
+        label: "Graph II: Core (Respon Tekanan)",
         data: [summary.avgGraph2.d, summary.avgGraph2.i, summary.avgGraph2.s, summary.avgGraph2.c],
-        borderColor: "#e11d48",
-        backgroundColor: "rgba(225, 29, 72, 0.1)",
+        borderColor: "#475569",
+        backgroundColor: "rgba(71, 85, 105, 0.08)",
         borderWidth: 2,
         pointRadius: 4,
         tension: 0.2,
       },
       {
-        label: "Graph III: Mirror (Perilaku Integrasi Terlihat)",
+        label: "Graph III: Mirror (Integrasi Terlihat)",
         data: [summary.avgGraph3.d, summary.avgGraph3.i, summary.avgGraph3.s, summary.avgGraph3.c],
-        borderColor: "#10b981",
-        backgroundColor: "rgba(16, 185, 129, 0.1)",
+        borderColor: "#0f766e",
+        backgroundColor: "rgba(15, 118, 110, 0.08)",
         borderWidth: 2,
         borderDash: [5, 5],
         pointRadius: 4,
@@ -202,7 +202,7 @@ export function DISCCharts({ summary }: DISCChartsProps) {
     datasets: [
       {
         data: consistencyValues,
-        backgroundColor: ["#10b981", "#f59e0b", "#e11d48", "#64748b"],
+        backgroundColor: ["#0f766e", "#94a3b8", "#cbd5e1"],
         borderWidth: 2,
         borderColor: "#ffffff",
       },
