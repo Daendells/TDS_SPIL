@@ -27,6 +27,6 @@ type AIProvider interface {
 	Generate(ctx context.Context, req AIRequest) (*AIResponse, error)
 	// ModelName mengembalikan nama model yang sedang digunakan.
 	ModelName() string
-	// ProviderName mengembalikan nama provider (e.g., "ling", "nemotron").
+	// ProviderName mengembalikan nama provider (e.g., "liquid").
 	ProviderName() string
 }

@@ -48,7 +48,7 @@ func NewOpenRouterClient(log *logrus.Logger, apiKey, model, baseURL string) *Ope
 		log.Warn("OPENROUTER_API_KEY kosong - panggilan LLM akan gagal")
 	}
 	if model == "" {
-		model = "inclusionai/ling-3.0-flash:free"
+		model = "poolside/laguna-s-2.1:free"
 	}
 	if baseURL == "" {
 		baseURL = "https://openrouter.ai/api/v1"

@@ -1,5 +1,5 @@
 // Package benchmark menyediakan benchmark logger untuk mencatat performa setiap AI request.
-// Data ini digunakan developer untuk membandingkan model (Ling vs Nemotron vs GPT, dll).
+// Data ini digunakan developer untuk membandingkan performa model (e.g. Liquid vs GPT, dll).
 // Benchmark TIDAK ditampilkan kepada end user.
 package benchmark
 

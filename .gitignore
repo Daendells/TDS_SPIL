@@ -52,3 +52,9 @@ Thumbs.db
 # File Material
 backend/public/materi/*
 backend/storage/*
+
+# Agent / AI Rules
+agent.md
+AGENTS.md
+Agent.md
+.agents/

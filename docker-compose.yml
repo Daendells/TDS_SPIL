@@ -11,6 +11,8 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
+    env_file:
+      - ./backend/.env
     environment:
       # Database (shared mysql-container)
       DB_HOST: mysql-container
@@ -36,12 +38,11 @@ services:
       SSO_CALLBACK_URL: ${SSO_CALLBACK_URL:-http://localhost:8081/api/auth/sso/callback}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
 
-      # OpenRouter AI (CV Analysis)
-      OPENROUTER_API_KEY: ${OPENROUTER_API_KEY:-}
-      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-inclusionai/ling-3.0-flash:free}
+      # OpenRouter AI (CV Analysis) - Dibaca dari env_file ./backend/.env
+      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-poolside/laguna-s-2.1:free}
       OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
-      # MODEL_PROVIDER: "ling" (default) atau "nemotron"
-      MODEL_PROVIDER: ${MODEL_PROVIDER:-ling}
+      # MODEL_PROVIDER: "poolside" (default)
+      MODEL_PROVIDER: ${MODEL_PROVIDER:-poolside}
 
     ports:
       - "8081:8080"   # Port 8081 agar tidak konflik dengan tds-devto_normal (8080)

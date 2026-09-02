@@ -18,7 +18,7 @@ import (
 )
 
 // CandidateAnalysisService menangani business logic Fitur 1:
-// Analisis 1 CV terhadap seluruh IT role yang dipilih (Goroutine Workers + Concurrency Semaphore + Retry).
+// Analisis 1 CV terhadap seluruh IT/SPIL role yang dipilih (Goroutine Workers + Rate Limit Retry).
 type CandidateAnalysisService struct {
 	log      *logrus.Logger
 	provider ai.AIProvider
@@ -34,7 +34,7 @@ func NewCandidateAnalysisService(log *logrus.Logger, provider ai.AIProvider, ben
 	}
 }
 
-// callBatchWithRetry memanggil AI provider dengan mekanisme retry otomatis jika terjadi rate-limit atau empty response.
+// callBatchWithRetry memanggil AI provider dengan mekanisme retry otomatis jika terjadi rate-limit (429) atau empty response.
 func (s *CandidateAnalysisService) callBatchWithRetry(ctx context.Context, systemPrompt, userMessage string, maxRetries int) (*ai.AIResponse, error) {
 	var lastErr error
 	for attempt := 1; attempt <= maxRetries; attempt++ {
@@ -52,17 +52,26 @@ func (s *CandidateAnalysisService) callBatchWithRetry(ctx context.Context, syste
 		} else {
 			lastErr = fmt.Errorf("empty AI response")
 		}
-		s.log.Warnf("CandidateAnalysisService: batch attempt %d/%d failed (%v), retrying in 500ms...", attempt, maxRetries, lastErr)
+
+		// Deteksi HTTP 429 / Rate Limit
+		backoffDuration := 800 * time.Millisecond
+		if err != nil && (strings.Contains(err.Error(), "429") || strings.Contains(strings.ToLower(err.Error()), "rate limit")) {
+			backoffDuration = 2000 * time.Millisecond
+			s.log.Warnf("CandidateAnalysisService: 429 Rate Limit hit (attempt %d/%d), backing off %v...", attempt, maxRetries, backoffDuration)
+		} else {
+			s.log.Warnf("CandidateAnalysisService: batch attempt %d/%d failed (%v), retrying in %v...", attempt, maxRetries, lastErr, backoffDuration)
+		}
+
 		select {
 		case <-ctx.Done():
 			return nil, ctx.Err()
-		case <-time.After(500 * time.Millisecond):
+		case <-time.After(backoffDuration):
 		}
 	}
 	return nil, lastErr
 }
 
-// Analyze menganalisis satu CV terhadap role IT yang dipilih.
+// Analyze menganalisis satu CV terhadap role IT/SPIL yang dipilih.
 func (s *CandidateAnalysisService) Analyze(ctx context.Context, req web.CandidateAnalysisRequest) (*web.CandidateAnalysisResponse, error) {
 	if strings.TrimSpace(req.CVText) == "" {
 		return nil, fmt.Errorf("CV text tidak boleh kosong")
@@ -88,9 +97,8 @@ func (s *CandidateAnalysisService) Analyze(ctx context.Context, req web.Candidat
 	var wg sync.WaitGroup
 	var mu sync.Mutex
 
-	// Semaphore untuk membatasi max 2 request simultan ke OpenRouter free tier
-	// agar tidak terbentur rate-limit "empty response from AI provider"
-	sem := make(chan struct{}, 2)
+	// Semaphore 1 request sekaligus untuk mencegah 429 Rate Limit pada model free-tier OpenRouter
+	sem := make(chan struct{}, 1)
 
 	var combinedRoleFits []web.RoleFitItem
 	var profileSummary string
@@ -106,7 +114,7 @@ func (s *CandidateAnalysisService) Analyze(ctx context.Context, req web.Candidat
 		go func(bIdx int, batch []web.TargetRoleItem) {
 			defer wg.Done()
 
-			// Acquire semaphore slot
+			// Acquire semaphore slot (1 request at a time)
 			sem <- struct{}{}
 			defer func() { <-sem }()
 
@@ -176,7 +184,7 @@ func (s *CandidateAnalysisService) Analyze(ctx context.Context, req web.Candidat
 
 	// Deduplikasi dan Sort role_fits dari skor tertinggi ke terendah
 	roleFitsMap := make(map[string]web.RoleFitItem)
-	var finalFits []web.RoleFitItem
+	finalFits := []web.RoleFitItem{}
 	for _, rf := range combinedRoleFits {
 		if _, exists := roleFitsMap[rf.Role]; !exists && rf.Role != "" {
 			roleFitsMap[rf.Role] = rf

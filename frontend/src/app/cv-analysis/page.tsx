@@ -527,11 +527,11 @@ function CandidateAnalysisTab() {
             <CardHeader className="border-b border-gray-100 pb-3">
               <CardTitle className="text-base font-bold text-gray-900 flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-blue-600" />
-                Hasil Perbandingan Role Perkapalan ({analysisResult.role_fits.length} Role Analyzed)
+                Hasil Perbandingan Role Perkapalan ({(analysisResult.role_fits?.length ?? 0)} Role Analyzed)
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3 pt-4">
-              {analysisResult.role_fits.map((rf, idx) => (
+              {(analysisResult.role_fits || []).map((rf, idx) => (
                 <div key={rf.role} className="border border-gray-200 rounded-xl overflow-hidden bg-white">
                   {/* Role Header Row */}
                   <button

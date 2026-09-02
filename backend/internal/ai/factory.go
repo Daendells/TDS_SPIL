@@ -1,14 +1,12 @@
 package ai
 
 import (
-	"fmt"
-
 	"github.com/sirupsen/logrus"
 )
 
 // ProviderConfig menyimpan konfigurasi untuk AI provider.
 type ProviderConfig struct {
-	// Provider adalah nama provider: "ling" atau "nemotron"
+	// Provider adalah nama provider: "poolside"
 	Provider string
 	// APIKey adalah API key untuk OpenRouter
 	APIKey string
@@ -18,34 +16,26 @@ type ProviderConfig struct {
 
 // Model IDs yang didukung
 const (
-	ModelLing     = "inclusionai/ling-3.0-flash:free"
-	ModelNemotron = "nvidia/nemotron-3-ultra-550b-a55b:free"
-
-	ProviderLing     = "ling"
-	ProviderNemotron = "nemotron"
+	ModelPoolside    = "poolside/laguna-s-2.1:free"
+	ProviderPoolside = "poolside"
 )
 
 // NewProvider membuat AIProvider berdasarkan konfigurasi.
-// Jika Nemotron dipilih sebagai primary dan gagal/empty, secara otomatis fallback ke Ling.
 func NewProvider(log *logrus.Logger, cfg ProviderConfig) (AIProvider, error) {
 	if cfg.APIKey == "" {
 		log.Warn("OPENROUTER_API_KEY kosong — panggilan AI akan gagal")
 	}
 
-	lingProvider := NewOpenRouterProvider(log, cfg.APIKey, ModelLing, ProviderLing, cfg.BaseURL)
-	nemotronProvider := NewOpenRouterProvider(log, cfg.APIKey, ModelNemotron, ProviderNemotron, cfg.BaseURL)
+	poolsideProvider := NewOpenRouterProvider(log, cfg.APIKey, ModelPoolside, ProviderPoolside, cfg.BaseURL)
 
 	switch cfg.Provider {
-	case ProviderNemotron:
-		log.Infof("AI Provider: Nemotron (%s) dengan Fallback ke Ling (%s)", ModelNemotron, ModelLing)
-		return NewFallbackProvider(log, nemotronProvider, lingProvider), nil
-
-	case ProviderLing, "":
-		// Default: Ling-3.0 Flash
-		log.Infof("AI Provider: Ling (%s)", ModelLing)
-		return lingProvider, nil
+	case ProviderPoolside, "laguna", "openrouter", "":
+		// Default: Poolside (poolside/laguna-s-2.1:free)
+		log.Infof("AI Provider: Poolside (%s)", ModelPoolside)
+		return poolsideProvider, nil
 
 	default:
-		return nil, fmt.Errorf("unknown AI provider: %q (supported: ling, nemotron)", cfg.Provider)
+		log.Infof("AI Provider: Poolside (%s) [requested: %s]", ModelPoolside, cfg.Provider)
+		return poolsideProvider, nil
 	}
 }
