@@ -203,7 +203,7 @@ export function DISCCharts({ summary }: DISCChartsProps) {
     datasets: [
       {
         data: consistencyValues,
-        backgroundColor: ["#0f766e", "#94a3b8", "#64748b"],
+        backgroundColor: ["#10b981", "#94a3b8", "#64748b"], // Bright Emerald Green for Consistent, Muted Slate for Note
         borderWidth: 2,
         borderColor: "#ffffff",
       },
