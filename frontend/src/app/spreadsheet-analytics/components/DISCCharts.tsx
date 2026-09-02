@@ -194,15 +194,16 @@ export function DISCCharts({ summary }: DISCChartsProps) {
     },
   };
 
-  // 4. Consistency Reliability Doughnut Data
-  const consistencyLabels = Object.keys(summary.consistencyCounts);
-  const consistencyValues = Object.values(summary.consistencyCounts);
+  // 4. Consistency Reliability Doughnut Data (Filter only active counts)
+  const activeConsistency = Object.entries(summary.consistencyCounts).filter(([, val]) => val > 0);
+  const consistencyLabels = activeConsistency.map(([k, v]) => `${k} (${v} kandidat)`);
+  const consistencyValues = activeConsistency.map(([, v]) => v);
   const consistencyData = {
     labels: consistencyLabels,
     datasets: [
       {
         data: consistencyValues,
-        backgroundColor: ["#0f766e", "#94a3b8", "#cbd5e1"],
+        backgroundColor: ["#0f766e", "#94a3b8", "#64748b"],
         borderWidth: 2,
         borderColor: "#ffffff",
       },
