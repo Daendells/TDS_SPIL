@@ -21,8 +21,17 @@ export interface DISCSummary {
   recommendations: string[];
 }
 
-// RFC 4180 Compliant Multi-line CSV Parser (Handles newlines inside quotes)
-function parseRFC4180CSV(text: string): string[][] {
+// Safe numeric parser that handles comma decimals and string sanitization
+function parseNumeric(val: any, fallback: number = 0): number {
+  if (val === undefined || val === null || val === "") return fallback;
+  const sanitized = String(val).replace(",", ".").replace(/[^0-9.-]/g, "");
+  const num = Number(sanitized);
+  return isNaN(num) ? fallback : num;
+}
+
+// RFC 4180 Compliant Multi-line CSV Parser (Handles newlines inside quotes and BOM)
+function parseRFC4180CSV(rawText: string): string[][] {
+  const text = rawText.replace(/^\uFEFF/, ""); // Remove UTF-8 BOM if present
   const rows: string[][] = [];
   let currentRow: string[] = [];
   let currentField = "";
@@ -98,10 +107,12 @@ export function useDISCAnalytics(initialDataset: DISCCandidate[] = REAL_DISC_DAT
       const nikIdx = headers.findIndex((h) => h.includes("identitas") || h.includes("ktp") || h.includes("nik"));
       const emailIdx = headers.findIndex((h) => h.includes("email"));
       const dateIdx = headers.findIndex((h) => h.includes("timestamp") || h.includes("date"));
-      const traitIdx = headers.findIndex((h) => h.includes("traitm") || h.includes("trait"));
-      const traitLIdx = headers.findIndex((h) => h.includes("traitl"));
-      const traitPkIdx = headers.findIndex((h) => h.includes("traitp-k") || h.includes("traitp"));
-      const konsIdx = headers.findIndex((h) => h.includes("kons fin") || h.includes("kons"));
+      let traitIdx = headers.findIndex((h) => h.includes("traitm") || h.includes("trait_m") || h.includes("trait m"));
+      if (traitIdx === -1) traitIdx = headers.findIndex((h) => h.includes("trait"));
+      const traitLIdx = headers.findIndex((h) => h.includes("traitl") || h.includes("trait_l"));
+      const traitPkIdx = headers.findIndex((h) => h.includes("traitp-k") || h.includes("traitp") || h.includes("trait_pk"));
+      let konsIdx = headers.findIndex((h) => h.includes("kons fin") || h.includes("kons_fin") || h.includes("consistency"));
+      if (konsIdx === -1) konsIdx = headers.findIndex((h) => h.includes("kons"));
       const grmdIdx = headers.findIndex((h) => h.includes("grmd"));
       const grmiIdx = headers.findIndex((h) => h.includes("grmi"));
       const grmsIdx = headers.findIndex((h) => h.includes("grms"));
@@ -128,7 +139,10 @@ export function useDISCAnalytics(initialDataset: DISCCandidate[] = REAL_DISC_DAT
         const name = nameIdx !== -1 ? row[nameIdx] : `Kandidat ${i}`;
         if (!name || name.trim() === "") continue;
 
-        const trait = traitIdx !== -1 ? row[traitIdx] || "D / I / S / C" : "D / I / S / C";
+        const rawKons = konsIdx !== -1 && row[konsIdx] ? row[konsIdx].trim() : "";
+        const consistencyVal = rawKons === "" ? "Incomplete" : rawKons;
+
+        const trait = traitIdx !== -1 && row[traitIdx] ? row[traitIdx].trim() : "D / C";
         let dominant: "D" | "I" | "S" | "C" = "D";
         if (trait.startsWith("I") || trait.includes("/ I")) dominant = "I";
         else if (trait.startsWith("S") || trait.includes("/ S")) dominant = "S";
@@ -141,34 +155,34 @@ export function useDISCAnalytics(initialDataset: DISCCandidate[] = REAL_DISC_DAT
           email: emailIdx !== -1 && row[emailIdx] ? row[emailIdx].trim() : "-",
           date: dateIdx !== -1 && row[dateIdx] ? row[dateIdx].trim() : new Date().toISOString().slice(0, 10),
           dominantType: dominant,
-          traitM: trait.trim(),
+          traitM: trait,
           traitL: traitLIdx !== -1 && row[traitLIdx] ? row[traitLIdx].trim() : "-",
           traitPk: traitPkIdx !== -1 && row[traitPkIdx] ? row[traitPkIdx].trim() : "-",
-          consistency: konsIdx !== -1 && row[konsIdx] ? row[konsIdx].trim() : "Still Consistent",
+          consistency: consistencyVal,
           graph1: {
-            d: grmdIdx !== -1 ? Number(row[grmdIdx]) || 0 : 2,
-            i: grmiIdx !== -1 ? Number(row[grmiIdx]) || 0 : 1,
-            s: grmsIdx !== -1 ? Number(row[grmsIdx]) || 0 : 0,
-            c: grmcIdx !== -1 ? Number(row[grmcIdx]) || 0 : 3,
+            d: grmdIdx !== -1 ? parseNumeric(row[grmdIdx], 2) : 2,
+            i: grmiIdx !== -1 ? parseNumeric(row[grmiIdx], 1) : 1,
+            s: grmsIdx !== -1 ? parseNumeric(row[grmsIdx], 0) : 0,
+            c: grmcIdx !== -1 ? parseNumeric(row[grmcIdx], 3) : 3,
           },
           graph2: {
-            d: grldIdx !== -1 ? Number(row[grldIdx]) || 0 : 1,
-            i: grliIdx !== -1 ? Number(row[grliIdx]) || 0 : 0,
-            s: grlsIdx !== -1 ? Number(row[grlsIdx]) || 0 : 2,
-            c: grlcIdx !== -1 ? Number(row[grlcIdx]) || 0 : 2,
+            d: grldIdx !== -1 ? parseNumeric(row[grldIdx], 1) : 1,
+            i: grliIdx !== -1 ? parseNumeric(row[grliIdx], 0) : 0,
+            s: grlsIdx !== -1 ? parseNumeric(row[grlsIdx], 2) : 2,
+            c: grlcIdx !== -1 ? parseNumeric(row[grlcIdx], 2) : 2,
           },
           graph3: {
-            d: pkdIdx !== -1 ? Number(row[pkdIdx]) || 0 : 1,
-            i: pkiIdx !== -1 ? Number(row[pkiIdx]) || 0 : 1,
-            s: pksIdx !== -1 ? Number(row[pksIdx]) || 0 : -1,
-            c: pkcIdx !== -1 ? Number(row[pkcIdx]) || 0 : 1,
+            d: pkdIdx !== -1 ? parseNumeric(row[pkdIdx], 1) : 1,
+            i: pkiIdx !== -1 ? parseNumeric(row[pkiIdx], 1) : 1,
+            s: pksIdx !== -1 ? parseNumeric(row[pksIdx], -1) : -1,
+            c: pkcIdx !== -1 ? parseNumeric(row[pkcIdx], 1) : 1,
           },
           descWords: descWordsIdx !== -1 && row[descWordsIdx] ? row[descWordsIdx].trim() : "Adaptif, fokus pada hasil, sistematis.",
-          character: charIdx !== -1 && row[charIdx] ? row[charIdx].trim() : "Kandidat memiliki orientasi kerja yang terstruktur.",
-          motivation: motivIdx !== -1 && row[motivIdx] ? row[motivIdx].trim() : "Pencapaian target kerja dan pengakuan profesional.",
-          jobEmphasis: jobIdx !== -1 && row[jobIdx] ? row[jobIdx].trim() : "Penerapan sistem operasional dan standar keselamatan.",
-          workMask: g1Idx !== -1 && row[g1Idx] ? row[g1Idx].trim() : "Fokus pada tugas dan efisiensi waktu kerja.",
-          underPressure: g2Idx !== -1 && row[g2Idx] ? row[g2Idx].trim() : "Tetap berhati-hati dan mengutamakan prosedur keselamatan.",
+          character: charIdx !== -1 && row[charIdx] ? row[charIdx].trim() : (consistencyVal === "Incomplete" ? "Data asesmen kandidat belum lengkap." : "Kandidat memiliki orientasi kerja yang terstruktur."),
+          motivation: motivIdx !== -1 && row[motivIdx] ? row[motivIdx].trim() : "-",
+          jobEmphasis: jobIdx !== -1 && row[jobIdx] ? row[jobIdx].trim() : "-",
+          workMask: g1Idx !== -1 && row[g1Idx] ? row[g1Idx].trim() : "-",
+          underPressure: g2Idx !== -1 && row[g2Idx] ? row[g2Idx].trim() : "-",
         });
       }
 
