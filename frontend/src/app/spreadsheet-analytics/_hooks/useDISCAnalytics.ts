@@ -21,38 +21,112 @@ export interface DISCSummary {
   recommendations: string[];
 }
 
+// RFC 4180 Compliant Multi-line CSV Parser (Handles newlines inside quotes)
+function parseRFC4180CSV(text: string): string[][] {
+  const rows: string[][] = [];
+  let currentRow: string[] = [];
+  let currentField = "";
+  let inQuotes = false;
+  let i = 0;
+
+  while (i < text.length) {
+    const char = text[i];
+    const nextChar = text[i + 1];
+
+    if (char === '"') {
+      if (inQuotes && nextChar === '"') {
+        currentField += '"';
+        i += 2;
+        continue;
+      } else {
+        inQuotes = !inQuotes;
+        i++;
+        continue;
+      }
+    }
+
+    if (char === "," && !inQuotes) {
+      currentRow.push(currentField.trim());
+      currentField = "";
+      i++;
+      continue;
+    }
+
+    if ((char === "\r" || char === "\n") && !inQuotes) {
+      if (char === "\r" && nextChar === "\n") {
+        i++;
+      }
+      currentRow.push(currentField.trim());
+      if (currentRow.some((f) => f.length > 0)) {
+        rows.push(currentRow);
+      }
+      currentRow = [];
+      currentField = "";
+      i++;
+      continue;
+    }
+
+    currentField += char;
+    i++;
+  }
+
+  if (currentField.length > 0 || currentRow.length > 0) {
+    currentRow.push(currentField.trim());
+    if (currentRow.some((f) => f.length > 0)) {
+      rows.push(currentRow);
+    }
+  }
+
+  return rows;
+}
+
 export function useDISCAnalytics(initialDataset: DISCCandidate[] = REAL_DISC_DATASET) {
   const [candidates, setCandidates] = useState<DISCCandidate[]>(initialDataset);
   const [sourceTitle, setSourceTitle] = useState<string>("SPM Rec - Assessment Resume (582 Kandidat Rekrutmen SPIL)");
   const [selectedCandidate, setSelectedCandidate] = useState<DISCCandidate | null>(initialDataset[0] || null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // Load from User Uploaded CSV
+  // Load from User Uploaded CSV with Proper Multi-line Handling
   const loadCustomCSV = useCallback((csvText: string, filename: string) => {
     setIsLoading(true);
     try {
-      const lines = csvText.split(/\r?\n/).filter((l) => l.trim().length > 0);
-      if (lines.length < 2) throw new Error("File CSV tidak memiliki baris data yang cukup.");
+      const parsedRows = parseRFC4180CSV(csvText);
+      if (parsedRows.length < 2) throw new Error("File CSV tidak memiliki baris data yang cukup.");
 
-      const headers = lines[0].split(",").map((h) => h.trim().replace(/^["']|["']$/g, ""));
-      const nameIdx = headers.findIndex((h) => h.toLowerCase().includes("nama"));
-      const nikIdx = headers.findIndex((h) => h.toLowerCase().includes("identitas") || h.toLowerCase().includes("ktp") || h.toLowerCase().includes("nik"));
-      const emailIdx = headers.findIndex((h) => h.toLowerCase().includes("email"));
-      const traitIdx = headers.findIndex((h) => h.toLowerCase().includes("traitm") || h.toLowerCase().includes("trait"));
-      const konsIdx = headers.findIndex((h) => h.toLowerCase().includes("kons fin") || h.toLowerCase().includes("kons"));
-      const descWordsIdx = headers.findIndex((h) => h.toLowerCase().includes("desc. words") || h.toLowerCase().includes("desc"));
-      const charIdx = headers.findIndex((h) => h.toLowerCase().includes("character"));
-      const motivIdx = headers.findIndex((h) => h.toLowerCase().includes("motivation"));
-      const jobIdx = headers.findIndex((h) => h.toLowerCase().includes("job emphasis"));
-      const g1Idx = headers.findIndex((h) => h.toLowerCase().includes("graph i") && !h.toLowerCase().includes("graph ii"));
-      const g2Idx = headers.findIndex((h) => h.toLowerCase().includes("graph ii"));
+      const headers = parsedRows[0].map((h) => h.toLowerCase());
+      const nameIdx = headers.findIndex((h) => h.includes("nama"));
+      const nikIdx = headers.findIndex((h) => h.includes("identitas") || h.includes("ktp") || h.includes("nik"));
+      const emailIdx = headers.findIndex((h) => h.includes("email"));
+      const dateIdx = headers.findIndex((h) => h.includes("timestamp") || h.includes("date"));
+      const traitIdx = headers.findIndex((h) => h.includes("traitm") || h.includes("trait"));
+      const traitLIdx = headers.findIndex((h) => h.includes("traitl"));
+      const traitPkIdx = headers.findIndex((h) => h.includes("traitp-k") || h.includes("traitp"));
+      const konsIdx = headers.findIndex((h) => h.includes("kons fin") || h.includes("kons"));
+      const grmdIdx = headers.findIndex((h) => h.includes("grmd"));
+      const grmiIdx = headers.findIndex((h) => h.includes("grmi"));
+      const grmsIdx = headers.findIndex((h) => h.includes("grms"));
+      const grmcIdx = headers.findIndex((h) => h.includes("grmc"));
+      const grldIdx = headers.findIndex((h) => h.includes("grld"));
+      const grliIdx = headers.findIndex((h) => h.includes("grli"));
+      const grlsIdx = headers.findIndex((h) => h.includes("grls"));
+      const grlcIdx = headers.findIndex((h) => h.includes("grlc"));
+      const pkdIdx = headers.findIndex((h) => h.includes("grp-kd"));
+      const pkiIdx = headers.findIndex((h) => h.includes("grp-ki"));
+      const pksIdx = headers.findIndex((h) => h.includes("grp-ks"));
+      const pkcIdx = headers.findIndex((h) => h.includes("grp-kc"));
+      const descWordsIdx = headers.findIndex((h) => h.includes("desc. words") || h.includes("desc"));
+      const charIdx = headers.findIndex((h) => h.includes("character"));
+      const motivIdx = headers.findIndex((h) => h.includes("motivation"));
+      const jobIdx = headers.findIndex((h) => h.includes("job emphasis"));
+      const g1Idx = headers.findIndex((h) => h.includes("graph i") && !h.includes("graph ii"));
+      const g2Idx = headers.findIndex((h) => h.includes("graph ii"));
 
       const newCandidates: DISCCandidate[] = [];
 
-      for (let i = 1; i < lines.length; i++) {
-        const row = lines[i].split(",").map((c) => c.trim().replace(/^["']|["']$/g, ""));
+      for (let i = 1; i < parsedRows.length; i++) {
+        const row = parsedRows[i];
         const name = nameIdx !== -1 ? row[nameIdx] : `Kandidat ${i}`;
-        if (!name) continue;
+        if (!name || name.trim() === "") continue;
 
         const trait = traitIdx !== -1 ? row[traitIdx] || "D / I / S / C" : "D / I / S / C";
         let dominant: "D" | "I" | "S" | "C" = "D";
@@ -62,31 +136,46 @@ export function useDISCAnalytics(initialDataset: DISCCandidate[] = REAL_DISC_DAT
 
         newCandidates.push({
           id: `DISC-${i.toString().padStart(4, "0")}`,
-          name: name,
-          nik: nikIdx !== -1 ? row[nikIdx] || "-" : "-",
-          email: emailIdx !== -1 ? row[emailIdx] || "-" : "-",
-          date: new Date().toISOString().slice(0, 10),
+          name: name.trim(),
+          nik: nikIdx !== -1 && row[nikIdx] ? row[nikIdx].trim() : "-",
+          email: emailIdx !== -1 && row[emailIdx] ? row[emailIdx].trim() : "-",
+          date: dateIdx !== -1 && row[dateIdx] ? row[dateIdx].trim() : new Date().toISOString().slice(0, 10),
           dominantType: dominant,
-          traitM: trait,
-          traitL: "-",
-          traitPk: trait,
-          consistency: konsIdx !== -1 ? row[konsIdx] || "Consistent" : "Consistent",
-          graph1: { d: 2, i: 1, s: 0, c: 3 },
-          graph2: { d: 1, i: 0, s: 2, c: 2 },
-          graph3: { d: 1, i: 1, s: -1, c: 1 },
-          descWords: descWordsIdx !== -1 ? row[descWordsIdx] || "Adaptif, fokus pada hasil, sistematis." : "Adaptif, fokus pada hasil, sistematis.",
-          character: charIdx !== -1 ? row[charIdx] || "Kandidat memiliki orientasi kerja yang terstruktur." : "Kandidat memiliki orientasi kerja yang terstruktur.",
-          motivation: motivIdx !== -1 ? row[motivIdx] || "Pencapaian target kerja dan pengakuan profesional." : "Pencapaian target kerja dan pengakuan profesional.",
-          jobEmphasis: jobIdx !== -1 ? row[jobIdx] || "Penerapan sistem operasional dan standar keselamatan." : "Penerapan sistem operasional dan standar keselamatan.",
-          workMask: g1Idx !== -1 ? row[g1Idx] || "Fokus pada tugas dan efisiensi waktu kerja." : "Fokus pada tugas dan efisiensi waktu kerja.",
-          underPressure: g2Idx !== -1 ? row[g2Idx] || "Tetap berhati-hati dan mengutamakan prosedur keselamatan." : "Tetap berhati-hati dan mengutamakan prosedur keselamatan.",
+          traitM: trait.trim(),
+          traitL: traitLIdx !== -1 && row[traitLIdx] ? row[traitLIdx].trim() : "-",
+          traitPk: traitPkIdx !== -1 && row[traitPkIdx] ? row[traitPkIdx].trim() : "-",
+          consistency: konsIdx !== -1 && row[konsIdx] ? row[konsIdx].trim() : "Still Consistent",
+          graph1: {
+            d: grmdIdx !== -1 ? Number(row[grmdIdx]) || 0 : 2,
+            i: grmiIdx !== -1 ? Number(row[grmiIdx]) || 0 : 1,
+            s: grmsIdx !== -1 ? Number(row[grmsIdx]) || 0 : 0,
+            c: grmcIdx !== -1 ? Number(row[grmcIdx]) || 0 : 3,
+          },
+          graph2: {
+            d: grldIdx !== -1 ? Number(row[grldIdx]) || 0 : 1,
+            i: grliIdx !== -1 ? Number(row[grliIdx]) || 0 : 0,
+            s: grlsIdx !== -1 ? Number(row[grlsIdx]) || 0 : 2,
+            c: grlcIdx !== -1 ? Number(row[grlcIdx]) || 0 : 2,
+          },
+          graph3: {
+            d: pkdIdx !== -1 ? Number(row[pkdIdx]) || 0 : 1,
+            i: pkiIdx !== -1 ? Number(row[pkiIdx]) || 0 : 1,
+            s: pksIdx !== -1 ? Number(row[pksIdx]) || 0 : -1,
+            c: pkcIdx !== -1 ? Number(row[pkcIdx]) || 0 : 1,
+          },
+          descWords: descWordsIdx !== -1 && row[descWordsIdx] ? row[descWordsIdx].trim() : "Adaptif, fokus pada hasil, sistematis.",
+          character: charIdx !== -1 && row[charIdx] ? row[charIdx].trim() : "Kandidat memiliki orientasi kerja yang terstruktur.",
+          motivation: motivIdx !== -1 && row[motivIdx] ? row[motivIdx].trim() : "Pencapaian target kerja dan pengakuan profesional.",
+          jobEmphasis: jobIdx !== -1 && row[jobIdx] ? row[jobIdx].trim() : "Penerapan sistem operasional dan standar keselamatan.",
+          workMask: g1Idx !== -1 && row[g1Idx] ? row[g1Idx].trim() : "Fokus pada tugas dan efisiensi waktu kerja.",
+          underPressure: g2Idx !== -1 && row[g2Idx] ? row[g2Idx].trim() : "Tetap berhati-hati dan mengutamakan prosedur keselamatan.",
         });
       }
 
       if (newCandidates.length > 0) {
         setCandidates(newCandidates);
         setSelectedCandidate(newCandidates[0]);
-        setSourceTitle(filename);
+        setSourceTitle(`${filename} (${newCandidates.length} Kandidat)`);
       }
     } catch (e: any) {
       console.error("Failed to parse custom DISC CSV:", e);
