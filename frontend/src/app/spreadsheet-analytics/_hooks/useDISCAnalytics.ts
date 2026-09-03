@@ -218,13 +218,32 @@ export function useDISCAnalytics() {
     [fetchSummary, fetchCandidates]
   );
 
+  // Connect Google Account for Private Google Sheets OAuth
+  const connectGoogleAccount = useCallback(async () => {
+    try {
+      const redirectUri = window.location.origin + "/spreadsheet-analytics/google-callback";
+      const res = await api.get("/api/v1/disc-analytics/auth/google/url", {
+        params: { redirectUri },
+      });
+
+      if (res.data?.data?.authUrl) {
+        window.location.href = res.data.data.authUrl;
+      }
+    } catch (err: any) {
+      toast.error("Gagal mendapatkan link login Google: " + (err?.response?.data?.error || err.message));
+    }
+  }, []);
+
   // Sync from Google Spreadsheet Live URL
   const syncGoogleSheet = useCallback(
     async (sheetUrl: string) => {
       setIsUploading(true);
       try {
+        const accessToken = typeof window !== "undefined" ? sessionStorage.getItem("google_access_token") || "" : "";
+
         const res = await api.post("/api/v1/disc-analytics/sync-sheet", {
           url: sheetUrl,
+          accessToken,
         });
 
         const data = res.data?.data;
@@ -278,6 +297,7 @@ export function useDISCAnalytics() {
     error,
     uploadCSVFile,
     syncGoogleSheet,
+    connectGoogleAccount,
     resetToRealDataset,
     getCandidateDimensions: (c: DISCCandidate | null) => getCandidateDimensions(c, summary),
     refetch: () => {

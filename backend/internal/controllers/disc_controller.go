@@ -148,7 +148,8 @@ func (ctrl *DISCController) UploadCSV(c *gin.Context) {
 }
 
 type SyncSheetRequest struct {
-	URL string `json:"url" binding:"required"`
+	URL         string `json:"url" binding:"required"`
+	AccessToken string `json:"accessToken"`
 }
 
 func (ctrl *DISCController) SyncGoogleSheet(c *gin.Context) {
@@ -158,7 +159,15 @@ func (ctrl *DISCController) SyncGoogleSheet(c *gin.Context) {
 		return
 	}
 
-	inserted, updated, skipped, err := ctrl.Service.SyncFromGoogleSheet(req.URL)
+	var inserted, updated, skipped int
+	var err error
+
+	if req.AccessToken != "" {
+		inserted, updated, skipped, err = ctrl.Service.SyncFromGoogleSheetWithAuth(req.URL, req.AccessToken)
+	} else {
+		inserted, updated, skipped, err = ctrl.Service.SyncFromGoogleSheet(req.URL)
+	}
+
 	if err != nil {
 		ctrl.Log.Errorf("failed to sync Google Sheet: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
@@ -173,6 +182,51 @@ func (ctrl *DISCController) SyncGoogleSheet(c *gin.Context) {
 			"updated":  updated,
 			"skipped":  skipped,
 			"total":    inserted + updated + skipped,
+		},
+	})
+}
+
+func (ctrl *DISCController) GetGoogleAuthURL(c *gin.Context) {
+	redirectURI := c.DefaultQuery("redirectUri", "http://localhost:3001/spreadsheet-analytics/google-callback")
+	authURL := ctrl.Service.GetGoogleAuthURL(redirectURI)
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"message": "URL otentikasi Google berhasil dibuat",
+		"data": gin.H{
+			"authUrl": authURL,
+		},
+	})
+}
+
+type GoogleExchangeRequest struct {
+	Code        string `json:"code" binding:"required"`
+	RedirectURI string `json:"redirectUri"`
+}
+
+func (ctrl *DISCController) ExchangeGoogleCode(c *gin.Context) {
+	var req GoogleExchangeRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Authorization code Google wajib disertakan"})
+		return
+	}
+
+	if req.RedirectURI == "" {
+		req.RedirectURI = "http://localhost:3001/spreadsheet-analytics/google-callback"
+	}
+
+	token, err := ctrl.Service.ExchangeGoogleCode(req.Code, req.RedirectURI)
+	if err != nil {
+		ctrl.Log.Errorf("failed to exchange google code: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"message": "Berhasil mendapatkan token akses Google",
+		"data": gin.H{
+			"accessToken": token,
 		},
 	})
 }

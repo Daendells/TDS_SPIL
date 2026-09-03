@@ -1,7 +1,8 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { useDISCAnalytics } from "./_hooks/useDISCAnalytics";
 import { PersonalCandidateDossier } from "./components/PersonalCandidateDossier";
 import { FleetPopulationAnalytics } from "./components/FleetPopulationAnalytics";
@@ -26,17 +27,19 @@ import {
   Scale,
   Database,
   CloudDownload,
-  ExternalLink,
   Info,
+  ShieldCheck,
+  KeyRound,
 } from "lucide-react";
 import { toast } from "sonner";
 
 type ActiveTab = "dossier" | "population" | "comparison" | "table";
 
 const DEFAULT_SHEET_URL =
-  "https://docs.google.com/spreadsheets/d/1Jf9IhudkzSg0HNuB7t4dBgWpGuiQvNbe2Xtu_nbJCqc/edit#gid=1701811227";
+  "https://docs.google.com/spreadsheets/d/1Jf9IhudkzSg0HNuB7t4dBgWpGuiQvNbe2Xtu_nbJCqc/export?format=csv&gid=1701811227";
 
 export default function SpreadsheetAnalyticsPage() {
+  const searchParams = useSearchParams();
   const {
     candidates,
     sourceTitle,
@@ -49,13 +52,27 @@ export default function SpreadsheetAnalyticsPage() {
     isUploading,
     uploadCSVFile,
     syncGoogleSheet,
+    connectGoogleAccount,
     resetToRealDataset,
   } = useDISCAnalytics();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("dossier");
   const [sheetUrlInput, setSheetUrlInput] = useState<string>(DEFAULT_SHEET_URL);
   const [isSyncDialogOpen, setIsSyncDialogOpen] = useState<boolean>(false);
+  const [hasGoogleToken, setHasGoogleToken] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const token = sessionStorage.getItem("google_access_token");
+      setHasGoogleToken(!!token);
+    }
+
+    if (searchParams.get("google_auth") === "success") {
+      toast.success("Akun Google SPIL terhubung! Menjalankan sinkronisasi data...");
+      syncGoogleSheet(DEFAULT_SHEET_URL);
+    }
+  }, [searchParams, syncGoogleSheet]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -169,18 +186,54 @@ export default function SpreadsheetAnalyticsPage() {
                   <Input
                     value={sheetUrlInput}
                     onChange={(e) => setSheetUrlInput(e.target.value)}
-                    placeholder="https://docs.google.com/spreadsheets/d/.../edit"
+                    placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=..."
                     className="text-xs h-8 font-mono bg-slate-50"
                   />
+                </div>
+
+                {/* Google OAuth Status / Connect Button */}
+                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5">
+                      <KeyRound className="w-3.5 h-3.5 text-slate-500" />
+                      Status Otorisasi Akun Google:
+                    </span>
+                    {hasGoogleToken ? (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800">
+                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
+                        Terhubung
+                      </span>
+                    ) : (
+                      <span className="text-[10px] text-slate-400">Belum login</span>
+                    )}
+                  </div>
+
+                  {!hasGoogleToken && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => connectGoogleAccount()}
+                      className="w-full text-xs h-7.5 border-slate-300 text-slate-700 hover:bg-slate-100 gap-1.5"
+                    >
+                      <Image
+                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
+                        alt="Google"
+                        width={14}
+                        height={14}
+                      />
+                      Hubungkan Akun Google SPIL (Untuk Sheet Private)
+                    </Button>
+                  )}
                 </div>
 
                 <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1">
                   <div className="flex items-center gap-1.5 font-semibold text-slate-700">
                     <Info className="w-3.5 h-3.5 text-slate-500" />
-                    Panduan Izin Akses Google Sheets:
+                    Panduan Sinkronisasi:
                   </div>
                   <p>
-                    Pastikan Spreadsheet memiliki akses <strong>"Siapa saja yang memiliki link (Viewer)"</strong> atau dipublikasikan melalui menu <em>File &gt; Share &gt; Publish to web (CSV)</em>.
+                    Jika sheet bersifat privat internal, hubungkan akun Google Anda di atas agar server memiliki izin membaca spreadsheet secara otomatis.
                   </p>
                 </div>
               </div>

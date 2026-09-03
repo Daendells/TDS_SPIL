@@ -4,9 +4,12 @@ import (
 	_ "embed"
 	"backend/internal/models/domain"
 	"backend/internal/repositories"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
+	"os"
 	"strconv"
 	"strings"
 	"time"
@@ -25,6 +28,9 @@ type DISCService interface {
 	ImportCSV(csvContent string) (int, error)
 	ImportCSVIncremental(csvContent string) (int, int, int, error)
 	SyncFromGoogleSheet(sheetURL string) (int, int, int, error)
+	SyncFromGoogleSheetWithAuth(sheetURL, accessToken string) (int, int, int, error)
+	GetGoogleAuthURL(redirectURI string) string
+	ExchangeGoogleCode(code, redirectURI string) (string, error)
 	ResetToDefault() (int, error)
 }
 
@@ -362,7 +368,68 @@ func convertToGoogleSheetCSVURL(rawURL string) string {
 	return u
 }
 
+func (s *discService) GetGoogleAuthURL(redirectURI string) string {
+	clientID := os.Getenv("GOOGLE_CLIENT_ID")
+	if clientID == "" {
+		clientID = "717811013815-8e9eplq85bmocouomrgkivnjlkn041qk.apps.googleusercontent.com"
+	}
+
+	scope := url.QueryEscape("https://www.googleapis.com/auth/spreadsheets.readonly https://www.googleapis.com/auth/drive.readonly")
+	return fmt.Sprintf(
+		"https://accounts.google.com/o/oauth2/v2/auth?client_id=%s&redirect_uri=%s&response_type=code&scope=%s&access_type=offline&prompt=consent",
+		clientID,
+		url.QueryEscape(redirectURI),
+		scope,
+	)
+}
+
+func (s *discService) ExchangeGoogleCode(code, redirectURI string) (string, error) {
+	clientID := os.Getenv("GOOGLE_CLIENT_ID")
+	clientSecret := os.Getenv("GOOGLE_CLIENT_SECRET")
+
+	data := url.Values{}
+	data.Set("code", code)
+	data.Set("client_id", clientID)
+	data.Set("client_secret", clientSecret)
+	data.Set("redirect_uri", redirectURI)
+	data.Set("grant_type", "authorization_code")
+
+	req, err := http.NewRequest("POST", "https://oauth2.googleapis.com/token", strings.NewReader(data.Encode()))
+	if err != nil {
+		return "", err
+	}
+	req.Header.Set("Content-Type", "application/x-www-form-urlencoded")
+
+	client := &http.Client{Timeout: 15 * time.Second}
+	resp, err := client.Do(req)
+	if err != nil {
+		return "", fmt.Errorf("gagal menghubungi server otentikasi Google: %w", err)
+	}
+	defer resp.Body.Close()
+
+	bodyBytes, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("google OAuth error (%d): %s", resp.StatusCode, string(bodyBytes))
+	}
+
+	var res struct {
+		AccessToken  string `json:"access_token"`
+		RefreshToken string `json:"refresh_token"`
+		TokenType    string `json:"token_type"`
+		ExpiresIn    int    `json:"expires_in"`
+	}
+	if err := json.Unmarshal(bodyBytes, &res); err != nil {
+		return "", err
+	}
+
+	return res.AccessToken, nil
+}
+
 func (s *discService) SyncFromGoogleSheet(sheetURL string) (int, int, int, error) {
+	return s.SyncFromGoogleSheetWithAuth(sheetURL, "")
+}
+
+func (s *discService) SyncFromGoogleSheetWithAuth(sheetURL, accessToken string) (int, int, int, error) {
 	targetURL := convertToGoogleSheetCSVURL(sheetURL)
 	if targetURL == "" {
 		return 0, 0, 0, fmt.Errorf("URL Google Spreadsheet tidak valid")
@@ -378,11 +445,19 @@ func (s *discService) SyncFromGoogleSheet(sheetURL string) (int, int, int, error
 	}
 	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
 
+	if accessToken != "" {
+		req.Header.Set("Authorization", "Bearer "+accessToken)
+	}
+
 	resp, err := client.Do(req)
 	if err != nil {
 		return 0, 0, 0, fmt.Errorf("gagal mengambil data dari Google Spreadsheet: %w", err)
 	}
 	defer resp.Body.Close()
+
+	if resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusForbidden {
+		return 0, 0, 0, fmt.Errorf("Google Spreadsheet merespon dengan status HTTP %d. Spreadsheet ini privat; silakan gunakan tombol 'Hubungkan Google SPIL' untuk otorisasi akses", resp.StatusCode)
+	}
 
 	if resp.StatusCode != http.StatusOK {
 		return 0, 0, 0, fmt.Errorf("Google Spreadsheet merespon dengan status HTTP %d", resp.StatusCode)
@@ -395,7 +470,7 @@ func (s *discService) SyncFromGoogleSheet(sheetURL string) (int, int, int, error
 
 	content := string(bodyBytes)
 	if strings.Contains(content, "<!DOCTYPE html>") || strings.Contains(content, "<html") {
-		return 0, 0, 0, fmt.Errorf("Google Spreadsheet terkunci / memerlukan login. Pastikan hak akses Spreadsheet diatur ke 'Siapa saja yang memiliki link (Viewer)' atau gunakan link 'Publikasikan ke Web' berformat CSV")
+		return 0, 0, 0, fmt.Errorf("Google Spreadsheet terkunci / memerlukan otorisasi. Silakan login akun Google SPIL melalui dialog sinkronisasi")
 	}
 
 	return s.ImportCSVIncremental(content)

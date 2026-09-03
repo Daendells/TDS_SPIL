@@ -38,11 +38,10 @@ services:
       SSO_CALLBACK_URL: ${SSO_CALLBACK_URL:-http://localhost:8081/api/auth/sso/callback}
       FRONTEND_URL: ${FRONTEND_URL:-http://localhost:3001}
 
-      # OpenRouter AI (CV Analysis) - Dibaca dari env_file ./backend/.env
-      OPENROUTER_MODEL: ${OPENROUTER_MODEL:-poolside/laguna-s-2.1:free}
-      OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
-      # MODEL_PROVIDER: "poolside" (default)
-      MODEL_PROVIDER: ${MODEL_PROVIDER:-poolside}
+      # Google OAuth for Sheets Sync
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:3001/spreadsheet-analytics/google-callback}
 
     ports:
       - "8081:8080"   # Port 8081 agar tidak konflik dengan tds-devto_normal (8080)
