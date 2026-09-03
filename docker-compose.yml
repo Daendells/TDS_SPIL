@@ -44,11 +44,6 @@ services:
       OPENROUTER_BASE_URL: ${OPENROUTER_BASE_URL:-https://openrouter.ai/api/v1}
       MODEL_PROVIDER: ${MODEL_PROVIDER:-poolside}
 
-      # Google OAuth for Sheets Sync
-      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID:-}
-      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
-      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI:-http://localhost:3001/spreadsheet-analytics/google-callback}
-
     ports:
       - "8081:8080"   # Port 8081 agar tidak konflik dengan tds-devto_normal (8080)
     volumes:

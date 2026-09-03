@@ -218,53 +218,6 @@ export function useDISCAnalytics() {
     [fetchSummary, fetchCandidates]
   );
 
-  // Connect Google Account for Private Google Sheets OAuth
-  const connectGoogleAccount = useCallback(async () => {
-    try {
-      const redirectUri = window.location.origin + "/spreadsheet-analytics/google-callback";
-      const res = await api.get("/api/v1/disc-analytics/auth/google/url", {
-        params: { redirectUri },
-      });
-
-      if (res.data?.data?.authUrl) {
-        window.location.href = res.data.data.authUrl;
-      }
-    } catch (err: any) {
-      toast.error("Gagal mendapatkan link login Google: " + (err?.response?.data?.error || err.message));
-    }
-  }, []);
-
-  // Sync from Google Spreadsheet Live URL
-  const syncGoogleSheet = useCallback(
-    async (sheetUrl: string) => {
-      setIsUploading(true);
-      try {
-        const accessToken = typeof window !== "undefined" ? sessionStorage.getItem("google_access_token") || "" : "";
-
-        const res = await api.post("/api/v1/disc-analytics/sync-sheet", {
-          url: sheetUrl,
-          accessToken,
-        });
-
-        const data = res.data?.data;
-        setSourceTitle("Live Sync: Google Spreadsheet");
-        toast.success(
-          `Sync Google Sheets berhasil: +${data?.inserted ?? 0} baru, ${data?.updated ?? 0} diperbarui, ${data?.skipped ?? 0} tidak berubah.`
-        );
-
-        await fetchSummary();
-        await fetchCandidates();
-      } catch (err: any) {
-        const msg = err?.response?.data?.error || err.message || "Gagal sinkronisasi Google Spreadsheet.";
-        toast.error(msg);
-        throw err;
-      } finally {
-        setIsUploading(false);
-      }
-    },
-    [fetchSummary, fetchCandidates]
-  );
-
   // Reset Dataset to default 582 in Backend
   const resetToRealDataset = useCallback(async () => {
     setIsLoading(true);
@@ -296,8 +249,6 @@ export function useDISCAnalytics() {
     isUploading,
     error,
     uploadCSVFile,
-    syncGoogleSheet,
-    connectGoogleAccount,
     resetToRealDataset,
     getCandidateDimensions: (c: DISCCandidate | null) => getCandidateDimensions(c, summary),
     refetch: () => {
@@ -306,3 +257,4 @@ export function useDISCAnalytics() {
     },
   };
 }
+

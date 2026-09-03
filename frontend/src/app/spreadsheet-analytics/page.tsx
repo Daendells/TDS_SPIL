@@ -1,24 +1,13 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef } from "react";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
 import { useDISCAnalytics } from "./_hooks/useDISCAnalytics";
 import { PersonalCandidateDossier } from "./components/PersonalCandidateDossier";
 import { FleetPopulationAnalytics } from "./components/FleetPopulationAnalytics";
 import { CandidateComparisonView } from "./components/CandidateComparisonView";
 import { CandidateExplorerTable } from "./components/CandidateExplorerTable";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import {
   Upload,
   RefreshCw,
@@ -26,20 +15,11 @@ import {
   Users,
   Scale,
   Database,
-  CloudDownload,
-  Info,
-  ShieldCheck,
-  KeyRound,
 } from "lucide-react";
-import { toast } from "sonner";
 
 type ActiveTab = "dossier" | "population" | "comparison" | "table";
 
-const DEFAULT_SHEET_URL =
-  "https://docs.google.com/spreadsheets/d/1Jf9IhudkzSg0HNuB7t4dBgWpGuiQvNbe2Xtu_nbJCqc/export?format=csv&gid=1701811227";
-
 export default function SpreadsheetAnalyticsPage() {
-  const searchParams = useSearchParams();
   const {
     candidates,
     sourceTitle,
@@ -51,28 +31,11 @@ export default function SpreadsheetAnalyticsPage() {
     isLoading,
     isUploading,
     uploadCSVFile,
-    syncGoogleSheet,
-    connectGoogleAccount,
     resetToRealDataset,
   } = useDISCAnalytics();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("dossier");
-  const [sheetUrlInput, setSheetUrlInput] = useState<string>(DEFAULT_SHEET_URL);
-  const [isSyncDialogOpen, setIsSyncDialogOpen] = useState<boolean>(false);
-  const [hasGoogleToken, setHasGoogleToken] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (typeof window !== "undefined") {
-      const token = sessionStorage.getItem("google_access_token");
-      setHasGoogleToken(!!token);
-    }
-
-    if (searchParams.get("google_auth") === "success") {
-      toast.success("Akun Google SPIL terhubung! Menjalankan sinkronisasi data...");
-      syncGoogleSheet(DEFAULT_SHEET_URL);
-    }
-  }, [searchParams, syncGoogleSheet]);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -86,19 +49,6 @@ export default function SpreadsheetAnalyticsPage() {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
-    }
-  };
-
-  const handleTriggerSheetSync = async () => {
-    if (!sheetUrlInput.trim()) {
-      toast.error("Silakan masukkan URL Google Spreadsheet.");
-      return;
-    }
-    try {
-      await syncGoogleSheet(sheetUrlInput.trim());
-      setIsSyncDialogOpen(false);
-    } catch {
-      // Handled in hook
     }
   };
 
@@ -154,112 +104,6 @@ export default function SpreadsheetAnalyticsPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-2 shrink-0">
-          {/* Sync Google Spreadsheet Dialog */}
-          <Dialog open={isSyncDialogOpen} onOpenChange={setIsSyncDialogOpen}>
-            <DialogTrigger asChild>
-              <Button
-                variant="outline"
-                size="sm"
-                disabled={isUploading || isLoading}
-                className="text-xs h-8 border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5"
-              >
-                <CloudDownload className={`w-3.5 h-3.5 text-slate-700 ${isUploading ? "animate-spin" : ""}`} />
-                Sync Google Sheets
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-md bg-white">
-              <DialogHeader>
-                <DialogTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                  <CloudDownload className="w-4 h-4 text-slate-700" />
-                  Live Sync Google Spreadsheet DISC
-                </DialogTitle>
-                <DialogDescription className="text-xs text-slate-500">
-                  Sinkronisasi database dengan sheet Google Spreadsheet online secara otomatis (hanya menambah/memperbarui data berdasarkan NIK & Timestamp).
-                </DialogDescription>
-              </DialogHeader>
-
-              <div className="space-y-3 py-2">
-                <div>
-                  <label className="text-xs font-medium text-slate-700 block mb-1">
-                    URL Google Spreadsheet (Share Link atau CSV Export):
-                  </label>
-                  <Input
-                    value={sheetUrlInput}
-                    onChange={(e) => setSheetUrlInput(e.target.value)}
-                    placeholder="https://docs.google.com/spreadsheets/d/.../export?format=csv&gid=..."
-                    className="text-xs h-8 font-mono bg-slate-50"
-                  />
-                </div>
-
-                {/* Google OAuth Status / Connect Button */}
-                <div className="p-3 bg-slate-50 rounded-lg border border-slate-200 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-semibold text-slate-700 flex items-center gap-1.5">
-                      <KeyRound className="w-3.5 h-3.5 text-slate-500" />
-                      Status Otorisasi Akun Google:
-                    </span>
-                    {hasGoogleToken ? (
-                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-100 text-emerald-800">
-                        <ShieldCheck className="w-3 h-3 text-emerald-600" />
-                        Terhubung
-                      </span>
-                    ) : (
-                      <span className="text-[10px] text-slate-400">Belum login</span>
-                    )}
-                  </div>
-
-                  {!hasGoogleToken && (
-                    <Button
-                      type="button"
-                      variant="outline"
-                      size="sm"
-                      onClick={() => connectGoogleAccount()}
-                      className="w-full text-xs h-7.5 border-slate-300 text-slate-700 hover:bg-slate-100 gap-1.5"
-                    >
-                      <Image
-                        src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg"
-                        alt="Google"
-                        width={14}
-                        height={14}
-                      />
-                      Hubungkan Akun Google SPIL (Untuk Sheet Private)
-                    </Button>
-                  )}
-                </div>
-
-                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1">
-                  <div className="flex items-center gap-1.5 font-semibold text-slate-700">
-                    <Info className="w-3.5 h-3.5 text-slate-500" />
-                    Panduan Sinkronisasi:
-                  </div>
-                  <p>
-                    Jika sheet bersifat privat internal, hubungkan akun Google Anda di atas agar server memiliki izin membaca spreadsheet secara otomatis.
-                  </p>
-                </div>
-              </div>
-
-              <DialogFooter className="gap-2 sm:gap-0">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsSyncDialogOpen(false)}
-                  className="text-xs h-8"
-                >
-                  Batal
-                </Button>
-                <Button
-                  size="sm"
-                  disabled={isUploading}
-                  onClick={handleTriggerSheetSync}
-                  className="text-xs h-8 bg-slate-900 hover:bg-slate-800 text-white gap-1.5"
-                >
-                  <CloudDownload className={`w-3.5 h-3.5 ${isUploading ? "animate-spin" : ""}`} />
-                  {isUploading ? "Menyinkronkan..." : "Sinkronkan Sekarang"}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
-
           {/* Upload File Input */}
           <input
             type="file"
@@ -288,7 +132,7 @@ export default function SpreadsheetAnalyticsPage() {
             className="text-xs h-8 border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-slate-700 ${isLoading ? "animate-spin" : ""}`} />
-            Reset 582
+            Reset Dataset 582
           </Button>
         </div>
       </div>
