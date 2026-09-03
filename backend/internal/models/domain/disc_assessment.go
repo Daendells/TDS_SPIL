@@ -5,7 +5,7 @@ import "time"
 // DISCAssessment represents authentic candidate DISC psychometric assessment records
 type DISCAssessment struct {
 	ID               uint      `gorm:"primaryKey;autoIncrement" json:"id"`
-	CandidateCode    string    `gorm:"column:candidate_code;size:50;uniqueIndex;not null" json:"candidate_code"` // e.g. DISC-0001
+	CandidateCode    string    `gorm:"column:candidate_code;size:50;index;not null" json:"candidate_code"` // e.g. DISC-0001
 	Name             string    `gorm:"column:name;size:255;not null" json:"name"`
 	NIK              string    `gorm:"column:nik;size:100;index" json:"nik"`
 	Email            string    `gorm:"column:email;size:255" json:"email"`

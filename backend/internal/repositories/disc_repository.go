@@ -293,25 +293,29 @@ func (r *discRepository) UpsertIncremental(db *gorm.DB, items []domain.DISCAsses
 			existingMap[key] = e.ID
 		}
 
+		var maxID uint
+		tx.Model(&domain.DISCAssessment{}).Select("COALESCE(MAX(id), 0)").Scan(&maxID)
+
 		var toInsert []domain.DISCAssessment
-		var maxCodeID int64
-		tx.Model(&domain.DISCAssessment{}).Count(&maxCodeID)
 
 		for _, item := range items {
 			key := fmtCandidateKey(item.NIK, item.Name, item.TestDate)
 			if existingID, exists := existingMap[key]; exists {
-				// Update existing row
-				item.ID = existingID
-				if err := tx.Model(&domain.DISCAssessment{}).Where("id = ?", existingID).Updates(item).Error; err != nil {
+				// Update existing row, NEVER change candidate_code or id to prevent unique key violation
+				if err := tx.Model(&domain.DISCAssessment{}).
+					Where("id = ?", existingID).
+					Omit("id", "candidate_code", "created_at").
+					Updates(&item).Error; err != nil {
 					return err
 				}
 				updated++
 			} else {
-				// Prepare insert
-				maxCodeID++
-				item.CandidateCode = fmt.Sprintf("DISC-%04d", maxCodeID)
+				// Prepare insert with fresh unique candidate_code
+				maxID++
+				item.ID = 0
+				item.CandidateCode = fmt.Sprintf("DISC-%04d", maxID)
 				toInsert = append(toInsert, item)
-				existingMap[key] = 0 // mark as known
+				existingMap[key] = maxID // mark as known
 			}
 		}
 
