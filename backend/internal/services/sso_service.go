@@ -335,18 +335,23 @@ func (s *SSOService) fetchUserInfo(ssoBaseURL, accessToken string) (*ssoUserInfo
 }
 
 func (s *SSOService) findOrCreateUser(info *ssoUserInfo) (*domain.User, error) {
+	// 1. Cek apakah user dengan SSO ID ini sudah pernah terdaftar di TDS
 	userBySSO, err := s.UserRepository.FindBySSOID(s.DB, info.ID)
 	if err == nil {
 		return userBySSO, nil
 	}
 
-	var userByUsername domain.User
-	if err := s.UserRepository.FindByUsername(s.DB, &userByUsername, info.Username); err == nil {
-		userByUsername.SSOID = &info.ID
-		if updateErr := s.DB.Model(&userByUsername).Update("sso_id", info.ID).Error; updateErr != nil {
-			return nil, updateErr
+	// 2. KEAMANAN (Zero-Trust): Jangan pernah mengklaim atau menautkan otomatis ke akun lokal
+	// (terutama akun 'admin' atau 'davin') hanya karena kesamaan nama/username!
+	// Jika username sudah dipakai oleh akun lokal, beri suffix unik agar akun lokal tetap aman.
+	targetUsername := info.Username
+	var existingUser domain.User
+	if err := s.UserRepository.FindByUsername(s.DB, &existingUser, targetUsername); err == nil {
+		suffix := info.ID
+		if len(suffix) > 6 {
+			suffix = suffix[:6]
 		}
-		return &userByUsername, nil
+		targetUsername = fmt.Sprintf("%s_sso_%s", info.Username, suffix)
 	}
 
 	password, err := generateRandomPasswordHash()
@@ -354,20 +359,19 @@ func (s *SSOService) findOrCreateUser(info *ssoUserInfo) (*domain.User, error) {
 		return nil, err
 	}
 
+	// Semua user baru dari SSO WAJIB berstatus 'viewer'
 	newUser := &domain.User{
-		Username: info.Username,
+		Username: targetUsername,
 		Password: password,
 		Role:     "viewer",
 		SSOID:    &info.ID,
 	}
 
 	if err := s.UserRepository.Create(s.DB, newUser); err != nil {
-		// Fallback jika terjadi race condition / concurrent requests
-		var existingUser domain.User
-		if retryErr := s.UserRepository.FindByUsername(s.DB, &existingUser, info.Username); retryErr == nil {
-			existingUser.SSOID = &info.ID
-			_ = s.DB.Model(&existingUser).Update("sso_id", info.ID)
-			return &existingUser, nil
+		// Fallback jika terjadi race condition / concurrent requests dengan SSO ID yang sama
+		userBySSOAfterRetry, retryErr := s.UserRepository.FindBySSOID(s.DB, info.ID)
+		if retryErr == nil {
+			return userBySSOAfterRetry, nil
 		}
 		return nil, err
 	}
