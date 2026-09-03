@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { DISCCandidate } from "../_data/discDataset";
-import { calculateRoleFit } from "../_hooks/useDISCAnalytics";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -15,10 +14,6 @@ import {
   ChevronRight,
   Database,
   Eye,
-  CheckCircle2,
-  AlertTriangle,
-  Ship,
-  Sparkles,
   Scale,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -43,7 +38,6 @@ export function CandidateExplorerTable({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedDominant, setSelectedDominant] = useState<string>("ALL");
   const [selectedConsistency, setSelectedConsistency] = useState<string>("ALL");
-  const [selectedDepartment, setSelectedDepartment] = useState<string>("ALL");
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 12;
 
@@ -66,17 +60,9 @@ export function CandidateExplorerTable({
         (selectedConsistency === "NOTE" && c.consistency.includes("Note")) ||
         (selectedConsistency === "INCOMPLETE" && c.consistency.includes("Incomplete"));
 
-      const fit = calculateRoleFit(c);
-      const matchDept =
-        selectedDepartment === "ALL" ||
-        (selectedDepartment === "DECK" && fit.recommendedDepartment === "Dek (Nakhoda/Mualim)") ||
-        (selectedDepartment === "ENGINE" && fit.recommendedDepartment === "Mesin (KKM/Masinis)") ||
-        (selectedDepartment === "WATCH" && fit.recommendedDepartment === "Dinas Jaga & Navigasi") ||
-        (selectedDepartment === "CREW" && fit.recommendedDepartment === "Operasional Kru & Logistik");
-
-      return matchSearch && matchDominant && matchConsistency && matchDept;
+      return matchSearch && matchDominant && matchConsistency;
     });
-  }, [candidates, searchTerm, selectedDominant, selectedConsistency, selectedDepartment]);
+  }, [candidates, searchTerm, selectedDominant, selectedConsistency]);
 
   // Pagination
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
@@ -95,27 +81,24 @@ export function CandidateExplorerTable({
         "Tanggal Asesmen",
         "Tipe Dominan",
         "Pola Trait M",
+        "Pola Trait L",
+        "Pola Trait P-K",
         "Konsistensi",
-        "Rekomendasi Jabatan Kapal",
-        "Kesesuaian Departemen",
         "Kata Kunci Karakter",
       ];
-      const rows = filteredData.map((d) => {
-        const fit = calculateRoleFit(d);
-        return [
-          d.id,
-          `"${d.name.replace(/"/g, '""')}"`,
-          `"${d.nik.replace(/"/g, '""')}"`,
-          `"${d.email.replace(/"/g, '""')}"`,
-          d.date,
-          d.dominantType,
-          `"${d.traitM.replace(/"/g, '""')}"`,
-          `"${d.consistency.replace(/"/g, '""')}"`,
-          `"${fit.recommendedRole}"`,
-          `"${fit.recommendedDepartment}"`,
-          `"${(d.descWords || "").replace(/"/g, '""')}"`,
-        ];
-      });
+      const rows = filteredData.map((d) => [
+        d.id,
+        `"${d.name.replace(/"/g, '""')}"`,
+        `"${d.nik.replace(/"/g, '""')}"`,
+        `"${d.email.replace(/"/g, '""')}"`,
+        d.date,
+        d.dominantType,
+        `"${d.traitM.replace(/"/g, '""')}"`,
+        `"${d.traitL.replace(/"/g, '""')}"`,
+        `"${d.traitPk.replace(/"/g, '""')}"`,
+        `"${d.consistency.replace(/"/g, '""')}"`,
+        `"${(d.descWords || "").replace(/"/g, '""')}"`,
+      ]);
 
       const csvContent =
         "data:text/csv;charset=utf-8," + [headers.join(","), ...rows.map((e) => e.join(","))].join("\n");
@@ -124,7 +107,7 @@ export function CandidateExplorerTable({
       link.setAttribute("href", encodedUri);
       link.setAttribute(
         "download",
-        `SPIL_DISC_Talent_Pool_${new Date().toISOString().slice(0, 10)}.csv`
+        `SPIL_DISC_Dataset_${new Date().toISOString().slice(0, 10)}.csv`
       );
       document.body.appendChild(link);
       link.click();
@@ -138,7 +121,7 @@ export function CandidateExplorerTable({
   const getDominantBadge = (type: string) => {
     switch (type) {
       case "D":
-        return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-900 text-white">D (Dominance)</span>;
+        return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-800 text-white">D (Dominance)</span>;
       case "I":
         return <span className="inline-flex items-center px-2 py-0.5 rounded text-[11px] font-bold bg-slate-100 text-slate-800 border border-slate-300">I (Influence)</span>;
       case "S":
@@ -157,7 +140,7 @@ export function CandidateExplorerTable({
           <div>
             <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
               <Database className="w-4 h-4 text-slate-700" />
-              Daftar Rekapitulasi Talent Pool Pelaut (Candidate Explorer)
+              Daftar Rekapitulasi Asesmen Kandidat (Assessment Resume)
             </CardTitle>
             <CardDescription className="text-xs text-slate-500">
               Dataset: <strong className="text-slate-700">{sourceTitle}</strong> ({filteredData.length} kandidat terfilter)
@@ -178,7 +161,7 @@ export function CandidateExplorerTable({
         </div>
 
         {/* Filters Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-2.5 pt-3">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-3">
           <div className="relative">
             <Search className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
             <Input
@@ -190,23 +173,6 @@ export function CandidateExplorerTable({
               }}
               className="pl-8 h-8 text-xs border-slate-200 bg-white"
             />
-          </div>
-
-          <div>
-            <select
-              value={selectedDepartment}
-              onChange={(e) => {
-                setSelectedDepartment(e.target.value);
-                setCurrentPage(1);
-              }}
-              className="w-full h-8 px-2.5 text-xs bg-white border border-slate-200 rounded-md text-slate-700 focus:outline-none"
-            >
-              <option value="ALL">Semua Rekomendasi Departemen</option>
-              <option value="DECK">🚢 Departemen Dek (Nakhoda/Mualim)</option>
-              <option value="ENGINE">⚙️ Departemen Mesin (KKM/Masinis)</option>
-              <option value="WATCH">🧭 Dinas Jaga & Navigasi</option>
-              <option value="CREW">👥 Operasional Kru & Logistik</option>
-            </select>
           </div>
 
           <div>
@@ -236,9 +202,9 @@ export function CandidateExplorerTable({
               className="w-full h-8 px-2.5 text-xs bg-white border border-slate-200 rounded-md text-slate-700 focus:outline-none"
             >
               <option value="ALL">Semua Status Konsistensi</option>
-              <option value="CONSISTENT">🟢 Still Consistent (Valid)</option>
-              <option value="NOTE">🟡 Note for Assessor (Perlu Konfirmasi)</option>
-              <option value="INCOMPLETE">⚪ Incomplete (Belum Lengkap)</option>
+              <option value="CONSISTENT">🟢 Still Consistent (226 Kandidat)</option>
+              <option value="NOTE">⚪ Note for Assessor (355 Kandidat)</option>
+              <option value="INCOMPLETE">⚪ Incomplete (1 Kandidat)</option>
             </select>
           </div>
         </div>
@@ -253,8 +219,9 @@ export function CandidateExplorerTable({
                 <TableHead className="text-xs font-semibold text-slate-700">Nama Kandidat</TableHead>
                 <TableHead className="text-xs font-semibold text-slate-700">Tipe Dominan</TableHead>
                 <TableHead className="text-xs font-semibold text-slate-700">Pola Trait M</TableHead>
-                <TableHead className="text-xs font-semibold text-slate-700">Kesesuaian Jabatan Kapal</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">Pola Trait L</TableHead>
                 <TableHead className="text-xs font-semibold text-slate-700">Konsistensi</TableHead>
+                <TableHead className="text-xs font-semibold text-slate-700">Kata Kunci Karakter</TableHead>
                 <TableHead className="text-xs font-semibold text-slate-700 text-right">Aksi</TableHead>
               </TableRow>
             </TableHeader>
@@ -262,7 +229,6 @@ export function CandidateExplorerTable({
               {paginatedData.length > 0 ? (
                 paginatedData.map((c) => {
                   const isSelected = selectedCandidateId === c.id;
-                  const fit = calculateRoleFit(c);
                   return (
                     <TableRow
                       key={c.id}
@@ -277,11 +243,7 @@ export function CandidateExplorerTable({
                       </TableCell>
                       <TableCell className="text-xs">{getDominantBadge(c.dominantType)}</TableCell>
                       <TableCell className="text-xs font-mono font-semibold text-slate-800">{c.traitM}</TableCell>
-                      <TableCell className="text-xs">
-                        <Badge variant="outline" className={`text-[10.5px] font-semibold border ${fit.roleMatchBadge.color}`}>
-                          {fit.recommendedRole}
-                        </Badge>
-                      </TableCell>
+                      <TableCell className="text-xs font-mono text-slate-600">{c.traitL}</TableCell>
                       <TableCell className="text-xs">
                         <span
                           className={`inline-flex items-center px-2 py-0.5 rounded text-[10.5px] font-medium border ${
@@ -294,6 +256,9 @@ export function CandidateExplorerTable({
                         >
                           {c.consistency}
                         </span>
+                      </TableCell>
+                      <TableCell className="text-xs text-slate-500 max-w-xs truncate" title={c.descWords}>
+                        {c.descWords || "-"}
                       </TableCell>
                       <TableCell className="text-xs text-right">
                         <div className="flex items-center justify-end gap-1.5">
@@ -319,7 +284,7 @@ export function CandidateExplorerTable({
                               size="sm"
                               variant="ghost"
                               onClick={() => onCompareCandidate(c)}
-                              className="text-xs h-7 text-indigo-700 hover:bg-indigo-50 p-1.5"
+                              className="text-xs h-7 text-slate-600 hover:bg-slate-100 p-1.5"
                               title="Bandingkan kandidat ini"
                             >
                               <Scale className="w-3.5 h-3.5" />
@@ -332,7 +297,7 @@ export function CandidateExplorerTable({
                 })
               ) : (
                 <TableRow>
-                  <TableCell colSpan={7} className="text-center py-8 text-slate-500 text-xs">
+                  <TableCell colSpan={8} className="text-center py-8 text-slate-500 text-xs">
                     Tidak ada data kandidat yang cocok dengan kriteria filter.
                   </TableCell>
                 </TableRow>

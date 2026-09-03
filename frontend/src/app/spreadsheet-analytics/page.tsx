@@ -15,8 +15,6 @@ import {
   Users,
   Scale,
   Database,
-  Ship,
-  Sparkles,
   FileSpreadsheet,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -71,7 +69,7 @@ export default function SpreadsheetAnalyticsPage() {
 
   return (
     <div className="space-y-6 pb-16">
-      {/* ── TOP HEADER (Corporate SPIL Branding & Action Controls) ────────── */}
+      {/* ── TOP HEADER (Corporate SPIL Grey Theme & Controls) ────────────── */}
       <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white border border-slate-200 rounded-xl p-4 shadow-xs">
         <div className="flex items-center gap-3">
           <div className="relative h-8 w-24 shrink-0">
@@ -97,14 +95,14 @@ export default function SpreadsheetAnalyticsPage() {
           <div>
             <div className="flex items-center gap-2">
               <h1 className="text-sm font-bold text-slate-900 tracking-tight">
-                SPM RECRUITMENT & DISC PSYCHOMETRIC INTELLIGENCE
+                SPM RECRUITMENT & DISC PSYCHOMETRIC ANALYTICS
               </h1>
-              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-900 text-white">
-                Maritime Talent Profiler
+              <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold bg-slate-800 text-white">
+                DISC Profiler
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              Talent Assessment, Fit-to-Role Matrix & Psikogram Kru Kapal PT SPIL
+              Analisis Hasil Psikometri DISC Rekrutmen PT SPIL ({candidates.length} Kandidat)
             </p>
           </div>
         </div>
@@ -142,14 +140,14 @@ export default function SpreadsheetAnalyticsPage() {
         </div>
       </div>
 
-      {/* ── PROFESSIONAL VIEW SELECTOR TABS ───────────────────────────────── */}
+      {/* ── VIEW SELECTOR TABS ────────────────────────────────────────────── */}
       <div className="flex items-center justify-between border-b border-slate-200 bg-white px-2 rounded-xl shadow-2xs">
         <div className="flex items-center gap-1 overflow-x-auto py-1.5">
           <button
             onClick={() => setActiveTab("dossier")}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
               activeTab === "dossier"
-                ? "bg-slate-900 text-white shadow-xs"
+                ? "bg-slate-800 text-white shadow-xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
             }`}
           >
@@ -157,7 +155,7 @@ export default function SpreadsheetAnalyticsPage() {
             Dossier & Analisis Personal
             {selectedCandidate && (
               <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
-                activeTab === "dossier" ? "bg-slate-800 text-slate-200" : "bg-slate-200 text-slate-700"
+                activeTab === "dossier" ? "bg-slate-700 text-slate-200" : "bg-slate-200 text-slate-700"
               }`}>
                 {selectedCandidate.name.split(" ")[0]}
               </span>
@@ -168,14 +166,14 @@ export default function SpreadsheetAnalyticsPage() {
             onClick={() => setActiveTab("population")}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
               activeTab === "population"
-                ? "bg-slate-900 text-white shadow-xs"
+                ? "bg-slate-800 text-white shadow-xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
             }`}
           >
             <Users className="w-3.5 h-3.5" />
-            Populasi & Rekrutmen Fleet
+            Populasi & Rekrutmen Batch
             <span className={`text-[10px] px-1.5 py-0.2 rounded font-mono ${
-              activeTab === "population" ? "bg-slate-800 text-slate-200" : "bg-slate-200 text-slate-700"
+              activeTab === "population" ? "bg-slate-700 text-slate-200" : "bg-slate-200 text-slate-700"
             }`}>
               {candidates.length}
             </span>
@@ -185,7 +183,7 @@ export default function SpreadsheetAnalyticsPage() {
             onClick={() => setActiveTab("comparison")}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
               activeTab === "comparison"
-                ? "bg-slate-900 text-white shadow-xs"
+                ? "bg-slate-800 text-white shadow-xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
             }`}
           >
@@ -197,7 +195,7 @@ export default function SpreadsheetAnalyticsPage() {
             onClick={() => setActiveTab("table")}
             className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold transition-all shrink-0 ${
               activeTab === "table"
-                ? "bg-slate-900 text-white shadow-xs"
+                ? "bg-slate-800 text-white shadow-xs"
                 : "text-slate-600 hover:text-slate-900 hover:bg-slate-100/70"
             }`}
           >

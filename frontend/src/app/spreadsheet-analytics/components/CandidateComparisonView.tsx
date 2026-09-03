@@ -3,8 +3,7 @@
 import { useMemo, useState } from "react";
 import { DISCCandidate } from "../_data/discDataset";
 import {
-  calculateRoleFit,
-  calculateCompetencies,
+  getCandidateDimensions,
   DISCSummary,
 } from "../_hooks/useDISCAnalytics";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -18,7 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Scale, Users, User, ArrowRight, Activity, Award, ShieldCheck, Zap } from "lucide-react";
+import { Scale, Users, User, ArrowRight, Activity, Sliders, ShieldCheck } from "lucide-react";
 import { Radar } from "react-chartjs-2";
 
 interface CandidateComparisonViewProps {
@@ -63,12 +62,6 @@ export function CandidateComparisonView({
     );
   }
 
-  const roleFitA = calculateRoleFit(candidateA);
-  const roleFitB = calculateRoleFit(candidateB);
-
-  const compA = calculateCompetencies(candidateA);
-  const compB = calculateCompetencies(candidateB);
-
   const stressShiftA = Math.sqrt(
     Math.pow((candidateA.graph1.d || 0) - (candidateA.graph2.d || 0), 2) +
     Math.pow((candidateA.graph1.i || 0) - (candidateA.graph2.i || 0), 2) +
@@ -83,22 +76,22 @@ export function CandidateComparisonView({
     Math.pow((candidateB.graph1.c || 0) - (candidateB.graph2.c || 0), 2)
   );
 
-  // Radar Comparison Data
+  // Radar Comparison Data (Raw Graph III Vectors)
   const radarData = {
     labels: [
-      "Dominance (Ketegasan)",
-      "Influence (Komunikasi)",
-      "Steadiness (Ketenangan)",
-      "Compliance (Akurasi/SOP)",
+      "Dominance (D)",
+      "Influence (I)",
+      "Steadiness (S)",
+      "Compliance (C)",
     ],
     datasets: [
       {
-        label: `Kandidat A: ${candidateA.name}`,
+        label: `Kandidat A: ${candidateA.name} (Graph III)`,
         data: [
-          Math.max(0, candidateA.graph3.d + 5),
-          Math.max(0, candidateA.graph3.i + 5),
-          Math.max(0, candidateA.graph3.s + 5),
-          Math.max(0, candidateA.graph3.c + 5),
+          candidateA.graph3.d,
+          candidateA.graph3.i,
+          candidateA.graph3.s,
+          candidateA.graph3.c,
         ],
         backgroundColor: "rgba(2, 132, 199, 0.25)",
         borderColor: "#0284c7",
@@ -107,12 +100,12 @@ export function CandidateComparisonView({
         pointRadius: 4,
       },
       {
-        label: `Kandidat B: ${candidateB.name}`,
+        label: `Kandidat B: ${candidateB.name} (Graph III)`,
         data: [
-          Math.max(0, candidateB.graph3.d + 5),
-          Math.max(0, candidateB.graph3.i + 5),
-          Math.max(0, candidateB.graph3.s + 5),
-          Math.max(0, candidateB.graph3.c + 5),
+          candidateB.graph3.d,
+          candidateB.graph3.i,
+          candidateB.graph3.s,
+          candidateB.graph3.c,
         ],
         backgroundColor: "rgba(15, 118, 110, 0.25)",
         borderColor: "#0f766e",
@@ -134,9 +127,7 @@ export function CandidateComparisonView({
           font: { size: 11, weight: 600 },
           color: "#334155",
         },
-        ticks: { display: false },
-        min: 0,
-        max: 10,
+        ticks: { display: true, color: "#94a3b8", font: { size: 8 } },
       },
     },
     plugins: {
@@ -157,16 +148,16 @@ export function CandidateComparisonView({
       {/* ── TOP CANDIDATE SELECTORS ─────────────────────────────────────── */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Candidate A Selector */}
-        <Card className="border border-blue-200 bg-blue-50/30 p-4 rounded-xl shadow-xs">
+        <Card className="border border-slate-200 bg-white p-4 rounded-xl shadow-xs">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-blue-600" /> KANDIDAT A (Kandidat Utama)
+            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-blue-600" /> KANDIDAT A
             </span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onFocusCandidate(candidateA)}
-              className="h-6 text-[11px] text-blue-700 hover:bg-blue-100 p-1"
+              className="h-6 text-[11px] text-blue-700 hover:bg-blue-50 p-1"
             >
               Buka Dossier Personal →
             </Button>
@@ -178,7 +169,7 @@ export function CandidateComparisonView({
               if (found) onSelectCandidateA(found);
             }}
           >
-            <SelectTrigger className="h-8.5 text-xs bg-white border-blue-200 font-semibold">
+            <SelectTrigger className="h-8.5 text-xs bg-slate-50/70 border-slate-200 font-semibold">
               <SelectValue placeholder="Pilih Kandidat A..." />
             </SelectTrigger>
             <SelectContent className="max-h-72">
@@ -200,16 +191,16 @@ export function CandidateComparisonView({
         </Card>
 
         {/* Candidate B Selector */}
-        <Card className="border border-teal-200 bg-teal-50/30 p-4 rounded-xl shadow-xs">
+        <Card className="border border-slate-200 bg-white p-4 rounded-xl shadow-xs">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-xs font-bold text-teal-900 flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-full bg-teal-600" /> KANDIDAT B (Kandidat Pembanding)
+            <span className="text-xs font-bold text-slate-900 flex items-center gap-1.5">
+              <span className="h-2 w-2 rounded-full bg-teal-600" /> KANDIDAT B
             </span>
             <Button
               variant="ghost"
               size="sm"
               onClick={() => onFocusCandidate(candidateB)}
-              className="h-6 text-[11px] text-teal-700 hover:bg-teal-100 p-1"
+              className="h-6 text-[11px] text-teal-700 hover:bg-teal-50 p-1"
             >
               Buka Dossier Personal →
             </Button>
@@ -221,7 +212,7 @@ export function CandidateComparisonView({
               if (found) onSelectCandidateB(found);
             }}
           >
-            <SelectTrigger className="h-8.5 text-xs bg-white border-teal-200 font-semibold">
+            <SelectTrigger className="h-8.5 text-xs bg-slate-50/70 border-slate-200 font-semibold">
               <SelectValue placeholder="Pilih Kandidat B..." />
             </SelectTrigger>
             <SelectContent className="max-h-72">
@@ -251,7 +242,7 @@ export function CandidateComparisonView({
             <div className="flex items-center gap-2">
               <Scale className="w-4 h-4 text-slate-700" />
               <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
-                Overlay Radar Perbandingan DISC
+                Overlay Radar Vektor Graph III
               </h4>
             </div>
             <span className="text-[10px] text-slate-500 font-mono">Head-to-Head</span>
@@ -264,61 +255,52 @@ export function CandidateComparisonView({
         {/* Right: Comparative Side-by-Side Breakdown */}
         <Card className="lg:col-span-7 border border-slate-200 shadow-xs bg-white rounded-xl p-5 space-y-4">
           <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-            Matriks Perbandingan Profil & Kesiapan Jabatan Maritim
+            Matriks Perbandingan Vektor Psikometri & Konsistensi
           </h4>
 
           <div className="overflow-x-auto">
             <table className="w-full text-xs text-left">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-500 bg-slate-50/50">
-                  <th className="py-2 px-3 font-semibold">Aspek Evaluasi</th>
+                <tr className="border-b border-slate-200 text-slate-600 bg-slate-50/70 font-semibold">
+                  <th className="py-2 px-3">Metrik Psikometri</th>
                   <th className="py-2 px-3 font-bold text-blue-700">Kandidat A: {candidateA.name}</th>
                   <th className="py-2 px-3 font-bold text-teal-700">Kandidat B: {candidateB.name}</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
+              <tbody className="divide-y divide-slate-100 font-mono">
                 <tr>
-                  <td className="py-2.5 px-3 font-medium text-slate-600">Pola Trait Dominan</td>
+                  <td className="py-2.5 px-3 font-sans font-medium text-slate-600">Pola Trait M</td>
                   <td className="py-2.5 px-3 font-bold text-slate-900">{candidateA.traitM} (Tipe {candidateA.dominantType})</td>
                   <td className="py-2.5 px-3 font-bold text-slate-900">{candidateB.traitM} (Tipe {candidateB.dominantType})</td>
                 </tr>
                 <tr>
-                  <td className="py-2.5 px-3 font-medium text-slate-600">Rekomendasi Jabatan</td>
-                  <td className="py-2.5 px-3">
-                    <Badge variant="outline" className="text-[10px] bg-blue-50 text-blue-700 border-blue-200 font-bold">
-                      {roleFitA.recommendedRole}
-                    </Badge>
+                  <td className="py-2.5 px-3 font-sans font-medium text-slate-600">Vektor Graph I (Mask)</td>
+                  <td className="py-2.5 px-3 text-slate-700">D:{candidateA.graph1.d} I:{candidateA.graph1.i} S:{candidateA.graph1.s} C:{candidateA.graph1.c}</td>
+                  <td className="py-2.5 px-3 text-slate-700">D:{candidateB.graph1.d} I:{candidateB.graph1.i} S:{candidateB.graph1.s} C:{candidateB.graph1.c}</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 px-3 font-sans font-medium text-slate-600">Vektor Graph II (Core)</td>
+                  <td className="py-2.5 px-3 text-slate-700">D:{candidateA.graph2.d} I:{candidateA.graph2.i} S:{candidateA.graph2.s} C:{candidateA.graph2.c}</td>
+                  <td className="py-2.5 px-3 text-slate-700">D:{candidateB.graph2.d} I:{candidateB.graph2.i} S:{candidateB.graph2.s} C:{candidateB.graph2.c}</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 px-3 font-sans font-medium text-slate-600">Vektor Graph III (Mirror)</td>
+                  <td className="py-2.5 px-3 font-bold text-blue-800">D:{candidateA.graph3.d} I:{candidateA.graph3.i} S:{candidateA.graph3.s} C:{candidateA.graph3.c}</td>
+                  <td className="py-2.5 px-3 font-bold text-teal-800">D:{candidateB.graph3.d} I:{candidateB.graph3.i} S:{candidateB.graph3.s} C:{candidateB.graph3.c}</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 px-3 font-sans font-medium text-slate-600">Stress Shift Delta (|G1 - G2|)</td>
+                  <td className="py-2.5 px-3 font-bold">{stressShiftA.toFixed(2)}</td>
+                  <td className="py-2.5 px-3 font-bold">{stressShiftB.toFixed(2)}</td>
+                </tr>
+                <tr>
+                  <td className="py-2.5 px-3 font-sans font-medium text-slate-600">Reliabilitas Jawaban</td>
+                  <td className="py-2.5 px-3 font-sans">
+                    <span className="px-2 py-0.5 rounded text-[11px] bg-slate-100 border border-slate-200">{candidateA.consistency}</span>
                   </td>
-                  <td className="py-2.5 px-3">
-                    <Badge variant="outline" className="text-[10px] bg-teal-50 text-teal-700 border-teal-200 font-bold">
-                      {roleFitB.recommendedRole}
-                    </Badge>
+                  <td className="py-2.5 px-3 font-sans">
+                    <span className="px-2 py-0.5 rounded text-[11px] bg-slate-100 border border-slate-200">{candidateB.consistency}</span>
                   </td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 font-medium text-slate-600">Kepemimpinan & Komando</td>
-                  <td className="py-2.5 px-3 font-bold">{compA.leadershipAndCommand.score}/100</td>
-                  <td className="py-2.5 px-3 font-bold">{compB.leadershipAndCommand.score}/100</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 font-medium text-slate-600">Ketahanan Krisis di Laut</td>
-                  <td className="py-2.5 px-3 font-bold">{compA.stressResilience.score}/100</td>
-                  <td className="py-2.5 px-3 font-bold">{compB.stressResilience.score}/100</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 font-medium text-slate-600">Kepatuhan ISM & SOP</td>
-                  <td className="py-2.5 px-3 font-bold">{compA.complianceAndSOP.score}/100</td>
-                  <td className="py-2.5 px-3 font-bold">{compB.complianceAndSOP.score}/100</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 font-medium text-slate-600">Koordinasi Tim & Kru</td>
-                  <td className="py-2.5 px-3 font-bold">{compA.crewTeamwork.score}/100</td>
-                  <td className="py-2.5 px-3 font-bold">{compB.crewTeamwork.score}/100</td>
-                </tr>
-                <tr>
-                  <td className="py-2.5 px-3 font-medium text-slate-600">Reliabilitas Ujian</td>
-                  <td className="py-2.5 px-3 text-[11px] text-slate-700">{candidateA.consistency}</td>
-                  <td className="py-2.5 px-3 text-[11px] text-slate-700">{candidateB.consistency}</td>
                 </tr>
               </tbody>
             </table>

@@ -3,9 +3,7 @@
 import { useMemo, useState } from "react";
 import { DISCCandidate } from "../_data/discDataset";
 import {
-  calculateRoleFit,
-  calculateCompetencies,
-  generateInterviewQuestions,
+  getCandidateDimensions,
   DISCSummary,
 } from "../_hooks/useDISCAnalytics";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -21,10 +19,6 @@ import {
 } from "@/components/ui/select";
 import {
   User2,
-  ShieldCheck,
-  Award,
-  Zap,
-  Target,
   FileText,
   Activity,
   Printer,
@@ -32,12 +26,10 @@ import {
   ChevronRight,
   Compass,
   AlertTriangle,
-  HelpCircle,
-  TrendingUp,
   Scale,
-  Anchor,
-  Ship,
-  CheckCircle2,
+  Zap,
+  Target,
+  Sliders,
 } from "lucide-react";
 import {
   Chart as ChartJS,
@@ -80,7 +72,7 @@ export function PersonalCandidateDossier({
 }: PersonalCandidateDossierProps) {
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Filter candidates for quick dropdown / switcher
+  // Filter candidates for switcher dropdown
   const filteredOptions = useMemo(() => {
     if (!searchQuery) return candidates.slice(0, 50);
     return candidates
@@ -96,7 +88,7 @@ export function PersonalCandidateDossier({
   if (!candidate) {
     return (
       <Card className="border border-slate-200 bg-white rounded-xl p-12 text-center shadow-xs">
-        <p className="text-sm text-slate-500">Pilih salah satu kandidat untuk memuat Dossier Psikometri Personal.</p>
+        <p className="text-sm text-slate-500">Pilih salah satu kandidat untuk memuat psikogram personal.</p>
       </Card>
     );
   }
@@ -110,12 +102,10 @@ export function PersonalCandidateDossier({
     if (currentIndex < candidates.length - 1) onSelectCandidate(candidates[currentIndex + 1]);
   };
 
-  // Analytics helpers
-  const roleFit = calculateRoleFit(candidate);
-  const competencies = calculateCompetencies(candidate);
-  const interviewQuestions = generateInterviewQuestions(candidate);
+  // Dimensions & Vectors
+  const dimensions = getCandidateDimensions(candidate, summary.avgGraph3);
 
-  // Parse Desc Words
+  // Parse Desc Words to Chips
   const descChips = candidate.descWords
     ? candidate.descWords
         .split(/[,;\n]+/)
@@ -123,14 +113,14 @@ export function PersonalCandidateDossier({
         .filter((w) => w.length > 0 && w !== "-" && !w.toLowerCase().includes("belum ada"))
     : [];
 
-  // 1. Triple-Graph Line Chart Data (with Fleet Benchmark Overlay)
+  // 1. Triple-Graph Line Chart Data (with Batch Population Average Overlay)
   const lineChartData = {
     labels: ["Dominance (D)", "Influence (I)", "Steadiness (S)", "Compliance (C)"],
     datasets: [
       {
         label: "Graph I (Work Mask / Sehari-hari)",
         data: [candidate.graph1.d, candidate.graph1.i, candidate.graph1.s, candidate.graph1.c],
-        borderColor: "#0284c7", // Corporate Blue
+        borderColor: "#0284c7", // Blue
         backgroundColor: "rgba(2, 132, 199, 0.08)",
         borderWidth: 2.5,
         pointRadius: 5,
@@ -159,7 +149,7 @@ export function PersonalCandidateDossier({
         tension: 0.15,
       },
       {
-        label: "Rata-Rata Populasi Pelaut SPIL (Benchmark)",
+        label: `Rata-rata Populasi Batch (${summary.totalCandidates} Kandidat)`,
         data: [summary.avgGraph3.d, summary.avgGraph3.i, summary.avgGraph3.s, summary.avgGraph3.c],
         borderColor: "#cbd5e1", // Light Slate
         borderWidth: 1.5,
@@ -185,7 +175,7 @@ export function PersonalCandidateDossier({
         },
       },
       tooltip: {
-        backgroundColor: "#0f172a",
+        backgroundColor: "#1e293b",
         padding: 8,
         cornerRadius: 6,
       },
@@ -202,22 +192,22 @@ export function PersonalCandidateDossier({
     },
   };
 
-  // 2. DISC Spider Radar Chart Data
+  // 2. DISC Radar Chart Data (Candidate vs Batch Population Average)
   const radarChartData = {
     labels: [
-      "Dominance (Ketegasan)",
-      "Influence (Komunikasi)",
-      "Steadiness (Ketenangan)",
-      "Compliance (Ketaatan Prosedur)",
+      "Dominance (D)",
+      "Influence (I)",
+      "Steadiness (S)",
+      "Compliance (C)",
     ],
     datasets: [
       {
-        label: `Profil ${candidate.name}`,
+        label: `Profil ${candidate.name} (Graph III)`,
         data: [
-          Math.max(0, candidate.graph3.d + 5),
-          Math.max(0, candidate.graph3.i + 5),
-          Math.max(0, candidate.graph3.s + 5),
-          Math.max(0, candidate.graph3.c + 5),
+          candidate.graph3.d,
+          candidate.graph3.i,
+          candidate.graph3.s,
+          candidate.graph3.c,
         ],
         backgroundColor: "rgba(2, 132, 199, 0.2)",
         borderColor: "#0284c7",
@@ -226,18 +216,18 @@ export function PersonalCandidateDossier({
         pointRadius: 4,
       },
       {
-        label: "Benchmark Standar Perwira SPIL",
+        label: `Rata-rata Populasi Batch (${summary.totalCandidates} Kandidat)`,
         data: [
-          Math.max(0, summary.avgGraph3.d + 5),
-          Math.max(0, summary.avgGraph3.i + 5),
-          Math.max(0, summary.avgGraph3.s + 5),
-          Math.max(0, summary.avgGraph3.c + 5),
+          summary.avgGraph3.d,
+          summary.avgGraph3.i,
+          summary.avgGraph3.s,
+          summary.avgGraph3.c,
         ],
-        backgroundColor: "rgba(15, 118, 110, 0.1)",
-        borderColor: "#0f766e",
+        backgroundColor: "rgba(148, 163, 184, 0.15)",
+        borderColor: "#94a3b8",
         borderWidth: 1.5,
         borderDash: [4, 4],
-        pointBackgroundColor: "#0f766e",
+        pointBackgroundColor: "#94a3b8",
         pointRadius: 3,
       },
     ],
@@ -251,12 +241,10 @@ export function PersonalCandidateDossier({
         angleLines: { color: "rgba(226, 232, 240, 0.8)" },
         grid: { color: "rgba(226, 232, 240, 0.8)" },
         pointLabels: {
-          font: { size: 10.5, weight: 600 },
+          font: { size: 11, weight: 600 },
           color: "#334155",
         },
-        ticks: { display: false },
-        min: 0,
-        max: 10,
+        ticks: { display: true, color: "#94a3b8", font: { size: 8 } },
       },
     },
     plugins: {
@@ -272,7 +260,7 @@ export function PersonalCandidateDossier({
     },
   };
 
-  // Stress Volatility Delta
+  // Euclidean Distance of Stress Shift (|G1 - G2|)
   const stressShiftValue = Math.sqrt(
     Math.pow((candidate.graph1.d || 0) - (candidate.graph2.d || 0), 2) +
     Math.pow((candidate.graph1.i || 0) - (candidate.graph2.i || 0), 2) +
@@ -282,7 +270,7 @@ export function PersonalCandidateDossier({
 
   return (
     <div className="space-y-6">
-      {/* ── TOP ACTION & CANDIDATE SWITCHER ─────────────────────────────── */}
+      {/* ── TOP ACTION & CANDIDATE SWITCHER (Light Grey SPIL Theme) ─────── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white p-3.5 border border-slate-200 rounded-xl shadow-xs">
         <div className="flex items-center gap-2 flex-1 max-w-md">
           <User2 className="w-4 h-4 text-slate-500 shrink-0" />
@@ -293,7 +281,7 @@ export function PersonalCandidateDossier({
               if (found) onSelectCandidate(found);
             }}
           >
-            <SelectTrigger className="h-8.5 text-xs font-medium border-slate-200 bg-slate-50/50">
+            <SelectTrigger className="h-8.5 text-xs font-medium border-slate-200 bg-slate-50/70">
               <SelectValue placeholder="Pilih kandidat..." />
             </SelectTrigger>
             <SelectContent className="max-h-72">
@@ -347,7 +335,7 @@ export function PersonalCandidateDossier({
               onClick={() => onOpenComparison(candidate)}
               className="h-8 text-xs border-slate-200 hover:bg-slate-50 gap-1.5 text-slate-700"
             >
-              <Scale className="w-3.5 h-3.5 text-indigo-600" />
+              <Scale className="w-3.5 h-3.5 text-slate-600" />
               Bandingkan Kandidat
             </Button>
           )}
@@ -364,42 +352,34 @@ export function PersonalCandidateDossier({
         </div>
       </div>
 
-      {/* ── CANDIDATE HERO DOSSIER CARD ──────────────────────────────────── */}
+      {/* ── CANDIDATE HEADER (SPIL Corporate Slate Grey Theme) ──────────── */}
       <Card className="border border-slate-200 shadow-xs bg-white rounded-xl overflow-hidden">
-        <div className="bg-slate-900 text-white p-5 sm:p-6">
+        <div className="bg-slate-100/80 border-b border-slate-200 p-5 sm:p-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="space-y-1.5">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-xl font-bold tracking-tight text-white">{candidate.name}</h2>
+                <h2 className="text-xl font-bold tracking-tight text-slate-900">{candidate.name}</h2>
                 <Badge
                   variant="outline"
-                  className={`text-[11px] font-bold px-2 py-0.5 border ${
-                    candidate.dominantType === "D"
-                      ? "bg-slate-800 text-slate-100 border-slate-600"
-                      : candidate.dominantType === "I"
-                      ? "bg-slate-800 text-slate-200 border-slate-600"
-                      : candidate.dominantType === "S"
-                      ? "bg-teal-950 text-teal-300 border-teal-700"
-                      : "bg-sky-950 text-sky-300 border-sky-700"
-                  }`}
+                  className="text-[11px] font-bold px-2.5 py-0.5 bg-white text-slate-800 border-slate-300 shadow-2xs"
                 >
                   Dominan: Tipe {candidate.dominantType} ({candidate.traitM})
                 </Badge>
                 <Badge
                   variant="outline"
-                  className={`text-[11px] font-medium px-2 py-0.5 border ${
+                  className={`text-[11px] font-medium px-2.5 py-0.5 border ${
                     candidate.consistency.includes("Still")
-                      ? "bg-emerald-950/80 text-emerald-300 border-emerald-700"
+                      ? "bg-emerald-50 text-emerald-800 border-emerald-300"
                       : candidate.consistency.includes("Note")
-                      ? "bg-amber-950/80 text-amber-300 border-amber-700"
-                      : "bg-slate-800 text-slate-300 border-slate-600"
+                      ? "bg-slate-200/80 text-slate-700 border-slate-300"
+                      : "bg-amber-50 text-amber-800 border-amber-300"
                   }`}
                 >
                   {candidate.consistency}
                 </Badge>
               </div>
 
-              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-300 font-mono">
+              <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 font-mono">
                 <span>NIK: {candidate.nik}</span>
                 <span>•</span>
                 <span>Email: {candidate.email}</span>
@@ -408,70 +388,36 @@ export function PersonalCandidateDossier({
               </div>
             </div>
 
-            <div className="flex flex-col sm:items-end bg-slate-800/80 border border-slate-700/60 p-3 rounded-lg shrink-0">
+            <div className="flex flex-col sm:items-end bg-white border border-slate-200 p-3 rounded-lg shrink-0 shadow-2xs">
               <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                Kesesuaian Jabatan Kapal Teratas:
+                Pola Trait Psikometri:
               </span>
               <div className="flex items-center gap-1.5 mt-0.5">
-                <Ship className="w-4 h-4 text-sky-400" />
-                <span className="text-xs font-bold text-sky-200">{roleFit.recommendedRole}</span>
+                <span className="text-xs font-bold text-slate-900 font-mono">M: {candidate.traitM}</span>
+                <span className="text-slate-300">|</span>
+                <span className="text-xs font-mono text-slate-600">L: {candidate.traitL}</span>
+                <span className="text-slate-300">|</span>
+                <span className="text-xs font-mono text-slate-600">P-K: {candidate.traitPk}</span>
               </div>
-              <span className="text-[11px] text-slate-300 mt-0.5">
-                Kecocokan Departemen: <strong className="text-white">{roleFit.recommendedDepartment}</strong>
-              </span>
             </div>
           </div>
         </div>
 
-        {/* Benchmark Metric Strip */}
+        {/* Real Numeric Vector Strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 border-b border-slate-100 divide-x divide-slate-100 bg-slate-50/50">
-          <div className="p-3.5 text-center">
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
-              Skor Dominance (D)
-            </span>
-            <span className="text-base font-bold text-slate-900 mt-0.5 block">
-              {candidate.graph3.d}
-            </span>
-            <span className="text-[10px] text-slate-500">
-              Populasi: {summary.avgGraph3.d} ({candidate.graph3.d >= summary.avgGraph3.d ? "▲ Di atas rata2" : "▼ Di bawah rata2"})
-            </span>
-          </div>
-
-          <div className="p-3.5 text-center">
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
-              Skor Compliance (C)
-            </span>
-            <span className="text-base font-bold text-slate-900 mt-0.5 block">
-              {candidate.graph3.c}
-            </span>
-            <span className="text-[10px] text-slate-500">
-              Populasi: {summary.avgGraph3.c} ({candidate.graph3.c >= summary.avgGraph3.c ? "▲ Di atas rata2" : "▼ Di bawah rata2"})
-            </span>
-          </div>
-
-          <div className="p-3.5 text-center">
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
-              Skor Steadiness (S)
-            </span>
-            <span className="text-base font-bold text-slate-900 mt-0.5 block">
-              {candidate.graph3.s}
-            </span>
-            <span className="text-[10px] text-slate-500">
-              Populasi: {summary.avgGraph3.s} ({candidate.graph3.s >= summary.avgGraph3.s ? "▲ Di atas rata2" : "▼ Di bawah rata2"})
-            </span>
-          </div>
-
-          <div className="p-3.5 text-center">
-            <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
-              Stress Shift Volatility
-            </span>
-            <span className="text-base font-bold text-slate-900 mt-0.5 block">
-              {stressShiftValue.toFixed(2)}
-            </span>
-            <span className="text-[10px] text-slate-500">
-              {stressShiftValue <= 2 ? "🟢 Respon Sangat Stabil" : stressShiftValue <= 4 ? "🟡 Pergeseran Wajar" : "🔴 Rentan Tekanan Ekstrem"}
-            </span>
-          </div>
+          {dimensions.map((dim, idx) => (
+            <div key={idx} className="p-3.5 text-center">
+              <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block">
+                {dim.dimension} - {dim.dimension === "D" ? "Dominance" : dim.dimension === "I" ? "Influence" : dim.dimension === "S" ? "Steadiness" : "Compliance"}
+              </span>
+              <span className="text-base font-bold text-slate-900 mt-0.5 block font-mono">
+                {dim.g3 >= 0 ? `+${dim.g3}` : dim.g3}
+              </span>
+              <span className="text-[10px] text-slate-500">
+                Populasi: {dim.popAvg >= 0 ? `+${dim.popAvg}` : dim.popAvg} ({dim.deltaPop >= 0 ? `+${dim.deltaPop}` : dim.deltaPop})
+              </span>
+            </div>
+          ))}
         </div>
 
         {/* Content Body */}
@@ -484,10 +430,10 @@ export function PersonalCandidateDossier({
                 <div className="flex items-center gap-2">
                   <Activity className="w-4 h-4 text-sky-600" />
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
-                    Analisis Profil 3-Garis DISC & Benchmark Pelaut
+                    Kurva Vektor 3-Garis DISC & Rata-Rata Populasi
                   </h4>
                 </div>
-                <span className="text-[10px] text-slate-500 font-mono">3-Line Vector</span>
+                <span className="text-[10px] text-slate-500 font-mono">Graph I, II, III</span>
               </div>
               <div className="h-64 w-full">
                 <Line data={lineChartData} options={lineChartOptions} />
@@ -500,7 +446,7 @@ export function PersonalCandidateDossier({
                 <div className="flex items-center gap-2">
                   <Compass className="w-4 h-4 text-teal-600" />
                   <h4 className="text-xs font-bold text-slate-900 uppercase tracking-tight">
-                    Radar Keseimbangan Kompetensi DISC
+                    Radar Keseimbangan Dimensi DISC
                   </h4>
                 </div>
                 <span className="text-[10px] text-slate-500 font-mono">Radar 4-Axis</span>
@@ -511,91 +457,53 @@ export function PersonalCandidateDossier({
             </div>
           </div>
 
-          {/* 4-Pillar Behavioral Competency Matrix */}
+          {/* Real Dimensional Vector Table (Data Mentah & Analisis Pergeseran) */}
           <div className="space-y-3">
-            <div className="flex items-center gap-2">
-              <Award className="w-4 h-4 text-amber-600" />
-              <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
-                Evaluasi 4 Pilar Kompetensi Maritim & Kesiapan Tugas Laut
-              </h4>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sliders className="w-4 h-4 text-slate-700" />
+                <h4 className="text-xs font-bold text-slate-900 uppercase tracking-wider">
+                  Rincian Vektor Numerik 4 Dimensi DISC (Data Otentik Asesmen)
+                </h4>
+              </div>
+              <span className="text-[11px] text-slate-500 font-mono">
+                Stress Shift Delta: <strong>{stressShiftValue.toFixed(2)}</strong>
+              </span>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-              {/* Pillar 1: Leadership */}
-              <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900">1. Kepemimpinan & Komando Kapal</span>
-                  <Badge variant="outline" className="text-[10px] font-semibold bg-blue-50 text-blue-700 border-blue-200">
-                    {competencies.leadershipAndCommand.score}/100 • {competencies.leadershipAndCommand.level}
-                  </Badge>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-blue-600 h-1.5 rounded-full"
-                    style={{ width: `${competencies.leadershipAndCommand.score}%` }}
-                  />
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">
-                  {competencies.leadershipAndCommand.desc}
-                </p>
-              </div>
-
-              {/* Pillar 2: Stress Resilience */}
-              <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900">2. Ketahanan Tekanan & Manajemen Krisis</span>
-                  <Badge variant="outline" className="text-[10px] font-semibold bg-teal-50 text-teal-700 border-teal-200">
-                    {competencies.stressResilience.score}/100 • {competencies.stressResilience.level}
-                  </Badge>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-teal-600 h-1.5 rounded-full"
-                    style={{ width: `${competencies.stressResilience.score}%` }}
-                  />
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">
-                  {competencies.stressResilience.desc}
-                </p>
-              </div>
-
-              {/* Pillar 3: Compliance & SOP */}
-              <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900">3. Kepatuhan ISM Code & Regulasi SOLAS</span>
-                  <Badge variant="outline" className="text-[10px] font-semibold bg-slate-100 text-slate-800 border-slate-300">
-                    {competencies.complianceAndSOP.score}/100 • {competencies.complianceAndSOP.level}
-                  </Badge>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-slate-700 h-1.5 rounded-full"
-                    style={{ width: `${competencies.complianceAndSOP.score}%` }}
-                  />
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">
-                  {competencies.complianceAndSOP.desc}
-                </p>
-              </div>
-
-              {/* Pillar 4: Crew Teamwork */}
-              <div className="bg-white border border-slate-200 rounded-lg p-3.5 shadow-2xs space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-900">4. Koordinasi Tim & Keharmonisan Kru</span>
-                  <Badge variant="outline" className="text-[10px] font-semibold bg-indigo-50 text-indigo-700 border-indigo-200">
-                    {competencies.crewTeamwork.score}/100 • {competencies.crewTeamwork.level}
-                  </Badge>
-                </div>
-                <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
-                  <div
-                    className="bg-indigo-600 h-1.5 rounded-full"
-                    style={{ width: `${competencies.crewTeamwork.score}%` }}
-                  />
-                </div>
-                <p className="text-[11px] text-slate-600 leading-relaxed">
-                  {competencies.crewTeamwork.desc}
-                </p>
-              </div>
+            <div className="overflow-x-auto border border-slate-200 rounded-lg bg-white">
+              <table className="w-full text-xs text-left">
+                <thead>
+                  <tr className="border-b border-slate-200 bg-slate-50/80 text-slate-600 font-semibold">
+                    <th className="py-2.5 px-3">Dimensi DISC</th>
+                    <th className="py-2.5 px-3 text-center">Graph I (Mask)</th>
+                    <th className="py-2.5 px-3 text-center">Graph II (Core)</th>
+                    <th className="py-2.5 px-3 text-center">Graph III (Mirror)</th>
+                    <th className="py-2.5 px-3 text-center">Rata-rata Batch</th>
+                    <th className="py-2.5 px-3 text-center">Deviasi (|G3 - Mean|)</th>
+                    <th className="py-2.5 px-3 text-center">Pergeseran Stres (|G1 - G2|)</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100">
+                  {dimensions.map((dim, idx) => (
+                    <tr key={idx} className="hover:bg-slate-50/60 font-mono">
+                      <td className="py-2 px-3 font-sans font-semibold text-slate-800">{dim.name}</td>
+                      <td className="py-2 px-3 text-center text-slate-700">{dim.g1 >= 0 ? `+${dim.g1}` : dim.g1}</td>
+                      <td className="py-2 px-3 text-center text-slate-700">{dim.g2 >= 0 ? `+${dim.g2}` : dim.g2}</td>
+                      <td className="py-2 px-3 text-center font-bold text-slate-900">{dim.g3 >= 0 ? `+${dim.g3}` : dim.g3}</td>
+                      <td className="py-2 px-3 text-center text-slate-500">{dim.popAvg >= 0 ? `+${dim.popAvg}` : dim.popAvg}</td>
+                      <td className="py-2 px-3 text-center">
+                        <span className={`px-1.5 py-0.2 rounded text-[10px] ${
+                          dim.deltaPop > 0 ? "bg-blue-50 text-blue-700" : dim.deltaPop < 0 ? "bg-slate-100 text-slate-600" : "text-slate-400"
+                        }`}>
+                          {dim.deltaPop > 0 ? `+${dim.deltaPop}` : dim.deltaPop}
+                        </span>
+                      </td>
+                      <td className="py-2 px-3 text-center text-slate-700">{dim.stressShift}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
             </div>
           </div>
 
@@ -603,7 +511,7 @@ export function PersonalCandidateDossier({
           {descChips.length > 0 && (
             <div className="bg-slate-50 border border-slate-200 rounded-xl p-3.5">
               <span className="text-[11px] font-bold text-slate-700 block mb-2">
-                Karakteristik & Kata Kunci Perilaku Teramati (Observed Trait Words):
+                Kata Kunci Karakteristik Teramati (Desc. Words dari Asesmen):
               </span>
               <div className="flex flex-wrap gap-1.5">
                 {descChips.map((chip, idx) => (
@@ -618,13 +526,13 @@ export function PersonalCandidateDossier({
             </div>
           )}
 
-          {/* Psychological Narrative Deep-Dive Cards */}
+          {/* Psychological Narrative Deep-Dive Cards (Real Text From CSV) */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Character & Mindset */}
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs space-y-2">
               <div className="flex items-center gap-2">
                 <FileText className="w-4 h-4 text-sky-600" />
-                <h5 className="text-xs font-bold text-slate-900">Ulasan Karakter & Pola Pikir Lengkap</h5>
+                <h5 className="text-xs font-bold text-slate-900">Ulasan Karakter & Pola Pikir (His/Her Character)</h5>
               </div>
               <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50/70 p-3 rounded-lg border border-slate-100">
                 {candidate.character}
@@ -646,7 +554,7 @@ export function PersonalCandidateDossier({
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs space-y-2">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-emerald-600" />
-                <h5 className="text-xs font-bold text-slate-900">Penekanan Tugas & Penempatan Kerja Ideal</h5>
+                <h5 className="text-xs font-bold text-slate-900">Penekanan Tugas & Penempatan Ideal (Job Emphasis)</h5>
               </div>
               <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50/70 p-3 rounded-lg border border-slate-100">
                 {candidate.jobEmphasis}
@@ -657,39 +565,11 @@ export function PersonalCandidateDossier({
             <div className="bg-white border border-slate-200 rounded-xl p-4 shadow-2xs space-y-2">
               <div className="flex items-center gap-2">
                 <AlertTriangle className="w-4 h-4 text-rose-600" />
-                <h5 className="text-xs font-bold text-slate-900">Respon Perilaku di Bawah Tekanan Operasional</h5>
+                <h5 className="text-xs font-bold text-slate-900">Respon di Bawah Tekanan Kerja (Under Pressure)</h5>
               </div>
               <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-line bg-slate-50/70 p-3 rounded-lg border border-slate-100">
                 {candidate.underPressure}
               </p>
-            </div>
-          </div>
-
-          {/* Assessor Structured Interview Guide */}
-          <div className="bg-slate-900 text-slate-100 rounded-xl p-4 sm:p-5 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <HelpCircle className="w-4 h-4 text-sky-400" />
-                <h5 className="text-xs font-bold uppercase tracking-wider text-white">
-                  Panduan Pertanyaan Wawancara Konfirmasi HR Asesor (Targeted Interview Guide)
-                </h5>
-              </div>
-              <span className="text-[10px] text-slate-400 font-mono">HR Specialist Toolkit</span>
-            </div>
-
-            <p className="text-xs text-slate-300">
-              Gunakan pertanyaan berikut dalam sesi wawancara teknis/HR untuk mengonfirmasi titik adaptasi psikologis kandidat:
-            </p>
-
-            <div className="space-y-2">
-              {interviewQuestions.map((q, idx) => (
-                <div key={idx} className="flex items-start gap-2.5 bg-slate-800/80 border border-slate-700 p-2.5 rounded-lg text-xs text-slate-200">
-                  <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-sky-900 text-[10px] font-bold text-sky-200">
-                    {idx + 1}
-                  </span>
-                  <span className="leading-relaxed">{q}</span>
-                </div>
-              ))}
             </div>
           </div>
         </CardContent>
