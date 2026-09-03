@@ -74,6 +74,7 @@ func (c *RouterConfig) SetupDISCRouter() {
 		disc.GET("/candidates", c.DISCController.GetCandidates)
 		disc.GET("/candidates/:id", c.DISCController.GetCandidateByID)
 		disc.POST("/upload", c.DISCController.UploadCSV)
+		disc.POST("/sync-sheet", c.DISCController.SyncGoogleSheet)
 		disc.POST("/reset", c.DISCController.ResetData)
 	}
 }

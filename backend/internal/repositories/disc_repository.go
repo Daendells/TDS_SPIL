@@ -2,6 +2,7 @@ package repositories
 
 import (
 	"backend/internal/models/domain"
+	"fmt"
 	"math"
 	"strings"
 
@@ -33,6 +34,7 @@ type DISCRepository interface {
 	GetSummary(db *gorm.DB) (*DISCPopulationSummary, error)
 	BatchCreate(db *gorm.DB, items []domain.DISCAssessment) error
 	TruncateAndBatchCreate(db *gorm.DB, items []domain.DISCAssessment) error
+	UpsertIncremental(db *gorm.DB, items []domain.DISCAssessment) (int, int, int, error)
 	Count(db *gorm.DB) (int64, error)
 }
 
@@ -263,4 +265,79 @@ func (r *discRepository) TruncateAndBatchCreate(db *gorm.DB, items []domain.DISC
 		}
 		return nil
 	})
+}
+
+func (r *discRepository) UpsertIncremental(db *gorm.DB, items []domain.DISCAssessment) (int, int, int, error) {
+	if len(items) == 0 {
+		return 0, 0, 0, nil
+	}
+
+	var inserted, updated, skipped int
+
+	err := db.Transaction(func(tx *gorm.DB) error {
+		// Load existing candidate keys into memory map
+		type ExistingKey struct {
+			ID       uint
+			NIK      string
+			Name     string
+			TestDate string
+		}
+		var existingList []ExistingKey
+		if err := tx.Model(&domain.DISCAssessment{}).Select("id, nik, name, test_date").Find(&existingList).Error; err != nil {
+			return err
+		}
+
+		existingMap := make(map[string]uint)
+		for _, e := range existingList {
+			key := fmtCandidateKey(e.NIK, e.Name, e.TestDate)
+			existingMap[key] = e.ID
+		}
+
+		var toInsert []domain.DISCAssessment
+		var maxCodeID int64
+		tx.Model(&domain.DISCAssessment{}).Count(&maxCodeID)
+
+		for _, item := range items {
+			key := fmtCandidateKey(item.NIK, item.Name, item.TestDate)
+			if existingID, exists := existingMap[key]; exists {
+				// Update existing row
+				item.ID = existingID
+				if err := tx.Model(&domain.DISCAssessment{}).Where("id = ?", existingID).Updates(item).Error; err != nil {
+					return err
+				}
+				updated++
+			} else {
+				// Prepare insert
+				maxCodeID++
+				item.CandidateCode = fmt.Sprintf("DISC-%04d", maxCodeID)
+				toInsert = append(toInsert, item)
+				existingMap[key] = 0 // mark as known
+			}
+		}
+
+		if len(toInsert) > 0 {
+			if err := tx.CreateInBatches(toInsert, 100).Error; err != nil {
+				return err
+			}
+			inserted = len(toInsert)
+		}
+
+		skipped = len(items) - inserted - updated
+		if skipped < 0 {
+			skipped = 0
+		}
+		return nil
+	})
+
+	return inserted, updated, skipped, err
+}
+
+func fmtCandidateKey(nik, name, testDate string) string {
+	n := strings.TrimSpace(strings.ToLower(nik))
+	nm := strings.TrimSpace(strings.ToLower(name))
+	td := strings.TrimSpace(strings.ToLower(testDate))
+	if n != "" && n != "-" {
+		return n + "____" + td
+	}
+	return nm + "____" + td
 }

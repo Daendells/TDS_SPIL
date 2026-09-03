@@ -8,6 +8,16 @@ import { FleetPopulationAnalytics } from "./components/FleetPopulationAnalytics"
 import { CandidateComparisonView } from "./components/CandidateComparisonView";
 import { CandidateExplorerTable } from "./components/CandidateExplorerTable";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import {
   Upload,
   RefreshCw,
@@ -15,11 +25,16 @@ import {
   Users,
   Scale,
   Database,
-  FileSpreadsheet,
+  CloudDownload,
+  ExternalLink,
+  Info,
 } from "lucide-react";
 import { toast } from "sonner";
 
 type ActiveTab = "dossier" | "population" | "comparison" | "table";
+
+const DEFAULT_SHEET_URL =
+  "https://docs.google.com/spreadsheets/d/1Jf9IhudkzSg0HNuB7t4dBgWpGuiQvNbe2Xtu_nbJCqc/edit#gid=1701811227";
 
 export default function SpreadsheetAnalyticsPage() {
   const {
@@ -33,10 +48,13 @@ export default function SpreadsheetAnalyticsPage() {
     isLoading,
     isUploading,
     uploadCSVFile,
+    syncGoogleSheet,
     resetToRealDataset,
   } = useDISCAnalytics();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("dossier");
+  const [sheetUrlInput, setSheetUrlInput] = useState<string>(DEFAULT_SHEET_URL);
+  const [isSyncDialogOpen, setIsSyncDialogOpen] = useState<boolean>(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -44,13 +62,26 @@ export default function SpreadsheetAnalyticsPage() {
     if (!file) return;
 
     try {
-      await uploadCSVFile(file);
+      await uploadCSVFile(file, "incremental");
     } catch {
-      // Error handled in hook
+      // Handled in hook
     } finally {
       if (fileInputRef.current) {
         fileInputRef.current.value = "";
       }
+    }
+  };
+
+  const handleTriggerSheetSync = async () => {
+    if (!sheetUrlInput.trim()) {
+      toast.error("Silakan masukkan URL Google Spreadsheet.");
+      return;
+    }
+    try {
+      await syncGoogleSheet(sheetUrlInput.trim());
+      setIsSyncDialogOpen(false);
+    } catch {
+      // Handled in hook
     }
   };
 
@@ -100,12 +131,83 @@ export default function SpreadsheetAnalyticsPage() {
               </span>
             </div>
             <p className="text-xs text-slate-500">
-              Analisis Hasil Psikometri DISC Rekrutmen PT SPIL ({candidates.length} Kandidat)
+              Analisis Hasil Psikometri DISC Rekrutmen PT SPIL ({candidates.length} Kandidat) • Source: <strong className="text-slate-700">{sourceTitle}</strong>
             </p>
           </div>
         </div>
 
-        <div className="flex items-center gap-2 shrink-0">
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {/* Sync Google Spreadsheet Dialog */}
+          <Dialog open={isSyncDialogOpen} onOpenChange={setIsSyncDialogOpen}>
+            <DialogTrigger asChild>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={isUploading || isLoading}
+                className="text-xs h-8 border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5"
+              >
+                <CloudDownload className={`w-3.5 h-3.5 text-slate-700 ${isUploading ? "animate-spin" : ""}`} />
+                Sync Google Sheets
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-md bg-white">
+              <DialogHeader>
+                <DialogTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
+                  <CloudDownload className="w-4 h-4 text-slate-700" />
+                  Live Sync Google Spreadsheet DISC
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500">
+                  Sinkronisasi database dengan sheet Google Spreadsheet online secara otomatis (hanya menambah/memperbarui data berdasarkan NIK & Timestamp).
+                </DialogDescription>
+              </DialogHeader>
+
+              <div className="space-y-3 py-2">
+                <div>
+                  <label className="text-xs font-medium text-slate-700 block mb-1">
+                    URL Google Spreadsheet (Share Link atau CSV Export):
+                  </label>
+                  <Input
+                    value={sheetUrlInput}
+                    onChange={(e) => setSheetUrlInput(e.target.value)}
+                    placeholder="https://docs.google.com/spreadsheets/d/.../edit"
+                    className="text-xs h-8 font-mono bg-slate-50"
+                  />
+                </div>
+
+                <div className="bg-slate-50 p-2.5 rounded-lg border border-slate-200 text-[11px] text-slate-600 space-y-1">
+                  <div className="flex items-center gap-1.5 font-semibold text-slate-700">
+                    <Info className="w-3.5 h-3.5 text-slate-500" />
+                    Panduan Izin Akses Google Sheets:
+                  </div>
+                  <p>
+                    Pastikan Spreadsheet memiliki akses <strong>"Siapa saja yang memiliki link (Viewer)"</strong> atau dipublikasikan melalui menu <em>File &gt; Share &gt; Publish to web (CSV)</em>.
+                  </p>
+                </div>
+              </div>
+
+              <DialogFooter className="gap-2 sm:gap-0">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsSyncDialogOpen(false)}
+                  className="text-xs h-8"
+                >
+                  Batal
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={isUploading}
+                  onClick={handleTriggerSheetSync}
+                  className="text-xs h-8 bg-slate-900 hover:bg-slate-800 text-white gap-1.5"
+                >
+                  <CloudDownload className={`w-3.5 h-3.5 ${isUploading ? "animate-spin" : ""}`} />
+                  {isUploading ? "Menyinkronkan..." : "Sinkronkan Sekarang"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Upload File Input */}
           <input
             type="file"
             ref={fileInputRef}
@@ -124,6 +226,7 @@ export default function SpreadsheetAnalyticsPage() {
             {isUploading ? "Mengunggah..." : "Upload CSV Baru"}
           </Button>
 
+          {/* Reset Button */}
           <Button
             variant="outline"
             size="sm"
@@ -132,7 +235,7 @@ export default function SpreadsheetAnalyticsPage() {
             className="text-xs h-8 border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5"
           >
             <RefreshCw className={`w-3.5 h-3.5 text-slate-700 ${isLoading ? "animate-spin" : ""}`} />
-            Reset Dataset 582
+            Reset 582
           </Button>
         </div>
       </div>

@@ -179,28 +179,64 @@ export function useDISCAnalytics() {
     fetchCandidates();
   }, [fetchSummary, fetchCandidates]);
 
-  // Upload CSV to Backend
+  // Upload CSV to Backend (Incremental by default, or Replace)
   const uploadCSVFile = useCallback(
-    async (file: File) => {
+    async (file: File, mode: "incremental" | "replace" = "incremental") => {
       setIsUploading(true);
       try {
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await api.post("/api/v1/disc-analytics/upload", formData, {
+        const res = await api.post(`/api/v1/disc-analytics/upload?mode=${mode}`, formData, {
           headers: {
             "Content-Type": "multipart/form-data",
           },
         });
 
+        const data = res.data?.data;
         setSourceTitle(`Upload: ${file.name}`);
-        toast.success(`Berhasil mengimpor ${res.data?.data?.totalImported ?? 0} data ke database!`);
+
+        if (mode === "incremental") {
+          toast.success(
+            `Sinkronisasi selesai: ${data?.inserted ?? 0} data baru ditambahkan, ${data?.updated ?? 0} diperbarui.`
+          );
+        } else {
+          toast.success(`Berhasil mengganti database dengan ${data?.totalImported ?? 0} data baru!`);
+        }
 
         // Refresh data
         await fetchSummary();
         await fetchCandidates();
       } catch (err: any) {
         const msg = err?.response?.data?.error || err.message || "Gagal mengunggah file CSV.";
+        toast.error(msg);
+        throw err;
+      } finally {
+        setIsUploading(false);
+      }
+    },
+    [fetchSummary, fetchCandidates]
+  );
+
+  // Sync from Google Spreadsheet Live URL
+  const syncGoogleSheet = useCallback(
+    async (sheetUrl: string) => {
+      setIsUploading(true);
+      try {
+        const res = await api.post("/api/v1/disc-analytics/sync-sheet", {
+          url: sheetUrl,
+        });
+
+        const data = res.data?.data;
+        setSourceTitle("Live Sync: Google Spreadsheet");
+        toast.success(
+          `Sync Google Sheets berhasil: +${data?.inserted ?? 0} baru, ${data?.updated ?? 0} diperbarui, ${data?.skipped ?? 0} tidak berubah.`
+        );
+
+        await fetchSummary();
+        await fetchCandidates();
+      } catch (err: any) {
+        const msg = err?.response?.data?.error || err.message || "Gagal sinkronisasi Google Spreadsheet.";
         toast.error(msg);
         throw err;
       } finally {
@@ -241,6 +277,7 @@ export function useDISCAnalytics() {
     isUploading,
     error,
     uploadCSVFile,
+    syncGoogleSheet,
     resetToRealDataset,
     getCandidateDimensions: (c: DISCCandidate | null) => getCandidateDimensions(c, summary),
     refetch: () => {

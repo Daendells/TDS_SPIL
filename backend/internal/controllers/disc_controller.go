@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
@@ -105,18 +106,73 @@ func (ctrl *DISCController) UploadCSV(c *gin.Context) {
 		return
 	}
 
-	count, err := ctrl.Service.ImportCSV(string(content))
+	mode := strings.ToLower(c.DefaultQuery("mode", "incremental"))
+
+	if mode == "replace" {
+		count, err := ctrl.Service.ImportCSV(string(content))
+		if err != nil {
+			ctrl.Log.Errorf("failed to import CSV: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+			return
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"code":    http.StatusOK,
+			"message": "Berhasil mengganti data psikometri DISC",
+			"data": gin.H{
+				"mode":          "replace",
+				"totalImported": count,
+			},
+		})
+		return
+	}
+
+	// Incremental Upsert
+	inserted, updated, skipped, err := ctrl.Service.ImportCSVIncremental(string(content))
 	if err != nil {
-		ctrl.Log.Errorf("failed to import CSV: %v", err)
+		ctrl.Log.Errorf("failed to sync CSV incrementally: %v", err)
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
 
 	c.JSON(http.StatusOK, gin.H{
 		"code":    http.StatusOK,
-		"message": "Berhasil mengimpor data psikometri DISC",
+		"message": "Sinkronisasi file CSV berhasil",
 		"data": gin.H{
-			"totalImported": count,
+			"mode":     "incremental",
+			"inserted": inserted,
+			"updated":  updated,
+			"skipped":  skipped,
+			"total":    inserted + updated + skipped,
+		},
+	})
+}
+
+type SyncSheetRequest struct {
+	URL string `json:"url" binding:"required"`
+}
+
+func (ctrl *DISCController) SyncGoogleSheet(c *gin.Context) {
+	var req SyncSheetRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "URL Google Spreadsheet wajib diisi"})
+		return
+	}
+
+	inserted, updated, skipped, err := ctrl.Service.SyncFromGoogleSheet(req.URL)
+	if err != nil {
+		ctrl.Log.Errorf("failed to sync Google Sheet: %v", err)
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"code":    http.StatusOK,
+		"message": "Sinkronisasi Google Spreadsheet berhasil",
+		"data": gin.H{
+			"inserted": inserted,
+			"updated":  updated,
+			"skipped":  skipped,
+			"total":    inserted + updated + skipped,
 		},
 	})
 }

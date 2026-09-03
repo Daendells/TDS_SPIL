@@ -5,8 +5,11 @@ import (
 	"backend/internal/models/domain"
 	"backend/internal/repositories"
 	"fmt"
+	"io"
+	"net/http"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/sirupsen/logrus"
 	"gorm.io/gorm"
@@ -20,6 +23,8 @@ type DISCService interface {
 	GetCandidateByID(id uint) (*domain.DISCAssessment, error)
 	GetSummary() (*repositories.DISCPopulationSummary, error)
 	ImportCSV(csvContent string) (int, error)
+	ImportCSVIncremental(csvContent string) (int, int, int, error)
+	SyncFromGoogleSheet(sheetURL string) (int, int, int, error)
 	ResetToDefault() (int, error)
 }
 
@@ -137,10 +142,10 @@ func hasNonEmpty(arr []string) bool {
 	return false
 }
 
-func (s *discService) ImportCSV(csvContent string) (int, error) {
+func parseCSVItems(csvContent string) ([]domain.DISCAssessment, error) {
 	rows := parseRFC4180CSV(csvContent)
 	if len(rows) < 2 {
-		return 0, fmt.Errorf("file CSV tidak memiliki data yang valid")
+		return nil, fmt.Errorf("file CSV tidak memiliki data yang valid (kurang dari 2 baris)")
 	}
 
 	headerMap := make(map[string]int)
@@ -303,7 +308,16 @@ func (s *discService) ImportCSV(csvContent string) (int, error) {
 	}
 
 	if len(items) == 0 {
-		return 0, fmt.Errorf("tidak ada baris data kandidat yang berhasil diparsing")
+		return nil, fmt.Errorf("tidak ada baris data kandidat yang berhasil diparsing")
+	}
+
+	return items, nil
+}
+
+func (s *discService) ImportCSV(csvContent string) (int, error) {
+	items, err := parseCSVItems(csvContent)
+	if err != nil {
+		return 0, err
 	}
 
 	if err := s.Repo.TruncateAndBatchCreate(s.DB, items); err != nil {
@@ -311,6 +325,80 @@ func (s *discService) ImportCSV(csvContent string) (int, error) {
 	}
 
 	return len(items), nil
+}
+
+func (s *discService) ImportCSVIncremental(csvContent string) (int, int, int, error) {
+	items, err := parseCSVItems(csvContent)
+	if err != nil {
+		return 0, 0, 0, err
+	}
+
+	return s.Repo.UpsertIncremental(s.DB, items)
+}
+
+func convertToGoogleSheetCSVURL(rawURL string) string {
+	u := strings.TrimSpace(rawURL)
+	if u == "" {
+		return ""
+	}
+	if strings.Contains(u, "export?format=csv") || strings.Contains(u, "output=csv") {
+		return u
+	}
+	if strings.Contains(u, "docs.google.com/spreadsheets/d/") {
+		parts := strings.Split(u, "/edit")
+		if len(parts) >= 1 {
+			baseDoc := parts[0]
+			gid := "0"
+			if strings.Contains(u, "gid=") {
+				gidParts := strings.Split(u, "gid=")
+				if len(gidParts) >= 2 {
+					gid = strings.Split(gidParts[1], "&")[0]
+					gid = strings.Split(gid, "#")[0]
+				}
+			}
+			return fmt.Sprintf("%s/export?format=csv&gid=%s", baseDoc, gid)
+		}
+	}
+	return u
+}
+
+func (s *discService) SyncFromGoogleSheet(sheetURL string) (int, int, int, error) {
+	targetURL := convertToGoogleSheetCSVURL(sheetURL)
+	if targetURL == "" {
+		return 0, 0, 0, fmt.Errorf("URL Google Spreadsheet tidak valid")
+	}
+
+	client := &http.Client{
+		Timeout: 30 * time.Second,
+	}
+
+	req, err := http.NewRequest("GET", targetURL, nil)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("gagal membuat request HTTP: %w", err)
+	}
+	req.Header.Set("User-Agent", "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36")
+
+	resp, err := client.Do(req)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("gagal mengambil data dari Google Spreadsheet: %w", err)
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, 0, 0, fmt.Errorf("Google Spreadsheet merespon dengan status HTTP %d", resp.StatusCode)
+	}
+
+	bodyBytes, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return 0, 0, 0, fmt.Errorf("gagal membaca data dari Google Spreadsheet: %w", err)
+	}
+
+	content := string(bodyBytes)
+	if strings.Contains(content, "<!DOCTYPE html>") || strings.Contains(content, "<html") {
+		return 0, 0, 0, fmt.Errorf("Google Spreadsheet terkunci / memerlukan login. Pastikan hak akses Spreadsheet diatur ke 'Siapa saja yang memiliki link (Viewer)' atau gunakan link 'Publikasikan ke Web' berformat CSV")
+	}
+
+	return s.ImportCSVIncremental(content)
 }
 
 func (s *discService) ResetToDefault() (int, error) {
