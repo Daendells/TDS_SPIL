@@ -209,6 +209,9 @@ func Bootstrap(config *BootstrapConfig) {
 	roleAnalysisController := controllers.NewRoleAnalysisController(config.Log, roleAnalysisService)
 	pdfController := controllers.NewPDFController(config.Log)
 	cvRoleController := controllers.NewCVRoleController(cvRoleService, config.Log)
+	discRepository := repositories.NewDISCRepository(config.Log)
+	discService := services.NewDISCService(config.DB, config.Log, discRepository)
+	discController := controllers.NewDISCController(discService, config.Log)
 
 	authMiddleware := middlewares.AuthMiddleware(config.Config.GetString("JWT_SECRET_KEY"))
 
@@ -247,6 +250,7 @@ func Bootstrap(config *BootstrapConfig) {
 		RoleAnalysisController:          roleAnalysisController,
 		PDFController:                   pdfController,
 		CVRoleController:                cvRoleController,
+		DISCController:                  discController,
 	}
 	routerConfig.Setup()
 

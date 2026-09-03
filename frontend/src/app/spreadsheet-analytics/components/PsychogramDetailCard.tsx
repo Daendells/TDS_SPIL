@@ -1,6 +1,6 @@
 "use client";
 
-import { DISCCandidate } from "../_data/discDataset";
+import { DISCCandidate } from "../_hooks/useDISCAnalytics";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";

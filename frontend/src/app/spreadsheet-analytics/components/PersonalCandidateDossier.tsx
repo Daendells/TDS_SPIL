@@ -1,11 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { DISCCandidate } from "../_data/discDataset";
-import {
-  getCandidateDimensions,
-  DISCSummary,
-} from "../_hooks/useDISCAnalytics";
+import { DISCCandidate, DISCSummary } from "../_hooks/useDISCAnalytics";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -102,8 +98,49 @@ export function PersonalCandidateDossier({
     if (currentIndex < candidates.length - 1) onSelectCandidate(candidates[currentIndex + 1]);
   };
 
-  // Dimensions & Vectors
-  const dimensions = getCandidateDimensions(candidate, summary.avgGraph3);
+  // Dimensions & Vectors Array
+  const dimensions = [
+    {
+      dimension: "D",
+      label: "Dominance",
+      g1: candidate.graph1.d,
+      g2: candidate.graph2.d,
+      g3: candidate.graph3.d,
+      popAvg: summary.avgGraph3.d,
+      deltaPop: Number((candidate.graph3.d - summary.avgGraph3.d).toFixed(2)),
+      deltaStress: Number(Math.abs(candidate.graph1.d - candidate.graph2.d).toFixed(2)),
+    },
+    {
+      dimension: "I",
+      label: "Influence",
+      g1: candidate.graph1.i,
+      g2: candidate.graph2.i,
+      g3: candidate.graph3.i,
+      popAvg: summary.avgGraph3.i,
+      deltaPop: Number((candidate.graph3.i - summary.avgGraph3.i).toFixed(2)),
+      deltaStress: Number(Math.abs(candidate.graph1.i - candidate.graph2.i).toFixed(2)),
+    },
+    {
+      dimension: "S",
+      label: "Steadiness",
+      g1: candidate.graph1.s,
+      g2: candidate.graph2.s,
+      g3: candidate.graph3.s,
+      popAvg: summary.avgGraph3.s,
+      deltaPop: Number((candidate.graph3.s - summary.avgGraph3.s).toFixed(2)),
+      deltaStress: Number(Math.abs(candidate.graph1.s - candidate.graph2.s).toFixed(2)),
+    },
+    {
+      dimension: "C",
+      label: "Compliance",
+      g1: candidate.graph1.c,
+      g2: candidate.graph2.c,
+      g3: candidate.graph3.c,
+      popAvg: summary.avgGraph3.c,
+      deltaPop: Number((candidate.graph3.c - summary.avgGraph3.c).toFixed(2)),
+      deltaStress: Number(Math.abs(candidate.graph1.c - candidate.graph2.c).toFixed(2)),
+    },
+  ];
 
   // Parse Desc Words to Chips
   const descChips = candidate.descWords
@@ -487,7 +524,7 @@ export function PersonalCandidateDossier({
                 <tbody className="divide-y divide-slate-100">
                   {dimensions.map((dim, idx) => (
                     <tr key={idx} className="hover:bg-slate-50/60 font-mono">
-                      <td className="py-2 px-3 font-sans font-semibold text-slate-800">{dim.name}</td>
+                      <td className="py-2 px-3 font-sans font-semibold text-slate-800">{dim.dimension} - {dim.label}</td>
                       <td className="py-2 px-3 text-center text-slate-700">{dim.g1 >= 0 ? `+${dim.g1}` : dim.g1}</td>
                       <td className="py-2 px-3 text-center text-slate-700">{dim.g2 >= 0 ? `+${dim.g2}` : dim.g2}</td>
                       <td className="py-2 px-3 text-center font-bold text-slate-900">{dim.g3 >= 0 ? `+${dim.g3}` : dim.g3}</td>
@@ -499,7 +536,7 @@ export function PersonalCandidateDossier({
                           {dim.deltaPop > 0 ? `+${dim.deltaPop}` : dim.deltaPop}
                         </span>
                       </td>
-                      <td className="py-2 px-3 text-center text-slate-700">{dim.stressShift}</td>
+                      <td className="py-2 px-3 text-center text-slate-700">{dim.deltaStress}</td>
                     </tr>
                   ))}
                 </tbody>

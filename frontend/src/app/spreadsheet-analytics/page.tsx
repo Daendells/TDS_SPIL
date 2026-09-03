@@ -31,29 +31,27 @@ export default function SpreadsheetAnalyticsPage() {
     comparisonCandidate,
     setComparisonCandidate,
     isLoading,
-    loadCustomCSV,
+    isUploading,
+    uploadCSVFile,
     resetToRealDataset,
   } = useDISCAnalytics();
 
   const [activeTab, setActiveTab] = useState<ActiveTab>("dossier");
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    const reader = new FileReader();
-    reader.onload = (event) => {
-      const text = event.target?.result;
-      if (typeof text === "string") {
-        loadCustomCSV(text, file.name);
-        toast.success(`Berhasil memuat file: ${file.name}`);
+    try {
+      await uploadCSVFile(file);
+    } catch {
+      // Error handled in hook
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
       }
-    };
-    reader.onerror = () => {
-      toast.error("Gagal membaca file CSV.");
-    };
-    reader.readAsText(file);
+    }
   };
 
   const handleOpenComparison = (candidate: any) => {
@@ -118,23 +116,22 @@ export default function SpreadsheetAnalyticsPage() {
           <Button
             variant="outline"
             size="sm"
+            disabled={isUploading}
             onClick={() => fileInputRef.current?.click()}
             className="text-xs h-8 border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5"
           >
-            <Upload className="w-3.5 h-3.5 text-slate-700" />
-            Upload CSV Baru
+            <Upload className={`w-3.5 h-3.5 text-slate-700 ${isUploading ? "animate-spin" : ""}`} />
+            {isUploading ? "Mengunggah..." : "Upload CSV Baru"}
           </Button>
 
           <Button
             variant="outline"
             size="sm"
-            onClick={() => {
-              resetToRealDataset();
-              toast.info("Memuat ulang 582 dataset asli kandidat rekrutmen SPIL.");
-            }}
+            disabled={isLoading}
+            onClick={() => resetToRealDataset()}
             className="text-xs h-8 border-slate-200 text-slate-700 hover:bg-slate-50 gap-1.5"
           >
-            <RefreshCw className="w-3.5 h-3.5 text-slate-700" />
+            <RefreshCw className={`w-3.5 h-3.5 text-slate-700 ${isLoading ? "animate-spin" : ""}`} />
             Reset Dataset 582
           </Button>
         </div>

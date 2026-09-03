@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { DISCCandidate } from "../_data/discDataset";
+import { DISCCandidate } from "../_hooks/useDISCAnalytics";
 import {
   getCandidateDimensions,
   DISCSummary,

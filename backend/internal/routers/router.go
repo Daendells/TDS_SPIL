@@ -41,6 +41,7 @@ type RouterConfig struct {
 	RoleAnalysisController          *controllers.RoleAnalysisController
 	PDFController                   *controllers.PDFController
 	CVRoleController                *controllers.CVRoleController
+	DISCController                  *controllers.DISCController
 }
 
 func (c *RouterConfig) Setup() {
@@ -62,6 +63,19 @@ func (c *RouterConfig) Setup() {
 	c.SetupRoleAnalysisRouter()
 	c.SetupPDFRouter()
 	c.SetupCVRoleRouter()
+	c.SetupDISCRouter()
+}
+
+func (c *RouterConfig) SetupDISCRouter() {
+	disc := c.App.Group("/api/v1/disc-analytics")
+	disc.Use(c.AuthMiddleware)
+	{
+		disc.GET("/summary", c.DISCController.GetSummary)
+		disc.GET("/candidates", c.DISCController.GetCandidates)
+		disc.GET("/candidates/:id", c.DISCController.GetCandidateByID)
+		disc.POST("/upload", c.DISCController.UploadCSV)
+		disc.POST("/reset", c.DISCController.ResetData)
+	}
 }
 
 func (c *RouterConfig) SetupGuestRouter() {

@@ -1,14 +1,21 @@
 package main
 
 import (
+	_ "embed"
 	"backend/internal/config"
 	"backend/internal/models/domain"
+	"backend/internal/repositories"
+	"backend/internal/services"
 	"fmt"
 	"strings"
 
+	"github.com/sirupsen/logrus"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/gorm"
 )
+
+//go:embed seeds/rec_disc.csv
+var defaultDISCCSV string
 
 func main() {
 	viperConfig := config.NewViper()
@@ -59,6 +66,12 @@ func main() {
 		log.Fatalf("seed default accounts failed: %v", err)
 	}
 	log.Info("Default system accounts verified/seeded successfully")
+
+	log.Info("Seeding default DISC psychometric assessments if empty...")
+	if err := seedDefaultDISCAssessments(db, log); err != nil {
+		log.Fatalf("seed default DISC assessments failed: %v", err)
+	}
+	log.Info("Default DISC assessments verified/seeded successfully")
 
 	log.Info("Running batch system migrations...")
 	if err := runBatchMigrations(db); err != nil {
@@ -230,6 +243,7 @@ func runAutoMigrate(db *gorm.DB) error {
 		&domain.ApolloTrainingCache{},
 		&domain.SeamenCache{},
 		&domain.MutationCache{},
+		&domain.DISCAssessment{},
 
 		// Tables with single dependency
 		&domain.Assessment{},
@@ -814,6 +828,25 @@ func seedDefaultAccounts(db *gorm.DB) error {
 		}
 	}
 
+	return nil
+}
+
+func seedDefaultDISCAssessments(db *gorm.DB, log *logrus.Logger) error {
+	repo := repositories.NewDISCRepository(log)
+	count, err := repo.Count(db)
+	if err != nil {
+		return err
+	}
+	if count > 0 {
+		return nil
+	}
+
+	service := services.NewDISCService(db, log, repo)
+	imported, err := service.ImportCSV(defaultDISCCSV)
+	if err != nil {
+		return err
+	}
+	log.Infof("Successfully seeded %d DISC psychometric assessment records", imported)
 	return nil
 }
 
