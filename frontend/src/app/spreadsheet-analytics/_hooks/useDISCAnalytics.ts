@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { api } from "@/app/lib/api";
 import { toast } from "sonner";
 
 export interface DISCCandidate {
@@ -37,21 +38,6 @@ export interface DISCSummary {
   avgGraph3: { d: number; i: number; s: number; c: number };
   avgStressShift: number;
   executiveInsights: string[];
-}
-
-const API_BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8081";
-
-function getCookie(name: string): string | null {
-  if (typeof document === "undefined") return null;
-  const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
-  return match ? decodeURIComponent(match[2]) : null;
-}
-
-function getAuthToken(): string | null {
-  if (typeof window === "undefined") return null;
-  const cookieToken = getCookie("Authorization");
-  if (cookieToken) return cookieToken;
-  return localStorage.getItem("token");
 }
 
 export function mapBackendToCandidate(d: any): DISCCandidate {
@@ -148,24 +134,13 @@ export function useDISCAnalytics() {
   // Fetch Summary
   const fetchSummary = useCallback(async () => {
     try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_BASE}/api/v1/disc-analytics/summary`, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: Gagal memuat ringkasan`);
-      }
-
-      const json = await res.json();
-      if (json.data) {
-        setSummary(json.data);
+      const res = await api.get("/api/v1/disc-analytics/summary");
+      if (res.data && res.data.data) {
+        setSummary(res.data.data);
       }
     } catch (err: any) {
       console.error("fetchSummary error:", err);
-      setError(err.message);
+      setError(err?.response?.data?.error || err.message);
     }
   }, []);
 
@@ -173,22 +148,17 @@ export function useDISCAnalytics() {
   const fetchCandidates = useCallback(async () => {
     setIsLoading(true);
     try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_BASE}/api/v1/disc-analytics/candidates?page=1&pageSize=1000`, {
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      const res = await api.get("/api/v1/disc-analytics/candidates", {
+        params: {
+          page: 1,
+          pageSize: 1000,
         },
       });
 
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: Gagal memuat daftar kandidat`);
-      }
-
-      const json = await res.json();
-      if (json.data && Array.isArray(json.data.items)) {
-        const mapped = json.data.items.map(mapBackendToCandidate);
+      if (res.data && res.data.data && Array.isArray(res.data.data.items)) {
+        const mapped = res.data.data.items.map(mapBackendToCandidate);
         setCandidates(mapped);
-        setTotalCount(json.data.total);
+        setTotalCount(res.data.data.total);
 
         if (mapped.length > 0) {
           setSelectedCandidate((prev) => prev ?? mapped[0]);
@@ -197,7 +167,7 @@ export function useDISCAnalytics() {
       }
     } catch (err: any) {
       console.error("fetchCandidates error:", err);
-      setError(err.message);
+      setError(err?.response?.data?.error || err.message);
     } finally {
       setIsLoading(false);
     }
@@ -214,32 +184,24 @@ export function useDISCAnalytics() {
     async (file: File) => {
       setIsUploading(true);
       try {
-        const token = getAuthToken();
         const formData = new FormData();
         formData.append("file", file);
 
-        const res = await fetch(`${API_BASE}/api/v1/disc-analytics/upload`, {
-          method: "POST",
+        const res = await api.post("/api/v1/disc-analytics/upload", formData, {
           headers: {
-            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            "Content-Type": "multipart/form-data",
           },
-          body: formData,
         });
 
-        if (!res.ok) {
-          const errJson = await res.json().catch(() => null);
-          throw new Error(errJson?.error || `Upload gagal (HTTP ${res.status})`);
-        }
-
-        const json = await res.json();
         setSourceTitle(`Upload: ${file.name}`);
-        toast.success(`Berhasil mengimpor ${json.data?.totalImported ?? 0} data ke database!`);
+        toast.success(`Berhasil mengimpor ${res.data?.data?.totalImported ?? 0} data ke database!`);
 
         // Refresh data
         await fetchSummary();
         await fetchCandidates();
       } catch (err: any) {
-        toast.error(err.message || "Gagal mengunggah file CSV.");
+        const msg = err?.response?.data?.error || err.message || "Gagal mengunggah file CSV.";
+        toast.error(msg);
         throw err;
       } finally {
         setIsUploading(false);
@@ -252,25 +214,15 @@ export function useDISCAnalytics() {
   const resetToRealDataset = useCallback(async () => {
     setIsLoading(true);
     try {
-      const token = getAuthToken();
-      const res = await fetch(`${API_BASE}/api/v1/disc-analytics/reset`, {
-        method: "POST",
-        headers: {
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-      });
-
-      if (!res.ok) {
-        throw new Error(`HTTP ${res.status}: Gagal mereset dataset`);
-      }
-
+      await api.post("/api/v1/disc-analytics/reset");
       setSourceTitle("Database MySQL SPIL (582 Kandidat)");
       toast.success("Dataset berhasil direset ke 582 data kandidat asli.");
 
       await fetchSummary();
       await fetchCandidates();
     } catch (err: any) {
-      toast.error(err.message || "Gagal mereset dataset.");
+      const msg = err?.response?.data?.error || err.message || "Gagal mereset dataset.";
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }

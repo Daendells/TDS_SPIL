@@ -208,40 +208,50 @@ export default function SpreadsheetAnalyticsPage() {
       </div>
 
       {/* ── TAB CONTENT RENDERING ────────────────────────────────────────── */}
-      {activeTab === "dossier" && (
-        <PersonalCandidateDossier
-          candidate={selectedCandidate}
-          candidates={candidates}
-          summary={summary}
-          onSelectCandidate={setSelectedCandidate}
-          onOpenComparison={handleOpenComparison}
-        />
-      )}
+      {isLoading ? (
+        <div className="bg-white border border-slate-200 rounded-xl p-12 text-center shadow-xs">
+          <div className="inline-block animate-spin rounded-full h-8 w-8 border-2 border-slate-800 border-t-transparent mb-3" />
+          <p className="text-sm font-semibold text-slate-700">Memuat data asesmen psikometri dari database...</p>
+          <p className="text-xs text-slate-400 mt-1">Mengambil kalkulasi populasi batch rekrutmen</p>
+        </div>
+      ) : (
+        <>
+          {activeTab === "dossier" && (
+            <PersonalCandidateDossier
+              candidate={selectedCandidate}
+              candidates={candidates}
+              summary={summary}
+              onSelectCandidate={setSelectedCandidate}
+              onOpenComparison={handleOpenComparison}
+            />
+          )}
 
-      {activeTab === "population" && (
-        <FleetPopulationAnalytics summary={summary} />
-      )}
+          {activeTab === "population" && (
+            <FleetPopulationAnalytics summary={summary} />
+          )}
 
-      {activeTab === "comparison" && (
-        <CandidateComparisonView
-          candidates={candidates}
-          candidateA={selectedCandidate}
-          candidateB={comparisonCandidate}
-          onSelectCandidateA={setSelectedCandidate}
-          onSelectCandidateB={setComparisonCandidate}
-          onFocusCandidate={handleFocusCandidate}
-        />
-      )}
+          {activeTab === "comparison" && (
+            <CandidateComparisonView
+              candidates={candidates}
+              candidateA={selectedCandidate}
+              candidateB={comparisonCandidate}
+              onSelectCandidateA={setSelectedCandidate}
+              onSelectCandidateB={setComparisonCandidate}
+              onFocusCandidate={handleFocusCandidate}
+            />
+          )}
 
-      {activeTab === "table" && (
-        <CandidateExplorerTable
-          candidates={candidates}
-          selectedCandidateId={selectedCandidate?.id || null}
-          onSelectCandidate={setSelectedCandidate}
-          onFocusCandidate={handleFocusCandidate}
-          onCompareCandidate={handleOpenComparison}
-          sourceTitle={sourceTitle}
-        />
+          {activeTab === "table" && (
+            <CandidateExplorerTable
+              candidates={candidates}
+              selectedCandidateId={selectedCandidate?.id || null}
+              onSelectCandidate={setSelectedCandidate}
+              onFocusCandidate={handleFocusCandidate}
+              onCompareCandidate={handleOpenComparison}
+              sourceTitle={sourceTitle}
+            />
+          )}
+        </>
       )}
     </div>
   );
