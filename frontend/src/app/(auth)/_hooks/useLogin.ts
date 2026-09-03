@@ -123,6 +123,9 @@ export function useLogout() {
 
       // Clear user data
       setUser(null);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("USER");
+      }
 
       // Show success message
       toast.success("Logout berhasil!");
@@ -138,6 +141,9 @@ export function useLogout() {
       // Even if logout fails on server, clear local state
       cookies.remove("Authorization", { path: "/" });
       setUser(null);
+      if (typeof window !== "undefined") {
+        localStorage.removeItem("USER");
+      }
       window.location.href = withBasePath("/login");
     },
   });

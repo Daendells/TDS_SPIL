@@ -77,10 +77,10 @@ export default function Page() {
   }, []);
 
   React.useEffect(() => {
-    if (shouldAutoSSO && clientID === process.env.NEXT_PUBLIC_SSO_CLIENT_ID) {
+    if (shouldAutoSSO) {
       handleSsoLogin();
     }
-  }, [clientID, handleSsoLogin, shouldAutoSSO]);
+  }, [handleSsoLogin, shouldAutoSSO]);
 
   return (
     <div className="flex flex-col gap-5">
