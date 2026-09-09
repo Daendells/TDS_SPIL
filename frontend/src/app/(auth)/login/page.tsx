@@ -37,7 +37,6 @@ const FormSchema = z.object({
 
 export default function Page() {
   const loginMutation = useLogin();
-  const [clientID, setClientID] = React.useState<string | null>(null);
   const [shouldAutoSSO, setShouldAutoSSO] = React.useState(false);
   const [ssoError, setSsoError] = React.useState<string | null>(null);
 
@@ -59,19 +58,14 @@ export default function Page() {
 
   const handleSsoLogin = React.useCallback(() => {
     const apiBase = process.env.NEXT_PUBLIC_API_ENDPOINT || `${window.location.origin}/tds-api`;
-    const params = new URLSearchParams();
-    if (clientID) {
-      params.set("client_id", clientID);
-    }
-
-    const queryString = params.toString();
-    const target = `${apiBase}/api/auth/sso/initiate${queryString ? `?${queryString}` : ""}`;
+    // The backend owns the TDS OAuth client credentials. Never replace them
+    // with a possibly stale client_id supplied by a portal application card.
+    const target = `${apiBase}/api/auth/sso/initiate`;
     window.location.href = target;
-  }, [clientID]);
+  }, []);
 
   React.useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    setClientID(params.get("client_id"));
     setShouldAutoSSO(params.get("login_sso") === "true");
     setSsoError(params.get("sso_error"));
   }, []);
