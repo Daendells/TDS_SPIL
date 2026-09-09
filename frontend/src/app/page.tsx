@@ -10,16 +10,14 @@ export default function Home() {
   useEffect(() => {
     const searchParams = new URLSearchParams(window.location.search);
     const loginSso = searchParams.get("login_sso");
-    const clientId = searchParams.get("client_id");
 
     // Jika ada parameter login_sso dari Fleet Portal / SSO
     if (loginSso === "true") {
       const apiBase = process.env.NEXT_PUBLIC_API_ENDPOINT || "http://localhost:8081";
-      const params = new URLSearchParams();
-      if (clientId) {
-        params.set("client_id", clientId);
-      }
-      const target = `${apiBase}/api/auth/sso/initiate${params.toString() ? `?${params.toString()}` : ""}`;
+      // TDS is a single OAuth client and must use the client ID configured on
+      // its backend. The portal query can be stale when duplicate application
+      // records exist, so it must not override TDS credentials.
+      const target = `${apiBase}/api/auth/sso/initiate`;
       window.location.href = target;
       return;
     }
