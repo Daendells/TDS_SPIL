@@ -1,6 +1,7 @@
 package services
 
 import (
+	"errors"
 	"fmt"
 	"net/http"
 	"time"
@@ -61,6 +62,12 @@ func (service *UserService) CreateAccessToken(user *domain.User) (string, error)
 }
 
 func (service *UserService) Login(user *domain.User, password string) (*web.SuccessResponse, error) {
+	// SSO-linked users authenticate only through the SSO provider. Their local
+	// password is a random unusable hash and must never become a second login.
+	if user.SSOID != nil {
+		return nil, errors.New("invalid username or password")
+	}
+
 	// TODO: Compare the password
 	err := bcrypt.CompareHashAndPassword([]byte(user.Password), []byte(password))
 	if err != nil {
@@ -151,6 +158,10 @@ func (service *UserService) UpdateUser(id int, req *web.UserUpdateRequest) (*web
 	user, err := service.UserReporsitory.FindByID(service.DB, id)
 	if err != nil {
 		return nil, fmt.Errorf("user not found")
+	}
+
+	if user.SSOID != nil && (req.Username != "" || req.Password != "") {
+		return nil, errors.New("username and password for SSO-linked users must be managed in the SSO portal")
 	}
 
 	// Update username jika diberikan

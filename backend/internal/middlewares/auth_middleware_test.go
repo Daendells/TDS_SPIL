@@ -180,3 +180,17 @@ func TestAdminOnly_NoRoleInContext(t *testing.T) {
 	assert.Equal(t, http.StatusForbidden, w.Code)
 	assert.Contains(t, w.Body.String(), "Akses ditolak: Fitur ini hanya dapat diakses oleh Admin")
 }
+
+func TestDeleteTokenClearsRootPathCookie(t *testing.T) {
+	recorder := httptest.NewRecorder()
+	ctx, _ := gin.CreateTestContext(recorder)
+
+	DeleteToken(ctx)
+
+	cookies := recorder.Result().Cookies()
+	assert.Len(t, cookies, 1)
+	assert.Equal(t, TOKEN_COOKIE, cookies[0].Name)
+	assert.Equal(t, "/", cookies[0].Path)
+	assert.Less(t, cookies[0].MaxAge, 0)
+	assert.True(t, cookies[0].HttpOnly)
+}

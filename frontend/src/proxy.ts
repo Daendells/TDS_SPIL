@@ -11,9 +11,16 @@ const buildRedirectURL = (request: NextRequest, path: string) => {
 
 export async function proxy(request: NextRequest) {
   const token = request.cookies.get("Authorization")?.value;
-  console.log("TOKEN:", token);
   const url = request.nextUrl;
   const pathname = stripBasePath(url.pathname);
+  const isSSOLaunch = url.searchParams.get("login_sso") === "true";
+
+  // An explicit launch from the SSO portal must always start a fresh OAuth
+  // flow, even when this browser still has a local TDS session. Otherwise the
+  // root/login redirects below swallow the SSO query and reuse the old user.
+  if (isSSOLaunch && (pathname === "/" || pathname.startsWith("/login"))) {
+    return NextResponse.next();
+  }
 
   // TODO: Handle root "/"
   if (pathname === "/") {
@@ -25,7 +32,7 @@ export async function proxy(request: NextRequest) {
       const { payload } = await jwtVerify(token, secret, {
         algorithms: ["HS256"],
       });
-      console.log("PAYLOAD:", payload);
+      void payload;
       return NextResponse.redirect(buildRedirectURL(request, "/dashboard"));
     } catch (err) {
       console.log(err);
@@ -62,7 +69,7 @@ export async function proxy(request: NextRequest) {
       const { payload } = await jwtVerify(token, secret, {
         algorithms: ["HS256"],
       });
-      console.log("PAYLOAD:", payload);
+      void payload;
       return NextResponse.next();
     } catch (err) {
       console.log("ERROR VERIFY:", (err as Error).message);

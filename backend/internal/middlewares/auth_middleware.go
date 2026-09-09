@@ -18,7 +18,9 @@ var (
 )
 
 func DeleteToken(ctx *gin.Context) {
-	ctx.SetCookie(TOKEN_COOKIE, "delete", -1, "", "", false, true)
+	// The login cookie is created for the root path. Cookie deletion must use
+	// the same path or the browser keeps sending the old TDS session.
+	ctx.SetCookie(TOKEN_COOKIE, "", -1, "/", "", false, true)
 }
 
 func AuthMiddleware(secret string) gin.HandlerFunc {
